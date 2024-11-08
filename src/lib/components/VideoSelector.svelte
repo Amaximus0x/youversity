@@ -13,7 +13,7 @@
     export let moduleVideos: VideoItem[][];
     export let selectedVideos: number[];
     export let error: string | null;
-    export let loading: boolean;
+    export const loading = false;
   
     let saving = false;
     let currentModule = 0;
@@ -208,8 +208,15 @@
                   class:border-blue-500={selectedVideos[moduleIndex] === videoIndex}
                 >
                   <div 
+                    role="button"
+                    tabindex="0"
                     class="relative cursor-pointer"
                     on:click={() => playingVideoId = video.videoId}
+                    on:keydown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                            playingVideoId = video.videoId;
+                        }
+                    }}
                   >
                     <img
                       src={video.thumbnailUrl}
@@ -223,8 +230,15 @@
                     </div>
                   </div>
                   <div 
+                    role="button"
+                    tabindex="0"
                     class="mt-2"
                     on:click={() => selectedVideos[moduleIndex] = videoIndex}
+                    on:keydown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                            selectedVideos[moduleIndex] = videoIndex;
+                        }
+                    }}
                   >
                     <h4 class="font-semibold mb-1">{video.title}</h4>
                     <p class="text-sm text-gray-600">{video.length} minutes</p>

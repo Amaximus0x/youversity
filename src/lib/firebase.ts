@@ -15,29 +15,31 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+const auth = getAuth(app);
 
-// Enable offline persistence first
-try {
-  await enableIndexedDbPersistence(db);
-} catch (err) {
-  if (err.code === 'failed-precondition') {
-    console.warn('Multiple tabs open, persistence can only be enabled in one tab at a time.');
-  } else if (err.code === 'unimplemented') {
-    console.warn('The current browser doesn\'t support persistence.');
+// Initialize persistence in a function instead of top-level await
+async function initializePersistence() {
+  try {
+    await enableIndexedDbPersistence(db);
+  } catch (err) {
+    if (err.code === 'failed-precondition') {
+      console.warn('Multiple tabs open, persistence can only be enabled in one tab at a time.');
+    } else if (err.code === 'unimplemented') {
+      console.warn('The current browser doesn\'t support persistence.');
+    }
+  }
+
+  try {
+    await setPersistence(auth, browserLocalPersistence);
+  } catch (error) {
+    console.error("Auth persistence error:", error);
   }
 }
 
-// Initialize auth after persistence is enabled
-const auth = getAuth(app);
+// Call the initialization function
+initializePersistence();
 
-// Set auth persistence
-try {
-  await setPersistence(auth, browserLocalPersistence);
-} catch (error) {
-  console.error('Auth persistence error:', error);
-}
-
-export { db, auth };
+export { app, db, auth };
 
 // Firebase utility functions
 export async function saveCourseToFirebase(userId: string, course: FinalCourseStructure) {
