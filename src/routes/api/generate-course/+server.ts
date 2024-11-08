@@ -1,6 +1,6 @@
 import { json } from '@sveltejs/kit';
+import { env } from '$env/dynamic/private';
 import type { RequestHandler } from './$types';
-import { OPENAI_API_KEY } from '$env/static/private';
 import axios from 'axios';
 import type { CourseStructure } from '$lib/types/course';
 
@@ -21,7 +21,7 @@ async function generateCourse(User_Course_Input: string): Promise<CourseStructur
       messages: [{ role: 'user', content: prompt }],
     }, {
       headers: {
-        'Authorization': `Bearer ${OPENAI_API_KEY}`,
+        'Authorization': `Bearer ${env.OPENAI_API_KEY}`,
         'Content-Type': 'application/json',
       },
     });
