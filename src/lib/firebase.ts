@@ -1,15 +1,14 @@
 import { initializeApp } from 'firebase/app';
 import { getFirestore } from 'firebase/firestore';
 import { getAuth, setPersistence, browserLocalPersistence } from 'firebase/auth';
-import { env } from '$env/dynamic/public';
 
 const firebaseConfig = {
-  apiKey: env.PUBLIC_FIREBASE_API_KEY,
-  authDomain: env.PUBLIC_FIREBASE_AUTH_DOMAIN,
-  projectId: env.PUBLIC_FIREBASE_PROJECT_ID,
-  storageBucket: env.PUBLIC_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: env.PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-  appId: env.PUBLIC_FIREBASE_APP_ID
+  apiKey: "AIzaSyAOzl4NcFW95BEhRw-t3meFAyzfCo-vZIs",
+  authDomain: "youversity-c8632.firebaseapp.com",
+  projectId: "youversity-c8632",
+  storageBucket: "youversity-c8632.appspot.com",
+  messagingSenderId: "1021633759112",
+  appId: "1:1021633759112:web:6476141a5dd9527b97dc3d"
 };
 
 // Initialize Firebase
