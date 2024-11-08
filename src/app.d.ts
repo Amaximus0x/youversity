@@ -15,6 +15,13 @@ declare global {
 		interface PageData {
 			user: DecodedIdToken | null
 		}
+		interface PrivateEnv {
+			OPENAI_API_KEY: string;
+			// Add other private environment variables here
+		}
+		interface PublicEnv {
+			// Add public environment variables here
+		}
 	}
 }
 
