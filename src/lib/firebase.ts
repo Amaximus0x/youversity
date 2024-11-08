@@ -1,45 +1,26 @@
 import { initializeApp } from 'firebase/app';
-import { getFirestore, enableIndexedDbPersistence } from 'firebase/firestore';
+import { getFirestore } from 'firebase/firestore';
 import { getAuth, setPersistence, browserLocalPersistence } from 'firebase/auth';
-import { collection, addDoc, query, where, getDocs } from 'firebase/firestore';
-import type { FinalCourseStructure } from '$lib/types/course';
+import { env } from '$env/dynamic/public';
 
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID
+  apiKey: env.PUBLIC_FIREBASE_API_KEY,
+  authDomain: env.PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: env.PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: env.PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: env.PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: env.PUBLIC_FIREBASE_APP_ID
 };
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-const auth = getAuth(app);
+// Initialize Firebase
+export const app = initializeApp(firebaseConfig);
+export const db = getFirestore(app);
+export const auth = getAuth(app);
 
-// Initialize persistence in a function instead of top-level await
-async function initializePersistence() {
-  try {
-    await enableIndexedDbPersistence(db);
-  } catch (err) {
-    if (err.code === 'failed-precondition') {
-      console.warn('Multiple tabs open, persistence can only be enabled in one tab at a time.');
-    } else if (err.code === 'unimplemented') {
-      console.warn('The current browser doesn\'t support persistence.');
-    }
-  }
-
-  try {
-    await setPersistence(auth, browserLocalPersistence);
-  } catch (error) {
-    console.error("Auth persistence error:", error);
-  }
-}
-
-// Call the initialization function
-initializePersistence();
-
-export { app, db, auth };
+// Enable persistence
+setPersistence(auth, browserLocalPersistence).catch((error) => {
+  console.error("Auth persistence error:", error);
+});
 
 // Firebase utility functions
 export async function saveCourseToFirebase(userId: string, course: FinalCourseStructure) {
