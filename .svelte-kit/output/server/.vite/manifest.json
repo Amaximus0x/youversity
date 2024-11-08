@@ -1,0 +1,281 @@
+{
+  ".svelte-kit/generated/server/internal.js": {
+    "file": "internal.js",
+    "name": "internal",
+    "src": ".svelte-kit/generated/server/internal.js",
+    "isEntry": true,
+    "imports": [
+      "_internal.js"
+    ]
+  },
+  "_auth.js": {
+    "file": "chunks/auth.js",
+    "name": "auth",
+    "imports": [
+      "_index3.js"
+    ]
+  },
+  "_auth2.js": {
+    "file": "chunks/auth2.js",
+    "name": "auth",
+    "imports": [
+      "_auth.js",
+      "_client.js"
+    ]
+  },
+  "_client.js": {
+    "file": "chunks/client.js",
+    "name": "client",
+    "imports": [
+      "_exports.js"
+    ]
+  },
+  "_exports.js": {
+    "file": "chunks/exports.js",
+    "name": "exports"
+  },
+  "_firebase-admin.js": {
+    "file": "chunks/firebase-admin.js",
+    "name": "firebase-admin",
+    "imports": [
+      "_private.js"
+    ]
+  },
+  "_guards.js": {
+    "file": "chunks/guards.js",
+    "name": "guards",
+    "imports": [
+      "_index2.js",
+      "_firebase-admin.js"
+    ]
+  },
+  "_index.js": {
+    "file": "chunks/index.js",
+    "name": "index"
+  },
+  "_index2.js": {
+    "file": "chunks/index2.js",
+    "name": "index"
+  },
+  "_index3.js": {
+    "file": "chunks/index3.js",
+    "name": "index",
+    "imports": [
+      "_index.js"
+    ]
+  },
+  "_internal.js": {
+    "file": "chunks/internal.js",
+    "name": "internal",
+    "imports": [
+      "_index.js"
+    ],
+    "dynamicImports": [
+      "src/hooks.server.ts"
+    ]
+  },
+  "_private.js": {
+    "file": "chunks/private.js",
+    "name": "private"
+  },
+  "node_modules/@sveltejs/kit/src/runtime/components/svelte-5/error.svelte": {
+    "file": "entries/fallbacks/error.svelte.js",
+    "name": "entries/fallbacks/error.svelte",
+    "src": "node_modules/@sveltejs/kit/src/runtime/components/svelte-5/error.svelte",
+    "isEntry": true,
+    "imports": [
+      "_index.js",
+      "_client.js"
+    ]
+  },
+  "node_modules/@sveltejs/kit/src/runtime/server/index.js": {
+    "file": "index.js",
+    "name": "index",
+    "src": "node_modules/@sveltejs/kit/src/runtime/server/index.js",
+    "isEntry": true,
+    "imports": [
+      "_index.js",
+      "_internal.js",
+      "_index2.js",
+      "_exports.js",
+      "_index3.js"
+    ]
+  },
+  "src/hooks.server.ts": {
+    "file": "chunks/hooks.server.js",
+    "name": "hooks.server",
+    "src": "src/hooks.server.ts",
+    "isDynamicEntry": true,
+    "imports": [
+      "_firebase-admin.js"
+    ]
+  },
+  "src/routes/+layout.svelte": {
+    "file": "entries/pages/_layout.svelte.js",
+    "name": "entries/pages/_layout.svelte",
+    "src": "src/routes/+layout.svelte",
+    "isEntry": true,
+    "imports": [
+      "_index.js",
+      "_auth.js",
+      "_auth2.js"
+    ],
+    "css": [
+      "_app/immutable/assets/_layout.Bn2BZ_Ig.css"
+    ]
+  },
+  "src/routes/+page.svelte": {
+    "file": "entries/pages/_page.svelte.js",
+    "name": "entries/pages/_page.svelte",
+    "src": "src/routes/+page.svelte",
+    "isEntry": true,
+    "imports": [
+      "_index.js",
+      "_auth.js",
+      "_auth2.js",
+      "_client.js"
+    ]
+  },
+  "src/routes/api/auth/refresh-token/+server.ts": {
+    "file": "entries/endpoints/api/auth/refresh-token/_server.ts.js",
+    "name": "entries/endpoints/api/auth/refresh-token/_server.ts",
+    "src": "src/routes/api/auth/refresh-token/+server.ts",
+    "isEntry": true,
+    "imports": [
+      "_index2.js"
+    ]
+  },
+  "src/routes/api/auth/session/+server.ts": {
+    "file": "entries/endpoints/api/auth/session/_server.ts.js",
+    "name": "entries/endpoints/api/auth/session/_server.ts",
+    "src": "src/routes/api/auth/session/+server.ts",
+    "isEntry": true,
+    "imports": [
+      "_index2.js"
+    ]
+  },
+  "src/routes/api/courses/+server.ts": {
+    "file": "entries/endpoints/api/courses/_server.ts.js",
+    "name": "entries/endpoints/api/courses/_server.ts",
+    "src": "src/routes/api/courses/+server.ts",
+    "isEntry": true,
+    "imports": [
+      "_index2.js"
+    ]
+  },
+  "src/routes/api/create-final-course/+server.ts": {
+    "file": "entries/endpoints/api/create-final-course/_server.ts.js",
+    "name": "entries/endpoints/api/create-final-course/_server.ts",
+    "src": "src/routes/api/create-final-course/+server.ts",
+    "isEntry": true,
+    "imports": [
+      "_index2.js",
+      "_private.js"
+    ]
+  },
+  "src/routes/api/generate-course/+server.ts": {
+    "file": "entries/endpoints/api/generate-course/_server.ts.js",
+    "name": "entries/endpoints/api/generate-course/_server.ts",
+    "src": "src/routes/api/generate-course/+server.ts",
+    "isEntry": true,
+    "imports": [
+      "_index2.js",
+      "_private.js"
+    ]
+  },
+  "src/routes/api/search-videos/+server.ts": {
+    "file": "entries/endpoints/api/search-videos/_server.ts.js",
+    "name": "entries/endpoints/api/search-videos/_server.ts",
+    "src": "src/routes/api/search-videos/+server.ts",
+    "isEntry": true,
+    "imports": [
+      "_index2.js"
+    ]
+  },
+  "src/routes/api/video-metadata/+server.ts": {
+    "file": "entries/endpoints/api/video-metadata/_server.ts.js",
+    "name": "entries/endpoints/api/video-metadata/_server.ts",
+    "src": "src/routes/api/video-metadata/+server.ts",
+    "isEntry": true,
+    "imports": [
+      "_index2.js"
+    ]
+  },
+  "src/routes/api/video-transcript/+server.ts": {
+    "file": "entries/endpoints/api/video-transcript/_server.ts.js",
+    "name": "entries/endpoints/api/video-transcript/_server.ts",
+    "src": "src/routes/api/video-transcript/+server.ts",
+    "isEntry": true,
+    "imports": [
+      "_index2.js"
+    ]
+  },
+  "src/routes/create-course/+page.server.ts": {
+    "file": "entries/pages/create-course/_page.server.ts.js",
+    "name": "entries/pages/create-course/_page.server.ts",
+    "src": "src/routes/create-course/+page.server.ts",
+    "isEntry": true,
+    "imports": [
+      "_guards.js"
+    ]
+  },
+  "src/routes/create-course/+page.svelte": {
+    "file": "entries/pages/create-course/_page.svelte.js",
+    "name": "entries/pages/create-course/_page.svelte",
+    "src": "src/routes/create-course/+page.svelte",
+    "isEntry": true,
+    "imports": [
+      "_index.js",
+      "_auth.js",
+      "_client.js"
+    ]
+  },
+  "src/routes/my-courses/+page.server.ts": {
+    "file": "entries/pages/my-courses/_page.server.ts.js",
+    "name": "entries/pages/my-courses/_page.server.ts",
+    "src": "src/routes/my-courses/+page.server.ts",
+    "isEntry": true,
+    "imports": [
+      "_guards.js"
+    ]
+  },
+  "src/routes/my-courses/+page.svelte": {
+    "file": "entries/pages/my-courses/_page.svelte.js",
+    "name": "entries/pages/my-courses/_page.svelte",
+    "src": "src/routes/my-courses/+page.svelte",
+    "isEntry": true,
+    "imports": [
+      "_index.js",
+      "_auth.js"
+    ]
+  },
+  "src/routes/profile/+page.server.ts": {
+    "file": "entries/pages/profile/_page.server.ts.js",
+    "name": "entries/pages/profile/_page.server.ts",
+    "src": "src/routes/profile/+page.server.ts",
+    "isEntry": true,
+    "imports": [
+      "_guards.js"
+    ]
+  },
+  "src/routes/profile/+page.svelte": {
+    "file": "entries/pages/profile/_page.svelte.js",
+    "name": "entries/pages/profile/_page.svelte",
+    "src": "src/routes/profile/+page.svelte",
+    "isEntry": true,
+    "imports": [
+      "_index.js",
+      "_client.js"
+    ]
+  },
+  "src/routes/protected/+page.svelte": {
+    "file": "entries/pages/protected/_page.svelte.js",
+    "name": "entries/pages/protected/_page.svelte",
+    "src": "src/routes/protected/+page.svelte",
+    "isEntry": true,
+    "imports": [
+      "_index.js",
+      "_auth.js"
+    ]
+  }
+}

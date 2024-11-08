@@ -39,7 +39,6 @@ declare module '$env/static/private' {
 	export const FIREBASE_ADMIN_PRIVATE_KEY: string;
 	export const FIREBASE_PROJECT_ID: string;
 	export const OPENAI_API_KEY: string;
-	export const YOUTUBE_API_KEY: string;
 	export const ALLUSERSPROFILE: string;
 	export const APPDATA: string;
 	export const ChocolateyInstall: string;
@@ -53,7 +52,9 @@ declare module '$env/static/private' {
 	export const ComSpec: string;
 	export const DriverData: string;
 	export const EDITOR: string;
-	export const EFC_3460: string;
+	export const EFC_5928: string;
+	export const FPS_BROWSER_APP_PROFILE_STRING: string;
+	export const FPS_BROWSER_USER_PROFILE_STRING: string;
 	export const GIT_ASKPASS: string;
 	export const HOME: string;
 	export const HOMEDRIVE: string;
@@ -169,7 +170,6 @@ declare module '$env/dynamic/private' {
 		FIREBASE_ADMIN_PRIVATE_KEY: string;
 		FIREBASE_PROJECT_ID: string;
 		OPENAI_API_KEY: string;
-		YOUTUBE_API_KEY: string;
 		ALLUSERSPROFILE: string;
 		APPDATA: string;
 		ChocolateyInstall: string;
@@ -183,7 +183,9 @@ declare module '$env/dynamic/private' {
 		ComSpec: string;
 		DriverData: string;
 		EDITOR: string;
-		EFC_3460: string;
+		EFC_5928: string;
+		FPS_BROWSER_APP_PROFILE_STRING: string;
+		FPS_BROWSER_USER_PROFILE_STRING: string;
 		GIT_ASKPASS: string;
 		HOME: string;
 		HOMEDRIVE: string;
