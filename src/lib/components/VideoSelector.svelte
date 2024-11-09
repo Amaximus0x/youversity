@@ -34,9 +34,13 @@
     async function fetchVideosForModule(searchPrompt: string, moduleIndex: number, retryCount = 0) {
       const maxRetries = 3;
       try {
+        if (!searchPrompt?.trim()) {
+          throw new Error('Search prompt is required');
+        }
+
         const moduleTitle = courseStructure.OG_Module_Title[moduleIndex];
         const response = await fetch(
-          `/api/search-videos?query=${encodeURIComponent(searchPrompt)}&moduleTitle=${encodeURIComponent(moduleTitle)}&moduleIndex=${moduleIndex}&retry=${retryCount}`,
+          `/api/search-videos?query=${encodeURIComponent(searchPrompt.trim())}&moduleTitle=${encodeURIComponent(moduleTitle)}&moduleIndex=${moduleIndex}&retry=${retryCount}`,
           {
             headers: {
               'Accept': 'application/json',
@@ -45,14 +49,17 @@
           }
         );
         
-        if (!response.ok) throw new Error('Failed to fetch videos');
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Failed to fetch videos');
+        }
         const data = await response.json();
         
         const hasRealVideos = data.videos.some(v => v.videoId !== '');
         
         if (!hasRealVideos && retryCount < maxRetries) {
           console.log(`Retrying module ${moduleIndex + 1}, attempt ${retryCount + 1}`);
-          await new Promise(resolve => setTimeout(resolve, 1000)); // Add delay between retries
+          await new Promise(resolve => setTimeout(resolve, 1000));
           return fetchVideosForModule(searchPrompt, moduleIndex, retryCount + 1);
         }
         
@@ -69,7 +76,9 @@
           await new Promise(resolve => setTimeout(resolve, 1000));
           return fetchVideosForModule(searchPrompt, moduleIndex, retryCount + 1);
         }
-        error = `Failed to fetch videos for module ${moduleIndex + 1}`;
+        moduleVideos[moduleIndex] = Array(3).fill(createPlaceholderVideo());
+        moduleVideos = [...moduleVideos];
+        error = `Failed to fetch videos for module ${moduleIndex + 1}: ${err.message}`;
       }
     }
   

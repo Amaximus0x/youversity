@@ -1,5 +1,5 @@
 import { j as json } from "../../../../chunks/index2.js";
-import { O as OPENAI_API_KEY } from "../../../../chunks/private.js";
+import { d as private_env } from "../../../../chunks/shared-server.js";
 import axios from "axios";
 async function generateCourse(User_Course_Input) {
   try {
@@ -17,7 +17,7 @@ async function generateCourse(User_Course_Input) {
       messages: [{ role: "user", content: prompt }]
     }, {
       headers: {
-        "Authorization": `Bearer ${OPENAI_API_KEY}`,
+        "Authorization": `Bearer ${private_env.OPENAI_API_KEY}`,
         "Content-Type": "application/json"
       }
     });

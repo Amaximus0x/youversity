@@ -1,6 +1,6 @@
 import { d as derived, w as writable } from "./index3.js";
 import { initializeApp } from "firebase/app";
-import { getFirestore, enableIndexedDbPersistence, query, collection, where, getDocs } from "firebase/firestore";
+import { getFirestore } from "firebase/firestore";
 import { getAuth, setPersistence, browserLocalPersistence } from "firebase/auth";
 const firebaseConfig = {
   apiKey: "AIzaSyAOzl4NcFW95BEhRw-t3meFAyzfCo-vZIs",
@@ -13,23 +13,9 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
-async function initializePersistence() {
-  try {
-    await enableIndexedDbPersistence(db);
-  } catch (err) {
-    if (err.code === "failed-precondition") {
-      console.warn("Multiple tabs open, persistence can only be enabled in one tab at a time.");
-    } else if (err.code === "unimplemented") {
-      console.warn("The current browser doesn't support persistence.");
-    }
-  }
-  try {
-    await setPersistence(auth, browserLocalPersistence);
-  } catch (error) {
-    console.error("Auth persistence error:", error);
-  }
-}
-initializePersistence();
+setPersistence(auth, browserLocalPersistence).catch((error) => {
+  console.error("Auth persistence error:", error);
+});
 async function getUserCourses(userId) {
   try {
     const q = query(collection(db, "courses"), where("userId", "==", userId));

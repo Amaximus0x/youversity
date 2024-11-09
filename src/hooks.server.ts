@@ -5,10 +5,16 @@ import { adminApp } from '$lib/server/firebase-admin';
 export const handle: Handle = async ({ event, resolve }) => {
   try {
     const token = event.cookies.get('firebase-token');
-    if (token) {
+    
+    if (token && adminApp.auth) {  // Check if auth is available
       const auth = getAuth(adminApp);
-      const decodedToken = await auth.verifyIdToken(token);
-      event.locals.user = decodedToken;
+      try {
+        const decodedToken = await auth.verifyIdToken(token);
+        event.locals.user = decodedToken;
+      } catch (tokenError) {
+        console.error('Token verification error:', tokenError);
+        event.locals.user = null;
+      }
     }
   } catch (error) {
     console.error('Auth error in hooks:', error);

@@ -5,7 +5,8 @@
     "src": ".svelte-kit/generated/server/internal.js",
     "isEntry": true,
     "imports": [
-      "_internal.js"
+      "_internal.js",
+      "_shared-server.js"
     ]
   },
   "_auth.js": {
@@ -38,7 +39,7 @@
     "file": "chunks/firebase-admin.js",
     "name": "firebase-admin",
     "imports": [
-      "_private.js"
+      "_shared-server.js"
     ]
   },
   "_guards.js": {
@@ -68,15 +69,16 @@
     "file": "chunks/internal.js",
     "name": "internal",
     "imports": [
-      "_index.js"
+      "_index.js",
+      "_shared-server.js"
     ],
     "dynamicImports": [
       "src/hooks.server.ts"
     ]
   },
-  "_private.js": {
-    "file": "chunks/private.js",
-    "name": "private"
+  "_shared-server.js": {
+    "file": "chunks/shared-server.js",
+    "name": "shared-server"
   },
   "node_modules/@sveltejs/kit/src/runtime/components/svelte-5/error.svelte": {
     "file": "entries/fallbacks/error.svelte.js",
@@ -98,7 +100,8 @@
       "_internal.js",
       "_index2.js",
       "_exports.js",
-      "_index3.js"
+      "_index3.js",
+      "_shared-server.js"
     ]
   },
   "src/hooks.server.ts": {
@@ -170,7 +173,7 @@
     "isEntry": true,
     "imports": [
       "_index2.js",
-      "_private.js"
+      "_shared-server.js"
     ]
   },
   "src/routes/api/generate-course/+server.ts": {
@@ -180,7 +183,7 @@
     "isEntry": true,
     "imports": [
       "_index2.js",
-      "_private.js"
+      "_shared-server.js"
     ]
   },
   "src/routes/api/search-videos/+server.ts": {

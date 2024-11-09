@@ -12,7 +12,23 @@ const handle = async ({ event, resolve }) => {
     console.error("Auth error in hooks:", error);
     event.locals.user = null;
   }
-  return resolve(event);
+  if (event.request.method === "OPTIONS") {
+    return new Response(null, {
+      headers: {
+        "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Headers": "*"
+      }
+    });
+  }
+  const response = await resolve(event);
+  const newHeaders = new Headers(response.headers);
+  newHeaders.set("Access-Control-Allow-Origin", "*");
+  return new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers: newHeaders
+  });
 };
 export {
   handle

@@ -1,4 +1,5 @@
 import { H as HYDRATION_ERROR, g as get_next_sibling, d as define_property, s as set_active_reaction, a as set_active_effect, i as is_array, b as active_reaction, c as active_effect, e as init_operations, f as get_first_child, h as HYDRATION_START, j as HYDRATION_END, k as hydration_failed, l as clear_text_content, m as array_from, n as effect_root, o as create_text, p as branch, q as push, r as pop, t as component_context, u as get, v as set, w as flush_sync, x as mutable_source, y as render, z as push$1, A as setContext, B as pop$1 } from "./index.js";
+import "./shared-server.js";
 let base = "";
 let assets = base;
 const initial = { base, assets };
@@ -12,16 +13,6 @@ function reset() {
 }
 function set_assets(path) {
   assets = initial.assets = path;
-}
-let public_env = {};
-let safe_public_env = {};
-function set_private_env(environment) {
-}
-function set_public_env(environment) {
-  public_env = environment;
-}
-function set_safe_public_env(environment) {
-  safe_public_env = environment;
 }
 function hydration_mismatch(location) {
   {
@@ -473,7 +464,7 @@ const options = {
   root,
   service_worker: false,
   templates: {
-    app: ({ head, body, assets: assets2, nonce, env }) => '<!doctype html>\n<html lang="en">\n	<head>\n		<meta charset="utf-8" />\n		<link rel="icon" href="' + assets2 + '/favicon.png" />\n		<meta name="viewport" content="width=device-width, initial-scale=1" />\n		' + head + '\n	</head>\n	<body data-sveltekit-preload-data="hover">\n		<div style="display: contents">' + body + "</div>\n	</body>\n</html>\n",
+    app: ({ head, body, assets: assets2, nonce, env }) => '<!DOCTYPE html>\n<html lang="en">\n	<head>\n		<meta charset="utf-8" />\n		<link rel="icon" href="' + assets2 + '/favicon.png" />\n		<meta name="viewport" content="width=device-width" />\n		' + head + '\n	</head>\n	<body data-sveltekit-preload-data="hover">\n		<div style="display: contents">' + body + "</div>\n	</body>\n</html>\n",
     error: ({ status, message }) => '<!doctype html>\n<html lang="en">\n	<head>\n		<meta charset="utf-8" />\n		<title>' + message + `</title>
 
 		<style>
@@ -545,7 +536,7 @@ const options = {
 		<div class="error">
 			<span class="status">` + status + '</span>\n			<div class="message">\n				<h1>' + message + "</h1>\n			</div>\n		</div>\n	</body>\n</html>\n"
   },
-  version_hash: "duvjtr"
+  version_hash: "129nss4"
 };
 async function get_hooks() {
   return {
@@ -557,18 +548,13 @@ export {
   base as b,
   read_implementation as c,
   options as d,
-  set_private_env as e,
-  prerendering as f,
-  set_public_env as g,
-  get_hooks as h,
-  set_safe_public_env as i,
-  set_read_implementation as j,
-  set_assets as k,
-  set_building as l,
-  set_manifest as m,
-  set_prerendering as n,
+  set_assets as e,
+  set_building as f,
+  get_hooks as g,
+  set_manifest as h,
+  set_prerendering as i,
   override as o,
-  public_env as p,
+  prerendering as p,
   reset as r,
-  safe_public_env as s
+  set_read_implementation as s
 };
