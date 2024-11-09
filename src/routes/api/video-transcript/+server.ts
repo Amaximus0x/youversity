@@ -5,63 +5,76 @@ async function fetchTranscriptFromYoutube(videoId: string) {
   try {
     const response = await axios.get(`https://youtube.com/watch?v=${videoId}`, {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
         'Accept-Language': 'en-US,en;q=0.9',
         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
         'Cache-Control': 'no-cache',
         'Pragma': 'no-cache',
-        'Referer': 'https://www.youtube.com/'
+        'Referer': 'https://www.youtube.com/',
+        'sec-ch-ua': '"Not_A Brand";v="8", "Chromium";v="120"',
+        'sec-ch-ua-mobile': '?0',
+        'sec-ch-ua-platform': '"Windows"',
+        'sec-fetch-dest': 'document',
+        'sec-fetch-mode': 'navigate',
+        'sec-fetch-site': 'none',
+        'sec-fetch-user': '?1'
       },
-      timeout: 10000 // 10 second timeout
+      timeout: 15000,
+      maxRedirects: 5
     });
 
     const html = response.data;
     
-    // Extract the ytInitialPlayerResponse
-    const match = html.match(/ytInitialPlayerResponse\s*=\s*({.+?});/);
-    if (!match) {
-      throw new Error('Could not find player response');
-    }
+    // Try multiple patterns to extract player response
+    const patterns = [
+      /ytInitialPlayerResponse\s*=\s*({.+?});/,
+      /\"captions\":{\"playerCaptionsTracklistRenderer\":(.+?)}}/,
+      /\"captionTracks\":(\[.+?\])/
+    ];
 
-    const playerResponse = JSON.parse(match[1]);
-    const captionTracks = playerResponse?.captions?.playerCaptionsTracklistRenderer?.captionTracks;
+    let playerResponse;
+    let captionTracks;
+
+    for (const pattern of patterns) {
+      const match = html.match(pattern);
+      if (match) {
+        try {
+          const data = JSON.parse(match[1]);
+          if (data.captions?.playerCaptionsTracklistRenderer?.captionTracks) {
+            captionTracks = data.captions.playerCaptionsTracklistRenderer.captionTracks;
+            break;
+          } else if (Array.isArray(data)) {
+            captionTracks = data;
+            break;
+          }
+        } catch (e) {
+          console.warn('Failed to parse match:', e);
+          continue;
+        }
+      }
+    }
 
     if (!captionTracks || captionTracks.length === 0) {
       throw new Error('No captions available');
     }
 
-    // First try to get manual English captions
-    let captionTrack = captionTracks.find(
-      (track: any) => track.languageCode === 'en' && !track.kind
+    // Try multiple caption types
+    const captionTrack = captionTracks.find(
+      (track: any) => (track.languageCode === 'en' && !track.kind) ||
+                     (track.languageCode === 'en' && track.kind === 'asr') ||
+                     track.vssId?.includes('en')
     );
-
-    // Fall back to auto-generated captions
-    if (!captionTrack) {
-      captionTrack = captionTracks.find(
-        (track: any) => track.languageCode === 'en' && track.kind === 'asr'
-      );
-    }
 
     if (!captionTrack?.baseUrl) {
       throw new Error('No English captions found');
     }
 
-    // Fetch the actual transcript
-    const transcriptResponse = await axios.get(captionTrack.baseUrl);
-    const transcript = transcriptResponse.data;
-    
-    // Parse the XML transcript
-    const textContent = transcript.replace(/<text[^>]*>(.*?)<\/text>/g, '$1 ')
-      .replace(/&amp;/g, '&')
-      .replace(/&quot;/g, '"')
-      .replace(/&#39;/g, "'")
-      .replace(/&lt;/g, '<')
-      .replace(/&gt;/g, '>')
-      .replace(/\n/g, ' ')
-      .replace(/\s+/g, ' ')
-      .trim();
+    const transcriptResponse = await axios.get(captionTrack.baseUrl, {
+      timeout: 10000,
+      maxRedirects: 5
+    });
 
-    return textContent;
+    return transcriptResponse.data;
   } catch (error) {
     console.error('Error fetching transcript:', error);
     throw error;

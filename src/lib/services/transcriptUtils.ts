@@ -19,7 +19,7 @@ export async function getVideoTranscript(videoId: string, maxRetries = 3): Promi
       if (data.transcript === 'No transcript available for this video') {
         console.log(`Attempt ${attempt + 1}: No transcript for ${videoId}`);
         if (attempt < maxRetries - 1) {
-          await delay(1000 * (attempt + 1));
+          await delay(2000 * Math.pow(2, attempt));
           continue;
         }
       }
@@ -28,7 +28,7 @@ export async function getVideoTranscript(videoId: string, maxRetries = 3): Promi
     } catch (error) {
       console.error(`Attempt ${attempt + 1}: Error fetching transcript for ${videoId}:`, error);
       if (attempt < maxRetries - 1) {
-        await delay(1000 * (attempt + 1));
+        await delay(2000 * Math.pow(2, attempt));
         continue;
       }
     }
