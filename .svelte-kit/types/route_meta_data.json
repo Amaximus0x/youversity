@@ -24,6 +24,7 @@
 	"/api/video-transcript": [
 		"src/routes/api/video-transcript/+server.ts"
 	],
+	"/course/[id]": [],
 	"/create-course": [
 		"src/routes/create-course/+page.server.ts"
 	],

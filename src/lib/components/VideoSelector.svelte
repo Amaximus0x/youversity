@@ -143,31 +143,32 @@
         
         console.log('Selected videos:', selectedVideoObjects);
         
-        // console.log('Calling create-final-course API...');
-        // const response = await fetch('/api/create-final-course', {
-        //   method: 'POST',
-        //   headers: {
-        //     'Content-Type': 'application/json',
-        //   },
-        //   body: JSON.stringify({
-        //     courseStructure,
-        //     selectedVideos: selectedVideoObjects
-        //   }),
-        // });
-        
-        // if (!response.ok) {
-        //   const errorData = await response.json();
-        //   throw new Error(errorData.error || 'Failed to create final course');
-        // }
-        
-        // const finalCourse = await response.json();
-        // console.log('Final course data:', finalCourse);
-        
-        // console.log('Saving to Firebase...');
-        // const courseId = await saveCourseToFirebase($user.uid, finalCourse);
-        // console.log('Course saved with ID:', courseId);
-        
-        // goto('/my-courses');
+        console.log('Calling create-final-course API...');
+        const response = await fetch('/api/create-final-course', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            courseStructure,
+            selectedVideos: selectedVideoObjects
+          }),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Failed to create final course');
+        }
+
+        const { course: finalCourse } = await response.json();
+        console.log('Final course data:', finalCourse);
+
+        console.log('Saving to Firebase...');
+        const courseId = await saveCourseToFirebase($user.uid, finalCourse);
+        console.log('Course saved with ID:', courseId);
+
+        // Navigate to course details page
+        goto(`/course/${courseId}`);
       } catch (err) {
         console.error('Save course error:', err);
         error = err instanceof Error ? err.message : 'An unknown error occurred';
