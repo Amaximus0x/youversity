@@ -86,12 +86,13 @@ export const GetListByKeyword = async (
 
     for (const query of searchQueries) {
       try {
-        const endpoint = `${youtubeEndpoint}/results?search_query=${encodeURIComponent(query)}&sp=EgIQAQ%3D%3D`;
+        const endpoint = `${youtubeEndpoint}/results?search_query=${encodeURIComponent(query)}&sp=EgIQAQ%3D%3D&hl=en&gl=US`;
         
         const response = await axios.get(endpoint, {
           headers: {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
             'Accept-Language': 'en-US,en;q=0.9',
+            'Cookie': 'PREF=hl=en&gl=US'
           },
           timeout: 5000
         });
@@ -128,6 +129,7 @@ export const GetListByKeyword = async (
             })
             .filter(video => 
               video && // Ensure video exists
+              isEnglishVideo(video) && // Filter for English videos
               !usedVideoIds.has(video.videoId) && // Check for duplicates using videoId
               !allVideos.some(v => v.videoId === video.videoId) && // Double-check against current results
               video.length >= 3 && 
@@ -526,4 +528,30 @@ async function extractVideoMetadata(videoUrl: string): Promise<VideoItem> {
     console.error('Error extracting video metadata:', error);
     throw error;
   }
+}
+
+function isEnglishVideo(video: VideoItem): boolean {
+  // Check title and description for common non-English indicators
+  const text = `${video.title} ${video.description}`.toLowerCase();
+  
+  // Common non-English language indicators in titles
+  const nonEnglishIndicators = [
+    '[한국어]', '[日本語]', '[中文]', '[español]', '[français]', '[deutsch]',
+    '(한국어)', '(日本語)', '(中文)', '(español)', '(français)', '(deutsch)',
+    'subtitles', 'субтитры', 'مترجم', '字幕'
+  ];
+
+  // Check for non-English indicators
+  if (nonEnglishIndicators.some(indicator => text.includes(indicator))) {
+    return false;
+  }
+
+  // Check if title uses primarily Latin characters
+  const latinCharRegex = /^[\x00-\x7F\s]*$/;
+  const nonLatinCharPercentage = video.title
+    .split('')
+    .filter(char => !latinCharRegex.test(char)).length / video.title.length;
+
+  // If more than 15% of characters are non-Latin, likely not English
+  return nonLatinCharPercentage < 0.15;
 }
