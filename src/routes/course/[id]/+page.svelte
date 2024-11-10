@@ -3,13 +3,18 @@
   import { page } from '$app/stores';
   import { goto } from '$app/navigation';
   import { user } from '$lib/stores/auth';
-  import type { FinalCourseStructure } from '$lib/types/course';
+  import type { FinalCourseStructure, Quiz, QuizQuestion } from '$lib/types/course';
   import { getUserCourse, updateUserCourse } from '$lib/firebase';
 
   let courseDetails: FinalCourseStructure | null = null;
   let loading = true;
   let error: string | null = null;
   let playlistUrl: string | null = null;
+
+  let showQuiz = false;
+  let currentQuiz: Quiz | null = null;
+  let selectedAnswers: { [key: string]: string } = {};
+  let quizResults: { [key: string]: boolean } = {};
 
   const handleCreatePlaylist = () => {
     if (courseDetails) {
@@ -31,6 +36,26 @@
     } catch (err) {
       console.error('Error updating module completion:', err);
     }
+  }
+
+  function startQuiz(quiz: Quiz | undefined, moduleIndex?: number) {
+    if (!quiz || !quiz.quiz || quiz.quiz.length === 0) {
+      console.error('Invalid quiz data');
+      return;
+    }
+    currentQuiz = quiz;
+    selectedAnswers = {};
+    quizResults = {};
+    showQuiz = true;
+  }
+
+  function checkAnswers() {
+    if (!currentQuiz || !currentQuiz.quiz) return;
+    
+    quizResults = {};
+    currentQuiz.quiz.forEach((question, index) => {
+      quizResults[index] = selectedAnswers[index] === question.answer;
+    });
   }
 
   onMount(async () => {
@@ -101,8 +126,75 @@
               ></iframe>
             </div>
           {/if}
+
+          <div class="mt-4">
+            <button
+              class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+              on:click={() => startQuiz(courseDetails?.Final_Module_Quiz?.[index], index)}
+            >
+              Take Module Quiz
+            </button>
+          </div>
         </section>
       {/each}
+
+      <div class="mt-8">
+        <h2 class="text-2xl font-semibold mb-4">Final Course Quiz</h2>
+        <button
+          class="bg-green-500 text-white px-6 py-3 rounded-lg hover:bg-green-600"
+          on:click={() => startQuiz(courseDetails?.Final_Course_Quiz)}
+        >
+          Take Final Quiz
+        </button>
+      </div>
+
+      {#if showQuiz && currentQuiz}
+        <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
+          <div class="bg-white rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <h3 class="text-xl font-semibold mb-4">Quiz</h3>
+            
+            {#each currentQuiz.quiz as question, index}
+              <div class="mb-6">
+                <p class="font-medium mb-2">{index + 1}. {question.question}</p>
+                
+                {#each Object.entries(question.options) as [key, value]}
+                  <label class="block mb-2">
+                    <input
+                      type="radio"
+                      name="question{index}"
+                      value={key}
+                      bind:group={selectedAnswers[index]}
+                      class="mr-2"
+                    />
+                    {value}
+                  </label>
+                {/each}
+
+                {#if quizResults[index] !== undefined}
+                  <p class={quizResults[index] ? "text-green-500" : "text-red-500"}>
+                    {quizResults[index] ? "Correct!" : "Incorrect"}
+                  </p>
+                {/if}
+              </div>
+            {/each}
+
+            <div class="flex justify-end gap-4">
+              <button
+                class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                on:click={checkAnswers}
+              >
+                Check Answers
+              </button>
+              <button
+                class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
+                on:click={() => showQuiz = false}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      {/if}
 
       <div class="mt-8">
         <h2 class="text-2xl font-semibold mb-4">Course Conclusion</h2>

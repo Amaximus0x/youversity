@@ -143,6 +143,16 @@
         
         console.log('Selected videos:', selectedVideoObjects);
         
+        const moduleTranscripts = [];
+
+        transcriptResults.forEach((result, index) => {
+          if (result.status === 'fulfilled') {
+            moduleTranscripts[index] = result.value.transcript;
+          } else {
+            moduleTranscripts[index] = 'Failed to fetch transcript';
+          }
+        });
+        
         console.log('Calling create-final-course API...');
         const response = await fetch('/api/create-final-course', {
           method: 'POST',
@@ -151,7 +161,8 @@
           },
           body: JSON.stringify({
             courseStructure,
-            selectedVideos: selectedVideoObjects
+            selectedVideos: selectedVideoObjects,
+            moduleTranscripts
           }),
         });
 
