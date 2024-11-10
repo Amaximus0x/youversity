@@ -22,6 +22,8 @@
   
     let playingVideoId: string | null = null;
   
+    let moduleTranscripts: string[] = [];
+  
     const createPlaceholderVideo = (): VideoItem => ({
       videoId: '',
       videoUrl: '',
@@ -95,6 +97,9 @@
           throw new Error('Please select a video for each module');
         }
 
+        // Reset moduleTranscripts array to match the number of modules
+        moduleTranscripts = new Array(selectedVideos.length).fill('');
+
         // Fetch transcripts with better error handling and retries
         console.log('Fetching transcripts...');
         const transcriptPromises = selectedVideos.map(async (index, i) => {
@@ -121,16 +126,25 @@
 
         const transcriptResults = await Promise.allSettled(transcriptPromises);
 
-        // Log transcript results
+        // Clean and log transcript results
         transcriptResults.forEach((result, index) => {
           if (result.status === 'fulfilled') {
-            console.log(`Module ${index + 1} Transcript:`, {
+            const transcript = result.value.transcript;
+            
+            // Log transcript details for debugging
+            console.log(`Module ${index + 1} Transcript details:`, {
               videoId: result.value.videoId,
               title: result.value.title,
-              transcript: result.value.transcript.substring(0, 100) + '...'
+              transcript: result.value.transcript.substring(0, 100) + '...',
+              length: transcript.length,
+              isClean: !transcript.includes('<text'),
+              // preview: transcript.substring(0, 100)
             });
+
+            moduleTranscripts[index] = transcript;
           } else {
             console.error(`Failed to fetch transcript for module ${index + 1}:`, result.reason);
+            moduleTranscripts[index] = 'Failed to fetch transcript';
           }
         });
         
@@ -143,43 +157,27 @@
         
         console.log('Selected videos:', selectedVideoObjects);
         
-        const moduleTranscripts = [];
-
-        transcriptResults.forEach((result, index) => {
-          if (result.status === 'fulfilled') {
-            moduleTranscripts[index] = result.value.transcript;
-          } else {
-            moduleTranscripts[index] = 'Failed to fetch transcript';
-          }
-        });
-        
         console.log('Calling create-final-course API...');
         const response = await fetch('/api/create-final-course', {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json',
+            'Content-Type': 'application/json'
           },
           body: JSON.stringify({
             courseStructure,
-            selectedVideos: selectedVideoObjects,
+            selectedVideos: selectedVideos.map((index, i) => moduleVideos[i][index]),
             moduleTranscripts
-          }),
+          })
         });
 
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error || 'Failed to create final course');
+        const data = await response.json();
+
+        if (!data.success) {
+          throw new Error(data.error || 'Failed to create final course');
         }
 
-        const { course: finalCourse } = await response.json();
-        console.log('Final course data:', finalCourse);
-
-        // console.log('Saving to Firebase...');
-        // const courseId = await saveCourseToFirebase($user.uid, finalCourse);
-        // console.log('Course saved with ID:', courseId);
-
-        // // Navigate to course details page
-        // goto(`/course/${courseId}`);
+        console.log('Final course data:', data.course);
+        return data.course;
       } catch (err) {
         console.error('Save course error:', err);
         error = err instanceof Error ? err.message : 'An unknown error occurred';

@@ -22,17 +22,17 @@
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Cross-Origin-Opener-Policy': 'same-origin'
         },
-        body: JSON.stringify({ objective: courseObjective }),
+        body: JSON.stringify({ courseInput: courseObjective }),
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to generate course');
+      const data = await response.json();
+
+      if (!data.success) {
+        throw new Error(data.error || 'Failed to generate course');
       }
 
-      courseStructure = await response.json();
+      courseStructure = data.courseStructure;
       selectedVideos = new Array(courseStructure.OG_Module_Title.length).fill(0);
     } catch (err) {
       console.error('Error building course:', err);

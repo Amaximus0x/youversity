@@ -83,25 +83,30 @@ async function fetchTranscriptFromYoutube(videoId: string) {
 
 async function parseTranscriptXml(transcriptXml: string): string {
   try {
-    // Check if the response is XML
+    // First, handle XML format
     if (transcriptXml.includes('<?xml')) {
-      // Extract text content between <transcript> tags
       const match = transcriptXml.match(/<transcript>(.*?)<\/transcript>/s);
       if (match && match[1]) {
-        return match[1].trim()
-          .replace(/\s+/g, ' ') // Replace multiple spaces with single space
-          .replace(/&amp;/g, '&')
-          .replace(/&quot;/g, '"')
-          .replace(/&#39;/g, "'")
-          .replace(/&lt;/g, '<')
-          .replace(/&gt;/g, '>');
+        transcriptXml = match[1];
       }
     }
-    // If not XML, return the original text
-    return transcriptXml;
+
+    // Clean the transcript regardless of format
+    return transcriptXml
+      .replace(/<text[^>]*>/g, '') // Remove opening text tags
+      .replace(/<\/text>/g, ' ') // Replace closing text tags with space
+      .replace(/start="[^"]*"/g, '') // Remove start attributes
+      .replace(/dur="[^"]*"/g, '') // Remove dur attributes
+      .replace(/\s+/g, ' ') // Normalize whitespace
+      .replace(/&amp;/g, '&')
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'")
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .trim();
   } catch (error) {
-    console.error('Error parsing transcript XML:', error);
-    return transcriptXml;
+    console.error('Error parsing transcript:', error);
+    return 'No transcript available for this video';
   }
 }
 
