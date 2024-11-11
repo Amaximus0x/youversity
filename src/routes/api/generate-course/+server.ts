@@ -2,6 +2,7 @@ import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { env } from '$env/dynamic/private';
 import axios from 'axios';
+import type { CourseStructure } from '$lib/types/course';
 
 export const POST: RequestHandler = async ({ request }) => {
   try {
@@ -37,17 +38,22 @@ export const POST: RequestHandler = async ({ request }) => {
 };
 
 async function generateCourse(User_Course_Input: string): Promise<CourseStructure> {
-  try {
-    const prompt = `Create a structured course outline for: "${User_Course_Input}"
-    Format the response as follows:
-    Course Title: [title]
-    Course Objective: [objective]
-    Module 1 Title: [title]
-    Module 1 Search Prompt: [search prompt]
-    Module 2 Title: [title]
-    Module 2 Search Prompt: [search prompt]
-    ... (continue for up to 10 modules)`;
+  const prompt = `Build a 10 module course plan based on the input below, with course title and individual module titles. For each module, include one sentence search prompt for youtube to find the best video match for that module. Do not include "Search Prompt:" before each search prompt.
 
+Here is the course objective - simplify if needed:
+
+${User_Course_Input}
+
+Course Title
+Course Objective
+Module 1 Title
+Module 1 Search Prompt
+Module 2 Title
+Module 2 Search Prompt
+.....`;
+
+  try {
+    console.log('Sending request to OpenAI API');
     const response = await axios.post(
       'https://api.openai.com/v1/chat/completions',
       {
@@ -63,34 +69,28 @@ async function generateCourse(User_Course_Input: string): Promise<CourseStructur
       }
     );
 
+    console.log('Received response from OpenAI API');
     const content = response.data.choices[0].message.content;
-    const lines = content.split('\n').filter(line => line.trim());
+    const lines = content.split('\n').filter(line => line.trim() !== '');
 
     const courseStructure: CourseStructure = {
-      OG_Course_Title: '',
-      OG_Course_Objective: '',
+      OG_Course_Title: lines[0].replace(/^Course Title:\s*/, ''),
+      OG_Course_Objective: lines[1].replace(/^Course Objective:\s*/, ''),
       OG_Module_Title: [],
       OG_Module_YouTube_Search_Prompt: [],
     };
 
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i]?.trim() || '';
+    for (let i = 2; i < lines.length && courseStructure.OG_Module_Title.length < 10; i += 2) {
+      const moduleTitle = lines[i]
+        .replace(/^Module \d+ Title:\s*/, '')
+        .replace(/^Module \d+:\s*/, '');
+      const searchPrompt = lines[i + 1]
+        .replace(/^Module \d+ Search Prompt:\s*/, '')
+        .replace(/^Search Prompt:\s*/, '')
+        .replace(/["\\\n]/g, '');
       
-      if (line.startsWith('Course Title:')) {
-        courseStructure.OG_Course_Title = line.replace('Course Title:', '').trim();
-      } else if (line.startsWith('Course Objective:')) {
-        courseStructure.OG_Course_Objective = line.replace('Course Objective:', '').trim();
-      } else if (line.match(/^Module \d+ Title:/)) {
-        const moduleTitle = line.replace(/^Module \d+ Title:\s*/, '').trim();
-        const nextLine = lines[i + 1]?.trim() || '';
-        const searchPrompt = nextLine.replace(/^Module \d+ Search Prompt:\s*/, '').trim();
-        
-        if (moduleTitle) {
-          courseStructure.OG_Module_Title.push(moduleTitle);
-          courseStructure.OG_Module_YouTube_Search_Prompt.push(searchPrompt);
-        }
-        i++; // Skip the search prompt line
-      }
+      courseStructure.OG_Module_Title.push(moduleTitle);
+      courseStructure.OG_Module_YouTube_Search_Prompt.push(searchPrompt);
     }
 
     if (!courseStructure.OG_Course_Title || !courseStructure.OG_Course_Objective || courseStructure.OG_Module_Title.length === 0) {
@@ -99,7 +99,10 @@ async function generateCourse(User_Course_Input: string): Promise<CourseStructur
 
     return courseStructure;
   } catch (error) {
-    console.error('Error generating course:', error);
-    throw new Error('Failed to generate course structure');
+    console.error('Error in generateCourse:', error);
+    if (error.response) {
+      console.error('OpenAI API response:', error.response.data);
+    }
+    throw new Error(`Failed to generate course: ${error.message}`);
   }
 }
