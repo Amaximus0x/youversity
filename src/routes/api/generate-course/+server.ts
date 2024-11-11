@@ -1,8 +1,40 @@
 import { json } from '@sveltejs/kit';
-import { env } from '$env/dynamic/private';
 import type { RequestHandler } from './$types';
+import { env } from '$env/dynamic/private';
 import axios from 'axios';
-import type { CourseStructure } from '$lib/types/course';
+
+export const POST: RequestHandler = async ({ request }) => {
+  try {
+    const { courseInput } = await request.json();
+
+    if (!courseInput) {
+      return json({ 
+        success: false, 
+        error: 'Course input is required' 
+      }, { status: 400 });
+    }
+
+    try {
+      const courseStructure = await generateCourse(courseInput);
+      return json({ 
+        success: true, 
+        courseStructure 
+      });
+    } catch (error) {
+      console.error('Error generating course:', error);
+      return json({ 
+        success: false, 
+        error: error.message 
+      }, { status: 500 });
+    }
+  } catch (error) {
+    console.error('Error processing request:', error);
+    return json({ 
+      success: false, 
+      error: 'Invalid request data' 
+    }, { status: 400 });
+  }
+};
 
 async function generateCourse(User_Course_Input: string): Promise<CourseStructure> {
   try {
@@ -16,15 +48,20 @@ async function generateCourse(User_Course_Input: string): Promise<CourseStructur
     Module 2 Search Prompt: [search prompt]
     ... (continue for up to 10 modules)`;
 
-    const response = await axios.post('https://api.openai.com/v1/chat/completions', {
-      model: 'gpt-3.5-turbo',
-      messages: [{ role: 'user', content: prompt }],
-    }, {
-      headers: {
-        'Authorization': `Bearer ${env.OPENAI_API_KEY}`,
-        'Content-Type': 'application/json',
+    const response = await axios.post(
+      'https://api.openai.com/v1/chat/completions',
+      {
+        model: 'gpt-3.5-turbo',
+        messages: [{ role: 'user', content: prompt }],
+        temperature: 0.7,
       },
-    });
+      {
+        headers: {
+          'Authorization': `Bearer ${env.OPENAI_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+      }
+    );
 
     const content = response.data.choices[0].message.content;
     const lines = content.split('\n').filter(line => line.trim());
@@ -36,7 +73,6 @@ async function generateCourse(User_Course_Input: string): Promise<CourseStructur
       OG_Module_YouTube_Search_Prompt: [],
     };
 
-    // Extract course title and objective
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i]?.trim() || '';
       
@@ -57,20 +93,13 @@ async function generateCourse(User_Course_Input: string): Promise<CourseStructur
       }
     }
 
+    if (!courseStructure.OG_Course_Title || !courseStructure.OG_Course_Objective || courseStructure.OG_Module_Title.length === 0) {
+      throw new Error('Invalid course structure generated');
+    }
+
     return courseStructure;
   } catch (error) {
     console.error('Error generating course:', error);
-    throw error;
+    throw new Error('Failed to generate course structure');
   }
 }
-
-export const POST: RequestHandler = async ({ request }) => {
-  try {
-    const { objective } = await request.json();
-    const courseStructure = await generateCourse(objective);
-    return json(courseStructure);
-  } catch (error) {
-    console.error('Error generating course:', error);
-    return json({ error: 'Failed to generate course structure' }, { status: 500 });
-  }
-};

@@ -13,22 +13,37 @@ export interface SelectedVideos {
   [moduleIndex: number]: number;
 }
   
-  export interface FinalCourseStructure {
-    Final_Course_Title: string;
-    Final_Course_Objective: string;
-    Final_Course_Introduction: string;
-    Final_Module_Title: string[];
-    Final_Module_Objective: string[];
-    Final_Module_YouTube_Video_URL: string[];
-    Final_Course_Conclusion: string;
-    YouTube_Playlist_URL: string;
-  }
+export interface QuizQuestion {
+  question: string;
+  type: 'multiple-choice' | 'true/false';
+  options: {
+    [key: string]: string;
+  };
+  answer: string;
+}
+
+export interface Quiz {
+  quiz: QuizQuestion[];
+}
+
+export interface FinalCourseStructure {
+  Final_Course_Title: string;
+  Final_Course_Objective: string;
+  Final_Course_Introduction: string;
+  Final_Module_Title: string[];
+  Final_Module_Objective: string[];
+  Final_Module_YouTube_Video_URL: string[];
+  Final_Module_Quiz: Quiz[];
+  Final_Course_Quiz: Quiz;
+  Final_Course_Conclusion: string;
+  YouTube_Playlist_URL: string;
+}
   
-  export interface VideoItem {
-    videoId: string;
-    videoUrl: string;
-    title: string;
-    description: string;
-    length: number;
-    thumbnailUrl: string;
-  }
+export interface VideoItem {
+  videoId: string;
+  videoUrl: string;
+  title: string;
+  description: string;
+  length: number;
+  thumbnailUrl: string;
+}

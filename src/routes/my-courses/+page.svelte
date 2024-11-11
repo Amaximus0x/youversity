@@ -3,6 +3,7 @@
   import { user, isAuthenticated } from '$lib/stores/auth';
   import { saveCourseToFirebase, getUserCourses } from '$lib/firebase';
   import type { FinalCourseStructure } from '$lib/types/course';
+  import { goto } from '$app/navigation';
 
   let courses: (FinalCourseStructure & { id: string })[] = [];
   let loading = true;
@@ -26,6 +27,10 @@
       loading = false;
     }
   }
+
+  function handleCourseClick(courseId: string) {
+    goto(`/course/${courseId}`);
+  }
 </script>
 
 <div class="container mx-auto px-4 py-8">
@@ -48,10 +53,17 @@
   {:else}
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {#each courses as course}
-        <div class="border rounded-lg p-6 hover:shadow-lg transition-shadow">
-          <h2 class="text-xl font-semibold mb-2">{course.Final_Course_Title}</h2>
+        <button
+          on:click={() => handleCourseClick(course.id)}
+          class="text-left border rounded-lg p-6 hover:shadow-lg transition-all duration-200 hover:scale-102 bg-white"
+        >
+          <h2 class="text-xl font-semibold mb-2 text-blue-600">{course.Final_Course_Title}</h2>
           <p class="text-gray-600 mb-4">{course.Final_Course_Objective}</p>
-        </div>
+          <div class="flex justify-between items-center text-sm text-gray-500">
+            <span>{course.Final_Module_Title.length} Modules</span>
+            <span class="text-blue-500 hover:text-blue-700">View Course →</span>
+          </div>
+        </button>
       {/each}
     </div>
   {/if}

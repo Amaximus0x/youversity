@@ -1,6 +1,6 @@
 import { initializeApp } from 'firebase/app';
-import { getFirestore } from 'firebase/firestore';
-import { getAuth, setPersistence, browserLocalPersistence } from 'firebase/auth';
+import { getFirestore, collection, addDoc, query, where, getDocs, doc, getDoc, updateDoc } from 'firebase/firestore';
+import { getAuth, setPersistence, browserLocalPersistence, signInWithPopup, GoogleAuthProvider, signOut } from 'firebase/auth';
 
 const firebaseConfig = {
   apiKey: "AIzaSyAOzl4NcFW95BEhRw-t3meFAyzfCo-vZIs",
@@ -69,5 +69,49 @@ export async function getUserCourses(userId: string) {
   } catch (error) {
     console.error('Error fetching user courses:', error);
     throw new Error('Failed to fetch courses');
+  }
+}
+
+export async function getUserCourse(userId: string, courseId: string) {
+  try {
+    const courseRef = doc(db, 'courses', courseId);
+    const courseSnap = await getDoc(courseRef);
+    
+    if (!courseSnap.exists()) {
+      throw new Error('Course not found');
+    }
+
+    const courseData = courseSnap.data();
+    if (courseData.userId !== userId) {
+      throw new Error('Unauthorized access to course');
+    }
+
+    return {
+      id: courseSnap.id,
+      ...courseData
+    };
+  } catch (error) {
+    console.error('Error fetching course:', error);
+    throw new Error('Failed to fetch course');
+  }
+}
+
+export async function updateUserCourse(userId: string, courseId: string, courseData: any) {
+  try {
+    const courseRef = doc(db, 'courses', courseId);
+    const courseSnap = await getDoc(courseRef);
+    
+    if (!courseSnap.exists()) {
+      throw new Error('Course not found');
+    }
+
+    if (courseSnap.data().userId !== userId) {
+      throw new Error('Unauthorized access to course');
+    }
+
+    await updateDoc(courseRef, courseData);
+  } catch (error) {
+    console.error('Error updating course:', error);
+    throw new Error('Failed to update course');
   }
 } 

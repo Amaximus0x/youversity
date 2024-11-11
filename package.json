@@ -25,6 +25,7 @@
 		"axios": "^1.7.7",
 		"firebase": "^11.0.1",
 		"firebase-admin": "^12.7.0",
+		"p-limit": "^6.1.0",
 		"youtube-caption-scraper": "^1.0.0",
 		"youtube-transcript": "^1.2.1"
 	}
