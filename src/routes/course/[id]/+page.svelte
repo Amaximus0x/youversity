@@ -39,10 +39,23 @@
   }
 
   function startQuiz(quiz: Quiz | undefined, moduleIndex?: number) {
-    if (!quiz || !quiz.quiz || quiz.quiz.length === 0) {
-      console.error('Invalid quiz data');
+    if (!quiz) {
+      console.error('Quiz not found');
       return;
     }
+
+    // Check if quiz has the correct structure
+    if (!Array.isArray(quiz.quiz)) {
+      console.error('Invalid quiz structure');
+      return;
+    }
+
+    // Ensure there are questions
+    if (quiz.quiz.length === 0) {
+      console.error('No questions found in quiz');
+      return;
+    }
+
     currentQuiz = quiz;
     selectedAnswers = {};
     quizResults = {};
@@ -76,6 +89,13 @@
       if (!course) {
         throw new Error('Course not found');
       }
+
+      console.log('Course data loaded:', {
+        hasModuleQuizzes: Boolean(course.Final_Module_Quiz),
+        moduleQuizCount: course.Final_Module_Quiz?.length,
+        hasCourseQuiz: Boolean(course.Final_Course_Quiz),
+        firstModuleQuiz: course.Final_Module_Quiz?.[0]
+      });
 
       if (!course.completed_modules) {
         course.completed_modules = new Array(course.Final_Module_Title.length).fill(false);
@@ -130,7 +150,20 @@
           <div class="mt-4">
             <button
               class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-              on:click={() => startQuiz(courseDetails?.Final_Module_Quiz?.[index], index)}
+              on:click={() => {
+                const moduleQuiz = courseDetails?.Final_Module_Quiz?.[index];
+                if (!moduleQuiz) {
+                  console.error(`No quiz found for module ${index + 1}`);
+                  return;
+                }
+                console.log('Module Quiz Data:', {
+                  moduleIndex: index,
+                  quizData: courseDetails?.Final_Module_Quiz?.[index],
+                  hasQuiz: Boolean(courseDetails?.Final_Module_Quiz?.[index]?.quiz),
+                  questionCount: courseDetails?.Final_Module_Quiz?.[index]?.quiz?.length
+                });
+                startQuiz(moduleQuiz, index);
+              }}
             >
               Take Module Quiz
             </button>
