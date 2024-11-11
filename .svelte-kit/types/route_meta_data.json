@@ -28,6 +28,7 @@
 	"/create-course": [
 		"src/routes/create-course/+page.server.ts"
 	],
+	"/login": [],
 	"/my-courses": [
 		"src/routes/my-courses/+page.server.ts"
 	],

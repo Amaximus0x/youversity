@@ -87,11 +87,14 @@
     }
   
     async function handleSaveCourse() {
+      loadingState.startLoading();
       loadingState.setCurrentModule($loadingState.totalModules + 1);
+      
       try {
         if (!$user) {
           throw new Error('Please sign in to save the course');
         }
+        
         saving = true;
         error = null;
         console.log('Starting save process...');
@@ -100,75 +103,37 @@
           throw new Error('Please select a video for each module');
         }
 
-        // Reset moduleTranscripts array to match the number of modules
+        // Reset moduleTranscripts array
         moduleTranscripts = new Array(selectedVideos.length).fill('');
 
-        // Fetch transcripts with better error handling and retries
+        // Fetch transcripts
         console.log('Fetching transcripts...');
         const transcriptPromises = selectedVideos.map(async (index, i) => {
           const video = moduleVideos[i][index];
           try {
             const transcript = await getVideoTranscript(video.videoId);
             console.log(`Successfully fetched transcript for module ${i + 1}`);
-            return {
-              moduleIndex: i,
-              videoId: video.videoId,
-              title: video.title,
-              transcript
-            };
-          } catch (error) {
-            console.error(`Error fetching transcript for module ${i + 1}:`, error);
-            return {
-              moduleIndex: i,
-              videoId: video.videoId,
-              title: video.title,
-              transcript: 'Failed to fetch transcript'
-            };
+            return transcript;
+          } catch (err) {
+            console.error(`Failed to fetch transcript for module ${i + 1}:`, err);
+            return '';
           }
         });
 
-        const transcriptResults = await Promise.allSettled(transcriptPromises);
+        moduleTranscripts = await Promise.all(transcriptPromises);
 
-        // Clean and log transcript results
-        transcriptResults.forEach((result, index) => {
-          if (result.status === 'fulfilled') {
-            const transcript = result.value.transcript;
-            
-            // Log transcript details for debugging
-            console.log(`Module ${index + 1} Transcript details:`, {
-              videoId: result.value.videoId,
-              title: result.value.title,
-              transcript: result.value.transcript.substring(0, 100) + '...',
-              length: transcript.length,
-              isClean: !transcript.includes('<text'),
-              // preview: transcript.substring(0, 100)
-            });
-
-            moduleTranscripts[index] = transcript;
-          } else {
-            console.error(`Failed to fetch transcript for module ${index + 1}:`, result.reason);
-            moduleTranscripts[index] = 'Failed to fetch transcript';
-          }
-        });
+        // Create final course structure
+        console.log('Creating final course...');
+        const selectedVideoObjects = selectedVideos.map((index, i) => moduleVideos[i][index]);
         
-        const selectedVideoObjects = selectedVideos.map((index, i) => ({
-          title: moduleVideos[i][index].title,
-          videoUrl: moduleVideos[i][index].videoUrl,
-          thumbnailUrl: moduleVideos[i][index].thumbnailUrl,
-          videoId: moduleVideos[i][index].videoId
-        }));
-        
-        console.log('Selected videos:', selectedVideoObjects);
-        
-        console.log('Calling create-final-course API...');
         const response = await fetch('/api/create-final-course', {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
           },
           body: JSON.stringify({
             courseStructure,
-            selectedVideos: selectedVideos.map((index, i) => moduleVideos[i][index]),
+            selectedVideos: selectedVideoObjects,
             moduleTranscripts
           })
         });
@@ -181,7 +146,7 @@
 
         console.log('Final course data:', data.course);
 
-        // Save to Firebase and navigate
+        // Save to Firebase
         console.log('Saving to Firebase...');
         const courseId = await saveCourseToFirebase($user.uid, data.course);
         console.log('Course saved with ID:', courseId);
@@ -308,6 +273,6 @@
       disabled={saving || selectedVideos.some(v => v === undefined)}
       class="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 disabled:opacity-50"
     >
-      {saving ? 'Saving...' : 'Save Course'}
+      {saving ? 'Generating...' : 'Generate Final Course'}
     </button>
   </div>
