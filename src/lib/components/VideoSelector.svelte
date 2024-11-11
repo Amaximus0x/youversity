@@ -177,7 +177,15 @@
         }
 
         console.log('Final course data:', data.course);
-        return data.course;
+
+        // Save to Firebase and navigate
+        console.log('Saving to Firebase...');
+        const courseId = await saveCourseToFirebase($user.uid, data.course);
+        console.log('Course saved with ID:', courseId);
+
+        // Navigate to course details page
+        goto(`/course/${courseId}`);
+
       } catch (err) {
         console.error('Save course error:', err);
         error = err instanceof Error ? err.message : 'An unknown error occurred';

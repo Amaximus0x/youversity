@@ -36,6 +36,9 @@ export async function saveCourseToFirebase(userId: string, course: FinalCourseSt
       Final_Module_Objective: course.Final_Module_Objective,
       Final_Course_Conclusion: course.Final_Course_Conclusion,
       Final_Module_YouTube_Video_URL: course.Final_Module_YouTube_Video_URL,
+      Final_Module_Quiz: course.Final_Module_Quiz,
+      Final_Course_Quiz: course.Final_Course_Quiz,
+      YouTube_Playlist_URL: course.YouTube_Playlist_URL,
       completed_modules: new Array(course.Final_Module_Title.length).fill(false)
     };
     
