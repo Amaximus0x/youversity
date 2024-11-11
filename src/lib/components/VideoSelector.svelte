@@ -8,6 +8,7 @@
     import { user, isAuthenticated } from '$lib/stores/auth';
     import VideoPlayer from './VideoPlayer.svelte';
     import { getVideoTranscript } from '$lib/services/transcriptUtils';
+    import { loadingState } from '$lib/stores/loadingState';
   
     export let courseStructure: CourseStructure;
     export let moduleVideos: VideoItem[][];
@@ -34,6 +35,7 @@
     });
   
     async function fetchVideosForModule(searchPrompt: string, moduleIndex: number, retryCount = 0) {
+      loadingState.setCurrentModule(moduleIndex + 1);
       const maxRetries = 3;
       try {
         if (!searchPrompt?.trim()) {
@@ -85,6 +87,7 @@
     }
   
     async function handleSaveCourse() {
+      loadingState.setCurrentModule($loadingState.totalModules + 1);
       try {
         if (!$user) {
           throw new Error('Please sign in to save the course');
@@ -191,6 +194,7 @@
         error = err instanceof Error ? err.message : 'An unknown error occurred';
       } finally {
         saving = false;
+        loadingState.stopLoading();
       }
     }
   

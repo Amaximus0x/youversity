@@ -3,20 +3,21 @@
     export let loading: boolean;
     export let error: string | null;
     export let onSubmit: () => void;
-  </script>
+</script>
   
-  <div class="max-w-2xl mx-auto">
+<div class="max-w-2xl mx-auto">
     <div class="mb-6">
       <label for="objective" class="block text-lg mb-2">
         Enter your course objective
       </label>
-      <textarea
+      <input
+        type="text"
         id="objective"
         bind:value={courseObjective}
-        class="w-full p-3 border rounded-lg min-h-[120px]"
+        class="w-full p-3 border rounded-lg"
         placeholder="e.g., Learn Python for Data Science"
         disabled={loading}
-      ></textarea>
+      />
     </div>
   
     {#if error}
@@ -30,4 +31,4 @@
     >
       {loading ? 'Building...' : 'Build My Course'}
     </button>
-  </div>
+</div>
