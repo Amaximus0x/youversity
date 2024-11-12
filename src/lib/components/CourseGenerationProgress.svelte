@@ -22,10 +22,14 @@
   function toggleMinimize() {
     loadingState.setMinimized(!$loadingState.minimized);
   }
+
+  function handleClose() {
+    loadingState.clearState();
+  }
 </script>
 
 {#if mounted && $loadingState.isLoading}
-  <div class={`fixed transition-all duration-300 ${$loadingState.minimized ? 'top-20 left-4 w-72 z-40' : 'inset-0 z-50'}`}>
+  <div class={`fixed transition-all duration-300 ${$loadingState.minimized ? 'bottom-4 right-4 w-72 z-40' : 'inset-0 z-50'}`}>
     {#if $loadingState.minimized}
       <div class="bg-white rounded-lg shadow-lg p-4">
         <div class="flex justify-between items-center mb-2">
@@ -35,8 +39,9 @@
             class="text-gray-500 hover:text-gray-700 ml-2 flex-shrink-0"
             aria-label="Maximize"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-              <path d="M3 3h14v14H3V3zm2 2v10h10V5H5z"/>
+            <!-- Pinch Out Icon -->
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M4 4L9 9M20 20L15 15M4 20L9 15M20 4L15 9" />
             </svg>
           </button>
         </div>
@@ -63,8 +68,9 @@
             class="mt-4 text-blue-600 hover:text-blue-800 flex items-center justify-center mx-auto"
             aria-label="Minimize"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-              <path d="M6 6h8v8H6V6zm2 2v4h4V8H8z"/>
+            <!-- Pinch In Icon -->
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M9 9L4 4M15 15L20 20M9 15L4 20M15 9L20 4" />
             </svg>
             Minimize
           </button>
@@ -73,15 +79,29 @@
     {/if}
   </div>
 {:else if mounted && $loadingState.courseId}
-  <div class="fixed top-4 left-4 z-40">
+  <div class="fixed bottom-4 right-4 z-40">
     <div 
-      role="button"
-      tabindex="0"
-      on:click={handleComplete}
-      on:keydown={(e) => e.key === 'Enter' && handleComplete()}
-      class="bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg cursor-pointer hover:bg-green-600"
+      class="bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg relative group"
     >
-      {$loadingState.courseTitle} built successfully! Click to view →
+      <button
+        on:click={handleClose}
+        class="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200 shadow-lg"
+        aria-label="Close notification"
+      >
+        <!-- Close Icon -->
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-white" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+        </svg>
+      </button>
+      <div 
+        role="button"
+        tabindex="0"
+        on:click={handleComplete}
+        on:keydown={(e) => e.key === 'Enter' && handleComplete()}
+        class="cursor-pointer hover:text-white/90"
+      >
+        {$loadingState.courseTitle} course is built successfully! Click to view →
+      </div>
     </div>
   </div>
 {/if} 
