@@ -9,6 +9,8 @@
     import VideoPlayer from './VideoPlayer.svelte';
     import { getVideoTranscript } from '$lib/services/transcriptUtils';
     import { loadingState } from '$lib/stores/loadingState';
+    import CourseGenerationProgress from './CourseGenerationProgress.svelte';
+    import { browser } from '$app/environment';
   
     export let courseStructure: CourseStructure;
     export let moduleVideos: VideoItem[][];
@@ -25,6 +27,9 @@
   
     let moduleTranscripts: string[] = [];
   
+    let minimized = false;
+    let generatedCourseId: string | null = null;
+  
     const createPlaceholderVideo = (): VideoItem => ({
       videoId: '',
       videoUrl: '',
@@ -35,14 +40,14 @@
     });
   
     async function fetchVideosForModule(searchPrompt: string, moduleIndex: number, retryCount = 0) {
-      loadingState.setCurrentModule(moduleIndex + 1);
+      const moduleTitle = courseStructure.OG_Module_Title[moduleIndex];
+      loadingState.setCurrentModule(moduleIndex + 1, moduleTitle);
       const maxRetries = 3;
       try {
         if (!searchPrompt?.trim()) {
           throw new Error('Search prompt is required');
         }
 
-        const moduleTitle = courseStructure.OG_Module_Title[moduleIndex];
         const response = await fetch(
           `/api/search-videos?query=${encodeURIComponent(searchPrompt.trim())}&moduleTitle=${encodeURIComponent(moduleTitle)}&moduleIndex=${moduleIndex}&retry=${retryCount}`,
           {
@@ -87,79 +92,59 @@
     }
   
     async function handleSaveCourse() {
-      loadingState.startLoading();
-      loadingState.setCurrentModule($loadingState.totalModules + 1);
+      loadingState.startLoading(courseStructure.OG_Course_Title);
       
       try {
-        if (!$user) {
-          throw new Error('Please sign in to save the course');
-        }
+        if (!$user) throw new Error('Please sign in to save the course');
         
         saving = true;
         error = null;
-        console.log('Starting save process...');
-        
-        if (selectedVideos.some(v => v === undefined)) {
-          throw new Error('Please select a video for each module');
+
+        for (let i = 0; i < selectedVideos.length; i++) {
+          loadingState.setCurrentModule(i + 1);
+          loadingState.setStep(`Building Module ${i + 1}: ${courseStructure.OG_Module_Title[i]}`);
+          
+          const video = moduleVideos[i][selectedVideos[i]];
+          const transcript = await getVideoTranscript(video.videoId);
+          moduleTranscripts[i] = transcript;
+          
+          const progress = ((i + 1) / selectedVideos.length) * 80; // Leave 20% for final steps
+          loadingState.setProgress(progress);
         }
 
-        // Reset moduleTranscripts array
-        moduleTranscripts = new Array(selectedVideos.length).fill('');
-
-        // Fetch transcripts
-        console.log('Fetching transcripts...');
-        const transcriptPromises = selectedVideos.map(async (index, i) => {
-          const video = moduleVideos[i][index];
-          try {
-            const transcript = await getVideoTranscript(video.videoId);
-            console.log(`Successfully fetched transcript for module ${i + 1}`);
-            return transcript;
-          } catch (err) {
-            console.error(`Failed to fetch transcript for module ${i + 1}:`, err);
-            return '';
-          }
-        });
-
-        moduleTranscripts = await Promise.all(transcriptPromises);
-
-        // Create final course structure
-        console.log('Creating final course...');
-        const selectedVideoObjects = selectedVideos.map((index, i) => moduleVideos[i][index]);
-        
+        loadingState.setStep('Generating course content and quizzes...');
         const response = await fetch('/api/create-final-course', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             courseStructure,
-            selectedVideos: selectedVideoObjects,
+            selectedVideos: selectedVideos.map((index, i) => moduleVideos[i][index]),
             moduleTranscripts
           })
         });
 
         const data = await response.json();
+        if (!data.success) throw new Error(data.error || 'Failed to create final course');
 
-        if (!data.success) {
-          throw new Error(data.error || 'Failed to create final course');
-        }
-
-        console.log('Final course data:', data.course);
-
-        // Save to Firebase
-        console.log('Saving to Firebase...');
+        loadingState.setStep('Saving course...');
+        loadingState.setProgress(90);
+        
         const courseId = await saveCourseToFirebase($user.uid, data.course);
-        console.log('Course saved with ID:', courseId);
-
-        // Navigate to course details page
-        goto(`/course/${courseId}`);
+        
+        // Complete the process
+        loadingState.stopLoading(courseId);
+        
+        // If user is still on this page, navigate to course details
+        if (browser) {
+          goto(`/course/${courseId}`);
+        }
 
       } catch (err) {
         console.error('Save course error:', err);
         error = err instanceof Error ? err.message : 'An unknown error occurred';
+        loadingState.setStep('Error: ' + (err instanceof Error ? err.message : 'Failed to generate course'));
       } finally {
         saving = false;
-        loadingState.stopLoading();
       }
     }
   
@@ -273,6 +258,11 @@
       disabled={saving || selectedVideos.some(v => v === undefined)}
       class="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 disabled:opacity-50"
     >
-      {saving ? 'Generating...' : 'Generate Final Course'}
+      {saving ? 'Generating Course...' : 'Generate Final Course'}
     </button>
   </div>
+
+  <CourseGenerationProgress 
+    bind:minimized
+    courseId={generatedCourseId}
+  />

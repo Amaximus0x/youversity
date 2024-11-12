@@ -1,25 +1,86 @@
 import { writable } from 'svelte/store';
+import { browser } from '$app/environment';
 
 type LoadingState = {
   isLoading: boolean;
   currentModule: number;
   totalModules: number;
+  currentModuleTitle: string;
+  currentStep: string;
+  progress: number;
+  courseTitle: string;
+  minimized: boolean;
+  courseId: string | null;
+};
+
+// Initialize from localStorage if available
+const getInitialState = () => {
+  if (browser) {
+    const saved = localStorage.getItem('loadingState');
+    if (saved) return JSON.parse(saved);
+  }
+  return {
+    isLoading: false,
+    currentModule: 0,
+    totalModules: 10,
+    currentModuleTitle: '',
+    currentStep: '',
+    progress: 0,
+    courseTitle: '',
+    minimized: false,
+    courseId: null
+  };
 };
 
 const createLoadingStore = () => {
-  const { subscribe, set, update } = writable<LoadingState>({
-    isLoading: false,
-    currentModule: 0,
-    totalModules: 0,
-  });
+  const { subscribe, set, update } = writable<LoadingState>(getInitialState());
+
+  if (browser) {
+    subscribe(state => {
+      localStorage.setItem('loadingState', JSON.stringify(state));
+    });
+  }
 
   return {
     subscribe,
-    startLoading: () => update(state => ({ ...state, isLoading: true })),
-    stopLoading: () => update(state => ({ ...state, isLoading: false, currentModule: 0 })),
-    setCurrentModule: (module: number) => update(state => ({ ...state, currentModule: module })),
-    setTotalModules: (total: number) => update(state => ({ ...state, totalModules: total })),
-    reset: () => set({ isLoading: false, currentModule: 0, totalModules: 0 })
+    startLoading: (courseTitle: string) => update(state => ({ 
+      ...state, 
+      isLoading: true, 
+      progress: 0,
+      courseTitle,
+      courseId: null 
+    })),
+    stopLoading: (courseId: string | null = null) => update(state => ({
+      ...state,
+      isLoading: false,
+      currentModule: 0,
+      currentStep: '',
+      progress: 100,
+      courseId
+    })),
+    setMinimized: (minimized: boolean) => update(state => ({ ...state, minimized })),
+    clearState: () => {
+      if (browser) localStorage.removeItem('loadingState');
+      set(getInitialState());
+    },
+    setCurrentModule: (module: number, title: string = '') => 
+      update(state => ({ 
+        ...state, 
+        currentModule: module,
+        currentModuleTitle: title 
+      })),
+    setStep: (step: string) =>
+      update(state => ({
+        ...state,
+        currentStep: step
+      })),
+    setProgress: (progress: number) =>
+      update(state => ({
+        ...state,
+        progress: Math.min(Math.max(progress, 0), 100)
+      })),
+    setTotalModules: (total: number) => 
+      update(state => ({ ...state, totalModules: total }))
   };
 };
 

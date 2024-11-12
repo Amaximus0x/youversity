@@ -4,7 +4,6 @@
   import VideoSelector from '$lib/components/VideoSelector.svelte';
   import type { CourseStructure, VideoItem } from '$lib/types/course';
   import { loadingState } from '$lib/stores/loadingState';
-  import LoadingOverlay from '$lib/components/LoadingOverlay.svelte';
 
   let courseObjective = '';
   let courseStructure: CourseStructure | null = null;
@@ -46,8 +45,6 @@
     }
   }
 </script>
-
-<LoadingOverlay />
 
 <div class="container mx-auto px-4 py-8">
   <h1 class="text-3xl font-bold mb-8">Create Your Course</h1>

@@ -1,53 +1,94 @@
 <script lang="ts">
-  import "../app.css";
-  import { user } from '$lib/stores/auth';
+  import { page } from '$app/stores';
+  import { user, isAuthenticated } from '$lib/stores/auth';
   import { signInWithGoogle, signOutUser } from '$lib/services/auth';
+  import CourseGenerationProgress from '$lib/components/CourseGenerationProgress.svelte';
+  import '../app.css';
+  
+  let menuOpen = false;
+  
+  function toggleMenu() {
+    menuOpen = !menuOpen;
+  }
+
+  async function handleAuth() {
+    if ($user) {
+      await signOutUser();
+    } else {
+      await signInWithGoogle();
+    }
+  }
 </script>
 
-<div class="min-h-screen">
-  <header class="bg-white shadow">
-    <nav class="container mx-auto px-4 py-4 flex justify-between items-center">
-      <div class="flex items-center gap-4">
-        <a href="/" class="text-3xl font-bold text-red-600">Youversity</a>
-        
+<nav class="bg-white shadow-lg fixed w-full top-0 z-50">
+  <div class="max-w-7xl mx-auto px-4">
+    <div class="flex justify-between items-center h-16">
+      <div class="flex items-center">
+        <a href="/" class="text-xl font-bold text-blue-600">Youversity</a>
       </div>
-      
-      <div class="flex items-center gap-4">
-        {#if $user}
+
+      <div class="hidden md:flex items-center space-x-4">
+        {#if $isAuthenticated}
+          <a 
+            href="/create-course" 
+            class="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md"
+            class:active={$page.url.pathname === '/create-course'}
+          >
+            Create Course
+          </a>
           <a 
             href="/my-courses" 
-            class="text-gray-600 hover:text-gray-900 ml-4"
+            class="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md"
+            class:active={$page.url.pathname === '/my-courses'}
           >
             My Courses
           </a>
-        {/if}
-
-        {#if $user}
           <a 
             href="/profile" 
-            class="text-gray-600 hover:text-gray-900"
+            class="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md"
+            class:active={$page.url.pathname === '/profile'}
           >
-            Profile
+            My Profile
           </a>
-          <button
-            on:click={signOutUser}
-            class="text-red-500 hover:text-red-700"
+          <button 
+            on:click={handleAuth}
+            class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
           >
-            Sign out
+            Sign Out
           </button>
         {:else}
-          <button
-            on:click={() => signInWithGoogle()}
-            class="text-blue-500 hover:text-blue-700"
+          <button 
+            on:click={handleAuth}
+            class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
           >
-            Sign up with Google
+            Sign In
           </button>
         {/if}
       </div>
-    </nav>
-  </header>
 
-  <main class="container mx-auto px-4 py-8">
-    <slot />
-  </main>
-</div>
+      <div class="md:hidden">
+        <button 
+          on:click={toggleMenu}
+          class="text-gray-600 hover:text-gray-900"
+        >
+          <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<CourseGenerationProgress />
+
+<main class="pt-16">
+  <slot />
+</main>
+
+<style>
+  .active {
+    color: theme(colors.blue.600);
+    font-weight: 500;
+  }
+</style>

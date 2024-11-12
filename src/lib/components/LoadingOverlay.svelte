@@ -6,7 +6,9 @@
       return "Building course structure...";
     }
     if ($loadingState.currentModule <= $loadingState.totalModules) {
-      return `Fetching videos for Module ${$loadingState.currentModule}`;
+      return `Fetching videos for Module ${$loadingState.currentModule}${
+        $loadingState.currentModuleTitle ? `: ${$loadingState.currentModuleTitle}` : ''
+      }`;
     }
     return "Generating your final course...";
   }
