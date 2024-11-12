@@ -34,16 +34,18 @@
       <div class="bg-white rounded-lg shadow-lg p-4">
         <div class="flex justify-between items-center mb-2">
           <h3 class="font-semibold truncate">{$loadingState.courseTitle}</h3>
-          <button 
-            on:click={toggleMinimize}
-            class="text-gray-500 hover:text-gray-700 ml-2 flex-shrink-0"
-            aria-label="Maximize"
-          >
-            <!-- Pinch Out Icon -->
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M4 4L9 9M20 20L15 15M4 20L9 15M20 4L15 9" />
-            </svg>
-          </button>
+          {#if !$loadingState.isInitialBuild}
+            <button 
+              on:click={toggleMinimize}
+              class="text-gray-500 hover:text-gray-700 ml-2 flex-shrink-0"
+              aria-label="Maximize"
+            >
+              <!-- Pinch Out Icon -->
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M4 4L9 9M20 20L15 15M4 20L9 15M20 4L15 9" />
+              </svg>
+            </button>
+          {/if}
         </div>
         <div class="bg-gray-200 rounded-full h-2 mb-2">
           <div 
@@ -63,17 +65,19 @@
               Processing module {$loadingState.currentModule} of {$loadingState.totalModules}
             {/if}
           </p>
-          <button 
-            on:click={toggleMinimize}
-            class="mt-4 text-blue-600 hover:text-blue-800 flex items-center justify-center mx-auto"
-            aria-label="Minimize"
-          >
-            <!-- Pinch In Icon -->
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M9 9L4 4M15 15L20 20M9 15L4 20M15 9L20 4" />
-            </svg>
-            Minimize
-          </button>
+          {#if !$loadingState.isInitialBuild}
+            <button 
+              on:click={toggleMinimize}
+              class="mt-4 text-blue-600 hover:text-blue-800 flex items-center justify-center mx-auto"
+              aria-label="Minimize"
+            >
+              <!-- Pinch In Icon -->
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M9 9L4 4M15 15L20 20M9 15L4 20M15 9L20 4" />
+              </svg>
+              Minimize
+            </button>
+          {/if}
         </div>
       </div>
     {/if}
@@ -88,7 +92,6 @@
         class="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200 shadow-lg"
         aria-label="Close notification"
       >
-        <!-- Close Icon -->
         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-white" viewBox="0 0 20 20" fill="currentColor">
           <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
         </svg>

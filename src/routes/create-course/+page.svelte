@@ -13,7 +13,7 @@
   let selectedVideos: number[] = [];
 
   async function handleBuildCourse() {
-    loadingState.startLoading();
+    loadingState.startLoading('', true);
     error = null;
     moduleVideos = [];
     selectedVideos = [];

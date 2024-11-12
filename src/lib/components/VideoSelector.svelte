@@ -92,7 +92,8 @@
     }
   
     async function handleSaveCourse() {
-      loadingState.startLoading(courseStructure.OG_Course_Title);
+      loadingState.setMinimized(false);
+      loadingState.startLoading(courseStructure.OG_Course_Title, false);
       
       try {
         if (!$user) throw new Error('Please sign in to save the course');
@@ -134,8 +135,8 @@
         // Complete the process
         loadingState.stopLoading(courseId);
         
-        // If user is still on this page, navigate to course details
-        if (browser) {
+        // Only navigate if the loading state is not minimized and we're still on the same page
+        if (browser && !$loadingState.minimized && window.location.pathname === '/create-course') {
           goto(`/course/${courseId}`);
         }
 
