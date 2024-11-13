@@ -4,6 +4,7 @@
   import VideoSelector from '$lib/components/VideoSelector.svelte';
   import type { CourseStructure, VideoItem } from '$lib/types/course';
   import { loadingState } from '$lib/stores/loadingState';
+  import { page } from '$app/stores';
 
   let courseObjective = '';
   let courseStructure: CourseStructure | null = null;
@@ -44,6 +45,16 @@
       loadingState.stopLoading();
     }
   }
+
+  // Get the objective from URL parameters on mount
+  onMount(() => {
+    const urlObjective = $page.url.searchParams.get('objective');
+    if (urlObjective) {
+      courseObjective = decodeURIComponent(urlObjective);
+      // Automatically start course generation if we have an objective
+      handleBuildCourse();
+    }
+  });
 </script>
 
 <div class="container mx-auto px-4 py-8">
