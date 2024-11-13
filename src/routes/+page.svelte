@@ -2,6 +2,8 @@
   import { user } from '$lib/stores/auth';
   import { signInWithGoogle } from '$lib/services/auth';
   import { page } from '$app/stores';
+  import { getUserCourses } from '$lib/firebase';
+  import type { FinalCourseStructure } from '$lib/types/course';
   import { 
     ArrowRight, 
     Share2, 
@@ -12,16 +14,27 @@
   } from 'lucide-svelte';
 
   let learningObjective = '';
+  let userCourses: (FinalCourseStructure & { id: string })[] = [];
+  let loading = false;
+  let error: string | null = null;
 
-  // Sample course data (replace with actual data from your backend)
-  const courses = [
-    { id: 1, title: 'Python for Beginners', progress: 60, image: '/placeholder.svg' },
-    { id: 2, title: 'Advanced JavaScript', progress: 30, image: '/placeholder.svg' },
-    { id: 3, title: 'Data Science Fundamentals', progress: 80, image: '/placeholder.svg' },
-    { id: 4, title: 'Machine Learning Basics', progress: 10, image: '/placeholder.svg' },
-    { id: 5, title: 'Web Development with React', progress: 45, image: '/placeholder.svg' },
-    { id: 6, title: 'iOS App Development', progress: 0, image: '/placeholder.svg' },
-  ];
+  // Load user courses when authenticated
+  $: if ($user) {
+    loadUserCourses();
+  }
+
+  async function loadUserCourses() {
+    try {
+      loading = true;
+      error = null;
+      userCourses = await getUserCourses($user.uid);
+    } catch (err) {
+      console.error('Error loading courses:', err);
+      error = err.message;
+    } finally {
+      loading = false;
+    }
+  }
 
   const trendingCourses = [
     { id: 1, title: 'Blockchain Fundamentals', author: 'Crypto Expert', image: '/placeholder.svg', likes: 1200, dislikes: 50, views: 15000 },
@@ -99,44 +112,62 @@
   <!-- My Courses Section -->
   <div class="mb-12">
     <h2 class="text-2xl font-bold text-[#2A4D61] mb-6">My Courses</h2>
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {#each courses as course}
-        <div class="bg-white rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300">
-          <div class="relative h-[180px]">
-            <img src={course.image} alt={course.title} class="w-full h-full object-cover" />
-            <div class="absolute inset-0 bg-black bg-opacity-30 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity duration-200">
-              <Play class="w-12 h-12 text-white" />
+    {#if loading}
+      <div class="text-center py-8">Loading your courses...</div>
+    {:else if error}
+      <div class="text-red-500 text-center py-8">{error}</div>
+    {:else if userCourses.length === 0}
+      <div class="text-center py-8">
+        <p class="text-[#1E3443]/80 mb-4">You haven't created any courses yet.</p>
+        <button
+          on:click={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          class="bg-[#EE434A] hover:bg-[#D93D44] text-white px-6 py-3 rounded-lg transition-colors duration-200"
+        >
+          Create Your First Course
+        </button>
+      </div>
+    {:else}
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {#each userCourses as course}
+          <div class="bg-white rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300">
+            <div class="relative h-[180px]">
+              <img src="/placeholder.svg" alt={course.Final_Course_Title} class="w-full h-full object-cover" />
+              <div class="absolute inset-0 bg-black bg-opacity-30 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity duration-200">
+                <Play class="w-12 h-12 text-white" />
+              </div>
             </div>
-          </div>
-          <div class="p-4">
-            <div class="flex justify-between items-start mb-2">
-              <h3 class="font-semibold text-lg text-[#2A4D61]">{course.title}</h3>
-              <button
-                class="p-1 hover:bg-[#F5F5F5] rounded-full transition-colors duration-200"
-                on:click={() => handleShareCourse(course.id)}
+            <div class="p-4">
+              <div class="flex justify-between items-start mb-2">
+                <h3 class="font-semibold text-lg text-[#2A4D61]">{course.Final_Course_Title}</h3>
+                <button
+                  class="p-1 hover:bg-[#F5F5F5] rounded-full transition-colors duration-200"
+                  on:click={() => handleShareCourse(course.id)}
+                >
+                  <Share2 class="w-5 h-5 text-[#2A4D61]" />
+                </button>
+              </div>
+              <div class="w-full h-2 bg-[#D9E1E3] rounded-full mb-2">
+                <div 
+                  class="h-full bg-[#42C1C8] rounded-full" 
+                  style="width: {course.completed_modules?.filter(Boolean).length / course.Final_Module_Title.length * 100}%"
+                ></div>
+              </div>
+            </div>
+            <div class="px-4 py-3 border-t border-gray-100 flex justify-between items-center">
+              <span class="text-sm text-[#1E3443]">
+                {Math.round(course.completed_modules?.filter(Boolean).length / course.Final_Module_Title.length * 100)}% complete
+              </span>
+              <a 
+                href="/course/{course.id}" 
+                class="bg-[#EE434A] hover:bg-[#D93D44] text-white px-4 py-2 rounded-lg transition-colors duration-200"
               >
-                <Share2 class="w-5 h-5 text-[#2A4D61]" />
-              </button>
-            </div>
-            <div class="w-full h-2 bg-[#D9E1E3] rounded-full mb-2">
-              <div 
-                class="h-full bg-[#42C1C8] rounded-full" 
-                style="width: {course.progress}%"
-              ></div>
+                Continue
+              </a>
             </div>
           </div>
-          <div class="px-4 py-3 border-t border-gray-100 flex justify-between items-center">
-            <span class="text-sm text-[#1E3443]">{course.progress}% complete</span>
-            <a 
-              href="/course/{course.id}" 
-              class="bg-[#EE434A] hover:bg-[#D93D44] text-white px-4 py-2 rounded-lg transition-colors duration-200"
-            >
-              Continue
-            </a>
-          </div>
-        </div>
-      {/each}
-    </div>
+        {/each}
+      </div>
+    {/if}
   </div>
 
   <!-- Trending Community Courses Section -->
