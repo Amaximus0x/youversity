@@ -12,6 +12,7 @@ type LoadingState = {
   minimized: boolean;
   courseId: string | null;
   isInitialBuild: boolean;
+  error: string | null;
 };
 
 // Initialize from localStorage if available
@@ -30,7 +31,8 @@ const getInitialState = () => {
     courseTitle: '',
     minimized: false,
     courseId: null,
-    isInitialBuild: false
+    isInitialBuild: false,
+    error: null
   };
 };
 
@@ -83,7 +85,13 @@ const createLoadingStore = () => {
         progress: Math.min(Math.max(progress, 0), 100)
       })),
     setTotalModules: (total: number) => 
-      update(state => ({ ...state, totalModules: total }))
+      update(state => ({ ...state, totalModules: total })),
+    setError: (error: string | null) => update(state => ({ 
+      ...state, 
+      error,
+      isLoading: error ? true : state.isLoading
+    })),
+    clearError: () => update(state => ({ ...state, error: null }))
   };
 };
 

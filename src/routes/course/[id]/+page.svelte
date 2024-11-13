@@ -17,8 +17,9 @@
   let quizResults: { [key: string]: boolean } = {};
 
   const handleCreatePlaylist = () => {
-    if (courseDetails) {
+    if (courseDetails?.YouTube_Playlist_URL) {
       playlistUrl = courseDetails.YouTube_Playlist_URL;
+      window.open(playlistUrl, '_blank');
     }
   };
 
@@ -71,6 +72,12 @@
     });
   }
 
+  function handlePlaylistClick() {
+    if (courseDetails?.YouTube_Playlist_URL) {
+      window.open(courseDetails.YouTube_Playlist_URL, '_blank');
+    }
+  }
+
   onMount(async () => {
     try {
       if (!$user) {
@@ -114,9 +121,14 @@
 <div class="min-h-screen bg-gradient-to-br from-red-50 to-white text-red-900">
   <main class="container mx-auto px-4 py-8 max-w-4xl">
     {#if loading}
-      <div class="text-center py-8">Loading course details...</div>
+      <div class="text-center py-8">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-red-900 mx-auto"></div>
+        <p class="mt-4">Loading course...</p>
+      </div>
     {:else if error}
-      <div class="text-red-500 text-center py-8">{error}</div>
+      <div class="text-center py-8 text-red-600">
+        <p>{error}</p>
+      </div>
     {:else if courseDetails}
       <header class="mb-8">
         <h1 class="text-3xl font-bold text-red-800 mb-4">{courseDetails.Final_Course_Title}</h1>
@@ -232,6 +244,25 @@
       <div class="mt-8">
         <h2 class="text-2xl font-semibold mb-4">Course Conclusion</h2>
         <p class="text-gray-700">{courseDetails.Final_Course_Conclusion}</p>
+      </div>
+
+      <div class="mt-12 border-t pt-8">
+        <div class="flex flex-col items-center gap-4">
+          <h3 class="text-xl font-semibold">Watch Complete Course</h3>
+          <button
+            on:click={handlePlaylistClick}
+            class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg transition-colors duration-200"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            Open YouTube Playlist
+          </button>
+          <p class="text-sm text-gray-600 text-center max-w-md">
+            Watch all course videos in sequence on YouTube. This will open in a new tab.
+          </p>
+        </div>
       </div>
     {:else}
       <div class="text-center py-8">No course data available</div>

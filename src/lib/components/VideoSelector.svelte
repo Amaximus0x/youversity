@@ -142,8 +142,11 @@
 
       } catch (err) {
         console.error('Save course error:', err);
-        error = err instanceof Error ? err.message : 'An unknown error occurred';
-        loadingState.setStep('Error: ' + (err instanceof Error ? err.message : 'Failed to generate course'));
+        const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
+        error = errorMessage;
+        loadingState.setError(errorMessage);
+        loadingState.setStep('Error generating course content');
+        loadingState.setProgress(0);
       } finally {
         saving = false;
       }

@@ -196,6 +196,31 @@ async function generateConclusion(courseOverview: any, moduleDetails: any[]) {
   return makeOpenAIRequest(conclusionPrompt);
 }
 
+function createYouTubePlaylist(course: Partial<FinalCourseStructure>): string {
+  try {
+    if (!course.Final_Module_YouTube_Video_URL || course.Final_Module_YouTube_Video_URL.length === 0) {
+      return '';
+    }
+
+    // Extract video IDs from URLs
+    const videoIds = course.Final_Module_YouTube_Video_URL.map(url => {
+      const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([^&?]+)/);
+      return match ? match[1] : '';
+    }).filter(id => id);
+
+    if (videoIds.length === 0) {
+      return '';
+    }
+
+    // Create a YouTube playlist URL with the video IDs
+    const playlistUrl = `https://www.youtube.com/watch_videos?video_ids=${videoIds.join(',')}`;
+    return playlistUrl;
+  } catch (error) {
+    console.error('Error creating YouTube playlist URL:', error);
+    return '';
+  }
+}
+
 async function generateFinalCourse(
   courseStructure: CourseStructure,
   selectedVideos: VideoItem[],
@@ -214,17 +239,24 @@ async function generateFinalCourse(
     // Generate conclusion after we have all other data
     const conclusion = await generateConclusion(courseOverview, moduleDetails);
 
+    // Generate YouTube playlist URL
+    const videoUrls = selectedVideos.map(video => video.videoUrl);
+    const playlistUrl = createYouTubePlaylist({
+      Final_Course_Title: courseOverview.Final_Course_Title,
+      Final_Module_YouTube_Video_URL: videoUrls
+    } as FinalCourseStructure);
+
     return {
       Final_Course_Title: courseOverview.Final_Course_Title,
       Final_Course_Objective: courseOverview.Final_Course_Objective,
       Final_Course_Introduction: courseOverview.Final_Course_Introduction,
       Final_Module_Title: moduleDetails.map(module => module.Final_Module_Title),
       Final_Module_Objective: moduleDetails.map(module => module.Final_Module_Objective),
-      Final_Module_YouTube_Video_URL: selectedVideos.map(video => video.videoUrl),
+      Final_Module_YouTube_Video_URL: videoUrls,
       Final_Module_Quiz: moduleQuizzes,
       Final_Course_Quiz: finalQuiz,
       Final_Course_Conclusion: conclusion.Final_Course_Conclusion,
-      YouTube_Playlist_URL: ''
+      YouTube_Playlist_URL: playlistUrl
     };
   } catch (error) {
     console.error('Error in generateFinalCourse:', error);
@@ -330,6 +362,14 @@ export const POST: RequestHandler = async ({ request }) => {
   try {
     const data = await request.json();
     
+    // Validate required fields
+    if (!data.courseStructure || !data.selectedVideos || !data.moduleTranscripts) {
+      return json({
+        success: false,
+        error: 'Missing required data'
+      }, { status: 400 });
+    }
+
     try {
       const finalCourse = await generateFinalCourse(
         data.courseStructure,
@@ -337,24 +377,40 @@ export const POST: RequestHandler = async ({ request }) => {
         data.moduleTranscripts
       );
 
+      // Validate the generated course
+      if (!finalCourse || !finalCourse.Final_Course_Title) {
+        throw new Error('Invalid course generation result');
+      }
+
       return json({
         success: true,
         course: finalCourse
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error in course generation:', error);
+      
+      // Handle rate limit errors
       if (error.response?.status === 429) {
         return json({
           success: false,
           error: 'Rate limit exceeded. Please try again in a few minutes.'
         }, { status: 429 });
       }
+
+      // Handle OpenAI API errors
+      if (error.response?.data?.error) {
+        return json({
+          success: false,
+          error: error.response.data.error.message || 'OpenAI API error'
+        }, { status: 500 });
+      }
+
       return json({
         success: false,
-        error: 'Error generating course content'
+        error: error.message || 'Error generating course content'
       }, { status: 500 });
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error processing request:', error);
     return json({
       success: false,
