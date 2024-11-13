@@ -31,13 +31,19 @@
 
   async function handleCreateCourse(e: Event) {
     e.preventDefault();
+    
+    if (!learningObjective.trim()) {
+      return; // Don't proceed if learning objective is empty
+    }
+
     try {
-      const redirectTo = $page.url.searchParams.get('redirectTo') || '/create-course';
-      
       if ($user) {
-        window.location.href = redirectTo + `?objective=${encodeURIComponent(learningObjective)}`;
+        // For authenticated users, go directly to create-course with the objective
+        window.location.href = `/create-course?objective=${encodeURIComponent(learningObjective)}`;
       } else {
-        await signInWithGoogle(redirectTo);
+        // For unauthenticated users, redirect to login with return URL
+        const returnUrl = `/create-course?objective=${encodeURIComponent(learningObjective)}`;
+        window.location.href = `/login?redirectTo=${encodeURIComponent(returnUrl)}`;
       }
     } catch (error) {
       console.error('Navigation error:', error);
@@ -56,7 +62,11 @@
   
   <div class="max-w-2xl mx-auto text-center relative">
     <div class="flex items-center justify-center mb-6">
-      <img src="/favicon.png" alt="Youversity Logo" class="w-12 h-12" />
+      <img 
+        src="/favicon.png" 
+        alt="Youversity Logo" 
+        class="w-12 h-12 object-contain"
+      />
     </div>
     <h2 class="text-4xl font-bold text-[#2A4D61] mb-4">
       Create Your Course

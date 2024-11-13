@@ -45,9 +45,11 @@
     <aside class="w-64 bg-white h-screen sticky top-0 shadow-md z-10">
       <div class="flex items-center justify-center h-16 border-b border-[#D9E1E3]">
         <a href="/" class="flex items-center space-x-2">
-          <div class="w-8 h-8 rounded-full bg-[#EE434A] flex items-center justify-center">
-            <img src="/favicon.png" alt="Logo" class="w-6 h-6" />
-          </div>
+          <img 
+            src="/favicon.png" 
+            alt="Youversity Logo" 
+            class="w-8 h-8 object-contain"
+          />
           <span class="text-xl font-bold text-[#2A4D61]">YouVersity</span>
         </a>
       </div>
