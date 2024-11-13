@@ -3,8 +3,8 @@
   import { page } from '$app/stores';
   import { goto } from '$app/navigation';
   import { user } from '$lib/stores/auth';
-  import type { FinalCourseStructure, Quiz, QuizQuestion } from '$lib/types/course';
-  import { getUserCourse, updateUserCourse } from '$lib/firebase';
+  import type { FinalCourseStructure, Quiz, QuizQuestion, ModuleProgress } from '$lib/types/course';
+  import { getUserCourse, updateUserCourse, getCourseProgress, updateModuleProgress } from '$lib/firebase';
 
   let courseDetails: FinalCourseStructure | null = null;
   let loading = true;
@@ -15,6 +15,9 @@
   let currentQuiz: Quiz | null = null;
   let selectedAnswers: { [key: string]: string } = {};
   let quizResults: { [key: string]: boolean } = {};
+
+  let moduleProgress: ModuleProgress[] = [];
+  let currentModuleIndex: number | null = null;
 
   const handleCreatePlaylist = () => {
     if (courseDetails?.YouTube_Playlist_URL) {
@@ -57,24 +60,92 @@
       return;
     }
 
+    currentModuleIndex = moduleIndex ?? null;
     currentQuiz = quiz;
     selectedAnswers = {};
     quizResults = {};
     showQuiz = true;
   }
 
-  function checkAnswers() {
+  async function checkAnswers() {
     if (!currentQuiz || !currentQuiz.quiz) return;
     
     quizResults = {};
+    let score = 0;
+    
     currentQuiz.quiz.forEach((question, index) => {
-      quizResults[index] = selectedAnswers[index] === question.answer;
+      const isCorrect = selectedAnswers[index] === question.answer;
+      quizResults[index] = isCorrect;
+      if (isCorrect) score += 2; // Each question worth 2 points
     });
+
+    const passed = score >= 8; // Pass threshold is 8/10
+    
+    if (passed && currentModuleIndex !== null) {
+      await handleModuleProgress(currentModuleIndex, {
+        completed: true,
+        quizAttempts: (moduleProgress[currentModuleIndex]?.quizAttempts || 0) + 1,
+        bestScore: Math.max(score, moduleProgress[currentModuleIndex]?.bestScore || 0),
+        lastAttemptDate: new Date()
+      });
+    }
+
+    return {
+      score,
+      passed
+    };
   }
 
   function handlePlaylistClick() {
     if (courseDetails?.YouTube_Playlist_URL) {
       window.open(courseDetails.YouTube_Playlist_URL, '_blank');
+    }
+  }
+
+  async function handleModuleProgress(moduleIndex: number | null, progress: ModuleProgress) {
+    if (moduleIndex === null || !$user || !$page.params.id) return;
+
+    try {
+      const updatedProgress = await updateModuleProgress(
+        $user.uid,
+        $page.params.id,
+        moduleIndex,
+        progress
+      );
+      
+      // Update local state
+      moduleProgress = updatedProgress.moduleProgress;
+      
+      // Unlock next module if available
+      if (progress.completed && moduleIndex + 1 < moduleProgress.length) {
+        moduleProgress[moduleIndex + 1] = {
+          completed: false,
+          quizAttempts: 0,
+          bestScore: 0,
+          lastAttemptDate: new Date()
+        };
+        
+        await updateModuleProgress(
+          $user.uid,
+          $page.params.id,
+          moduleIndex + 1,
+          moduleProgress[moduleIndex + 1]
+        );
+      }
+      
+      // Update course completion status
+      const updatedModules = [...(courseDetails?.completed_modules || [])];
+      updatedModules[moduleIndex] = true;
+      
+      await updateUserCourse($user.uid, $page.params.id, {
+        completed_modules: updatedModules
+      });
+      
+      if (courseDetails) {
+        courseDetails.completed_modules = updatedModules;
+      }
+    } catch (err) {
+      console.error('Error updating module progress:', err);
     }
   }
 
@@ -91,7 +162,12 @@
       }
 
       loading = true;
-      const course = await getUserCourse($user.uid, courseId);
+      const [course, progress] = await Promise.all([
+        getUserCourse($user.uid, courseId),
+        getCourseProgress($user.uid, courseId)
+      ]);
+      
+      moduleProgress = progress?.moduleProgress || [];
       
       if (!course) {
         throw new Error('Course not found');
@@ -109,6 +185,24 @@
       }
 
       courseDetails = course;
+
+      // Initialize first module if no progress exists
+      if (!moduleProgress.length && courseDetails) {
+        moduleProgress = Array(courseDetails.Final_Module_Title.length).fill(null);
+        moduleProgress[0] = {
+          completed: false,
+          quizAttempts: 0,
+          bestScore: 0,
+          lastAttemptDate: new Date()
+        };
+        
+        // Save initial progress
+        try {
+          await updateModuleProgress($user.uid, courseId, 0, moduleProgress[0]);
+        } catch (err) {
+          console.error('Error initializing course progress:', err);
+        }
+      }
     } catch (err) {
       console.error('Error loading course:', err);
       error = err instanceof Error ? err.message : 'An unknown error occurred';
@@ -134,6 +228,19 @@
         <h1 class="text-3xl font-bold text-red-800 mb-4">{courseDetails.Final_Course_Title}</h1>
         <p class="text-lg text-red-700">{courseDetails.Final_Course_Objective}</p>
       </header>
+      <!-- Course Progress bar-->
+      <div class="mb-8">
+        <div class="flex justify-between text-sm text-gray-600 mb-2">
+          <span>Course Progress</span>
+          <span>{moduleProgress.filter(m => m?.completed).length} of {courseDetails?.Final_Module_Title.length} modules completed</span>
+        </div>
+        <div class="w-full bg-gray-200 rounded-full h-2.5">
+          <div 
+            class="bg-blue-600 h-2.5 rounded-full transition-all duration-300"
+            style="width: {courseDetails ? (moduleProgress.filter(m => m?.completed).length / courseDetails.Final_Module_Title.length * 100) : 0}%"
+          />
+        </div>
+      </div>
 
       <div class="mb-8">
         <h2 class="text-2xl font-semibold mb-4">Course Introduction</h2>
@@ -141,8 +248,25 @@
       </div>
 
       {#each courseDetails.Final_Module_Title as moduleTitle, index}
-        <section class="mb-8 bg-white rounded-lg shadow-md p-6 min-h-[600px] flex flex-col">
-          <h3 class="text-xl font-semibold mb-4">Module {index + 1}: {moduleTitle}</h3>
+        <section class={`border rounded-lg p-6 mb-6 ${index > 0 && !moduleProgress[index - 1]?.completed ? 'opacity-50 pointer-events-none' : ''}`}>
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="text-xl font-semibold">Module {index + 1}: {moduleTitle}</h2>
+            {#if moduleProgress[index]?.completed}
+              <span class="text-green-500 flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                </svg>
+                Completed
+              </span>
+            {:else if index > 0 && !moduleProgress[index - 1]?.completed}
+              <span class="text-gray-500 flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd" />
+                </svg>
+                Locked
+              </span>
+            {/if}
+          </div>
           <p class="mb-4 text-gray-600">{courseDetails.Final_Module_Objective[index]}</p>
           
           {#if courseDetails.Final_Module_YouTube_Video_URL[index]}
@@ -220,7 +344,9 @@
             <div class="flex justify-end gap-4">
               <button
                 class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-                on:click={checkAnswers}
+                on:click={async () => {
+                  await checkAnswers();
+                }}
               >
                 Check Answers
               </button>

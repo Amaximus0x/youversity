@@ -47,3 +47,19 @@ export interface VideoItem {
   length: number;
   thumbnailUrl: string;
 }
+
+export interface ModuleProgress {
+  completed: boolean;
+  quizAttempts: number;
+  bestScore: number;
+  lastAttemptDate?: Date;
+}
+
+export interface CourseProgress {
+  userId: string;
+  courseId: string;
+  moduleProgress: ModuleProgress[];
+  lastAccessedModule: number;
+  startDate: Date;
+  lastAccessDate: Date;
+}

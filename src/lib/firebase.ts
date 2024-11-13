@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app';
-import { getFirestore, collection, addDoc, query, where, getDocs, doc, getDoc, updateDoc } from 'firebase/firestore';
+import { getFirestore, collection, addDoc, query, where, getDocs, doc, getDoc, updateDoc, setDoc } from 'firebase/firestore';
 import { getAuth, setPersistence, browserLocalPersistence, signInWithPopup, GoogleAuthProvider, signOut } from 'firebase/auth';
 
 const firebaseConfig = {
@@ -116,5 +116,63 @@ export async function updateUserCourse(userId: string, courseId: string, courseD
   } catch (error) {
     console.error('Error updating course:', error);
     throw new Error('Failed to update course');
+  }
+}
+
+export async function updateModuleProgress(
+  userId: string, 
+  courseId: string, 
+  moduleIndex: number, 
+  progress: ModuleProgress
+) {
+  try {
+    const courseRef = doc(db, 'courses', courseId);
+    const progressRef = doc(db, 'courseProgress', `${userId}_${courseId}`);
+    
+    const progressSnap = await getDoc(progressRef);
+    let currentProgress = progressSnap.data() || {
+      userId,
+      courseId,
+      moduleProgress: [],
+      startDate: new Date(),
+      lastAccessDate: new Date()
+    };
+
+    currentProgress.moduleProgress[moduleIndex] = progress;
+    currentProgress.lastAccessDate = new Date();
+    
+    await setDoc(progressRef, currentProgress);
+    
+    return currentProgress;
+  } catch (error) {
+    console.error('Error updating module progress:', error);
+    throw new Error('Failed to update module progress');
+  }
+}
+
+export async function getCourseProgress(userId: string, courseId: string) {
+  try {
+    const progressRef = doc(db, 'courseProgress', `${userId}_${courseId}`);
+    const progressSnap = await getDoc(progressRef);
+    
+    if (!progressSnap.exists()) {
+      const initialProgress = {
+        userId,
+        courseId,
+        moduleProgress: [],
+        lastAccessedModule: 0,
+        startDate: new Date(),
+        lastAccessDate: new Date()
+      };
+      
+      // Create initial progress document
+      await setDoc(progressRef, initialProgress);
+      return initialProgress;
+    }
+    
+    return progressSnap.data();
+  } catch (error) {
+    console.error('Error fetching course progress:', error);
+    throw new Error('Failed to fetch course progress');
   }
 } 
