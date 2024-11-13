@@ -141,12 +141,12 @@
       </div>
 
       {#each courseDetails.Final_Module_Title as moduleTitle, index}
-        <section class="mb-8 bg-white rounded-lg shadow-md p-6">
+        <section class="mb-8 bg-white rounded-lg shadow-md p-6 min-h-[600px] flex flex-col">
           <h3 class="text-xl font-semibold mb-4">Module {index + 1}: {moduleTitle}</h3>
           <p class="mb-4 text-gray-600">{courseDetails.Final_Module_Objective[index]}</p>
           
           {#if courseDetails.Final_Module_YouTube_Video_URL[index]}
-            <div class="aspect-w-16 aspect-h-9 mb-4">
+            <div class="flex-grow mb-4 relative" style="min-height: 400px;">
               <iframe
                 src={`https://www.youtube.com/embed/${new URL(courseDetails.Final_Module_YouTube_Video_URL[index]).searchParams.get('v')}?enablejsapi=0&origin=${window.location.origin}`}
                 title={moduleTitle}
@@ -154,12 +154,12 @@
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowfullscreen
                 loading="lazy"
-                class="w-full h-full rounded"
+                class="absolute inset-0 w-full h-full rounded"
               ></iframe>
             </div>
           {/if}
 
-          <div class="mt-4">
+          <div class="mt-auto">
             <button
               class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
               on:click={() => {
@@ -168,12 +168,6 @@
                   console.error(`No quiz found for module ${index + 1}`);
                   return;
                 }
-                console.log('Module Quiz Data:', {
-                  moduleIndex: index,
-                  quizData: courseDetails?.Final_Module_Quiz?.[index],
-                  hasQuiz: Boolean(courseDetails?.Final_Module_Quiz?.[index]?.quiz),
-                  questionCount: courseDetails?.Final_Module_Quiz?.[index]?.quiz?.length
-                });
                 startQuiz(moduleQuiz, index);
               }}
             >
