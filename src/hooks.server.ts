@@ -3,10 +3,11 @@ import { getAuth } from 'firebase-admin/auth';
 import { adminApp } from '$lib/server/firebase-admin';
 
 export const handle: Handle = async ({ event, resolve }) => {
+  // Handle authentication
   try {
     const token = event.cookies.get('firebase-token');
     
-    if (token && adminApp.auth) {  // Check if auth is available
+    if (token && adminApp.auth) {
       const auth = getAuth(adminApp);
       try {
         const decodedToken = await auth.verifyIdToken(token);
@@ -43,3 +44,33 @@ export const handle: Handle = async ({ event, resolve }) => {
     headers: newHeaders
   });
 };
+
+// Set port for production
+if (process.env.NODE_ENV === 'production') {
+  process.env.PORT = '3000';
+  process.env.HOST = '0.0.0.0';
+}
+
+// Handle process termination gracefully
+process.on('SIGTERM', () => {
+  console.log('Received SIGTERM signal. Performing graceful shutdown...');
+  process.exit(0);
+});
+
+process.on('SIGINT', () => {
+  console.log('Received SIGINT signal. Performing graceful shutdown...');
+  process.exit(0);
+});
+
+// Error handling for uncaught exceptions
+process.on('uncaughtException', (error) => {
+  console.error('Uncaught Exception:', error);
+  // Perform any necessary cleanup
+  process.exit(1);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+  // Perform any necessary cleanup
+  process.exit(1);
+});

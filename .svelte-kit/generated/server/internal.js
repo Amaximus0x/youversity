@@ -1,5 +1,5 @@
 
-import root from '../root.js';
+import root from '../root.svelte';
 import { set_building, set_prerendering } from '__sveltekit/environment';
 import { set_assets } from '__sveltekit/paths';
 import { set_manifest, set_read_implementation } from '__sveltekit/server';
@@ -9,7 +9,7 @@ export const options = {
 	app_dir: "_app",
 	app_template_contains_nonce: false,
 	csp: {"mode":"auto","directives":{"upgrade-insecure-requests":false,"block-all-mixed-content":false},"reportOnly":{"upgrade-insecure-requests":false,"block-all-mixed-content":false}},
-	csrf_check_origin: true,
+	csrf_check_origin: false,
 	embedded: false,
 	env_public_prefix: 'PUBLIC_',
 	env_private_prefix: '',

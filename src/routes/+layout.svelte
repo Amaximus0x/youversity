@@ -4,9 +4,9 @@
   import { signInWithGoogle, signOutUser } from '$lib/services/auth';
   import CourseGenerationProgress from '$lib/components/CourseGenerationProgress.svelte';
   import '../app.css';
-  
+
   let menuOpen = false;
-  
+
   function toggleMenu() {
     menuOpen = !menuOpen;
   }
@@ -31,22 +31,19 @@
         {#if $isAuthenticated}
           <a 
             href="/create-course" 
-            class="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md"
-            class:active={$page.url.pathname === '/create-course'}
+            class="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md {$page.url.pathname === '/create-course' ? 'text-blue-600 font-medium' : ''}"
           >
             Create Course
           </a>
           <a 
             href="/my-courses" 
-            class="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md"
-            class:active={$page.url.pathname === '/my-courses'}
+            class="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md {$page.url.pathname === '/my-courses' ? 'text-blue-600 font-medium' : ''}"
           >
             My Courses
           </a>
           <a 
             href="/profile" 
-            class="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md"
-            class:active={$page.url.pathname === '/profile'}
+            class="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md {$page.url.pathname === '/profile' ? 'text-blue-600 font-medium' : ''}"
           >
             My Profile
           </a>
@@ -85,10 +82,3 @@
 <main class="pt-16">
   <slot />
 </main>
-
-<style>
-  .active {
-    color: theme(colors.blue.600);
-    font-weight: 500;
-  }
-</style>

@@ -10,7 +10,7 @@ return {
 	assets: new Set(["favicon.png"]),
 	mimeTypes: {".png":"image/png"},
 	_: {
-		client: {"start":"_app/immutable/entry/start.BzMrrVAi.js","app":"_app/immutable/entry/app.C11hrGWA.js","imports":["_app/immutable/entry/start.BzMrrVAi.js","_app/immutable/chunks/entry.bDmjVCi5.js","_app/immutable/chunks/utils.DcsKdZEZ.js","_app/immutable/chunks/index.CC-aNF1f.js","_app/immutable/entry/app.C11hrGWA.js","_app/immutable/chunks/utils.DcsKdZEZ.js","_app/immutable/chunks/render.Cil4iE76.js","_app/immutable/chunks/disclose-version.D7tGBA4G.js","_app/immutable/chunks/if.C26WOn-M.js","_app/immutable/chunks/props.OFLBkJCG.js","_app/immutable/chunks/index-client.Buh_srdv.js"],"stylesheets":[],"fonts":[],"uses_env_dynamic_public":false},
+		client: {"start":"_app/immutable/entry/start.DVmCEMDf.js","app":"_app/immutable/entry/app.I29R-eE3.js","imports":["_app/immutable/entry/start.DVmCEMDf.js","_app/immutable/chunks/entry.XLM3-e4P.js","_app/immutable/chunks/scheduler.DhsztkH2.js","_app/immutable/chunks/index.hQFG0jTX.js","_app/immutable/entry/app.I29R-eE3.js","_app/immutable/chunks/scheduler.DhsztkH2.js","_app/immutable/chunks/index.DK03Zu-C.js"],"stylesheets":[],"fonts":[],"uses_env_dynamic_public":false},
 		nodes: [
 			__memo(() => import('./nodes/0.js')),
 			__memo(() => import('./nodes/1.js')),
@@ -18,7 +18,9 @@ return {
 			__memo(() => import('./nodes/3.js')),
 			__memo(() => import('./nodes/4.js')),
 			__memo(() => import('./nodes/5.js')),
-			__memo(() => import('./nodes/6.js'))
+			__memo(() => import('./nodes/6.js')),
+			__memo(() => import('./nodes/7.js')),
+			__memo(() => import('./nodes/8.js'))
 		],
 		routes: [
 			{
@@ -85,31 +87,45 @@ return {
 				endpoint: __memo(() => import('./entries/endpoints/api/video-transcript/_server.ts.js'))
 			},
 			{
+				id: "/course/[id]",
+				pattern: /^\/course\/([^/]+?)\/?$/,
+				params: [{"name":"id","optional":false,"rest":false,"chained":false}],
+				page: { layouts: [0,], errors: [1,], leaf: 3 },
+				endpoint: null
+			},
+			{
 				id: "/create-course",
 				pattern: /^\/create-course\/?$/,
 				params: [],
-				page: { layouts: [0,], errors: [1,], leaf: 3 },
+				page: { layouts: [0,], errors: [1,], leaf: 4 },
+				endpoint: null
+			},
+			{
+				id: "/login",
+				pattern: /^\/login\/?$/,
+				params: [],
+				page: { layouts: [0,], errors: [1,], leaf: 5 },
 				endpoint: null
 			},
 			{
 				id: "/my-courses",
 				pattern: /^\/my-courses\/?$/,
 				params: [],
-				page: { layouts: [0,], errors: [1,], leaf: 4 },
+				page: { layouts: [0,], errors: [1,], leaf: 6 },
 				endpoint: null
 			},
 			{
 				id: "/profile",
 				pattern: /^\/profile\/?$/,
 				params: [],
-				page: { layouts: [0,], errors: [1,], leaf: 5 },
+				page: { layouts: [0,], errors: [1,], leaf: 7 },
 				endpoint: null
 			},
 			{
 				id: "/protected",
 				pattern: /^\/protected\/?$/,
 				params: [],
-				page: { layouts: [0,], errors: [1,], leaf: 6 },
+				page: { layouts: [0,], errors: [1,], leaf: 8 },
 				endpoint: null
 			}
 		],

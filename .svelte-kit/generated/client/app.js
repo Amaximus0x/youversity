@@ -30,4 +30,4 @@ export const hooks = {
 	reroute: (() => {})
 };
 
-export { default as root } from '../root.js';
+export { default as root } from '../root.svelte';

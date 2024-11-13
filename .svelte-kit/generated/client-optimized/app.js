@@ -7,17 +7,21 @@ export const nodes = [
 	() => import('./nodes/3'),
 	() => import('./nodes/4'),
 	() => import('./nodes/5'),
-	() => import('./nodes/6')
+	() => import('./nodes/6'),
+	() => import('./nodes/7'),
+	() => import('./nodes/8')
 ];
 
 export const server_loads = [];
 
 export const dictionary = {
 		"/": [2],
-		"/create-course": [~3],
-		"/my-courses": [~4],
-		"/profile": [~5],
-		"/protected": [6]
+		"/course/[id]": [3],
+		"/create-course": [~4],
+		"/login": [5],
+		"/my-courses": [~6],
+		"/profile": [~7],
+		"/protected": [8]
 	};
 
 export const hooks = {
@@ -26,4 +30,4 @@ export const hooks = {
 	reroute: (() => {})
 };
 
-export { default as root } from '../root.js';
+export { default as root } from '../root.svelte';

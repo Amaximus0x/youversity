@@ -1,0 +1,1 @@
+{"version":3,"file":"auth2-D_qCq2Z-.js","sources":["../../../.svelte-kit/adapter-node/chunks/auth2.js"],"sourcesContent":["import { GoogleAuthProvider } from \"firebase/auth\";\nimport \"./firebase.js\";\nimport \"./client.js\";\nnew GoogleAuthProvider();\n"],"names":[],"mappings":";;;;AAGA,IAAI,kBAAkB,EAAE"}
