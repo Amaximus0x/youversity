@@ -43,11 +43,11 @@ async function makeOpenAIRequest(prompt: string, retries = 2) {
   });
 }
 
-async function generateQuiz(transcript: string, moduleTitle: string, isFinalQuiz: boolean = false): Promise<Quiz> {
+async function generateQuiz(transcript: string, moduleTitle: string, isFinalQuiz: boolean = false): Promise<Quiz | null> {
   try {
     if (typeof transcript !== 'string') {
       console.error('Invalid transcript type:', typeof transcript);
-      return generateFallbackQuiz(moduleTitle);
+      return null;
     }
 
     console.log(`Starting quiz generation for: ${moduleTitle}`);
@@ -108,76 +108,18 @@ ${transcript.substring(0, 4000)}`;
       
       if (!quiz.quiz || !Array.isArray(quiz.quiz) || quiz.quiz.length !== 5) {
         console.error(`Invalid quiz structure for ${moduleTitle}`);
-        return generateFallbackQuiz(moduleTitle);
+        return null;
       }
 
       return quiz;
     } catch (error) {
       console.error(`Error generating quiz for ${moduleTitle}:`, error);
-      return generateFallbackQuiz(moduleTitle);
+      return null;
     }
   } catch (error) {
     console.error(`Error in quiz generation for ${moduleTitle}:`, error);
-    return generateFallbackQuiz(moduleTitle);
+    return null;
   }
-}
-
-function generateFallbackQuiz(moduleTitle: string): Quiz {
-  return {
-    quiz: [
-      {
-        question: `What is the main topic covered in ${moduleTitle}?`,
-        type: "multiple-choice",
-        options: {
-          "a": moduleTitle,
-          "b": "General Knowledge",
-          "c": "Basic Concepts",
-          "d": "Advanced Topics"
-        },
-        answer: "a"
-      },
-      {
-        question: "Is this module part of a structured learning course?",
-        type: "true/false",
-        options: {
-          "a": "True",
-          "b": "False"
-        },
-        answer: "a"
-      },
-      {
-        question: "What best describes this module's content?",
-        type: "multiple-choice",
-        options: {
-          "a": "Introductory Material",
-          "b": "Advanced Concepts",
-          "c": "Practical Examples",
-          "d": "Theoretical Framework"
-        },
-        answer: "a"
-      },
-      {
-        question: "This module is designed for:",
-        type: "multiple-choice",
-        options: {
-          "a": "Beginners",
-          "b": "Intermediate Learners",
-          "c": "Advanced Users",
-          "d": "All Skill Levels"
-        },
-        answer: "d"
-      },
-      {
-        question: "The content in this module is educational.",
-        type: "true/false",
-        options: {
-          "a": "True",
-          "b": "False"
-        },
-        answer: "a"
-      }
-    ]
-  };
 }
 
 async function generateConclusion(courseOverview: any, moduleDetails: any[]) {
@@ -316,7 +258,7 @@ async function generateModuleDetails(courseStructure: CourseStructure, selectedV
 }
 
 async function generateAllQuizzes(moduleTranscripts: string[], courseStructure: CourseStructure) {
-  const moduleQuizzes = [];
+  const moduleQuizzes: (Quiz | null)[] = [];
   let allTranscripts = '';
 
   console.log('Starting quiz generation for all modules...');
@@ -336,7 +278,7 @@ async function generateAllQuizzes(moduleTranscripts: string[], courseStructure: 
       console.log(`Successfully generated quiz for module ${i + 1}`);
     } catch (error) {
       console.error(`Error processing module ${i + 1}:`, error);
-      moduleQuizzes.push(generateFallbackQuiz(courseStructure.OG_Module_Title[i]));
+      moduleQuizzes.push(null);
     }
   }
 
@@ -353,7 +295,7 @@ async function generateAllQuizzes(moduleTranscripts: string[], courseStructure: 
     console.error('Error generating final quiz:', error);
     return { 
       moduleQuizzes, 
-      finalQuiz: generateFallbackQuiz(courseStructure.OG_Course_Title) 
+      finalQuiz: null 
     };
   }
 }

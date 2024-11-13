@@ -10,8 +10,10 @@
     ThumbsUp, 
     ThumbsDown, 
     Eye,
-    Play 
+    Play,
+    Plus 
   } from 'lucide-svelte';
+  import { goto } from '$app/navigation';
 
   let learningObjective = '';
   let userCourses: (FinalCourseStructure & { id: string })[] = [];
@@ -67,6 +69,10 @@
     console.log(`Sharing course with ID: ${courseId}`);
     // Implement sharing functionality
   }
+
+  function handleAddCourse() {
+    goto('/create-course');
+  }
 </script>
 
 <!-- Create Course Section -->
@@ -111,20 +117,16 @@
 {#if $user}
   <!-- My Courses Section -->
   <div class="mb-12">
-    <h2 class="text-2xl font-bold text-[#2A4D61] mb-6">My Courses</h2>
+    <div class="flex justify-between items-center mb-6">
+      <h2 class="text-2xl font-bold text-[#2A4D61]">My Courses</h2>
+    </div>
     {#if loading}
       <div class="text-center py-8">Loading your courses...</div>
     {:else if error}
       <div class="text-red-500 text-center py-8">{error}</div>
     {:else if userCourses.length === 0}
       <div class="text-center py-8">
-        <p class="text-[#1E3443]/80 mb-4">You haven't created any courses yet.</p>
-        <button
-          on:click={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-          class="bg-[#EE434A] hover:bg-[#D93D44] text-white px-6 py-3 rounded-lg transition-colors duration-200"
-        >
-          Create Your First Course
-        </button>
+        <p class="text-[#1E3443]/80">You haven't created any courses yet.</p>
       </div>
     {:else}
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
