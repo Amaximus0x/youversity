@@ -215,6 +215,17 @@
       showVideoPlayer = false;
       currentPlayingVideo = null;
     }
+
+    let showCustomUrlInput: Record<number, boolean> = {};
+  
+    function handleCustomVideoAdd(video: VideoItem, moduleIndex: number) {
+      if (!moduleVideos[moduleIndex]) {
+        moduleVideos[moduleIndex] = [];
+      }
+      moduleVideos[moduleIndex] = [...moduleVideos[moduleIndex], video];
+      moduleVideos = [...moduleVideos];
+      showCustomUrlInput[moduleIndex] = false; // Hide input after successful add
+    }
 </script>
   
 <div class="container mx-auto px-4 py-8">
@@ -306,16 +317,22 @@
           </div>
         {/if}
 
-        <div class="flex gap-2 mt-4">
-          <input
-            type="text"
-            placeholder="Paste YouTube URL"
-            class="flex-1 p-2 border rounded-lg max-w-md focus:ring-2 focus:ring-[#EE434A] focus:border-transparent outline-none"
-          />
-          <button class="bg-[#EE434A] hover:bg-[#D93D44] text-white px-4 py-2 rounded-lg flex items-center transition-colors duration-200">
-            <Plus class="w-4 h-4 mr-2" />
-            Add Custom Video
-          </button>
+        <div class="flex gap-2">
+          {#if showCustomUrlInput[moduleIndex]}
+            <YoutubeUrlInput 
+              {moduleIndex} 
+              onVideoAdd={handleCustomVideoAdd}
+              class="flex-1"
+            />
+          {:else}
+            <button
+              class="bg-[#EE434A] hover:bg-[#D93D44] text-white px-4 py-2 rounded-lg flex items-center transition-colors duration-200"
+              on:click={() => showCustomUrlInput[moduleIndex] = true}
+            >
+              <Plus class="w-4 h-4 mr-2" />
+              Add Custom Video
+            </button>
+          {/if}
         </div>
       </div>
     {/each}
