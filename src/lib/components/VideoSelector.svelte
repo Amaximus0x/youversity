@@ -1,6 +1,7 @@
 <script lang="ts">
     import { onMount } from 'svelte';
     import type { CourseStructure, VideoItem } from '$lib/types/course';
+    import { ChevronLeft, ChevronRight, CheckCircle2, Plus, Play } from 'lucide-svelte';
     import { auth } from '$lib/firebase';
     import { saveCourseToFirebase } from '$lib/firebase';
     import { goto } from '$app/navigation';
@@ -16,7 +17,34 @@
     export let moduleVideos: VideoItem[][];
     export let selectedVideos: number[];
     export let error: string | null;
-    export const loading = false;
+    export let loading = false;
+  
+    let sliderRefs: HTMLDivElement[] = [];
+    let showLeftArrows: boolean[] = [];
+    let showRightArrows: boolean[] = [];
+  
+    function updateArrows(moduleIndex: number) {
+      const slider = sliderRefs[moduleIndex];
+      if (slider) {
+        const { scrollLeft, scrollWidth, clientWidth } = slider;
+        showLeftArrows[moduleIndex] = scrollLeft > 0;
+        showRightArrows[moduleIndex] = scrollLeft + clientWidth < scrollWidth;
+      }
+    }
+  
+    function scroll(moduleIndex: number, direction: 'left' | 'right') {
+      const slider = sliderRefs[moduleIndex];
+      if (slider) {
+        const scrollAmount = direction === 'left' ? -320 : 320;
+        slider.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+      }
+    }
+  
+    onMount(() => {
+      sliderRefs = sliderRefs;
+      showLeftArrows = new Array(courseStructure.OG_Module_Title.length).fill(false);
+      showRightArrows = new Array(courseStructure.OG_Module_Title.length).fill(true);
+    });
   
     let saving = false;
     let currentModule = 0;
@@ -174,87 +202,115 @@
     });
 </script>
   
-  <div>
-    <h2 class="text-2xl font-bold mb-6">{courseStructure.OG_Course_Title}</h2>
-    <p class="mb-8">{courseStructure.OG_Course_Objective}</p>
-  
+<div class="container mx-auto px-4 py-8">
+  <div class="space-y-8">
+    <div>
+      <h1 class="text-3xl font-bold text-[#2A4D61] mb-2">{courseStructure.OG_Course_Title}</h1>
+      <p class="text-[#1E3443]/80">{courseStructure.OG_Course_Objective}</p>
+    </div>
+
     {#each courseStructure.OG_Module_Title as moduleTitle, moduleIndex}
-      <div class="mb-8 p-4 bg-gray-50 rounded-lg">
-        <h3 class="text-xl font-semibold mb-2">
-          Module {moduleIndex + 1}: {moduleTitle}
-        </h3>
-  
-        {#if moduleVideos[moduleIndex]}
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {#each moduleVideos[moduleIndex] as video, videoIndex}
-              <div class="relative">
-                <button
-                  class="p-4 border rounded-lg hover:border-blue-500 transition-colors w-full text-left"
-                  class:border-blue-500={selectedVideos[moduleIndex] === videoIndex}
-                >
-                  <div 
-                    role="button"
-                    tabindex="0"
-                    class="relative cursor-pointer"
-                    on:click={() => playingVideoId = video.videoId}
-                    on:keydown={(e) => {
-                        if (e.key === 'Enter' || e.key === ' ') {
-                            playingVideoId = video.videoId;
-                        }
-                    }}
-                  >
-                    <img
-                      src={video.thumbnailUrl}
-                      alt={video.title}
-                      class="w-full h-48 object-cover mb-2 rounded"
-                    />
-                    <div class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-0 hover:bg-opacity-50 transition-opacity">
-                      <svg class="w-16 h-16 text-white opacity-0 hover:opacity-100" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M8 5v14l11-7z"/>
-                      </svg>
-                    </div>
-                  </div>
-                  <div 
-                    role="button"
-                    tabindex="0"
-                    class="mt-2"
-                    on:click={() => selectedVideos[moduleIndex] = videoIndex}
-                    on:keydown={(e) => {
-                        if (e.key === 'Enter' || e.key === ' ') {
-                            selectedVideos[moduleIndex] = videoIndex;
-                        }
-                    }}
-                  >
-                    <h4 class="font-semibold mb-1">{video.title}</h4>
-                    <p class="text-sm text-gray-600">{video.length} minutes</p>
-                  </div>
-                </button>
-              </div>
-            {/each}
-          </div>
-          
-          {#if playingVideoId}
-            <VideoPlayer 
-              videoId={playingVideoId} 
-              onClose={() => playingVideoId = null}
-            />
-          {/if}
-          
-          <YoutubeUrlInput
-            {moduleIndex}
-            onVideoAdd={(video, index) => {
-              moduleVideos[index] = [...moduleVideos[index], video];
-              moduleVideos = [...moduleVideos];
-            }}
-          />
+      <div class="bg-white rounded-lg shadow-md p-6 space-y-4">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-xl font-semibold text-[#2A4D61]">
+            Module {moduleIndex + 1}: {moduleTitle}
+          </h2>
+        </div>
+
+        {#if loading}
+          <div class="text-center py-4">Loading videos...</div>
+        {:else if !moduleVideos[moduleIndex]?.length}
+          <div class="text-center py-4">No videos available for this module.</div>
         {:else}
-          <div class="text-center py-4">
-            {getLoadingMessage()}
+          <div class="relative">
+            {#if showLeftArrows[moduleIndex]}
+              <button
+                class="absolute left-0 top-1/2 -translate-y-1/2 bg-white/80 p-2 rounded-full shadow-md z-10 hover:bg-white"
+                on:click={() => scroll(moduleIndex, 'left')}
+              >
+                <ChevronLeft class="w-6 h-6 text-[#2A4D61]" />
+              </button>
+            {/if}
+
+            <div
+              bind:this={sliderRefs[moduleIndex]}
+              class="flex overflow-x-auto scrollbar-hide space-x-4 pb-4"
+              on:scroll={() => updateArrows(moduleIndex)}
+              style="scrollbar-width: none; -ms-overflow-style: none;"
+            >
+              {#each moduleVideos[moduleIndex] as video, videoIndex}
+                <div class="relative flex-shrink-0" style="width: 300px">
+                  <button
+                    class="w-full cursor-pointer overflow-hidden rounded-lg transition-all duration-200 transform hover:scale-102 
+                      {selectedVideos[moduleIndex] === videoIndex ? 'ring-2 ring-[#EE434A] ring-offset-2' : 'hover:border-[#EE434A] border border-gray-200'}"
+                    on:click={() => selectedVideos[moduleIndex] = videoIndex}
+                  >
+                    <div class="relative w-full aspect-video">
+                      <img
+                        src={video.thumbnailUrl}
+                        alt={video.title}
+                        class="w-full h-full object-cover rounded-t-lg"
+                      />
+                      <div class="absolute inset-0 bg-black bg-opacity-0 hover:bg-opacity-30 transition-opacity duration-200 rounded-t-lg">
+                        <div class="w-full h-full flex items-center justify-center">
+                          <div class="text-white opacity-0 hover:opacity-100 transition-opacity duration-200">
+                            <Play class="w-12 h-12" />
+                          </div>
+                        </div>
+                      </div>
+                      {#if selectedVideos[moduleIndex] === videoIndex}
+                        <div class="absolute top-3 right-3 bg-[#EE434A] text-white p-1.5 rounded-full shadow-lg transform transition-transform duration-200 hover:scale-110">
+                          <CheckCircle2 class="w-5 h-5" />
+                        </div>
+                      {/if}
+                    </div>
+                    <div class="p-4 bg-white rounded-b-lg">
+                      <p class="font-medium text-sm line-clamp-2 mb-1 text-[#2A4D61]">{video.title}</p>
+                      <p class="text-xs text-[#1E3443]/60">{video.length} minutes</p>
+                    </div>
+                  </button>
+                </div>
+              {/each}
+            </div>
+
+            {#if showRightArrows[moduleIndex]}
+              <button
+                class="absolute right-0 top-1/2 -translate-y-1/2 bg-white/80 p-2 rounded-full shadow-md z-10 hover:bg-white"
+                on:click={() => scroll(moduleIndex, 'right')}
+              >
+                <ChevronRight class="w-6 h-6 text-[#2A4D61]" />
+              </button>
+            {/if}
           </div>
         {/if}
+
+        <div class="flex gap-2 mt-4">
+          <input
+            type="text"
+            placeholder="Paste YouTube URL"
+            class="flex-1 p-2 border rounded-lg max-w-md focus:ring-2 focus:ring-[#EE434A] focus:border-transparent outline-none"
+          />
+          <button class="bg-[#EE434A] hover:bg-[#D93D44] text-white px-4 py-2 rounded-lg flex items-center transition-colors duration-200">
+            <Plus class="w-4 h-4 mr-2" />
+            Add Custom Video
+          </button>
+        </div>
       </div>
     {/each}
   </div>
+</div>
+
+<style>
+  /* Hide scrollbar but keep functionality */
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  
+  /* For Firefox */
+  .scrollbar-hide {
+    scrollbar-width: none;
+  }
+</style>
   
   <div class="mt-8 flex justify-end">
     <button
