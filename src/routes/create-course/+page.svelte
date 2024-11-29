@@ -1,10 +1,10 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import CourseGenerator from '$lib/components/CourseGenerator.svelte';
   import VideoSelector from '$lib/components/VideoSelector.svelte';
   import type { CourseStructure, VideoItem } from '$lib/types/course';
   import { loadingState } from '$lib/stores/loadingState';
   import { page } from '$app/stores';
+  import { goto } from '$app/navigation';
 
   let courseObjective = '';
   let courseStructure: CourseStructure | null = null;
@@ -51,8 +51,10 @@
     const urlObjective = $page.url.searchParams.get('objective');
     if (urlObjective) {
       courseObjective = decodeURIComponent(urlObjective);
-      // Automatically start course generation if we have an objective
       handleBuildCourse();
+    } else {
+      // Redirect to home page if no objective is provided
+      goto('/');
     }
   });
 </script>
@@ -60,14 +62,17 @@
 <div class="container mx-auto px-4 py-8">
   <h1 class="text-3xl font-bold mb-8">Create Your Course</h1>
 
-  {#if !courseStructure}
-    <CourseGenerator
-      bind:courseObjective
-      {loading}
-      {error}
-      onSubmit={handleBuildCourse}
-    />
-  {:else}
+  {#if error}
+    <div class="max-w-2xl mx-auto text-center">
+      <div class="text-red-500 mb-4">{error}</div>
+      <a 
+        href="/" 
+        class="text-blue-600 hover:text-blue-800"
+      >
+        Return to Home Page
+      </a>
+    </div>
+  {:else if courseStructure}
     <VideoSelector
       {courseStructure}
       bind:moduleVideos
@@ -75,5 +80,12 @@
       {loading}
       {error}
     />
+  {:else}
+    <div class="max-w-2xl mx-auto text-center">
+      <div class="animate-pulse">
+        <div class="h-4 bg-gray-200 rounded w-3/4 mx-auto mb-4"></div>
+        <div class="h-4 bg-gray-200 rounded w-1/2 mx-auto"></div>
+      </div>
+    </div>
   {/if}
 </div>
