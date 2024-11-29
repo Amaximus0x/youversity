@@ -1,7 +1,7 @@
 <script lang="ts">
     import { onMount } from 'svelte';
     import type { CourseStructure, VideoItem } from '$lib/types/course';
-    import { ChevronLeft, ChevronRight, CheckCircle2, Plus, Play } from 'lucide-svelte';
+    import { ChevronLeft, ChevronRight, CheckCircle2, Plus, Play, X } from 'lucide-svelte';
     import { auth } from '$lib/firebase';
     import { saveCourseToFirebase } from '$lib/firebase';
     import { goto } from '$app/navigation';
@@ -57,6 +57,9 @@
   
     let minimized = false;
     let generatedCourseId: string | null = null;
+  
+    let showVideoPlayer = false;
+    let currentPlayingVideo: VideoItem | null = null;
   
     const createPlaceholderVideo = (): VideoItem => ({
       videoId: '',
@@ -200,6 +203,18 @@
         error = 'Failed to initialize course videos';
       }
     });
+  
+    function handlePlayVideo(video: VideoItem, event: MouseEvent) {
+      event.stopPropagation(); // Prevent video selection when clicking play
+      currentPlayingVideo = video;
+      playingVideoId = video.videoId;
+      showVideoPlayer = true;
+    }
+
+    function closeVideoPlayer() {
+      showVideoPlayer = false;
+      currentPlayingVideo = null;
+    }
 </script>
   
 <div class="container mx-auto px-4 py-8">
@@ -244,11 +259,6 @@
                     class="w-full cursor-pointer overflow-hidden rounded-lg transition-all duration-200 transform hover:scale-102 bg-white group
                       {selectedVideos[moduleIndex] === videoIndex ? 'ring-2 ring-[#EE434A] ring-offset-2' : 'hover:border-[#EE434A] border border-gray-200'}"
                     on:click={() => selectedVideos[moduleIndex] = videoIndex}
-                    on:keydown={(e) => {
-                      if (e.key === 'Enter' || e.key === ' ') {
-                        selectedVideos[moduleIndex] = videoIndex;
-                      }
-                    }}
                     role="button"
                     tabindex="0"
                   >
@@ -260,9 +270,12 @@
                       />
                       <!-- Play icon hover overlay -->
                       <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-200 rounded-t-lg flex items-center justify-center">
-                        <div class="text-white opacity-0 group-hover:opacity-100 transition-all duration-200">
+                        <button
+                          class="text-white opacity-0 group-hover:opacity-100 transition-all duration-200 hover:scale-110 transform"
+                          on:click|stopPropagation={(e) => handlePlayVideo(video, e)}
+                        >
                           <Play class="w-12 h-12" />
-                        </div>
+                        </button>
                       </div>
                       
                       <!-- Selected indicator -->
@@ -339,3 +352,31 @@
     bind:minimized
     courseId={generatedCourseId}
   />
+
+  {#if showVideoPlayer && currentPlayingVideo}
+    <div 
+      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 md:p-6"
+      on:click|self={closeVideoPlayer}
+    >
+      <div class="bg-white rounded-lg w-full h-[90vh] max-w-[90vw] md:max-w-[80vw] lg:max-w-[1200px] relative flex flex-col">
+        <button
+          class="absolute -top-2 -right-2 bg-white p-1.5 rounded-full shadow-lg hover:bg-gray-100 transition-colors duration-200 z-10"
+          on:click={closeVideoPlayer}
+        >
+          <X class="w-5 h-5 text-gray-600" />
+        </button>
+        
+        <div class="flex-1 min-h-0 flex flex-col">
+          <div class="relative flex-1">
+            <VideoPlayer 
+              videoId={currentPlayingVideo.videoId} 
+              class="absolute inset-0"
+            />
+          </div>
+          <div class="p-4 bg-white border-t">
+            <h3 class="text-lg font-semibold text-[#2A4D61] truncate">{currentPlayingVideo.title}</h3>
+          </div>
+        </div>
+      </div>
+    </div>
+  {/if}
