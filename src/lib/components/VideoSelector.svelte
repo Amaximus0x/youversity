@@ -225,7 +225,7 @@
           <div class="relative">
             {#if showLeftArrows[moduleIndex]}
               <button
-                class="absolute left-0 top-1/2 -translate-y-1/2 bg-white/80 p-2 rounded-full shadow-md z-10 hover:bg-white"
+                class="absolute -left-3 top-1/2 -translate-y-1/2 bg-white p-2 rounded-full shadow-md z-20 hover:bg-white"
                 on:click={() => scroll(moduleIndex, 'left')}
               >
                 <ChevronLeft class="w-6 h-6 text-[#2A4D61]" />
@@ -234,16 +234,23 @@
 
             <div
               bind:this={sliderRefs[moduleIndex]}
-              class="flex overflow-x-auto scrollbar-hide space-x-4 pb-4"
+              class="flex overflow-x-auto scrollbar-hide space-x-4 pb-4 px-2"
               on:scroll={() => updateArrows(moduleIndex)}
               style="scrollbar-width: none; -ms-overflow-style: none;"
             >
               {#each moduleVideos[moduleIndex] as video, videoIndex}
                 <div class="relative flex-shrink-0" style="width: 300px">
-                  <button
-                    class="w-full cursor-pointer overflow-hidden rounded-lg transition-all duration-200 transform hover:scale-102 
+                  <div 
+                    class="w-full cursor-pointer overflow-hidden rounded-lg transition-all duration-200 transform hover:scale-102 bg-white
                       {selectedVideos[moduleIndex] === videoIndex ? 'ring-2 ring-[#EE434A] ring-offset-2' : 'hover:border-[#EE434A] border border-gray-200'}"
                     on:click={() => selectedVideos[moduleIndex] = videoIndex}
+                    on:keydown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        selectedVideos[moduleIndex] = videoIndex;
+                      }
+                    }}
+                    role="button"
+                    tabindex="0"
                   >
                     <div class="relative w-full aspect-video">
                       <img
@@ -251,31 +258,33 @@
                         alt={video.title}
                         class="w-full h-full object-cover rounded-t-lg"
                       />
-                      <div class="absolute inset-0 bg-black bg-opacity-0 hover:bg-opacity-30 transition-opacity duration-200 rounded-t-lg">
-                        <div class="w-full h-full flex items-center justify-center">
-                          <div class="text-white opacity-0 hover:opacity-100 transition-opacity duration-200">
-                            <Play class="w-12 h-12" />
-                          </div>
+                      <!-- Hover overlay -->
+                      <div class="absolute inset-0 bg-black bg-opacity-0 hover:bg-opacity-30 transition-opacity duration-200 rounded-t-lg flex items-center justify-center">
+                        <div class="text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                          <Play class="w-12 h-12" />
                         </div>
                       </div>
+                      
+                      <!-- Selected indicator -->
                       {#if selectedVideos[moduleIndex] === videoIndex}
-                        <div class="absolute top-3 right-3 bg-[#EE434A] text-white p-1.5 rounded-full shadow-lg transform transition-transform duration-200 hover:scale-110">
+                        <div class="absolute -top-2 -right-2 bg-[#EE434A] text-white p-1.5 rounded-full shadow-lg z-10">
                           <CheckCircle2 class="w-5 h-5" />
                         </div>
                       {/if}
                     </div>
+
                     <div class="p-4 bg-white rounded-b-lg">
                       <p class="font-medium text-sm line-clamp-2 mb-1 text-[#2A4D61]">{video.title}</p>
                       <p class="text-xs text-[#1E3443]/60">{video.length} minutes</p>
                     </div>
-                  </button>
+                  </div>
                 </div>
               {/each}
             </div>
 
             {#if showRightArrows[moduleIndex]}
               <button
-                class="absolute right-0 top-1/2 -translate-y-1/2 bg-white/80 p-2 rounded-full shadow-md z-10 hover:bg-white"
+                class="absolute -right-3 top-1/2 -translate-y-1/2 bg-white p-2 rounded-full shadow-md z-20 hover:bg-white"
                 on:click={() => scroll(moduleIndex, 'right')}
               >
                 <ChevronRight class="w-6 h-6 text-[#2A4D61]" />
@@ -301,14 +310,18 @@
 </div>
 
 <style>
-  /* Hide scrollbar but keep functionality */
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
   }
   
-  /* For Firefox */
   .scrollbar-hide {
     scrollbar-width: none;
+  }
+
+  /* Add padding to ensure the selected indicator is fully visible */
+  .relative {
+    padding-top: 8px;
+    padding-right: 8px;
   }
 </style>
   
