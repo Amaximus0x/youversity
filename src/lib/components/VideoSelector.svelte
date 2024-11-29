@@ -241,7 +241,7 @@
               {#each moduleVideos[moduleIndex] as video, videoIndex}
                 <div class="relative flex-shrink-0" style="width: 300px">
                   <div 
-                    class="w-full cursor-pointer overflow-hidden rounded-lg transition-all duration-200 transform hover:scale-102 bg-white
+                    class="w-full cursor-pointer overflow-hidden rounded-lg transition-all duration-200 transform hover:scale-102 bg-white group
                       {selectedVideos[moduleIndex] === videoIndex ? 'ring-2 ring-[#EE434A] ring-offset-2' : 'hover:border-[#EE434A] border border-gray-200'}"
                     on:click={() => selectedVideos[moduleIndex] = videoIndex}
                     on:keydown={(e) => {
@@ -258,9 +258,9 @@
                         alt={video.title}
                         class="w-full h-full object-cover rounded-t-lg"
                       />
-                      <!-- Hover overlay -->
-                      <div class="absolute inset-0 bg-black bg-opacity-0 hover:bg-opacity-30 transition-opacity duration-200 rounded-t-lg flex items-center justify-center">
-                        <div class="text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                      <!-- Play icon hover overlay -->
+                      <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-200 rounded-t-lg flex items-center justify-center">
+                        <div class="text-white opacity-0 group-hover:opacity-100 transition-all duration-200">
                           <Play class="w-12 h-12" />
                         </div>
                       </div>
