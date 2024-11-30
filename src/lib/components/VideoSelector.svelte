@@ -251,6 +251,49 @@
         isGenerating = false;
       }
     }
+
+    async function generateCourse() {
+      const selectedVideosList = moduleVideos.map((videos, index) => {
+        const selectedVideo = videos[selectedVideos[index]];
+        return {
+          videoId: selectedVideo.videoId,
+          title: selectedVideo.title,
+          description: selectedVideo.description || '',
+          length: selectedVideo.length,
+          thumbnailUrl: selectedVideo.thumbnailUrl
+        };
+      });
+
+      try {
+        saving = true;
+        loadingState.set('Initializing course generation...');
+        
+        const courseData = {
+          title: courseStructure.OG_Course_Title,
+          objective: courseStructure.OG_Course_Objective,
+          modules: courseStructure.OG_Module_Title.map((title, index) => ({
+            title,
+            video: selectedVideosList[index]
+          }))
+        };
+
+        generatedCourseId = await saveCourseToFirebase(courseData);
+        
+        for (let i = 0; i < selectedVideosList.length; i++) {
+          currentModule = i;
+          loadingState.set(`Processing module ${i + 1} of ${selectedVideosList.length}...`);
+          await getVideoTranscript(selectedVideosList[i].videoId);
+        }
+
+        goto(`/course/${generatedCourseId}`);
+      } catch (error) {
+        console.error('Error generating course:', error);
+        alert('Failed to generate course. Please try again.');
+      } finally {
+        saving = false;
+        loadingState.set(null);
+      }
+    }
 </script>
   
 <div class="container mx-auto px-4 py-8">
@@ -404,11 +447,11 @@
     out:fade
   >
     <button
-      on:click={handleGenerateCourse}
+      on:click={handleSaveCourse}
       class="bg-[#EE434A] hover:bg-[#D93D44] text-white px-6 py-3 rounded-full text-base shadow-lg flex items-center justify-center transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed min-w-[250px]"
-      disabled={isGenerating || !courseStructure.OG_Module_Title.every((_, index) => selectedVideos[index] !== undefined)}
+      disabled={saving || !courseStructure.OG_Module_Title.every((_, index) => selectedVideos[index] !== undefined)}
     >
-      {#if isGenerating}
+      {#if saving}
         <div class="flex items-center justify-center space-x-2">
           <svg
             class="animate-spin w-4 h-4"
@@ -453,10 +496,12 @@
     </button>
   </div>
 
-  <CourseGenerationProgress 
-    bind:minimized
-    courseId={generatedCourseId}
-  />
+  {#if saving && generatedCourseId}
+    <CourseGenerationProgress 
+      bind:minimized
+      courseId={generatedCourseId}
+    />
+  {/if}
 
   {#if showVideoPlayer && currentPlayingVideo}
     <div 
