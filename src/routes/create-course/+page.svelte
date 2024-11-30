@@ -60,7 +60,7 @@
 </script>
 
 <div class="container mx-auto px-4 py-8">
-  <h1 class="text-3xl font-bold mb-8">Create Your Course</h1>
+  <!-- <h1 class="text-3xl font-bold mb-8">Create Your Course</h1> -->
 
   {#if error}
     <div class="max-w-2xl mx-auto text-center">

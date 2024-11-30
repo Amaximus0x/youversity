@@ -28,7 +28,8 @@
     "axios": "^1.7.7",
     "firebase": "^10.6.0",
     "firebase-admin": "^11.11.0",
-    "lucide-svelte": "^0.456.0"
+    "lucide-svelte": "^0.456.0",
+    "svelte-motion": "^0.12.2"
   },
   "engines": {
     "node": ">=18.0.0"

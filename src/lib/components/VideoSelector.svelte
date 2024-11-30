@@ -1,5 +1,6 @@
 <script lang="ts">
     import { onMount } from 'svelte';
+    import { fade, fly } from 'svelte/transition';
     import type { CourseStructure, VideoItem } from '$lib/types/course';
     import { ChevronLeft, ChevronRight, CheckCircle2, Plus, Play, X } from 'lucide-svelte';
     import { auth } from '$lib/firebase';
@@ -226,6 +227,30 @@
       moduleVideos = [...moduleVideos];
       showCustomUrlInput[moduleIndex] = false; // Hide input after successful add
     }
+  
+    let isGenerating = false;
+  
+    async function handleGenerateCourse() {
+      const allModulesSelected = courseStructure.OG_Module_Title.every((_, index) => 
+        selectedVideos[index] !== undefined
+      );
+      
+      if (!allModulesSelected) {
+        alert("Please select a video for each module before generating the course.");
+        return;
+      }
+      
+      isGenerating = true;
+      try {
+        // Your existing course generation logic here
+        await generateCourse(); // Replace with your actual generation function
+      } catch (error) {
+        console.error('Error generating course:', error);
+        alert('Failed to generate course. Please try again.');
+      } finally {
+        isGenerating = false;
+      }
+    }
 </script>
   
 <div class="container mx-auto px-4 py-8">
@@ -353,15 +378,78 @@
     padding-top: 8px;
     padding-right: 8px;
   }
+
+  .sticky {
+    position: sticky;
+    z-index: 40;
+  }
+
+  .animate-spin {
+    animation: spin 1s linear infinite;
+  }
+
+  @keyframes spin {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
 </style>
   
-  <div class="mt-8 flex justify-end">
+  <div 
+    class="sticky bottom-8 flex justify-center mt-8"
+    in:fly={{ y: 20, duration: 500, delay: 200 }}
+    out:fade
+  >
     <button
-      on:click={handleSaveCourse}
-      disabled={saving || selectedVideos.some(v => v === undefined)}
-      class="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 disabled:opacity-50"
+      on:click={handleGenerateCourse}
+      class="bg-[#EE434A] hover:bg-[#D93D44] text-white px-6 py-3 rounded-full text-base shadow-lg flex items-center justify-center transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed min-w-[250px]"
+      disabled={isGenerating || !courseStructure.OG_Module_Title.every((_, index) => selectedVideos[index] !== undefined)}
     >
-      {saving ? 'Generating Course...' : 'Generate Final Course'}
+      {#if isGenerating}
+        <div class="flex items-center justify-center space-x-2">
+          <svg
+            class="animate-spin w-4 h-4"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+          >
+            <circle
+              class="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              stroke-width="4"
+            ></circle>
+            <path
+              class="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+            ></path>
+          </svg>
+          <span>Generating Your Course...</span>
+        </div>
+      {:else}
+        <div class="flex items-center justify-center space-x-2">
+          <span>Generate Final Course</span>
+          <svg 
+            class="w-4 h-4" 
+            fill="none" 
+            stroke="currentColor" 
+            viewBox="0 0 24 24"
+          >
+            <path 
+              stroke-linecap="round" 
+              stroke-linejoin="round" 
+              stroke-width="2" 
+              d="M14 5l7 7m0 0l-7 7m7-7H3"
+            />
+          </svg>
+        </div>
+      {/if}
     </button>
   </div>
 

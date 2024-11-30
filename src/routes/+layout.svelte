@@ -77,13 +77,13 @@
           </a>
         {/each}
 
-        <button 
+        <!-- <button 
           on:click={handleAddCourse}
           class="w-full flex items-center px-6 py-3 text-[#2A4D61] hover:text-[#EE434A] hover:bg-[#F5F5F5]"
         >
           <PlusCircle class="w-5 h-5 mr-3" />
           Add Course
-        </button>
+        </button> -->
       </nav>
 
       <div class="absolute bottom-0 w-full p-4">
