@@ -1,14 +1,23 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
-  export let course: {
+  import type { FinalCourseStructure } from '$lib/types/course';
+
+  export let course: FinalCourseStructure & { 
     id: string;
-    Final_Course_Title: string;
-    Final_Course_Objective: string;
-    Final_Module_Title: string[];
+    createdAt?: string;
   };
 
   function handleCourseClick() {
     goto(`/course/${course.id}`);
+  }
+
+  function getYoutubeThumbnail(url: string) {
+    try {
+      const videoId = new URL(url).searchParams.get('v');
+      return `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+    } catch {
+      return '/images/course-placeholder.png'; // Make sure this image exists in static/images/
+    }
   }
 </script>
 
@@ -16,6 +25,23 @@
   on:click={handleCourseClick}
   class="text-left border rounded-lg p-6 hover:shadow-lg transition-all duration-200 hover:scale-102 bg-white"
 >
+  {#if course.Final_Module_YouTube_Video_URL?.[0]}
+    <img 
+      src={getYoutubeThumbnail(course.Final_Module_YouTube_Video_URL[0])}
+      alt={course.Final_Course_Title}
+      class="w-full h-48 object-cover mb-4 rounded"
+      on:error={(e) => {
+        const img = e.currentTarget as HTMLImageElement;
+        img.src = '/images/course-placeholder.png';
+      }}
+    />
+  {:else}
+    <img 
+      src="/images/course-placeholder.png"
+      alt={course.Final_Course_Title}
+      class="w-full h-48 object-cover mb-4 rounded"
+    />
+  {/if}
   <h2 class="text-xl font-semibold mb-2 text-blue-600">{course.Final_Course_Title}</h2>
   <p class="text-gray-600 mb-4">{course.Final_Course_Objective}</p>
   <div class="flex justify-between items-center text-sm text-gray-500">
