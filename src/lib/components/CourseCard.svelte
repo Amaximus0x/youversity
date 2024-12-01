@@ -16,8 +16,13 @@
       const videoId = new URL(url).searchParams.get('v');
       return `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
     } catch {
-      return '/images/course-placeholder.png'; // Make sure this image exists in static/images/
+      return '/images/course-placeholder.png';
     }
+  }
+
+  function handleImageError(event: Event) {
+    const img = event.target as HTMLImageElement;
+    img.src = '/images/course-placeholder.png';
   }
 </script>
 
@@ -30,10 +35,7 @@
       src={getYoutubeThumbnail(course.Final_Module_YouTube_Video_URL[0])}
       alt={course.Final_Course_Title}
       class="w-full h-48 object-cover mb-4 rounded"
-      on:error={(e) => {
-        const img = e.currentTarget as HTMLImageElement;
-        img.src = '/images/course-placeholder.png';
-      }}
+      on:error={handleImageError}
     />
   {:else}
     <img 
