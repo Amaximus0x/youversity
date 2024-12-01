@@ -165,7 +165,21 @@
         {#each filteredCourses as course}
           <div class="bg-white rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300">
             <div class="relative h-[180px]">
-              <img src="/placeholder.svg" alt={course.Final_Course_Title} class="w-full h-full object-cover" />
+              {#if course.Final_Module_YouTube_Video_URL && course.Final_Module_YouTube_Video_URL[0]}
+                {@const videoId = new URL(course.Final_Module_YouTube_Video_URL[0]).searchParams.get('v')}
+                <img 
+                  src={`https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`}
+                  alt={course.Final_Course_Title}
+                  class="w-full h-full object-cover"
+                  onerror="this.onerror=null; this.src=`https://img.youtube.com/vi/${videoId}/mqdefault.jpg`;"
+                />
+              {:else}
+                <img 
+                  src="/placeholder.svg" 
+                  alt={course.Final_Course_Title} 
+                  class="w-full h-full object-cover" 
+                />
+              {/if}
               <div class="absolute inset-0 bg-black bg-opacity-30 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity duration-200">
                 <Play class="w-12 h-12 text-white" />
               </div>
