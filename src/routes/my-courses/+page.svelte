@@ -1,4 +1,4 @@
-<script lang="ts">
+<!-- <script lang="ts">
   import { onMount } from 'svelte';
   import { user, isAuthenticated } from '$lib/stores/auth';
   import { getUserCourses } from '$lib/firebase';
@@ -66,6 +66,7 @@
 </script>
 
 <div class="container mx-auto px-4 py-8">
+
   <h1 class="text-3xl font-bold mb-8">My Courses</h1>
 
   {#if loading}
@@ -102,3 +103,4 @@
     </div>
   {/if}
 </div> 
+

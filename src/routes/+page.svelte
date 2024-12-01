@@ -175,7 +175,7 @@
                 />
               {:else}
                 <img 
-                  src="/placeholder.svg" 
+                  src="https://placehold.co/120x90/lightgray/darkgray.png" 
                   alt={course.Final_Course_Title} 
                   class="w-full h-full object-cover" 
                 />
