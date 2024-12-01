@@ -1,4 +1,4 @@
-<script lang="ts">
+<!-- <script lang="ts">
   import { onMount } from 'svelte';
   import { user, isAuthenticated } from '$lib/stores/auth';
   import { saveCourseToFirebase, getUserCourses } from '$lib/firebase';
@@ -47,4 +47,4 @@
       <CourseCard {course} />
     {/each}
   </div>
-</div> 
+</div>  -->
