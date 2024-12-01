@@ -14,11 +14,13 @@
     Plus 
   } from 'lucide-svelte';
   import { goto } from '$app/navigation';
+  import CourseFilter from '$lib/components/CourseFilter.svelte';
 
   let learningObjective = '';
   let userCourses: (FinalCourseStructure & { id: string })[] = [];
   let loading = false;
   let error: string | null = null;
+  let filteredCourses = userCourses;
 
   // Load user courses when authenticated
   $: if ($user) {
@@ -73,6 +75,33 @@
   function handleAddCourse() {
     goto('/create-course');
   }
+
+  function handleFilterChange(event) {
+    const filterValue = event.detail;
+    let sortedCourses = [...userCourses];
+    
+    switch (filterValue) {
+      case 'name-asc':
+        sortedCourses.sort((a, b) => a.Final_Course_Title.localeCompare(b.Final_Course_Title));
+        break;
+      case 'name-desc':
+        sortedCourses.sort((a, b) => b.Final_Course_Title.localeCompare(a.Final_Course_Title));
+        break;
+      case 'date-new':
+        sortedCourses.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        break;
+      case 'date-old':
+        sortedCourses.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+        break;
+      default:
+        sortedCourses = [...userCourses];
+    }
+    
+    filteredCourses = sortedCourses;
+  }
+
+  // Update filteredCourses whenever userCourses changes
+  $: filteredCourses = userCourses;
 </script>
 
 <!-- Create Course Section -->
@@ -119,7 +148,10 @@
   <div class="mb-12">
     <div class="flex justify-between items-center mb-6">
       <h2 class="text-2xl font-bold text-[#2A4D61]">My Courses</h2>
+      
+      <CourseFilter on:filterChange={handleFilterChange} />
     </div>
+    
     {#if loading}
       <div class="text-center py-8">Loading your courses...</div>
     {:else if error}
@@ -130,7 +162,7 @@
       </div>
     {:else}
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {#each userCourses as course}
+        {#each filteredCourses as course}
           <div class="bg-white rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300">
             <div class="relative h-[180px]">
               <img src="/placeholder.svg" alt={course.Final_Course_Title} class="w-full h-full object-cover" />
