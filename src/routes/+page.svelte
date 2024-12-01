@@ -15,6 +15,8 @@
   } from 'lucide-svelte';
   import { goto } from '$app/navigation';
   import CourseFilter from '$lib/components/CourseFilter.svelte';
+  import { loadingState } from '$lib/stores/loadingState';
+  import { onMount } from 'svelte';
 
   let learningObjective = '';
   let userCourses: (FinalCourseStructure & { id: string })[] = [];
@@ -102,6 +104,14 @@
 
   // Update filteredCourses whenever userCourses changes
   $: filteredCourses = userCourses;
+
+  onMount(() => {
+    // Clear any stale loading state
+    loadingState.clearState();
+    return () => {
+      loadingState.clearState();
+    };
+  });
 </script>
 
 <!-- Create Course Section -->
