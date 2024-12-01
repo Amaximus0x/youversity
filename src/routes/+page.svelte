@@ -17,12 +17,16 @@
   import CourseFilter from '$lib/components/CourseFilter.svelte';
   import { loadingState } from '$lib/stores/loadingState';
   import { onMount } from 'svelte';
+  import ShareModal from '$lib/components/ShareModal.svelte';
+  import { Copy, X } from 'lucide-svelte';
 
   let learningObjective = '';
   let userCourses: (FinalCourseStructure & { id: string })[] = [];
   let loading = false;
   let error: string | null = null;
   let filteredCourses = userCourses;
+  let showShareModal = false;
+  let selectedCourseId = '';
 
   // Load user courses when authenticated
   $: if ($user) {
@@ -69,9 +73,9 @@
     }
   }
 
-  function handleShareCourse(courseId: number) {
-    console.log(`Sharing course with ID: ${courseId}`);
-    // Implement sharing functionality
+  function handleShareCourse(courseId: string) {
+    selectedCourseId = courseId;
+    showShareModal = true;
   }
 
   function handleAddCourse() {
@@ -281,3 +285,9 @@
     </div>
   </div>
 {/if}
+
+<ShareModal
+  show={showShareModal}
+  courseId={selectedCourseId}
+  onClose={() => showShareModal = false}
+/>
