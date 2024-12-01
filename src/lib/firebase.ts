@@ -1,14 +1,14 @@
 import { initializeApp } from 'firebase/app';
-import { getFirestore, collection, addDoc, query, where, getDocs, doc, getDoc, updateDoc, setDoc } from 'firebase/firestore';
+import { getFirestore, collection, addDoc, query, where, getDocs, doc, getDoc, updateDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { getAuth, setPersistence, browserLocalPersistence, signInWithPopup, GoogleAuthProvider, signOut } from 'firebase/auth';
 
 const firebaseConfig = {
-  apiKey: "AIzaSyAOzl4NcFW95BEhRw-t3meFAyzfCo-vZIs",
-  authDomain: "youversity-c8632.firebaseapp.com",
-  projectId: "youversity-c8632",
-  storageBucket: "youversity-c8632.appspot.com",
-  messagingSenderId: "1021633759112",
-  appId: "1:1021633759112:web:6476141a5dd9527b97dc3d"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID
 };
 
 // Initialize Firebase
@@ -22,42 +22,31 @@ setPersistence(auth, browserLocalPersistence).catch((error) => {
 });
 
 // Firebase utility functions
-export async function saveCourseToFirebase(userId: string, course: FinalCourseStructure) {
+export async function saveCourseToFirebase(userId: string, courseData: any) {
   try {
-    console.log('Starting Firebase save...', { userId });
-    
-    const courseData = {
-      userId,
-      createdAt: new Date().toISOString(),
-      Final_Course_Title: course.Final_Course_Title,
-      Final_Course_Objective: course.Final_Course_Objective,
-      Final_Course_Introduction: course.Final_Course_Introduction,
-      Final_Module_Title: course.Final_Module_Title,
-      Final_Module_Objective: course.Final_Module_Objective,
-      Final_Course_Conclusion: course.Final_Course_Conclusion,
-      Final_Module_YouTube_Video_URL: course.Final_Module_YouTube_Video_URL,
-      Final_Module_Quiz: course.Final_Module_Quiz,
-      Final_Course_Quiz: course.Final_Course_Quiz,
-      YouTube_Playlist_URL: course.YouTube_Playlist_URL,
-      completed_modules: new Array(course.Final_Module_Title.length).fill(false)
+    // Create a new document reference in the public courses collection
+    const publicCourseRef = doc(collection(db, 'courses'));
+    const courseId = publicCourseRef.id;
+
+    // Add creation timestamp and ID
+    const courseWithMetadata = {
+      ...courseData,
+      createdAt: serverTimestamp(),
+      id: courseId,
+      createdBy: userId
     };
-    
-    console.log('Course data prepared:', courseData);
 
-    if (!db) {
-      throw new Error('Firestore not initialized');
-    }
+    // Save to public courses collection
+    await setDoc(publicCourseRef, courseWithMetadata);
 
-    const coursesRef = collection(db, 'courses');
-    console.log('Collection reference created');
+    // Save reference to user's courses collection
+    const userCourseRef = doc(db, `users/${userId}/courses/${courseId}`);
+    await setDoc(userCourseRef, courseWithMetadata);
 
-    const courseRef = await addDoc(coursesRef, courseData);
-    console.log('Document written with ID:', courseRef.id);
-
-    return courseRef.id;
+    return courseId;
   } catch (error) {
     console.error('Error saving course:', error);
-    throw new Error(`Failed to save course: ${error}`);
+    throw error;
   }
 }
 
@@ -174,5 +163,24 @@ export async function getCourseProgress(userId: string, courseId: string) {
   } catch (error) {
     console.error('Error fetching course progress:', error);
     throw new Error('Failed to fetch course progress');
+  }
+}
+
+export async function getSharedCourse(courseId: string) {
+  try {
+    // Get course from public courses collection
+    const courseDoc = await getDoc(doc(db, 'courses', courseId));
+    if (courseDoc.exists()) {
+      const data = courseDoc.data();
+      return {
+        ...data,
+        id: courseDoc.id,
+        createdAt: data.createdAt?.toDate?.() || null
+      } as FinalCourseStructure & { id: string };
+    }
+    return null;
+  } catch (error) {
+    console.error('Error getting shared course:', error);
+    throw error;
   }
 } 

@@ -4,205 +4,79 @@
   import { goto } from '$app/navigation';
   import { user } from '$lib/stores/auth';
   import type { FinalCourseStructure, Quiz, QuizQuestion, ModuleProgress } from '$lib/types/course';
-  import { getUserCourse, updateUserCourse, getCourseProgress, updateModuleProgress } from '$lib/firebase';
+  import { getUserCourse, updateUserCourse, getCourseProgress, updateModuleProgress, getSharedCourse } from '$lib/firebase';
 
   let courseDetails: FinalCourseStructure | null = null;
   let loading = true;
   let error: string | null = null;
-  let playlistUrl: string | null = null;
-
-  let showQuiz = false;
-  let currentQuiz: Quiz | null = null;
-  let selectedAnswers: { [key: string]: string } = {};
-  let quizResults: { [key: string]: boolean } = {};
-
+  let isSharedView = false;
   let moduleProgress: ModuleProgress[] = [];
-  let currentModuleIndex: number | null = null;
+  let selectedAnswers: string[] = [];
+  let currentModule = 0;
+  let showQuiz = false;
+  let quizSubmitted = false;
+  let quizScore = 0;
 
-  const handleCreatePlaylist = () => {
-    if (courseDetails?.YouTube_Playlist_URL) {
-      playlistUrl = courseDetails.YouTube_Playlist_URL;
-      window.open(playlistUrl, '_blank');
-    }
-  };
-
-  async function toggleModuleCompletion(index: number) {
-    if (!courseDetails || !$user) return;
-    
-    const updatedModules = [...courseDetails.completed_modules];
-    updatedModules[index] = !updatedModules[index];
-    
-    try {
-      await updateUserCourse($user.uid, $page.params.id, {
-        completed_modules: updatedModules
-      });
-      courseDetails.completed_modules = updatedModules;
-    } catch (err) {
-      console.error('Error updating module completion:', err);
-    }
-  }
-
-  function startQuiz(quiz: Quiz | undefined, moduleIndex?: number) {
-    if (!quiz) {
-      console.error('Quiz not found');
-      return;
-    }
-
-    // Check if quiz has the correct structure
-    if (!Array.isArray(quiz.quiz)) {
-      console.error('Invalid quiz structure');
-      return;
-    }
-
-    // Ensure there are questions
-    if (quiz.quiz.length === 0) {
-      console.error('No questions found in quiz');
-      return;
-    }
-
-    currentModuleIndex = moduleIndex ?? null;
-    currentQuiz = quiz;
-    selectedAnswers = {};
-    quizResults = {};
-    showQuiz = true;
-  }
-
-  async function checkAnswers() {
-    if (!currentQuiz || !currentQuiz.quiz) return;
-    
-    quizResults = {};
-    let score = 0;
-    
-    currentQuiz.quiz.forEach((question, index) => {
-      const isCorrect = selectedAnswers[index] === question.answer;
-      quizResults[index] = isCorrect;
-      if (isCorrect) score += 2; // Each question worth 2 points
-    });
-
-    const passed = score >= 8; // Pass threshold is 8/10
-    
-    if (passed && currentModuleIndex !== null) {
-      await handleModuleProgress(currentModuleIndex, {
-        completed: true,
-        quizAttempts: (moduleProgress[currentModuleIndex]?.quizAttempts || 0) + 1,
-        bestScore: Math.max(score, moduleProgress[currentModuleIndex]?.bestScore || 0),
-        lastAttemptDate: new Date()
-      });
-    }
-
-    return {
-      score,
-      passed
-    };
-  }
-
-  function handlePlaylistClick() {
-    if (courseDetails?.YouTube_Playlist_URL) {
-      window.open(courseDetails.YouTube_Playlist_URL, '_blank');
-    }
-  }
-
-  async function handleModuleProgress(moduleIndex: number | null, progress: ModuleProgress) {
-    if (moduleIndex === null || !$user || !$page.params.id) return;
-
-    try {
-      const updatedProgress = await updateModuleProgress(
-        $user.uid,
-        $page.params.id,
-        moduleIndex,
-        progress
-      );
-      
-      // Update local state
-      moduleProgress = updatedProgress.moduleProgress;
-      
-      // Unlock next module if available
-      if (progress.completed && moduleIndex + 1 < moduleProgress.length) {
-        moduleProgress[moduleIndex + 1] = {
-          completed: false,
-          quizAttempts: 0,
-          bestScore: 0,
-          lastAttemptDate: new Date()
-        };
-        
-        await updateModuleProgress(
-          $user.uid,
-          $page.params.id,
-          moduleIndex + 1,
-          moduleProgress[moduleIndex + 1]
-        );
-      }
-      
-      // Update course completion status
-      const updatedModules = [...(courseDetails?.completed_modules || [])];
-      updatedModules[moduleIndex] = true;
-      
-      await updateUserCourse($user.uid, $page.params.id, {
-        completed_modules: updatedModules
-      });
-      
-      if (courseDetails) {
-        courseDetails.completed_modules = updatedModules;
-      }
-    } catch (err) {
-      console.error('Error updating module progress:', err);
-    }
+  $: if (courseDetails?.Final_Module_Quiz) {
+    // Initialize selectedAnswers array based on number of questions
+    selectedAnswers = new Array(courseDetails.Final_Module_Quiz[currentModule]?.questions?.length || 0).fill('');
   }
 
   onMount(async () => {
     try {
-      if (!$user) {
-        goto('/login');
-        return;
-      }
-
       const courseId = $page.params.id;
       if (!courseId) {
         throw new Error('Course ID not found');
       }
 
       loading = true;
-      const [course, progress] = await Promise.all([
-        getUserCourse($user.uid, courseId),
-        getCourseProgress($user.uid, courseId)
-      ]);
-      
-      moduleProgress = progress?.moduleProgress || [];
-      
-      if (!course) {
+
+      if ($user) {
+        // Authenticated user flow
+        const [course, progress] = await Promise.all([
+          getUserCourse($user.uid, courseId),
+          getCourseProgress($user.uid, courseId)
+        ]);
+        
+        moduleProgress = progress?.moduleProgress || [];
+        
+        if (!course) {
+          // Try to load as shared course if not found in user's courses
+          courseDetails = await getSharedCourse(courseId);
+          isSharedView = true;
+        } else {
+          courseDetails = course;
+        }
+      } else {
+        // Unauthenticated user flow - load shared course
+        courseDetails = await getSharedCourse(courseId);
+        isSharedView = true;
+      }
+
+      if (!courseDetails) {
         throw new Error('Course not found');
       }
 
-      console.log('Course data loaded:', {
-        hasModuleQuizzes: Boolean(course.Final_Module_Quiz),
-        moduleQuizCount: course.Final_Module_Quiz?.length,
-        hasCourseQuiz: Boolean(course.Final_Course_Quiz),
-        firstModuleQuiz: course.Final_Module_Quiz?.[0]
-      });
-
-      if (!course.completed_modules) {
-        course.completed_modules = new Array(course.Final_Module_Title.length).fill(false);
-      }
-
-      courseDetails = course;
-
-      // Initialize first module if no progress exists
+      // Initialize module progress if not exists
       if (!moduleProgress.length && courseDetails) {
         moduleProgress = Array(courseDetails.Final_Module_Title.length).fill(null);
-        moduleProgress[0] = {
-          completed: false,
-          quizAttempts: 0,
-          bestScore: 0,
-          lastAttemptDate: new Date()
-        };
-        
-        // Save initial progress
-        try {
-          await updateModuleProgress($user.uid, courseId, 0, moduleProgress[0]);
-        } catch (err) {
-          console.error('Error initializing course progress:', err);
+        if ($user) {
+          moduleProgress[0] = {
+            completed: false,
+            quizAttempts: 0,
+            bestScore: 0,
+            lastAttemptDate: new Date()
+          };
+          
+          // Save initial progress
+          try {
+            await updateModuleProgress($user.uid, courseId, 0, moduleProgress[0]);
+          } catch (err) {
+            console.error('Error initializing course progress:', err);
+          }
         }
       }
+
     } catch (err) {
       console.error('Error loading course:', err);
       error = err instanceof Error ? err.message : 'An unknown error occurred';
@@ -210,6 +84,45 @@
       loading = false;
     }
   });
+
+  async function handleQuizSubmit() {
+    if (!courseDetails?.Final_Module_Quiz?.[currentModule]) return;
+    
+    const quiz = courseDetails.Final_Module_Quiz[currentModule];
+    let correctAnswers = 0;
+    
+    quiz.questions.forEach((question, index) => {
+      if (selectedAnswers[index] === question.correctAnswer) {
+        correctAnswers++;
+      }
+    });
+
+    quizScore = Math.round((correctAnswers / quiz.questions.length) * 100);
+    quizSubmitted = true;
+
+    if ($user && moduleProgress[currentModule]) {
+      const updatedProgress = {
+        ...moduleProgress[currentModule],
+        completed: quizScore >= 70,
+        quizAttempts: (moduleProgress[currentModule].quizAttempts || 0) + 1,
+        bestScore: Math.max(quizScore, moduleProgress[currentModule].bestScore || 0),
+        lastAttemptDate: new Date()
+      };
+
+      try {
+        await updateModuleProgress($user.uid, $page.params.id, currentModule, updatedProgress);
+        moduleProgress[currentModule] = updatedProgress;
+      } catch (err) {
+        console.error('Error updating module progress:', err);
+      }
+    }
+  }
+
+  function resetQuiz() {
+    selectedAnswers = new Array(courseDetails?.Final_Module_Quiz?.[currentModule]?.questions?.length || 0).fill('');
+    quizSubmitted = false;
+    quizScore = 0;
+  }
 </script>
 
 <div class="min-h-screen bg-gradient-to-br from-red-50 to-white text-red-900">
