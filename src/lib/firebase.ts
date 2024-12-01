@@ -3,12 +3,12 @@ import { getFirestore, collection, addDoc, query, where, getDocs, doc, getDoc, u
 import { getAuth, setPersistence, browserLocalPersistence, signInWithPopup, GoogleAuthProvider, signOut } from 'firebase/auth';
 
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID
+  apiKey: "AIzaSyAOzl4NcFW95BEhRw-t3meFAyzfCo-vZIs",
+  authDomain: "youversity-c8632.firebaseapp.com",
+  projectId: "youversity-c8632",
+  storageBucket: "youversity-c8632.appspot.com",
+  messagingSenderId: "1021633759112",
+  appId: "1:1021633759112:web:6476141a5dd9527b97dc3d"
 };
 
 // Initialize Firebase
