@@ -123,6 +123,27 @@
     quizSubmitted = false;
     quizScore = 0;
   }
+
+  function handlePlaylistClick() {
+    if (!courseDetails?.Final_Module_YouTube_Video_URL?.length) return;
+    
+    // Create a YouTube playlist URL from the video URLs
+    const videoIds = courseDetails.Final_Module_YouTube_Video_URL
+      .map(url => {
+        try {
+          return new URL(url).searchParams.get('v');
+        } catch {
+          return null;
+        }
+      })
+      .filter(Boolean);
+
+    if (videoIds.length) {
+      // Open YouTube playlist in a new tab
+      const playlistUrl = `https://www.youtube.com/watch_videos?video_ids=${videoIds.join(',')}`;
+      window.open(playlistUrl, '_blank');
+    }
+  }
 </script>
 
 <div class="min-h-screen bg-gradient-to-br from-red-50 to-white text-red-900">
