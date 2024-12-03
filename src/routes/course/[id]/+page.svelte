@@ -16,6 +16,8 @@
   let showQuiz = false;
   let quizSubmitted = false;
   let quizScore = 0;
+  let currentQuiz: Quiz | null = null;
+  let quizResults: (boolean | undefined)[] = [];
 
   $: if (courseDetails?.Final_Module_Quiz) {
     // Initialize selectedAnswers array based on number of questions
@@ -85,6 +87,21 @@
     }
   });
 
+  function startQuiz(quiz: Quiz | null, moduleIndex?: number) {
+    if (!quiz) {
+      console.error('No quiz provided');
+      return;
+    }
+    
+    currentModule = moduleIndex ?? -1; // -1 indicates final quiz
+    currentQuiz = quiz;
+    selectedAnswers = new Array(quiz.quiz?.length || 0).fill('');
+    quizResults = new Array(quiz.quiz?.length || 0).fill(undefined);
+    quizSubmitted = false;
+    quizScore = 0;
+    showQuiz = true;
+  }
+
   async function handleQuizSubmit() {
     if (!courseDetails?.Final_Module_Quiz?.[currentModule]) return;
     
@@ -142,6 +159,34 @@
       // Open YouTube playlist in a new tab
       const playlistUrl = `https://www.youtube.com/watch_videos?video_ids=${videoIds.join(',')}`;
       window.open(playlistUrl, '_blank');
+    }
+  }
+
+  async function checkAnswers() {
+    if (!currentQuiz) return;
+    
+    quizResults = currentQuiz.quiz.map((question, index) => 
+      selectedAnswers[index] === question.answer
+    );
+    
+    const correctAnswers = quizResults.filter(result => result).length;
+    quizScore = Math.round((correctAnswers / currentQuiz.quiz.length) * 100);
+    quizSubmitted = true;
+
+    if ($user) {
+      try {
+        const updatedProgress = {
+          completed: quizScore >= 70,
+          quizAttempts: (moduleProgress[currentModule]?.quizAttempts || 0) + 1,
+          bestScore: Math.max(quizScore, moduleProgress[currentModule]?.bestScore || 0),
+          lastAttemptDate: new Date()
+        };
+
+        await updateModuleProgress($user.uid, $page.params.id, currentModule, updatedProgress);
+        moduleProgress[currentModule] = updatedProgress;
+      } catch (err) {
+        console.error('Error updating module progress:', err);
+      }
     }
   }
 </script>
