@@ -1,6 +1,6 @@
 <script lang="ts">
     import { onMount } from 'svelte';
-    import { fade, fly } from 'svelte/transition';
+    import { fade, fly, scale } from 'svelte/transition';
     import type { CourseStructure, VideoItem } from '$lib/types/course';
     import { ChevronLeft, ChevronRight, CheckCircle2, Plus, Play, X } from 'lucide-svelte';
     import { auth } from '$lib/firebase';
@@ -439,6 +439,11 @@
       transform: rotate(360deg);
     }
   }
+
+  /* Scale animation for modal */
+  :global(.modal-scale) {
+    transform-origin: center center;
+  }
 </style>
   
   <div 
@@ -507,8 +512,13 @@
     <div 
       class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 md:p-6"
       on:click|self={closeVideoPlayer}
+      transition:fade={{ duration: 200 }}
     >
-      <div class="bg-white rounded-lg w-full h-[90vh] max-w-[90vw] md:max-w-[80vw] lg:max-w-[1200px] relative flex flex-col">
+      <div 
+        class="bg-white rounded-lg w-full h-[90vh] max-w-[90vw] md:max-w-[80vw] lg:max-w-[1200px] relative flex flex-col modal-scale"
+        in:scale={{ duration: 300, delay: 200, start: 0.95 }}
+        out:scale={{ duration: 200, start: 1 }}
+      >
         <button
           class="absolute -top-2 -right-2 bg-white p-1.5 rounded-full shadow-lg hover:bg-gray-100 transition-colors duration-200 z-10"
           on:click={closeVideoPlayer}
