@@ -168,16 +168,20 @@ export async function getCourseProgress(userId: string, courseId: string) {
 
 export async function getSharedCourse(courseId: string) {
   try {
-    // Get course from public courses collection
+    console.log('Fetching shared course:', courseId);
     const courseDoc = await getDoc(doc(db, 'courses', courseId));
+    console.log('Course exists:', courseDoc.exists());
+    
     if (courseDoc.exists()) {
       const data = courseDoc.data();
+      console.log('Course data:', data);
       return {
         ...data,
         id: courseDoc.id,
         createdAt: data.createdAt?.toDate?.() || null
       } as FinalCourseStructure & { id: string };
     }
+    console.log('Course not found');
     return null;
   } catch (error) {
     console.error('Error getting shared course:', error);

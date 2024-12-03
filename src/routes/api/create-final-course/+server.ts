@@ -274,7 +274,9 @@ async function generateAllQuizzes(moduleTranscripts: string[], courseStructure: 
     try {
       const quiz = await generateQuiz(transcript, courseStructure.OG_Module_Title[i]);
       moduleQuizzes.push(quiz);
-      allTranscripts += `Module ${i + 1} Content:\n${transcript}\n\n`;
+      if (quiz) {
+        allTranscripts += `Module ${i + 1} Content:\n${transcript}\n\n`;
+      }
       console.log(`Successfully generated quiz for module ${i + 1}`);
     } catch (error) {
       console.error(`Error processing module ${i + 1}:`, error);

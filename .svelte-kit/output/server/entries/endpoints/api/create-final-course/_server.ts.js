@@ -41,6 +41,7 @@ async function generateQuiz(transcript, moduleTitle, isFinalQuiz = false) {
     console.log(`Starting quiz generation for: ${moduleTitle}`);
     console.log(`Transcript preview: ${transcript.substring(0, 100)}...`);
     console.log(`Generating quiz for ${moduleTitle} with transcript length: ${transcript.length}`);
+    
     const prompt = `You are an AI language model tasked with creating a 5-question quiz based on the provided YouTube video transcript. The quiz should be in a rigid JSON format for coding purposes.
 
 Instructions:
