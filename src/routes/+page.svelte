@@ -25,11 +25,17 @@
   let userCourses: (FinalCourseStructure & { id: string })[] = [];
   let loading = false;
   let error: string | null = null;
-  let filteredCourses = userCourses;
+  let filteredCourses: (FinalCourseStructure & { id: string })[] = [];
   let showShareModal = false;
   let selectedCourseId = '';
 
-  // Load user courses when authenticated
+  // Update filteredCourses when userCourses changes
+  $: {
+    if (userCourses) {
+      filteredCourses = [...userCourses];
+    }
+  }
+
   $: if ($user) {
     loadUserCourses();
   }
@@ -38,7 +44,9 @@
     try {
       loading = true;
       error = null;
-      userCourses = await getUserCourses($user.uid);
+      const courses = await getUserCourses($user.uid);
+      userCourses = courses;
+      filteredCourses = [...courses];
     } catch (err) {
       console.error('Error loading courses:', err);
       error = err.message;
@@ -79,9 +87,7 @@
     showShareModal = true;
   }
 
-  function handleAddCourse() {
-    goto('/create-course');
-  }
+
 
   function handleFilterChange(event) {
     const filterValue = event.detail;
@@ -95,10 +101,10 @@
         sortedCourses.sort((a, b) => b.Final_Course_Title.localeCompare(a.Final_Course_Title));
         break;
       case 'date-new':
-        sortedCourses.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        sortedCourses.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
         break;
       case 'date-old':
-        sortedCourses.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+        sortedCourses.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
         break;
       default:
         sortedCourses = [...userCourses];
@@ -106,9 +112,6 @@
     
     filteredCourses = sortedCourses;
   }
-
-  // Update filteredCourses whenever userCourses changes
-  $: filteredCourses = userCourses;
 
   onMount(() => {
     // Clear any stale loading state
@@ -119,7 +122,7 @@
   });
 </script>
 
-<div class="container mx-auto px-4 py-6 sm:py-8 max-w-7xl">
+<div class="container mx-auto px-4 py-6 pb-20 sm:pb-6 sm:py-8 max-w-7xl">
   <!-- Create Course Section -->
   <div class="relative overflow-hidden bg-gradient-to-br from-[#F5F5F5] to-white rounded-lg shadow-lg p-4 sm:p-8 md:p-12 mb-6 sm:mb-12">
     <div class="absolute inset-0 bg-[url('/placeholder.svg')] opacity-5"></div>
@@ -152,7 +155,7 @@
         />
         <button
           type="submit"
-          class="px-6 py-2 sm:py-3 bg-[#42C1C8] text-white rounded-lg hover:bg-[#3BA7AD] transition-colors duration-200 flex items-center justify-center gap-2 text-sm sm:text-base whitespace-nowrap"
+          class="px-6 py-2 sm:py-3 bg-[#EE434A] text-white rounded-lg hover:bg-[#D63B42] transition-colors duration-200 flex items-center justify-center gap-2 text-sm sm:text-base whitespace-nowrap"
         >
           Create Course
           <ArrowRight class="w-4 h-4 sm:w-5 sm:h-5" />
@@ -166,14 +169,7 @@
       <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <h2 class="text-xl sm:text-2xl font-semibold text-[#2A4D61]">Your Courses</h2>
         <div class="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
-          <CourseFilter on:change={handleFilterChange} />
-          <button
-            on:click={handleAddCourse}
-            class="flex items-center justify-center gap-2 px-4 py-2 bg-[#42C1C8] text-white rounded-lg hover:bg-[#3BA7AD] transition-colors duration-200 w-full sm:w-auto"
-          >
-            <Plus class="w-4 h-4" />
-            <span>New Course</span>
-          </button>
+          <CourseFilter on:filterChange={handleFilterChange} />
         </div>
       </div>
       

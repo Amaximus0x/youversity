@@ -11,7 +11,8 @@
     Search,
     Bell,
     PlusCircle,
-    User
+    User,
+    Plus
   } from 'lucide-svelte';
   import '../app.css';
   import { goto } from '$app/navigation';
@@ -22,6 +23,14 @@
     { icon: TrendingUp, label: 'Trending', href: '/trending', isActive: false },
     { icon: User, label: 'My Profile', href: '/profile', isActive: false },
     { icon: Settings, label: 'Settings', href: '/settings', isActive: false },
+  ];
+
+  // Mobile navigation items (simplified version of sidebar items)
+  const mobileNavItems = [
+    { icon: Home, label: 'Home', href: '/' },
+    { icon: TrendingUp, label: 'Trending', href: '/trending' },
+    { icon: User, label: 'Profile', href: '/profile' },
+    { icon: Settings, label: 'Settings', href: '/settings' },
   ];
 
   let menuOpen = false;
@@ -46,8 +55,8 @@
 
 <div class="min-h-screen bg-[#F5F5F5] font-sans">
   <div class="flex">
-    <!-- Sidebar -->
-    <aside class="w-64 bg-white h-screen sticky top-0 shadow-md z-10">
+    <!-- Sidebar - hidden on mobile -->
+    <aside class="hidden md:block w-64 bg-white h-screen sticky top-0 shadow-md z-10">
       <div class="flex items-center justify-center h-16 border-b border-[#D9E1E3]">
         <a href="/" class="flex items-center space-x-2">
           <img 
@@ -98,7 +107,7 @@
     </aside>
 
     <!-- Main Content -->
-    <main class="flex-1">
+    <main class="flex-1 pb-16 md:pb-0">
       <!-- Header -->
       <header class="bg-white shadow-sm p-4 flex justify-between items-center">
         <div class="relative w-1/2">
@@ -135,6 +144,27 @@
       </div>
     </main>
   </div>
+
+  <!-- Mobile Bottom Navigation -->
+  <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-white shadow-lg border-t border-gray-200">
+    <div class="flex justify-around items-center h-16">
+      {#each mobileNavItems as item}
+        <a 
+          href={item.href}
+          class="flex flex-col items-center justify-center flex-1 h-full text-xs py-1
+            {$page.url.pathname === item.href 
+              ? 'text-[#EE434A]' 
+              : 'text-[#2A4D61]'}"
+        >
+          <svelte:component 
+            this={item.icon} 
+            class="w-6 h-6 mb-1" 
+          />
+          <span>{item.label}</span>
+        </a>
+      {/each}
+    </div>
+  </nav>
 </div>
 
 <CourseGenerationProgress />
