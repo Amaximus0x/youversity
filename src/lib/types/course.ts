@@ -37,6 +37,7 @@ export interface FinalCourseStructure {
   Final_Course_Quiz: Quiz;
   Final_Course_Conclusion: string;
   YouTube_Playlist_URL: string;
+  Final_Course_Thumbnail?: string;
 }
   
 export interface VideoItem {

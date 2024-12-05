@@ -1,6 +1,7 @@
 import { j as json } from './index-DzcLzHBX.js';
 import { d as private_env } from './shared-server-BfUoNEXY.js';
 import axios from 'axios';
+import { OPENAI_CONFIG } from "../../../../../../src/lib/config/openai";
 
 function getDefaultExportFromCjs (x) {
 	return x && x.__esModule && Object.prototype.hasOwnProperty.call(x, 'default') ? x['default'] : x;
@@ -175,7 +176,7 @@ async function makeOpenAIRequest(prompt, retries = 2) {
         const response = await axios.post(
           "https://api.openai.com/v1/chat/completions",
           {
-            model: "gpt-3.5-turbo",
+            model:  OPENAI_CONFIG.model,
             messages: [{ role: "user", content: prompt }],
             temperature: 0.7
           },

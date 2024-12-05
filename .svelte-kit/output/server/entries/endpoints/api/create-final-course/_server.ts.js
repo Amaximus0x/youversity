@@ -2,6 +2,7 @@ import { j as json } from "../../../../chunks/index.js";
 import { d as private_env } from "../../../../chunks/shared-server.js";
 import axios from "axios";
 import pLimit from "p-limit";
+import { OPENAI_CONFIG } from "../../../../../../src/lib/config/openai";
 const openAIRateLimit = pLimit(3);
 const RPM_LIMIT = 200;
 const DELAY_BETWEEN_REQUESTS = Math.ceil(60 * 1e3 / RPM_LIMIT);
@@ -12,9 +13,9 @@ async function makeOpenAIRequest(prompt, retries = 2) {
         const response = await axios.post(
           "https://api.openai.com/v1/chat/completions",
           {
-            model: "gpt-3.5-turbo",
+            model: OPENAI_CONFIG.model,
             messages: [{ role: "user", content: prompt }],
-            temperature: 0.7
+            temperature: OPENAI_CONFIG.temperature
           },
           {
             headers: {

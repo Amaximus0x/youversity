@@ -1,6 +1,7 @@
 import { j as json } from "../../../../chunks/index.js";
 import { d as private_env } from "../../../../chunks/shared-server.js";
 import axios from "axios";
+import { OPENAI_CONFIG } from "../../../../../../src/lib/config/openai";
 const POST = async ({ request }) => {
   try {
     const { courseInput } = await request.json();
@@ -50,9 +51,9 @@ Module 2 Search Prompt
     const response = await axios.post(
       "https://api.openai.com/v1/chat/completions",
       {
-        model: "gpt-3.5-turbo",
+        model: OPENAI_CONFIG.model,
         messages: [{ role: "user", content: prompt }],
-        temperature: 0.7
+        temperature: OPENAI_CONFIG.temperature
       },
       {
         headers: {

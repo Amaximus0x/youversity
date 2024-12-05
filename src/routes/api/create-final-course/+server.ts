@@ -6,6 +6,7 @@ import type { RequestHandler } from './$types';
 import type { CourseStructure, FinalCourseStructure, VideoItem, Quiz, QuizQuestion } from '$lib/types/course';
 import { getVideoTranscript } from '$lib/services/transcriptUtils';
 import pLimit from 'p-limit';
+import { OPENAI_CONFIG } from '$lib/config/openai';
 
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -21,9 +22,9 @@ async function makeOpenAIRequest(prompt: string, retries = 2) {
         const response = await axios.post(
           "https://api.openai.com/v1/chat/completions",
           {
-            model: "gpt-4",
+            model: OPENAI_CONFIG.model,
             messages: [{ role: "user", content: prompt }],
-            temperature: 0.7,
+            temperature: OPENAI_CONFIG.temperature,
           },
           {
             headers: {
@@ -188,6 +189,15 @@ async function generateFinalCourse(
       Final_Module_YouTube_Video_URL: videoUrls
     } as FinalCourseStructure);
 
+    // Extract thumbnail URL from the first video
+    let thumbnailUrl = '';
+    if (selectedVideos[0]?.videoUrl) {
+      const videoId = new URL(selectedVideos[0].videoUrl).searchParams.get('v');
+      if (videoId) {
+        thumbnailUrl = `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
+      }
+    }
+
     return {
       Final_Course_Title: courseOverview.Final_Course_Title,
       Final_Course_Objective: courseOverview.Final_Course_Objective,
@@ -198,7 +208,8 @@ async function generateFinalCourse(
       Final_Module_Quiz: moduleQuizzes,
       Final_Course_Quiz: finalQuiz,
       Final_Course_Conclusion: conclusion.Final_Course_Conclusion,
-      YouTube_Playlist_URL: playlistUrl
+      YouTube_Playlist_URL: playlistUrl,
+      Final_Course_Thumbnail: thumbnailUrl
     };
   } catch (error) {
     console.error('Error in generateFinalCourse:', error);

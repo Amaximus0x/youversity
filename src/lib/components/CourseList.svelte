@@ -27,13 +27,12 @@
       {#each courses as course}
         <div class="bg-white rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300">
           <div class="relative h-[180px]">
-            {#if course.Final_Module_YouTube_Video_URL && course.Final_Module_YouTube_Video_URL[0]}
-              {@const videoId = new URL(course.Final_Module_YouTube_Video_URL[0]).searchParams.get('v')}
+            {#if course.Final_Course_Thumbnail}
               <img 
-                src={`https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`}
+                src={course.Final_Course_Thumbnail}
                 alt={course.Final_Course_Title}
                 class="w-full h-full object-cover"
-                onerror="this.onerror=null; this.src=`https://img.youtube.com/vi/${videoId}/mqdefault.jpg`;"
+                onerror="this.onerror=null; this.src='https://placehold.co/120x90/lightgray/darkgray.png';"
               />
             {:else}
               <img 

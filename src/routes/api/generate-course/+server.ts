@@ -3,6 +3,7 @@ import type { RequestHandler } from './$types';
 import { env } from '$env/dynamic/private';
 import axios from 'axios';
 import type { CourseStructure } from '$lib/types/course';
+import { OPENAI_CONFIG } from '$lib/config/openai';
 
 export const POST: RequestHandler = async ({ request }) => {
   try {
@@ -57,9 +58,9 @@ Module 2 Search Prompt
     const response = await axios.post(
       'https://api.openai.com/v1/chat/completions',
       {
-        model: 'gpt-4',
+        model: OPENAI_CONFIG.model,
         messages: [{ role: 'user', content: prompt }],
-        temperature: 0.7,
+        temperature: OPENAI_CONFIG.temperature,
       },
       {
         headers: {
