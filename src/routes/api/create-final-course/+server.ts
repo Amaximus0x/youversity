@@ -31,19 +31,32 @@ async function makeOpenAIRequest(prompt: string, retries = 2) {
               "Authorization": `Bearer ${env.OPENAI_API_KEY}`,
               "Content-Type": "application/json"
             },
-            timeout: 30000
+            timeout: 30000,
+            transformResponse: [(data) => {
+              // Remove XSSI prefix if present
+              const cleanData = typeof data === 'string' ? data.replace(/^\)\]\}\'/, '') : data;
+              try {
+                return JSON.parse(cleanData);
+              } catch (e) {
+                return cleanData;
+              }
+            }]
           }
         );
 
         const content = response.data.choices[0].message.content;
         
         // Clean up markdown formatting if present
-        const jsonContent = content.replace(/```json\n|\n```/g, '').trim();
+        const cleanedContent = content
+          .replace(/```json\n?|\n?```/g, '')
+          .trim();
         
         try {
-          return JSON.parse(jsonContent);
+          return JSON.parse(cleanedContent);
         } catch (parseError) {
           console.error('JSON Parse Error:', parseError);
+          console.error('Raw content:', content);
+          console.error('Cleaned content:', cleanedContent);
           throw new Error('Invalid JSON response from OpenAI');
         }
       } catch (error) {
@@ -347,9 +360,15 @@ export const POST: RequestHandler = async ({ request }) => {
         throw new Error('Invalid course generation result');
       }
 
-      return json({
+      return new Response(JSON.stringify({
         success: true,
         course: finalCourse
+      }), {
+        headers: {
+          'Content-Type': 'application/json',
+          // Prevent browsers from doing XSSI protection
+          'X-Content-Type-Options': 'nosniff'
+        }
       });
     } catch (error: any) {
       console.error('Error in course generation:', error);

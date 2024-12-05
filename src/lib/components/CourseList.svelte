@@ -58,13 +58,13 @@
             <div class="w-full h-2 bg-[#D9E1E3] rounded-full mb-2">
               <div 
                 class="h-full bg-[#42C1C8] rounded-full" 
-                style="width: {course.completed_modules?.filter(Boolean).length / course.Final_Module_Title.length * 100}%"
+                style="width: {(course.completed_modules?.filter(m => m?.completed)?.length || 0) / course.Final_Module_Title.length * 100}%"
               ></div>
             </div>
           </div>
           <div class="px-4 py-3 border-t border-gray-100 flex justify-between items-center">
             <span class="text-sm text-[#1E3443]">
-              {Math.round(course.completed_modules?.filter(Boolean).length / course.Final_Module_Title.length * 100)}% complete
+              {Math.round((course.completed_modules?.filter(m => m?.completed)?.length || 0) / course.Final_Module_Title.length * 100)}% complete
             </span>
             <button 
               on:click={() => handleCourseClick(course.id)}
