@@ -151,7 +151,7 @@
           type="text"
           bind:value={learningObjective}
           placeholder="Enter what you want to learn..."
-          class="flex-1 px-4 py-2 sm:py-3 rounded-lg border border-[#D9E1E3] focus:outline-none focus:ring-2 focus:ring-[#42C1C8] text-sm sm:text-base"
+          class="flex-1 px-4 py-2 sm:py-3 rounded-lg border border-[#D9E1E3] focus:outline-none focus:ring-2 focus:ring-[#EE434A] text-sm sm:text-base"
         />
         <button
           type="submit"
