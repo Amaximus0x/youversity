@@ -35,7 +35,17 @@ async function makeOpenAIRequest(prompt: string, retries = 2) {
           }
         );
 
-        return JSON.parse(response.data.choices[0].message.content);
+        const content = response.data.choices[0].message.content;
+        
+        // Clean up markdown formatting if present
+        const jsonContent = content.replace(/```json\n|\n```/g, '').trim();
+        
+        try {
+          return JSON.parse(jsonContent);
+        } catch (parseError) {
+          console.error('JSON Parse Error:', parseError);
+          throw new Error('Invalid JSON response from OpenAI');
+        }
       } catch (error) {
         if (i === retries - 1) throw error;
         await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));
