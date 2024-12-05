@@ -32,31 +32,48 @@
       }
 
       loading = true;
+      let attempts = 0;
+      const maxAttempts = 3;
 
-      if ($user) {
-        // Authenticated user flow
-        const [course, progress] = await Promise.all([
-          getUserCourse($user.uid, courseId),
-          getCourseProgress($user.uid, courseId)
-        ]);
-        
-        moduleProgress = progress?.moduleProgress || [];
-        
-        if (!course) {
-          // Try to load as shared course if not found in user's courses
-          courseDetails = await getSharedCourse(courseId);
-          isSharedView = true;
-        } else {
-          courseDetails = course;
+      while (attempts < maxAttempts) {
+        try {
+          if ($user) {
+            // Authenticated user flow
+            const [course, progress] = await Promise.all([
+              getUserCourse($user.uid, courseId),
+              getCourseProgress($user.uid, courseId)
+            ]);
+            
+            moduleProgress = progress?.moduleProgress || [];
+            
+            if (!course) {
+              // Try to load as shared course if not found in user's courses
+              courseDetails = await getSharedCourse(courseId);
+              isSharedView = true;
+            } else {
+              courseDetails = course;
+            }
+          } else {
+            // Unauthenticated user flow - load shared course
+            courseDetails = await getSharedCourse(courseId);
+            isSharedView = true;
+          }
+
+          if (courseDetails) {
+            break; // Successfully loaded the course
+          }
+        } catch (err) {
+          console.log(`Attempt ${attempts + 1} failed:`, err);
         }
-      } else {
-        // Unauthenticated user flow - load shared course
-        courseDetails = await getSharedCourse(courseId);
-        isSharedView = true;
+
+        attempts++;
+        if (attempts < maxAttempts) {
+          await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second between attempts
+        }
       }
 
       if (!courseDetails) {
-        throw new Error('Course not found');
+        throw new Error('Course not found after multiple attempts');
       }
 
       // Initialize module progress if not exists

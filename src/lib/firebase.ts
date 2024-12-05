@@ -33,7 +33,8 @@ export async function saveCourseToFirebase(userId: string, courseData: any) {
       ...courseData,
       createdAt: serverTimestamp(),
       id: courseId,
-      createdBy: userId
+      createdBy: userId,
+      userId
     };
 
     // Save to public courses collection
@@ -43,7 +44,20 @@ export async function saveCourseToFirebase(userId: string, courseData: any) {
     const userCourseRef = doc(db, `users/${userId}/courses/${courseId}`);
     await setDoc(userCourseRef, courseWithMetadata);
 
-    return courseId;
+    // Verify the course was saved by attempting to read it
+    let attempts = 0;
+    const maxAttempts = 3;
+    
+    while (attempts < maxAttempts) {
+      const courseDoc = await getDoc(publicCourseRef);
+      if (courseDoc.exists()) {
+        return courseId;
+      }
+      attempts++;
+      await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second between attempts
+    }
+
+    throw new Error('Course saved but not immediately available');
   } catch (error) {
     console.error('Error saving course:', error);
     throw error;
