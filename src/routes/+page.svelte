@@ -119,117 +119,113 @@
   });
 </script>
 
-<!-- Create Course Section -->
-<div class="relative overflow-hidden bg-gradient-to-br from-[#F5F5F5] to-white rounded-lg shadow-lg p-12 mb-12">
-  <div class="absolute inset-0 bg-[url('/placeholder.svg')] opacity-5"></div>
-  
-  <div class="max-w-2xl mx-auto text-center relative">
-    <div class="flex items-center justify-center mb-6">
-      <img 
-        src="/favicon.png" 
-        alt="Youversity Logo" 
-        class="w-12 h-12 object-contain"
-      />
-    </div>
-    <h2 class="text-4xl font-bold text-[#2A4D61] mb-4">
-      Create Your Course
-    </h2>
+<div class="container mx-auto px-4 py-6 sm:py-8 max-w-7xl">
+  <!-- Create Course Section -->
+  <div class="relative overflow-hidden bg-gradient-to-br from-[#F5F5F5] to-white rounded-lg shadow-lg p-4 sm:p-8 md:p-12 mb-6 sm:mb-12">
+    <div class="absolute inset-0 bg-[url('/placeholder.svg')] opacity-5"></div>
     
-    <p class="text-[#1E3443]/80 mb-8">
-      Enter your learning objective and let our AI build a course for you
-    </p>
+    <div class="max-w-2xl mx-auto text-center relative">
+      <div class="flex items-center justify-center mb-4 sm:mb-6">
+        <img 
+          src="/favicon.png" 
+          alt="Youversity Logo" 
+          class="w-8 h-8 sm:w-12 sm:h-12 object-contain"
+        />
+      </div>
+      <h2 class="text-2xl sm:text-3xl md:text-4xl font-bold text-[#2A4D61] mb-2 sm:mb-4">
+        Create Your Course
+      </h2>
+      
+      <p class="text-sm sm:text-base text-[#1E3443]/80 mb-6 sm:mb-8">
+        Enter your learning objective below and we'll help you create a comprehensive course
+      </p>
 
-    <form on:submit={handleCreateCourse} class="space-y-6">
-      <input
-        type="text"
-        placeholder="e.g., Learn Python for Data Science"
-        bind:value={learningObjective}
-        class="w-full text-lg py-6 px-4 rounded-lg bg-white shadow-inner border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#EE434A]"
-      />
-
-      <button 
-        type="submit" 
-        class="w-full bg-[#EE434A] hover:bg-[#D93D44] text-white text-lg py-6 rounded-lg transition-all duration-300 ease-in-out transform hover:scale-105 flex items-center justify-center"
+      <form 
+        on:submit={handleCreateCourse} 
+        class="flex flex-col sm:flex-row gap-2 sm:gap-4 max-w-xl mx-auto"
       >
-        {$user ? 'Build My Course' : 'Start with Google'}
-        <ArrowRight class="ml-2 w-6 h-6" />
-      </button>
-    </form>
-  </div>
-</div>
-
-{#if $user}
-  <!-- My Courses Section -->
-  <div class="mb-12">
-    <div class="flex justify-between items-center mb-6">
-      <h2 class="text-2xl font-bold text-[#2A4D61]">My Courses</h2>
-      <CourseFilter on:filterChange={handleFilterChange} />
+        <input
+          type="text"
+          bind:value={learningObjective}
+          placeholder="Enter what you want to learn..."
+          class="flex-1 px-4 py-2 sm:py-3 rounded-lg border border-[#D9E1E3] focus:outline-none focus:ring-2 focus:ring-[#42C1C8] text-sm sm:text-base"
+        />
+        <button
+          type="submit"
+          class="px-6 py-2 sm:py-3 bg-[#42C1C8] text-white rounded-lg hover:bg-[#3BA7AD] transition-colors duration-200 flex items-center justify-center gap-2 text-sm sm:text-base whitespace-nowrap"
+        >
+          Create Course
+          <ArrowRight class="w-4 h-4 sm:w-5 sm:h-5" />
+        </button>
+      </form>
     </div>
-    
-    <CourseList 
-      courses={filteredCourses}
-      {loading}
-      {error}
-      onShare={handleShareCourse}
-    />
   </div>
 
-  <!-- Trending Community Courses Section -->
-  <div>
-    <h2 class="text-2xl font-bold text-[#2A4D61] mb-6">Trending Community Courses</h2>
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {#each trendingCourses as course}
-        <div class="bg-white rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300">
-          <div class="relative h-[180px]">
-            <img src={course.image} alt={course.title} class="w-full h-full object-cover" />
-            <div class="absolute inset-0 bg-black bg-opacity-30 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity duration-200">
-              <Play class="w-12 h-12 text-white" />
-            </div>
-          </div>
-          <div class="p-4">
-            <h3 class="font-semibold text-lg text-[#2A4D61] mb-1">{course.title}</h3>
-            <p class="text-sm text-[#1E3443]/60 mb-2">by {course.author}</p>
-            <div class="flex items-center justify-between text-sm text-[#1E3443]/80">
-              <div class="flex items-center space-x-4">
-                <span class="flex items-center">
-                  <ThumbsUp class="w-4 h-4 mr-1" />
-                  {course.likes}
-                </span>
-                <span class="flex items-center">
-                  <ThumbsDown class="w-4 h-4 mr-1" />
-                  {course.dislikes}
+  {#if $user}
+    <div class="mb-8">
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+        <h2 class="text-xl sm:text-2xl font-semibold text-[#2A4D61]">Your Courses</h2>
+        <div class="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
+          <CourseFilter on:change={handleFilterChange} />
+          <button
+            on:click={handleAddCourse}
+            class="flex items-center justify-center gap-2 px-4 py-2 bg-[#42C1C8] text-white rounded-lg hover:bg-[#3BA7AD] transition-colors duration-200 w-full sm:w-auto"
+          >
+            <Plus class="w-4 h-4" />
+            <span>New Course</span>
+          </button>
+        </div>
+      </div>
+      
+      <CourseList 
+        courses={filteredCourses}
+        {loading}
+        {error}
+        onShare={handleShareCourse}
+      />
+    </div>
+
+    <!-- Trending Community Courses Section -->
+    <section class="mb-12">
+      <h2 class="text-xl sm:text-2xl font-semibold text-[#2A4D61] mb-6">Trending Courses</h2>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+        {#each trendingCourses as course}
+          <div class="bg-white rounded-lg shadow-md overflow-hidden">
+            <img 
+              src={course.image} 
+              alt={course.title}
+              class="w-full h-32 sm:h-48 object-cover"
+            />
+            <div class="p-4">
+              <h3 class="font-semibold text-base sm:text-lg text-[#2A4D61] mb-2">{course.title}</h3>
+              <p class="text-sm text-[#1E3443]/80 mb-4">{course.author}</p>
+              <div class="flex items-center justify-between text-sm">
+                <div class="flex items-center gap-4">
+                  <span class="flex items-center gap-1">
+                    <ThumbsUp class="w-4 h-4" />
+                    {course.likes}
+                  </span>
+                  <span class="flex items-center gap-1">
+                    <ThumbsDown class="w-4 h-4" />
+                    {course.dislikes}
+                  </span>
+                </div>
+                <span class="flex items-center gap-1">
+                  <Eye class="w-4 h-4" />
+                  {course.views}
                 </span>
               </div>
-              <span class="flex items-center">
-                <Eye class="w-4 h-4 mr-1" />
-                {course.views}
-              </span>
             </div>
           </div>
-          <div class="px-4 py-3 border-t border-gray-100 flex justify-between items-center">
-            <a 
-              href="/course/{course.id}" 
-              class="border border-[#2A4D61] text-[#2A4D61] hover:bg-[#2A4D61] hover:text-white px-4 py-2 rounded-lg transition-colors duration-200"
-            >
-              View Course
-            </a>
-            <div class="flex space-x-2">
-              <button class="p-2 hover:bg-[#F5F5F5] rounded-full transition-colors duration-200">
-                <ThumbsUp class="w-5 h-5 text-[#2A4D61]" />
-              </button>
-              <button class="p-2 hover:bg-[#F5F5F5] rounded-full transition-colors duration-200">
-                <ThumbsDown class="w-5 h-5 text-[#2A4D61]" />
-              </button>
-            </div>
-          </div>
-        </div>
-      {/each}
-    </div>
-  </div>
-{/if}
+        {/each}
+      </div>
+    </section>
+  {/if}
+</div>
 
-<ShareModal
-  show={showShareModal}
-  courseId={selectedCourseId}
-  onClose={() => showShareModal = false}
-/>
+{#if showShareModal}
+  <ShareModal 
+    courseId={selectedCourseId}
+    on:close={() => showShareModal = false}
+  />
+{/if}
