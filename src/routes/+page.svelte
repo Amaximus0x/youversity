@@ -221,7 +221,8 @@
 
 {#if showShareModal}
   <ShareModal 
+    show={showShareModal}
     courseId={selectedCourseId}
-    on:close={() => showShareModal = false}
+    onClose={() => showShareModal = false}
   />
 {/if}

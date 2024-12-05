@@ -50,7 +50,10 @@
               <h3 class="font-semibold text-lg text-[#2A4D61]">{course.Final_Course_Title}</h3>
               <button
                 class="p-1 hover:bg-[#F5F5F5] rounded-full transition-colors duration-200"
-                on:click={() => onShare(course.id)}
+                on:click|stopPropagation={(e) => {
+                  e.preventDefault();
+                  onShare(course.id);
+                }}
               >
                 <Share2 class="w-5 h-5 text-[#2A4D61]" />
               </button>
