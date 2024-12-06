@@ -109,7 +109,7 @@
     <!-- Main Content -->
     <main class="flex-1 pb-16 md:pb-0">
       <!-- Header -->
-      <header class="bg-white shadow-sm p-4 flex justify-between items-center">
+      <header class="bg-white shadow-sm p-4 flex justify-between items-center fixed top-0 right-0 w-[calc(100%-16rem)] z-20">
         <div class="relative w-1/2">
           <input
             type="text"
@@ -139,7 +139,7 @@
       </header>
 
       <!-- Page Content -->
-      <div class="p-8">
+      <div class="p-8 mt-16">
         <slot />
       </div>
     </main>
