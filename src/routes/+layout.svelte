@@ -56,52 +56,48 @@
 <div class="min-h-screen bg-[#F5F5F5] font-sans">
   <div class="flex">
     <!-- Sidebar - hidden on mobile -->
-    <aside class="hidden md:block w-64 bg-white h-screen sticky top-0 shadow-md z-10">
-      <div class="flex items-center justify-center h-16 border-b border-[#D9E1E3]">
-        <a href="/" class="flex items-center space-x-2">
+    <aside class="hidden md:block w-64 bg-white h-screen sticky top-0 border-r border-[#E8EAED] z-10">
+      <div class="flex items-center h-16 px-6 border-b border-[#E8EAED]">
+        <a href="/" class="flex items-center space-x-3">
           <img 
             src="/favicon.png" 
             alt="Youversity Logo" 
-            class="w-8 h-8 object-contain"
+            class="w-7 h-7 object-contain"
           />
-          <span class="text-xl font-bold text-[#2A4D61]">YouVersity</span>
+          <span class="text-[15px] font-medium text-[#202124]">YouVersity</span>
         </a>
       </div>
 
-      <nav class="mt-8">
+      <nav class="py-2">
         {#each sidebarItems as item}
           <a 
             href={item.href} 
-            class="flex items-center px-6 py-3 transition-colors {
+            class="flex items-center mx-2 px-4 h-[44px] transition-colors rounded-full {
               $page.url.pathname === item.href 
-                ? 'bg-[#EE434A] text-white' 
-                : 'text-[#2A4D61] hover:bg-[#F5F5F5]'
+                ? 'bg-[#E8F0FE] text-[#EE434A]' 
+                : 'text-[#5F6368] hover:bg-[#F8F9FA]'
             }"
           >
             <svelte:component 
               this={item.icon} 
-              class="w-5 h-5 mr-3" 
+              class="{
+                $page.url.pathname === item.href
+                  ? 'text-[#EE434A]'
+                  : 'text-[#5F6368]'
+              } w-[20px] h-[20px] mr-3" 
             />
-            {item.label}
+            <span class="text-[14px] font-medium">{item.label}</span>
           </a>
         {/each}
-
-        <!-- <button 
-          on:click={handleAddCourse}
-          class="w-full flex items-center px-6 py-3 text-[#2A4D61] hover:text-[#EE434A] hover:bg-[#F5F5F5]"
-        >
-          <PlusCircle class="w-5 h-5 mr-3" />
-          Add Course
-        </button> -->
       </nav>
 
-      <div class="absolute bottom-0 w-full p-4">
+      <div class="absolute bottom-0 w-full border-t border-[#E8EAED]">
         <button 
           on:click={handleAuth}
-          class="w-full flex items-center px-6 py-3 text-[#2A4D61] hover:text-[#EE434A]"
+          class="flex items-center w-full mx-2 px-4 h-[44px] text-[#5F6368] hover:bg-[#F8F9FA] rounded-full my-2"
         >
-          <LogOut class="w-5 h-5 mr-3" />
-          {$user ? 'Sign Out' : 'Sign In'}
+          <LogOut class="w-[20px] h-[20px] mr-3" />
+          <span class="text-[14px] font-medium">{$user ? 'Sign Out' : 'Sign In'}</span>
         </button>
       </div>
     </aside>
@@ -109,21 +105,21 @@
     <!-- Main Content -->
     <main class="flex-1 pb-16 md:pb-0">
       <!-- Header -->
-      <header class="bg-white shadow-sm p-4 flex justify-between items-center fixed top-0 right-0 w-[calc(100%-16rem)] z-20">
+      <header class="bg-white border-b border-[#E8EAED] px-6 h-16 flex justify-between items-center fixed top-0 right-0 w-[calc(100%-16rem)] z-20">
         <div class="relative w-1/2">
           <input
             type="text"
             placeholder="Search courses..."
             bind:value={searchQuery}
-            class="w-full pl-10 py-2 pr-4 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#EE434A]"
+            class="w-full pl-10 py-2 pr-4 rounded-lg bg-[#F5F5F5] border-none focus:outline-none focus:ring-2 focus:ring-[#EE434A] text-sm"
           />
           <Search class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
         </div>
 
-        <div class="flex items-center space-x-4">
-          <button class="relative p-2 hover:bg-gray-100 rounded-full">
-            <Bell class="w-5 h-5" />
-            <span class="absolute top-0 right-0 w-2 h-2 bg-[#42C1C8] rounded-full"></span>
+        <div class="flex items-center space-x-6">
+          <button class="relative p-2 hover:bg-[#F5F5F5] rounded-full">
+            <Bell class="w-5 h-5 text-[#2A4D61]" />
+            <span class="absolute top-1 right-1 w-2 h-2 bg-[#42C1C8] rounded-full"></span>
           </button>
           
           {#if $user}
