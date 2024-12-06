@@ -15,6 +15,7 @@
 
   async function handleBuildCourse() {
     loadingState.startLoading('', true);
+    loadingState.setStep('Analyzing your course objective...');
     error = null;
     moduleVideos = [];
     selectedVideos = [];
@@ -35,13 +36,23 @@
       }
 
       courseStructure = data.courseStructure;
-      loadingState.setTotalModules(courseStructure.OG_Module_Title.length);
-      selectedVideos = new Array(courseStructure.OG_Module_Title.length).fill(0);
-    } catch (err) {
+      if (courseStructure) {
+        loadingState.setTotalModules(courseStructure.OG_Module_Title.length);
+        loadingState.setStep('Course structure generated successfully!');
+        loadingState.setProgress(20); // Initial course structure generation is 20% of the process
+        selectedVideos = new Array(courseStructure.OG_Module_Title.length).fill(0);
+
+        // Start video search process
+        loadingState.setStep('Initiating video search for all modules...');
+      } else {
+        throw new Error('Invalid course structure received');
+      }
+      
+    } catch (err: any) {
       console.error('Error building course:', err);
       error = err.message;
       courseStructure = null;
-    } finally {
+      loadingState.setError(error);
       loadingState.stopLoading();
     }
   }
@@ -59,33 +70,33 @@
   });
 </script>
 
-<div class="container mx-auto px-4 py-8">
-  <!-- <h1 class="text-3xl font-bold mb-8">Create Your Course</h1> -->
-
-  {#if error}
-    <div class="max-w-2xl mx-auto text-center">
-      <div class="text-red-500 mb-4">{error}</div>
-      <a 
-        href="/" 
-        class="text-blue-600 hover:text-blue-800"
-      >
-        Return to Home Page
-      </a>
-    </div>
-  {:else if courseStructure}
-    <VideoSelector
-      {courseStructure}
-      bind:moduleVideos
-      bind:selectedVideos
-      {loading}
-      {error}
-    />
-  {:else}
-    <div class="max-w-2xl mx-auto text-center">
-      <div class="animate-pulse">
-        <div class="h-4 bg-gray-200 rounded w-3/4 mx-auto mb-4"></div>
-        <div class="h-4 bg-gray-200 rounded w-1/2 mx-auto"></div>
+<div class="min-h-screen bg-gray-50">
+  <div class="container mx-auto px-4 py-8">
+    {#if error}
+      <div class="max-w-2xl mx-auto text-center">
+        <div class="text-red-500 mb-4">{error}</div>
+        <a 
+          href="/" 
+          class="text-blue-600 hover:text-blue-800"
+        >
+          Return to Home Page
+        </a>
       </div>
-    </div>
-  {/if}
+    {:else if courseStructure}
+      <VideoSelector
+        {courseStructure}
+        bind:moduleVideos
+        bind:selectedVideos
+        {loading}
+        {error}
+      />
+    {:else}
+      <div class="max-w-2xl mx-auto text-center">
+        <div class="animate-pulse">
+          <div class="h-4 bg-gray-200 rounded w-3/4 mx-auto mb-4"></div>
+          <div class="h-4 bg-gray-200 rounded w-1/2 mx-auto"></div>
+        </div>
+      </div>
+    {/if}
+  </div>
 </div>

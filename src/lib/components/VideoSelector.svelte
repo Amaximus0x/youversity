@@ -74,6 +74,7 @@
     async function fetchVideosForModule(searchPrompt: string, moduleIndex: number, retryCount = 0) {
       const moduleTitle = courseStructure.OG_Module_Title[moduleIndex];
       loadingState.setCurrentModule(moduleIndex + 1, moduleTitle);
+      loadingState.setStep(`Searching videos for Module ${moduleIndex + 1}: ${moduleTitle}`);
       const maxRetries = 3;
       try {
         if (!searchPrompt?.trim()) {
@@ -96,9 +97,10 @@
         }
         const data = await response.json();
         
-        const hasRealVideos = data.videos.some(v => v.videoId !== '');
+        const hasRealVideos = data.videos.some((v: any) => v.videoId !== '');
         
         if (!hasRealVideos && retryCount < maxRetries) {
+          loadingState.setStep(`Retrying video search for Module ${moduleIndex + 1} (Attempt ${retryCount + 1})`);
           console.log(`Retrying module ${moduleIndex + 1}, attempt ${retryCount + 1}`);
           await new Promise(resolve => setTimeout(resolve, 1000));
           return fetchVideosForModule(searchPrompt, moduleIndex, retryCount + 1);
@@ -111,31 +113,48 @@
         
         moduleVideos = [...moduleVideos];
         selectedVideos = [...selectedVideos];
-      } catch (err) {
+
+        // Update progress
+        const progress = ((moduleIndex + 1) / courseStructure.OG_Module_Title.length) * 100;
+        loadingState.setProgress(progress);
+
+        // If this is the last module, stop the loading state
+        if (moduleIndex === courseStructure.OG_Module_Title.length - 1) {
+          loadingState.stopLoading();
+        }
+      } catch (err: any) {
         console.error(`Error in module ${moduleIndex + 1}:`, err);
         if (retryCount < maxRetries) {
+          loadingState.setStep(`Error occurred, retrying Module ${moduleIndex + 1} (Attempt ${retryCount + 1})`);
           await new Promise(resolve => setTimeout(resolve, 1000));
           return fetchVideosForModule(searchPrompt, moduleIndex, retryCount + 1);
         }
         moduleVideos[moduleIndex] = Array(5).fill(createPlaceholderVideo());
         moduleVideos = [...moduleVideos];
         error = `Failed to fetch videos for module ${moduleIndex + 1}: ${err.message}`;
+        loadingState.setError(error);
+        loadingState.stopLoading();
       }
     }
   
     async function handleSaveCourse() {
+      if (!$user) {
+        error = 'Please sign in to save the course';
+        return;
+      }
+
       loadingState.setMinimized(false);
       loadingState.startLoading(courseStructure.OG_Course_Title, false);
+      loadingState.setStep('Preparing to generate final course...');
       
       try {
-        if (!$user) throw new Error('Please sign in to save the course');
-        
         saving = true;
         error = null;
+        moduleTranscripts = [];
 
         for (let i = 0; i < selectedVideos.length; i++) {
           loadingState.setCurrentModule(i + 1);
-          loadingState.setStep(`Building Module ${i + 1}: ${courseStructure.OG_Module_Title[i]}`);
+          loadingState.setStep(`Fetching transcript for Module ${i + 1}: ${courseStructure.OG_Module_Title[i]}`);
           
           const video = moduleVideos[i][selectedVideos[i]];
           const transcript = await getVideoTranscript(video.videoId);
@@ -146,6 +165,8 @@
         }
 
         loadingState.setStep('Generating course content and quizzes...');
+        loadingState.setProgress(85);
+
         const response = await fetch('/api/create-final-course', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -159,15 +180,15 @@
         const data = await response.json();
         if (!data.success) throw new Error(data.error || 'Failed to create final course');
 
-        loadingState.setStep('Saving course...');
-        loadingState.setProgress(90);
+        loadingState.setStep('Saving your course...');
+        loadingState.setProgress(95);
         
         const courseId = await saveCourseToFirebase($user.uid, data.course);
         
-        // Complete the process
+        loadingState.setStep('Course creation complete!');
+        loadingState.setProgress(100);
         loadingState.stopLoading(courseId);
         
-        // Only navigate if the loading state is not minimized and we're still on the same page
         if (browser && !$loadingState.minimized && window.location.pathname === '/create-course') {
           goto(`/course/${courseId}`);
         }
@@ -446,7 +467,7 @@
 </style>
   
   <div 
-    class="sticky bottom-8 flex justify-center mt-8"
+    class="sticky bottom-8 md:bottom-8 bottom-24 flex justify-center mt-8"
     in:fly={{ y: 20, duration: 500, delay: 200 }}
     out:fade
   >
