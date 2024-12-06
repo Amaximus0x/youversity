@@ -269,14 +269,14 @@ async function generateModuleDetails(courseStructure: CourseStructure, selectedV
       .map(async (title, index) => {
         const moduleIndex = i + index;
         const modulePrompt = `
-          Based on the following module information, generate a refined module title and objective:
+          Based on the following module information, generate a refined module title and objective. Do not include any asterisks (*) in the title:
           Module Title: ${title}
           Video Title: ${selectedVideos[moduleIndex].title}
           Video Description: ${selectedVideos[moduleIndex].description}
 
           Provide the response in JSON format with the following keys:
           {
-            "Final_Module_Title": "refined module title",
+            "Final_Module_Title": "refined module title (no asterisks)",
             "Final_Module_Objective": "refined module objective"
           }
         `;

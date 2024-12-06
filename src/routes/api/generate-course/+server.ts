@@ -39,7 +39,7 @@ export const POST: RequestHandler = async ({ request }) => {
 };
 
 async function generateCourse(User_Course_Input: string): Promise<CourseStructure> {
-  const prompt = `Build a 10 module course plan based on the input below, with course title and individual module titles. For each module, include one sentence search prompt for youtube to find the best video match for that module. Do not include "Search Prompt:" before each search prompt.
+  const prompt = `Build a 10 module course plan based on the input below, with course title and individual module titles. For each module, include one sentence search prompt for youtube to find the best video match for that module. Do not include "Search Prompt:" before each search prompt. Do not include any asterisks (*) in the titles.
 
 Here is the course objective - simplify if needed:
 

@@ -327,12 +327,12 @@
 
             <div
               bind:this={sliderRefs[moduleIndex]}
-              class="flex overflow-x-auto scrollbar-hide space-x-4 pb-4 px-2"
+              class="flex overflow-x-auto scrollbar-hide gap-4 pb-4 px-2"
               on:scroll={() => updateArrows(moduleIndex)}
               style="scrollbar-width: none; -ms-overflow-style: none;"
             >
               {#each moduleVideos[moduleIndex] as video, videoIndex}
-                <div class="relative flex-shrink-0" style="width: 300px">
+                <div class="relative flex-shrink-0" style="width: calc((100% - 4rem) / 3.5)">
                   <div 
                     class="w-full cursor-pointer overflow-hidden rounded-lg transition-all duration-200 transform hover:scale-102 bg-white group
                       {selectedVideos[moduleIndex] === videoIndex ? 'ring-2 ring-[#EE434A] ring-offset-2' : 'hover:border-[#EE434A] border border-gray-200'}"
