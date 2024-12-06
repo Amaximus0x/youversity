@@ -117,7 +117,7 @@
           await new Promise(resolve => setTimeout(resolve, 1000));
           return fetchVideosForModule(searchPrompt, moduleIndex, retryCount + 1);
         }
-        moduleVideos[moduleIndex] = Array(3).fill(createPlaceholderVideo());
+        moduleVideos[moduleIndex] = Array(5).fill(createPlaceholderVideo());
         moduleVideos = [...moduleVideos];
         error = `Failed to fetch videos for module ${moduleIndex + 1}: ${err.message}`;
       }
@@ -231,24 +231,23 @@
     let isGenerating = false;
   
     async function handleGenerateCourse() {
-      const allModulesSelected = courseStructure.OG_Module_Title.every((_, index) => 
-        selectedVideos[index] !== undefined
-      );
+      loadingState.startLoading(courseStructure.OG_Course_Title);
+      loadingState.setStep("Preparing course generation...");
       
-      if (!allModulesSelected) {
-        alert("Please select a video for each module before generating the course.");
-        return;
-      }
-      
-      isGenerating = true;
       try {
-        // Your existing course generation logic here
-        await generateCourse(); // Replace with your actual generation function
+        for (let i = 0; i < selectedVideos.length; i++) {
+          loadingState.setCurrentModule(i + 1);
+          loadingState.setStep(`Processing Module ${i + 1}: ${courseStructure.OG_Module_Title[i]}`);
+          loadingState.setProgress((i / selectedVideos.length) * 100);
+          
+          // Your existing video processing code here
+        }
+
+        loadingState.setStep("Finalizing course generation...");
+        // Your existing final course generation code here
+        
       } catch (error) {
-        console.error('Error generating course:', error);
-        alert('Failed to generate course. Please try again.');
-      } finally {
-        isGenerating = false;
+        loadingState.setError(error.message);
       }
     }
 

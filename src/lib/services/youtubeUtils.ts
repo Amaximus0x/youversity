@@ -138,24 +138,24 @@ export const GetListByKeyword = async (
 
           // Filter out duplicates and add new videos
           for (const video of videos) {
-            if (allVideos.length >= 3) break;
+            if (allVideos.length >= 5) break;
             if (!allVideos.some(v => v.videoId === video.videoId) && !usedVideoIds.has(video.videoId)) {
               allVideos.push(video);
               usedVideoIds.add(video.videoId);
             }
           }
 
-          if (allVideos.length >= 3) break;
+          if (allVideos.length >= 5) break;
         }
 
-        if (allVideos.length >= 3) break;
+        if (allVideos.length >= 5) break;
       } catch (error) {
         console.error('Error fetching videos:', error);
       }
     }
 
     // If we don't have enough videos, try one last broad search
-    if (allVideos.length < 3) {
+    if (allVideos.length < 5) {
       const lastResortQuery = `${cleanKeyword} how to`;
       try {
         const endpoint = `${youtubeEndpoint}/results?search_query=${encodeURIComponent(lastResortQuery)}&sp=EgIQAQ%3D%3D`;
@@ -176,11 +176,11 @@ export const GetListByKeyword = async (
 
     // Return the best 3 videos or placeholders if needed
     return allVideos.length > 0 
-      ? allVideos.slice(0, 3)
-      : Array(3).fill(createPlaceholderVideo());
+      ? allVideos.slice(0, 5)
+      : Array(5).fill(createPlaceholderVideo());
   } catch (error) {
     console.error('Error in GetListByKeyword:', error);
-    return Array(3).fill(createPlaceholderVideo());
+    return Array(5).fill(createPlaceholderVideo());
   }
 };
 
@@ -305,7 +305,7 @@ async function findVideosWithFallback(
   let allVideos: VideoItem[] = [];
 
   for (const queries of searchStrategies) {
-    if (allVideos.length >= 3) break;
+    if (allVideos.length >= 5) break;
 
     const videos = await searchWithStrategy(
       queries,
@@ -317,7 +317,7 @@ async function findVideosWithFallback(
 
     // Filter out duplicates and add new videos
     for (const video of videos) {
-      if (allVideos.length >= 3) break;
+      if (allVideos.length >= 5) break;
       if (!allVideos.some(v => v.videoId === video.videoId) && !usedVideoIds.has(video.videoId)) {
         allVideos.push(video);
         usedVideoIds.add(video.videoId);
@@ -329,7 +329,7 @@ async function findVideosWithFallback(
   }
 
   // If we still don't have enough videos, try one final broad search
-  if (allVideos.length < 3) {
+  if (allVideos.length < 5) {
     console.log('Using final fallback search...');
     const finalVideos = await searchWithStrategy(
       [`${keyword} tutorial`],
@@ -346,7 +346,7 @@ async function findVideosWithFallback(
     });
   }
 
-  return allVideos.slice(0, 3);
+  return allVideos.slice(0, 5);
 }
 
 function generateAlternativeQueries(keyword: string, moduleTitle: string, moduleIndex: number): string[] {
@@ -373,7 +373,7 @@ async function searchWithStrategy(
   const maxRetries = 2;
 
   for (const query of searchQueries) {
-    if (allVideos.length >= 3) break;
+    if (allVideos.length >= 5) break;
 
     for (let retry = 0; retry <= maxRetries; retry++) {
       try {
@@ -401,7 +401,7 @@ async function searchWithStrategy(
         if (!contents) continue;
 
         for (const content of contents) {
-          if (allVideos.length >= 3) break;
+          if (allVideos.length >= 5) break;
           if (!content.itemSectionRenderer?.contents) continue;
 
           const videos = content.itemSectionRenderer.contents
@@ -426,7 +426,7 @@ async function searchWithStrategy(
             .filter(Boolean);
 
           for (const video of videos) {
-            if (allVideos.length >= 3) break;
+            if (allVideos.length >= 5) break;
             const relevanceScore = calculateVideoRelevanceScore(video, keyword, moduleTitle, moduleIndex);
             if (relevanceScore > 0) {
               allVideos.push(video);
@@ -538,7 +538,7 @@ function isEnglishVideo(video: VideoItem): boolean {
   const nonEnglishIndicators = [
     '[한국어]', '[日本語]', '[中文]', '[español]', '[français]', '[deutsch]',
     '(한국어)', '(日本語)', '(中文)', '(español)', '(français)', '(deutsch)',
-    'subtitles', 'субтитры', 'مترجم', '字幕'
+    'subtitles', 'субтитр', 'مترجم', '字幕'
   ];
 
   // Check for non-English indicators

@@ -10,7 +10,7 @@ export const GET: RequestHandler = async ({ url }) => {
   if (!query) {
     return new Response(JSON.stringify({ 
       error: 'Query parameter is required',
-      videos: Array(3).fill(createPlaceholderVideo())
+      videos: Array(5).fill(createPlaceholderVideo())
     }), { 
       status: 400,
       headers: { 'Content-Type': 'application/json' }
@@ -23,7 +23,7 @@ export const GET: RequestHandler = async ({ url }) => {
     
     if (videos.every(v => !v.videoId)) {
       console.log('No videos found, retrying with simplified query...');
-      const simplifiedQuery = query.split(' ').slice(0, 3).join(' ');
+      const simplifiedQuery = query.split(' ').slice(0, 5).join(' ');
       const retryVideos = await GetListByKeyword(simplifiedQuery, moduleTitle || '', new Set<string>(), moduleIndex);
       return json({ videos: retryVideos });
     }
@@ -32,7 +32,7 @@ export const GET: RequestHandler = async ({ url }) => {
   } catch (error) {
     console.error('Error fetching videos:', error);
     return json({ 
-      videos: Array(3).fill(createPlaceholderVideo())
+      videos: Array(5).fill(createPlaceholderVideo())
     });
   }
 };

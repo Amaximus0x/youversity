@@ -52,20 +52,20 @@ const GetListByKeyword = async (keyword, moduleTitle, usedVideoIds, moduleIndex)
             video.length >= 3 && video.length <= 20
           );
           for (const video of videos) {
-            if (allVideos.length >= 3) break;
+            if (allVideos.length >= 5) break;
             if (!allVideos.some((v) => v.videoId === video.videoId) && !usedVideoIds.has(video.videoId)) {
               allVideos.push(video);
               usedVideoIds.add(video.videoId);
             }
           }
-          if (allVideos.length >= 3) break;
+          if (allVideos.length >= 5) break;
         }
-        if (allVideos.length >= 3) break;
+        if (allVideos.length >= 5) break;
       } catch (error) {
         console.error("Error fetching videos:", error);
       }
     }
-    if (allVideos.length < 3) {
+    if (allVideos.length < 5) {
       const lastResortQuery = `${cleanKeyword} how to`;
       try {
         const endpoint = `${youtubeEndpoint}/results?search_query=${encodeURIComponent(lastResortQuery)}&sp=EgIQAQ%3D%3D`;
@@ -80,10 +80,10 @@ const GetListByKeyword = async (keyword, moduleTitle, usedVideoIds, moduleIndex)
         console.error("Error in last resort search:", error);
       }
     }
-    return allVideos.length > 0 ? allVideos.slice(0, 3) : Array(3).fill(createPlaceholderVideo());
+    return allVideos.length > 0 ? allVideos.slice(0, 5) : Array(5).fill(createPlaceholderVideo());
   } catch (error) {
     console.error("Error in GetListByKeyword:", error);
-    return Array(3).fill(createPlaceholderVideo());
+    return Array(5).fill(createPlaceholderVideo());
   }
 };
 const formatDuration = (durationText) => {
@@ -138,7 +138,7 @@ const GET = async ({ url }) => {
   if (!query) {
     return new Response(JSON.stringify({
       error: "Query parameter is required",
-      videos: Array(3).fill(createPlaceholderVideo())
+      videos: Array(5).fill(createPlaceholderVideo())
     }), {
       status: 400,
       headers: { "Content-Type": "application/json" }
@@ -157,7 +157,7 @@ const GET = async ({ url }) => {
   } catch (error) {
     console.error("Error fetching videos:", error);
     return json({
-      videos: Array(3).fill(createPlaceholderVideo())
+      videos: Array(5).fill(createPlaceholderVideo())
     });
   }
 };
