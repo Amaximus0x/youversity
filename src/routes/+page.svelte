@@ -20,6 +20,7 @@
   import ShareModal from '$lib/components/ShareModal.svelte';
   import { Copy, X } from 'lucide-svelte';
   import CourseList from '$lib/components/CourseList.svelte';
+  import Skeleton from '$lib/components/Skeleton.svelte';
 
   let learningObjective = '';
   let userCourses: (FinalCourseStructure & { id: string })[] = [];
@@ -120,6 +121,11 @@
       loadingState.clearState();
     };
   });
+
+  // Add this function to generate skeleton items
+  function getSkeletonItems(count: number) {
+    return Array(count).fill(null);
+  }
 </script>
 
 <div class="container mx-auto px-4 py-6 pb-20 sm:pb-6 sm:py-8 max-w-7xl">
@@ -173,12 +179,28 @@
         </div>
       </div>
       
-      <CourseList 
-        courses={filteredCourses}
-        {loading}
-        {error}
-        onShare={handleShareCourse}
-      />
+      {#if loading}
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+          {#each getSkeletonItems(6) as _}
+            <div class="bg-white rounded-lg shadow-md overflow-hidden p-4">
+              <Skeleton height="200px" class="mb-4" />
+              <Skeleton height="24px" width="70%" class="mb-2" />
+              <Skeleton height="20px" width="40%" class="mb-4" />
+              <div class="flex justify-between">
+                <Skeleton height="20px" width="30%" />
+                <Skeleton height="20px" width="30%" />
+              </div>
+            </div>
+          {/each}
+        </div>
+      {:else}
+        <CourseList 
+          courses={filteredCourses}
+          {loading}
+          {error}
+          onShare={handleShareCourse}
+        />
+      {/if}
     </div>
 
     <!-- Trending Community Courses Section -->
@@ -191,6 +213,7 @@
               src={course.image} 
               alt={course.title}
               class="w-full h-32 sm:h-48 object-cover"
+              loading="lazy"
             />
             <div class="p-4">
               <h3 class="font-semibold text-base sm:text-lg text-[#2A4D61] mb-2">{course.title}</h3>

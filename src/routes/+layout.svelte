@@ -3,6 +3,7 @@
   import { user, isAuthenticated } from '$lib/stores/auth';
   import { signInWithGoogle, signOutUser } from '$lib/services/auth';
   import CourseGenerationProgress from '$lib/components/CourseGenerationProgress.svelte';
+  import Skeleton from '$lib/components/Skeleton.svelte';
   import { 
     Home,
     TrendingUp,
@@ -63,6 +64,18 @@
     updateOnlineStatus();
     window.addEventListener('online', updateOnlineStatus);
     window.addEventListener('offline', updateOnlineStatus);
+
+    // Register service worker
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker
+        .register('/service-worker.js')
+        .then((registration) => {
+          console.log('ServiceWorker registration successful');
+        })
+        .catch((err) => {
+          console.error('ServiceWorker registration failed:', err);
+        });
+    }
 
     return () => {
       window.removeEventListener('online', updateOnlineStatus);
