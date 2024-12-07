@@ -244,7 +244,7 @@
       </div>
 
       {#each courseDetails.Final_Module_Title as moduleTitle, index}
-        <section class={`border rounded-lg p-6 mb-6 ${index > 0 && !moduleProgress[index - 1]?.completed ? 'opacity-50 pointer-events-none' : ''}`}>
+        <section class="border rounded-lg p-6 mb-6">
           <div class="flex items-center justify-between mb-4">
             <h2 class="text-xl font-semibold">Module {index + 1}: {moduleTitle}</h2>
             {#if moduleProgress[index]?.completed}
@@ -253,13 +253,6 @@
                   <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
                 </svg>
                 Completed
-              </span>
-            {:else if index > 0 && !moduleProgress[index - 1]?.completed}
-              <span class="text-gray-500 flex items-center gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                  <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd" />
-                </svg>
-                Locked
               </span>
             {/if}
           </div>
