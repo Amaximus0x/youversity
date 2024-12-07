@@ -2,6 +2,7 @@
   import type { FinalCourseStructure } from '$lib/types/course';
   import { Share2, Play } from 'lucide-svelte';
   import { goto } from '$app/navigation';
+  import Skeleton from './Skeleton.svelte';
 
   export let courses: (FinalCourseStructure & { id: string })[] = [];
   export let loading = false;
@@ -11,11 +12,36 @@
   function handleCourseClick(courseId: string) {
     goto(`/course/${courseId}`);
   }
+
+  function getSkeletonItems(count: number) {
+    return Array(count).fill(null);
+  }
 </script>
 
 <div>
   {#if loading}
-    <div class="text-center py-8">Loading your courses...</div>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {#each getSkeletonItems(6) as _}
+        <div class="bg-white rounded-lg overflow-hidden shadow-lg">
+          <div class="relative">
+            <Skeleton height="180px" />
+          </div>
+          <div class="p-4">
+            <div class="flex justify-between items-start mb-2">
+              <Skeleton height="24px" width="70%" />
+              <Skeleton height="24px" width="24px" borderRadius="50%" />
+            </div>
+            <div class="w-full h-2 bg-[#D9E1E3] rounded-full mb-2">
+              <Skeleton height="8px" borderRadius="9999px" />
+            </div>
+          </div>
+          <div class="px-4 py-3 border-t border-gray-100 flex justify-between items-center">
+            <Skeleton height="20px" width="30%" />
+            <Skeleton height="36px" width="100px" borderRadius="8px" />
+          </div>
+        </div>
+      {/each}
+    </div>
   {:else if error}
     <div class="text-red-500 text-center py-8">{error}</div>
   {:else if courses.length === 0}
