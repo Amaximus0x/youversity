@@ -1,11 +1,13 @@
-<script>
+<script lang="ts">
   export let width = "100%";
   export let height = "20px";
   export let borderRadius = "4px";
+  let className = '';
+  export { className as class };
 </script>
 
 <div
-  class="skeleton-loader"
+  class="skeleton-loader {className}"
   style="width: {width}; height: {height}; border-radius: {borderRadius};"
 />
 

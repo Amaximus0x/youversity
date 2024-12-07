@@ -11,6 +11,13 @@
   let previewVideo: VideoItem | null = null;
   let showPreview = false;
 
+  function clearUrl() {
+    url = '';
+    error = '';
+    previewVideo = null;
+    showPreview = false;
+  }
+
   // Enhanced YouTube URL validation
   function getYoutubeVideoId(url: string): string | null {
     try {
@@ -33,6 +40,14 @@
     } catch {
       return null;
     }
+  }
+
+  // Format duration from seconds to MM:SS
+  function formatDuration(seconds: number): string {
+    if (!seconds) return '0:00';
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = Math.floor(seconds % 60);
+    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
   }
 
   async function validateAndPreview() {
@@ -58,14 +73,19 @@
       
       const metadata = await response.json();
 
-      // Create preview video object
+      if (!metadata.title) {
+        throw new Error('Could not fetch video title');
+      }
+
+      // Create preview video object with properly formatted metadata
       previewVideo = {
         videoId,
         videoUrl: url,
-        title: metadata.title,
-        description: metadata.description || 'User-added video',
-        length: metadata.duration,
-        thumbnailUrl: `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`
+        title: metadata.title || 'Untitled Video',
+        description: metadata.description || '',
+        length: metadata.duration ? Math.floor(metadata.duration / 60) : 0, // Convert seconds to minutes
+        thumbnailUrl: `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`,
+        duration: formatDuration(metadata.duration)
       };
 
       showPreview = true;
@@ -112,13 +132,24 @@
 
 <div class="space-y-4 w-full">
   <div class="flex gap-2 w-full">
-    <input
-      type="text"
-      bind:value={url}
-      placeholder="Paste YouTube URL"
-      class="flex-1 p-2 border rounded-lg focus:ring-2 focus:ring-[#EE434A] focus:border-transparent outline-none {error ? 'border-red-500' : ''}"
-      disabled={loading}
-    />
+    <div class="flex-1 relative">
+      <input
+        type="text"
+        bind:value={url}
+        placeholder="Paste YouTube URL"
+        class="w-full p-2 border rounded-lg focus:ring-2 focus:ring-[#EE434A] focus:border-transparent outline-none {error ? 'border-red-500' : ''} pr-10"
+        disabled={loading}
+      />
+      {#if url}
+        <button
+          on:click={clearUrl}
+          class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-100 transition-colors"
+          title="Clear input"
+        >
+          <X class="w-4 h-4" />
+        </button>
+      {/if}
+    </div>
     {#if !showPreview}
       <button
         on:click={validateAndPreview}
@@ -166,7 +197,7 @@
         </button>
       </div>
 
-      <div class="aspect-video w-full mb-4">
+      <div class="aspect-video w-full mb-4 relative">
         <iframe
           src="https://www.youtube.com/embed/{previewVideo.videoId}"
           title={previewVideo.title}
@@ -175,14 +206,17 @@
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
           allowfullscreen
         ></iframe>
+        <div class="absolute bottom-2 right-2 bg-black bg-opacity-75 text-white px-2 py-1 rounded text-sm">
+          {previewVideo.duration || formatDuration(previewVideo.length * 60)}
+        </div>
       </div>
 
       <div class="space-y-2">
         <h3 class="font-semibold text-[#2A4D61] line-clamp-2">
           {previewVideo.title}
         </h3>
-        <p class="text-sm text-gray-600">
-          Duration: {previewVideo.length} minutes
+        <p class="text-sm text-gray-600 line-clamp-2">
+          {previewVideo.description}
         </p>
       </div>
     </div>
