@@ -44,6 +44,15 @@
     }
   }
 
+  // Get standardized YouTube URLs
+  function getYoutubeUrls(videoId: string) {
+    return {
+      watchUrl: `https://www.youtube.com/watch?v=${videoId}`,
+      embedUrl: `https://www.youtube.com/embed/${videoId}?enablejsapi=1&origin=${encodeURIComponent(window.location.origin)}&widgetid=1`,
+      thumbnailUrl: `https://i.ytimg.com/vi/${videoId}/hq720.jpg?sqp=-oaymwEcCOgCEMoBSFXyq4qpAw4IARUAAIhCGAFwAcABBg==&rs=AOn4CLBsbssdoEtEid1L_V6r6w3LLT5uLg`
+    };
+  }
+
   // Format duration from minutes to MM:SS or HH:MM:SS
   function formatDuration(minutes: number): string {
     if (!minutes || isNaN(minutes)) return '0:00';
@@ -101,33 +110,43 @@
         return;
       }
 
+      const urls = getYoutubeUrls(videoId);
+
       // Fetch video metadata with retry mechanism
       const response = await retryWithBackoff(async () => {
-        const response = await fetch(`/api/video-metadata?videoId=${videoId}`);
-        const data = await response.json();
-        
-        if (!response.ok || !data.success) {
-          throw new Error(data.error || 'Failed to fetch video details');
+        try {
+          const response = await fetch(`/api/video-metadata?videoId=${videoId}`);
+          const contentType = response.headers.get('content-type');
+          
+          if (!contentType || !contentType.includes('application/json')) {
+            throw new Error('Invalid response format from server');
+          }
+
+          const text = await response.text();
+          const data = JSON.parse(text.replace(/^\)\]}',\s*/, ''));
+          
+          if (!response.ok || !data.success) {
+            throw new Error(data.error || 'Failed to fetch video details');
+          }
+          
+          return data.data;
+        } catch (err) {
+          if (err instanceof SyntaxError) {
+            throw new Error('Invalid response format from server');
+          }
+          throw err;
         }
-        
-        return data.data;
       });
 
       // Create preview video object with properly formatted metadata
       const video: VideoItem = {
         videoId,
-        videoUrl: url,
+        videoUrl: urls.watchUrl,
         title: response.title,
-        description: '',
+        description: '', // No description needed
         length: response.duration,
-        thumbnailUrl: `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`
+        thumbnailUrl: urls.thumbnailUrl
       };
-
-      // Try maxresdefault first, fallback to hqdefault
-      const thumbnailExists = await checkThumbnailExists(video.thumbnailUrl);
-      if (!thumbnailExists) {
-        video.thumbnailUrl = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
-      }
 
       previewVideo = video;
       showPreview = true;
@@ -263,7 +282,7 @@
 
       <div class="aspect-video w-full mb-4 relative">
         <iframe
-          src="https://www.youtube.com/embed/{previewVideo.videoId}"
+          src={`https://www.youtube.com/embed/${previewVideo.videoId}?enablejsapi=1&origin=${encodeURIComponent(window.location.origin)}&widgetid=1`}
           title={previewVideo.title}
           class="w-full h-full rounded-lg"
           frameborder="0"
