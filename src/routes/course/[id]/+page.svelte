@@ -11,13 +11,13 @@
   let error: string | null = null;
   let isSharedView = false;
   let moduleProgress: ModuleProgress[] = [];
-  let selectedAnswers: string[] = [];
+  let selectedAnswers: { [key: string]: string } = {};
   let currentModule = 0;
   let showQuiz = false;
   let quizSubmitted = false;
   let quizScore = 0;
   let currentQuiz: Quiz | null = null;
-  let quizResults: (boolean | undefined)[] = [];
+  let quizResults: { [key: string]: boolean } = {};
 
   $: if (courseDetails?.Final_Module_Quiz) {
     // Initialize selectedAnswers array based on number of questions
@@ -110,28 +110,34 @@
       return;
     }
     
-    currentModule = moduleIndex ?? -1; // -1 indicates final quiz
+    currentModule = moduleIndex ?? -1;
     currentQuiz = quiz;
-    selectedAnswers = new Array(quiz.quiz?.length || 0).fill('');
-    quizResults = new Array(quiz.quiz?.length || 0).fill(undefined);
+    selectedAnswers = {};
+    quizResults = {};
     quizSubmitted = false;
     quizScore = 0;
     showQuiz = true;
   }
 
+  function resetQuiz() {
+    if (!currentQuiz) return;
+    selectedAnswers = {};
+    quizResults = {};
+    quizSubmitted = false;
+    quizScore = 0;
+  }
+
   async function handleQuizSubmit() {
-    if (!courseDetails?.Final_Module_Quiz?.[currentModule]) return;
+    if (!currentQuiz) return;
     
-    const quiz = courseDetails.Final_Module_Quiz[currentModule];
     let correctAnswers = 0;
-    
-    quiz.questions.forEach((question, index) => {
-      if (selectedAnswers[index] === question.correctAnswer) {
-        correctAnswers++;
-      }
+    currentQuiz.quiz.forEach((question, index) => {
+      const isCorrect = selectedAnswers[index] === question.answer;
+      quizResults[index] = isCorrect;
+      if (isCorrect) correctAnswers++;
     });
 
-    quizScore = Math.round((correctAnswers / quiz.questions.length) * 100);
+    quizScore = Math.round((correctAnswers / currentQuiz.quiz.length) * 100);
     quizSubmitted = true;
 
     if ($user && moduleProgress[currentModule]) {
@@ -150,12 +156,6 @@
         console.error('Error updating module progress:', err);
       }
     }
-  }
-
-  function resetQuiz() {
-    selectedAnswers = new Array(courseDetails?.Final_Module_Quiz?.[currentModule]?.questions?.length || 0).fill('');
-    quizSubmitted = false;
-    quizScore = 0;
   }
 
   function handlePlaylistClick() {
@@ -273,19 +273,21 @@
           {/if}
 
           <div class="mt-auto">
-            <button
-              class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-              on:click={() => {
-                const moduleQuiz = courseDetails?.Final_Module_Quiz?.[index];
-                if (!moduleQuiz) {
-                  console.error(`No quiz found for module ${index + 1}`);
-                  return;
-                }
-                startQuiz(moduleQuiz, index);
-              }}
-            >
-              Take Module Quiz
-            </button>
+            {#if courseDetails?.Final_Module_Quiz?.[index]?.quiz?.length > 0}
+              <button
+                class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                on:click={() => {
+                  const moduleQuiz = courseDetails?.Final_Module_Quiz?.[index];
+                  if (!moduleQuiz) {
+                    console.error(`No quiz found for module ${index + 1}`);
+                    return;
+                  }
+                  startQuiz(moduleQuiz, index);
+                }}
+              >
+                Take Module Quiz
+              </button>
+            {/if}
           </div>
         </section>
       {/each}
@@ -301,50 +303,77 @@
       </div>
 
       {#if showQuiz && currentQuiz}
-        <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
+        <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div class="bg-white rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <h3 class="text-xl font-semibold mb-4">Quiz</h3>
+            <h3 class="text-xl font-semibold mb-4 text-[#2A4D61]">Quiz</h3>
             
-            {#each currentQuiz.quiz as question, index}
-              <div class="mb-6">
-                <p class="font-medium mb-2">{index + 1}. {question.question}</p>
-                
-                {#each Object.entries(question.options) as [key, value]}
-                  <label class="block mb-2">
-                    <input
-                      type="radio"
-                      name="question{index}"
-                      value={key}
-                      bind:group={selectedAnswers[index]}
-                      class="mr-2"
-                    />
-                    {value}
-                  </label>
-                {/each}
+            <div class="space-y-6">
+              {#each currentQuiz.quiz as question, index}
+                <div class="mb-6">
+                  <p class="font-medium mb-3 text-[#2A4D61]">{index + 1}. {question.question}</p>
+                  
+                  <div class="space-y-3">
+                    {#each Object.entries(question.options) as [key, value]}
+                      <label class="flex items-start space-x-3 cursor-pointer p-2 rounded hover:bg-gray-50">
+                        <input
+                          type="radio"
+                          name="question_{index}"
+                          value={key}
+                          checked={selectedAnswers[index] === key}
+                          on:change={() => {
+                            selectedAnswers[index] = key;
+                          }}
+                          disabled={quizSubmitted}
+                          class="mt-1"
+                        />
+                        <span class="text-gray-700">{value}</span>
+                      </label>
+                    {/each}
+                  </div>
 
-                {#if quizResults[index] !== undefined}
-                  <p class={quizResults[index] ? "text-green-500" : "text-red-500"}>
-                    {quizResults[index] ? "Correct!" : "Incorrect"}
-                  </p>
+                  {#if quizSubmitted}
+                    <p class={quizResults[index] ? "text-green-500 mt-2" : "text-red-500 mt-2"}>
+                      {quizResults[index] ? "Correct!" : "Incorrect"}
+                    </p>
+                  {/if}
+                </div>
+              {/each}
+
+              <div class="flex justify-end gap-4 mt-6">
+                {#if !quizSubmitted}
+                  <button
+                    type="button"
+                    class="bg-[#42C1C8] text-white px-6 py-2 rounded-lg hover:bg-[#3BA7AD] transition-colors duration-200"
+                    on:click={handleQuizSubmit}
+                  >
+                    Submit Quiz
+                  </button>
+                {:else}
+                  <button
+                    type="button"
+                    class="bg-[#4CAF50] text-white px-6 py-2 rounded-lg hover:bg-[#45A049] transition-colors duration-200"
+                    on:click={resetQuiz}
+                  >
+                    Try Again
+                  </button>
                 {/if}
+                <button
+                  type="button"
+                  class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition-colors duration-200"
+                  on:click={() => showQuiz = false}
+                >
+                  Close
+                </button>
               </div>
-            {/each}
 
-            <div class="flex justify-end gap-4">
-              <button
-                class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-                on:click={async () => {
-                  await checkAnswers();
-                }}
-              >
-                Check Answers
-              </button>
-              <button
-                class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
-                on:click={() => showQuiz = false}
-              >
-                Close
-              </button>
+              {#if quizSubmitted}
+                <div class="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                  <p class="text-lg font-semibold text-[#2A4D61]">Your Score: {quizScore}%</p>
+                  <p class="text-sm mt-1 text-gray-600">
+                    {quizScore >= 70 ? 'Congratulations! You passed the quiz.' : 'Keep trying! You need 70% to pass.'}
+                  </p>
+                </div>
+              {/if}
             </div>
           </div>
         </div>
