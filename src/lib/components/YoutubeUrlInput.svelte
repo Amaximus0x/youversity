@@ -4,6 +4,8 @@
   
   export let moduleIndex: number;
   export let onVideoAdd: (video: VideoItem, moduleIndex: number) => void;
+  let className = '';
+  export { className as class }; // Properly export the class prop for Svelte
   
   let url = '';
   let error = '';
@@ -42,12 +44,47 @@
     }
   }
 
-  // Format duration from seconds to MM:SS
-  function formatDuration(seconds: number): string {
-    if (!seconds) return '0:00';
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = Math.floor(seconds % 60);
-    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+  // Format duration from minutes to MM:SS or HH:MM:SS
+  function formatDuration(minutes: number): string {
+    if (!minutes || isNaN(minutes)) return '0:00';
+    
+    const totalSeconds = Math.round(minutes * 60);
+    const hours = Math.floor(totalSeconds / 3600);
+    const mins = Math.floor((totalSeconds % 3600) / 60);
+    const secs = Math.floor(totalSeconds % 60);
+    
+    if (hours > 0) {
+      return `${hours}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    }
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  }
+
+  // Check if thumbnail exists
+  async function checkThumbnailExists(url: string): Promise<boolean> {
+    try {
+      const response = await fetch(url, { 
+        method: 'HEAD',
+        mode: 'no-cors' // Add no-cors mode to handle CORS issues
+      });
+      return response.status === 200;
+    } catch {
+      return false;
+    }
+  }
+
+  // Retry function with exponential backoff
+  async function retryWithBackoff<T>(
+    fn: () => Promise<T>,
+    retries = 3,
+    delay = 1000
+  ): Promise<T> {
+    try {
+      return await fn();
+    } catch (error) {
+      if (retries === 0) throw error;
+      await new Promise(resolve => setTimeout(resolve, delay));
+      return retryWithBackoff(fn, retries - 1, delay * 2);
+    }
   }
 
   async function validateAndPreview() {
@@ -64,30 +101,35 @@
         return;
       }
 
-      // Check if video exists and is available
-      const response = await fetch(`/api/video-metadata?videoId=${videoId}`);
-      if (!response.ok) {
+      // Fetch video metadata with retry mechanism
+      const response = await retryWithBackoff(async () => {
+        const response = await fetch(`/api/video-metadata?videoId=${videoId}`);
         const data = await response.json();
-        throw new Error(data.error || 'Failed to fetch video details');
-      }
-      
-      const metadata = await response.json();
-
-      if (!metadata.title) {
-        throw new Error('Could not fetch video title');
-      }
+        
+        if (!response.ok || !data.success) {
+          throw new Error(data.error || 'Failed to fetch video details');
+        }
+        
+        return data.data;
+      });
 
       // Create preview video object with properly formatted metadata
-      previewVideo = {
+      const video: VideoItem = {
         videoId,
         videoUrl: url,
-        title: metadata.title || 'Untitled Video',
-        description: metadata.description || '',
-        length: metadata.duration ? Math.floor(metadata.duration / 60) : 0, // Convert seconds to minutes
-        thumbnailUrl: `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`,
-        duration: formatDuration(metadata.duration)
+        title: response.title,
+        description: '',
+        length: response.duration,
+        thumbnailUrl: `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`
       };
 
+      // Try maxresdefault first, fallback to hqdefault
+      const thumbnailExists = await checkThumbnailExists(video.thumbnailUrl);
+      if (!thumbnailExists) {
+        video.thumbnailUrl = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+      }
+
+      previewVideo = video;
       showPreview = true;
     } catch (err) {
       console.error('Error validating video:', err);
@@ -104,10 +146,32 @@
     }
 
     try {
-      onVideoAdd(previewVideo, moduleIndex);
-      url = '';
-      previewVideo = null;
-      showPreview = false;
+      const videoToAdd: VideoItem = {
+        videoId: previewVideo.videoId,
+        videoUrl: previewVideo.videoUrl,
+        title: previewVideo.title,
+        description: '',
+        length: previewVideo.length,
+        thumbnailUrl: previewVideo.thumbnailUrl
+      };
+
+      // First add the video
+      onVideoAdd(videoToAdd, moduleIndex);
+      
+      // Clear the input
+      clearUrl();
+      
+      // Wait for the DOM to update
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      // Try to find and click the video element
+      const selector = `[data-module="${moduleIndex}"] [data-video-id="${videoToAdd.videoId}"]`;
+      const videoElement = document.querySelector(selector) as HTMLElement;
+      if (videoElement) {
+        videoElement.click();
+      } else {
+        console.log('Could not find video element to select:', selector);
+      }
     } catch (err) {
       console.error('Error adding video:', err);
       error = 'Failed to add video. Please try again.';
@@ -130,7 +194,7 @@
   $: if (url) handleUrlInput();
 </script>
 
-<div class="space-y-4 w-full">
+<div class="space-y-4 w-full {className}">
   <div class="flex gap-2 w-full">
     <div class="flex-1 relative">
       <input
@@ -189,7 +253,7 @@
           <Plus class="w-4 h-4" />
         </button>
         <button
-          on:click={() => { showPreview = false; previewVideo = null; }}
+          on:click={clearUrl}
           class="bg-gray-500 hover:bg-gray-600 text-white p-2 rounded-lg transition-colors duration-200"
           title="Cancel"
         >
@@ -207,7 +271,7 @@
           allowfullscreen
         ></iframe>
         <div class="absolute bottom-2 right-2 bg-black bg-opacity-75 text-white px-2 py-1 rounded text-sm">
-          {previewVideo.duration || formatDuration(previewVideo.length * 60)}
+          {formatDuration(previewVideo.length)}
         </div>
       </div>
 
@@ -215,9 +279,6 @@
         <h3 class="font-semibold text-[#2A4D61] line-clamp-2">
           {previewVideo.title}
         </h3>
-        <p class="text-sm text-gray-600 line-clamp-2">
-          {previewVideo.description}
-        </p>
       </div>
     </div>
   {/if}
