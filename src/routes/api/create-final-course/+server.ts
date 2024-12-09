@@ -10,6 +10,31 @@ import { OPENAI_CONFIG } from '$lib/config/openai';
 
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
+function preprocessTranscript(transcript: string): string {
+  if (!transcript) return '';
+  
+  return transcript
+    // Remove multiple consecutive spaces
+    .replace(/\s+/g, ' ')
+    // Remove timestamps if present (common in YouTube transcripts)
+    .replace(/\[\d{1,2}:\d{2}\]/g, '')
+    // Remove speaker labels if present
+    .replace(/^[A-Za-z]+:\s*/gm, '')
+    // Remove any HTML tags if present
+    .replace(/<[^>]*>/g, '')
+    // Remove URLs
+    .replace(/https?:\/\/[^\s]+/g, '')
+    // Remove redundant newlines while preserving paragraph structure
+    .split('\n')
+    .map(line => line.trim())
+    .filter(line => line.length > 0)
+    .join('\n')
+    // Remove any remaining special characters
+    .replace(/[^\w\s.,!?;:'"()\n-]/g, '')
+    // Trim the final result
+    .trim();
+}
+
 const openAIRateLimit = pLimit(3); // Limit concurrent requests
 
 const RPM_LIMIT = 200; // requests per minute
@@ -74,9 +99,16 @@ async function generateQuiz(transcript: string, moduleTitle: string, isFinalQuiz
       return null;
     }
 
+    // Preprocess the transcript
+    const processedTranscript = preprocessTranscript(transcript);
+    
+    if (!processedTranscript) {
+      console.error(`Empty transcript after processing for: ${moduleTitle}`);
+      return null;
+    }
+
     console.log(`Starting quiz generation for: ${moduleTitle}`);
-    console.log(`Transcript preview: ${transcript.substring(0, 100)}...`);
-    console.log(`Generating quiz for ${moduleTitle} with transcript length: ${transcript.length}`);
+    console.log(`Processed transcript length: ${processedTranscript.length} characters`);
 
     const prompt = `You are an AI language model tasked with creating a 5-question quiz based on the provided YouTube video transcript. The quiz should be in a rigid JSON format for coding purposes.
 
@@ -125,7 +157,7 @@ Use clear and concise language suitable for a general audience.
 Avoid ambiguous or misleading questions and options.
 
 Transcript:
-${transcript.substring(0, 4000)}`;
+${processedTranscript.substring(0, 4000)}`;
 
     try {
       const quiz = await makeOpenAIRequest(prompt);
@@ -294,37 +326,46 @@ async function generateModuleDetails(courseStructure: CourseStructure, selectedV
 async function generateAllQuizzes(moduleTranscripts: string[], courseStructure: CourseStructure) {
   const moduleQuizzes: (Quiz | null)[] = [];
   let allTranscripts = '';
+  const batchSize = 3; // Process 3 quizzes in parallel
 
   console.log('Starting quiz generation for all modules...');
 
-  for (let i = 0; i < moduleTranscripts.length; i++) {
-    const transcript = moduleTranscripts[i];
-    console.log(`Processing module ${i + 1} of ${moduleTranscripts.length}`);
+  // Process module quizzes in batches
+  for (let i = 0; i < moduleTranscripts.length; i += batchSize) {
+    const batch = moduleTranscripts
+      .slice(i, i + batchSize)
+      .map(async (transcript, index) => {
+        const moduleIndex = i + index;
+        try {
+          // Pre-process transcript before quiz generation
+          const processedTranscript = preprocessTranscript(transcript);
+          const quiz = await generateQuiz(processedTranscript, courseStructure.OG_Module_Title[moduleIndex]);
+          if (quiz) {
+            allTranscripts += `Module ${moduleIndex + 1} Content:\n${processedTranscript}\n\n`;
+          }
+          console.log(`Successfully generated quiz for module ${moduleIndex + 1}`);
+          return quiz;
+        } catch (error) {
+          console.error(`Error processing module ${moduleIndex + 1}:`, error);
+          return null;
+        }
+      });
 
-    if (i > 0) {
+    const batchResults = await Promise.all(batch);
+    moduleQuizzes.push(...batchResults);
+
+    // Add a small delay between batches to prevent rate limiting
+    if (i + batchSize < moduleTranscripts.length) {
       await new Promise(resolve => setTimeout(resolve, DELAY_BETWEEN_REQUESTS));
-    }
-
-    try {
-      const quiz = await generateQuiz(transcript, courseStructure.OG_Module_Title[i]);
-      moduleQuizzes.push(quiz);
-      if (quiz) {
-        allTranscripts += `Module ${i + 1} Content:\n${transcript}\n\n`;
-      }
-      console.log(`Successfully generated quiz for module ${i + 1}`);
-    } catch (error) {
-      console.error(`Error processing module ${i + 1}:`, error);
-      moduleQuizzes.push(null);
     }
   }
 
   console.log(`Generated ${moduleQuizzes.length} module quizzes`);
   
-  await new Promise(resolve => setTimeout(resolve, DELAY_BETWEEN_REQUESTS));
-  
+  // Generate final course quiz with preprocessed transcripts
   console.log('Generating final course quiz...');
   try {
-    const finalTranscript = allTranscripts.substring(0, 4000);
+    const finalTranscript = preprocessTranscript(allTranscripts).substring(0, 4000);
     const finalQuiz = await generateQuiz(finalTranscript, courseStructure.OG_Course_Title, true);
     return { moduleQuizzes, finalQuiz };
   } catch (error) {
