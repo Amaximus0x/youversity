@@ -202,16 +202,17 @@ function createYouTubePlaylist(course: Partial<FinalCourseStructure>): string {
 
     // Extract video IDs from URLs
     const videoIds = course.Final_Module_YouTube_Video_URL.map(url => {
-      const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([^&?]+)/);
-      return match ? match[1] : '';
-    }).filter(id => id);
+      const match = url.match(/(?:https?:\/\/)?(?:www\.)?youtu\.?be(?:\.com)?\/?.*(?:watch|embed)?(?:.*v=|v\/|\/)([\w-_]+)/i);
+      return match ? match[1] : null;
+    }).filter(id => id !== null);
 
     if (videoIds.length === 0) {
       return '';
     }
 
-    // Create a YouTube playlist URL with the video IDs
-    const playlistUrl = `https://www.youtube.com/watch_videos?video_ids=${videoIds.join(',')}`;
+    // Create a YouTube playlist URL with the video IDs and course title
+    const playlistTitle = encodeURIComponent(course.Final_Course_Title || '');
+    const playlistUrl = `https://www.youtube.com/watch_videos?video_ids=${videoIds.join(',')}&title=${playlistTitle}`;
     return playlistUrl;
   } catch (error) {
     console.error('Error creating YouTube playlist URL:', error);
@@ -237,12 +238,8 @@ async function generateFinalCourse(
     // Generate conclusion after we have all other data
     const conclusion = await generateConclusion(courseOverview, moduleDetails);
 
-    // Generate YouTube playlist URL
+    // Get video URLs
     const videoUrls = selectedVideos.map(video => video.videoUrl);
-    const playlistUrl = createYouTubePlaylist({
-      Final_Course_Title: courseOverview.Final_Course_Title,
-      Final_Module_YouTube_Video_URL: videoUrls
-    } as FinalCourseStructure);
 
     // Extract thumbnail URL from the first video
     let thumbnailUrl = '';
@@ -263,7 +260,6 @@ async function generateFinalCourse(
       Final_Module_Quiz: moduleQuizzes,
       Final_Course_Quiz: finalQuiz,
       Final_Course_Conclusion: conclusion.Final_Course_Conclusion,
-      YouTube_Playlist_URL: playlistUrl,
       Final_Course_Thumbnail: thumbnailUrl
     };
   } catch (error) {

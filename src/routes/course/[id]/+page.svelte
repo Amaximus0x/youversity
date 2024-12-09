@@ -161,21 +161,23 @@
   function handlePlaylistClick() {
     if (!courseDetails?.Final_Module_YouTube_Video_URL?.length) return;
     
-    // Create a YouTube playlist URL from the video URLs
-    const videoIds = courseDetails.Final_Module_YouTube_Video_URL
-      .map(url => {
-        try {
-          return new URL(url).searchParams.get('v');
-        } catch {
-          return null;
-        }
-      })
-      .filter(Boolean);
+    try {
+      // Extract video IDs from URLs
+      const videoIds = courseDetails.Final_Module_YouTube_Video_URL
+        .map(url => {
+          const match = url.match(/(?:https?:\/\/)?(?:www\.)?youtu\.?be(?:\.com)?\/?.*(?:watch|embed)?(?:.*v=|v\/|\/)([\w-_]+)/i);
+          return match ? match[1] : null;
+        })
+        .filter(id => id !== null);
 
-    if (videoIds.length) {
-      // Open YouTube playlist in a new tab
-      const playlistUrl = `https://www.youtube.com/watch_videos?video_ids=${videoIds.join(',')}`;
-      window.open(playlistUrl, '_blank');
+      if (videoIds.length > 0) {
+        // Create a YouTube playlist URL with the video IDs and course title
+        const playlistTitle = encodeURIComponent(courseDetails.Final_Course_Title || '');
+        const playlistUrl = `https://www.youtube.com/watch_videos?video_ids=${videoIds.join(',')}&title=${playlistTitle}`;
+        window.open(playlistUrl, '_blank');
+      }
+    } catch (error) {
+      console.error('Error creating YouTube playlist URL:', error);
     }
   }
 
