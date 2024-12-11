@@ -1,4 +1,4 @@
-import { GoogleAuthProvider, signInWithPopup, signOut, createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
+import { GoogleAuthProvider, signInWithPopup, signOut, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
 import { auth } from '$lib/firebase';
 import { goto } from '$app/navigation';
 
@@ -109,4 +109,13 @@ export async function refreshUserToken() {
     throw error;
   }
 } 
+
+export const resetPassword = async (email: string) => {
+  try {
+    await sendPasswordResetEmail(auth, email);
+  } catch (error) {
+    console.error('Error sending password reset email:', error);
+    throw error;
+  }
+};
 
