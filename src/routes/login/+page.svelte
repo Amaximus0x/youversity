@@ -8,13 +8,38 @@
   let password = '';
   let confirmPassword = '';
 
+  function getReadableErrorMessage(err: any): string {
+    if (!(err instanceof Error)) return 'Authentication failed';
+    
+    const errorCode = err.message.match(/\(([^)]+)\)/)?.[1] || '';
+    
+    switch (errorCode) {
+      case 'auth/invalid-credential':
+      case 'auth/wrong-password':
+      case 'auth/user-not-found':
+        return 'Invalid email or password';
+      case 'auth/email-already-in-use':
+        return 'Email is already registered';
+      case 'auth/weak-password':
+        return 'Password should be at least 6 characters';
+      case 'auth/invalid-email':
+        return 'Invalid email address';
+      case 'auth/operation-not-allowed':
+        return 'Email/password sign-in is not enabled';
+      case 'auth/too-many-requests':
+        return 'Too many attempts. Please try again later';
+      default:
+        return 'Authentication failed. Please try again';
+    }
+  }
+
   async function handleSignIn() {
     try {
       const redirectTo = $page.url.searchParams.get('redirectTo') || '/create-course';
       await signInWithGoogle(redirectTo);
     } catch (err) {
       console.error('Sign in error:', err);
-      error = err instanceof Error ? err.message : 'Failed to sign in';
+      error = getReadableErrorMessage(err);
     }
   }
 
@@ -39,7 +64,7 @@
       }
     } catch (err) {
       console.error('Authentication error:', err);
-      error = err instanceof Error ? err.message : 'Authentication failed';
+      error = getReadableErrorMessage(err);
     }
   }
 </script>
