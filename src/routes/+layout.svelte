@@ -48,7 +48,8 @@
     if ($user) {
       await signOutUser();
     } else {
-      await signInWithGoogle();
+      const redirectTo = $page.url.pathname;
+      goto(`/login?redirectTo=${encodeURIComponent(redirectTo)}`);
     }
   }
 
@@ -195,6 +196,13 @@
             <span>{item.label}</span>
           </a>
         {/each}
+        <button 
+          on:click={handleAuth}
+          class="flex flex-col items-center justify-center flex-1 h-full text-xs py-1 text-[#2A4D61]"
+        >
+          <LogOut class="w-6 h-6 mb-1" />
+          <span>{$user ? 'Sign Out' : 'Sign In'}</span>
+        </button>
       </div>
     </nav>
   </div>
