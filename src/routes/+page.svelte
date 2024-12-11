@@ -115,10 +115,15 @@
   }
 
   onMount(() => {
-    // Clear any stale loading state
-    loadingState.clearState();
-    return () => {
+    // Only clear loading state if there's no active course generation
+    if (!$loadingState.isLoading) {
       loadingState.clearState();
+    }
+    return () => {
+      // Only clear on unmount if there's no active course generation
+      if (!$loadingState.isLoading) {
+        loadingState.clearState();
+      }
     };
   });
 

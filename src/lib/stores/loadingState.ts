@@ -1,6 +1,13 @@
 import { writable } from 'svelte/store';
 import { browser } from '$app/environment';
 
+// Declare the window property type
+declare global {
+  interface Window {
+    loadingStateTimeout?: number;
+  }
+}
+
 type LoadingState = {
   isLoading: boolean;
   currentModule: number;
@@ -41,6 +48,11 @@ const getInitialState = () => {
 const createLoadingStore = () => {
   const { subscribe, set, update } = writable<LoadingState>(getInitialState());
 
+  // Clear timeout on store initialization
+  if (browser && window.loadingStateTimeout) {
+    clearTimeout(window.loadingStateTimeout);
+  }
+
   if (browser) {
     subscribe(state => {
       localStorage.setItem('loadingState', JSON.stringify(state));
@@ -49,15 +61,29 @@ const createLoadingStore = () => {
 
   return {
     subscribe,
-    startLoading: (courseTitle: string = '', isInitialBuild: boolean = false, isCreateCourse: boolean = false) => update(state => ({
-      ...state,
-      isLoading: true,
-      currentModule: 0,
-      progress: 0,
-      courseTitle,
-      isInitialBuild,
-      isCreateCourse
-    })),
+    startLoading: (courseTitle: string = '', isInitialBuild: boolean = false, isCreateCourse: boolean = false) => {
+      if (browser && window.loadingStateTimeout) {
+        clearTimeout(window.loadingStateTimeout);
+      }
+      
+      update(state => ({
+        ...state,
+        isLoading: true,
+        currentModule: 0,
+        progress: 0,
+        courseTitle,
+        isInitialBuild,
+        isCreateCourse,
+        minimized: false
+      }));
+
+      // Set auto-minimize timeout
+      if (browser) {
+        window.loadingStateTimeout = window.setTimeout(() => {
+          update(state => ({ ...state, minimized: true }));
+        }, 3000);
+      }
+    },
     stopLoading: (courseId: string | null = null) => update(state => ({
       ...state,
       isLoading: false,
@@ -69,7 +95,12 @@ const createLoadingStore = () => {
     })),
     setMinimized: (minimized: boolean) => update(state => ({ ...state, minimized })),
     clearState: () => {
-      if (browser) localStorage.removeItem('loadingState');
+      if (browser) {
+        localStorage.removeItem('loadingState');
+        if (window.loadingStateTimeout) {
+          clearTimeout(window.loadingStateTimeout);
+        }
+      }
       set(getInitialState());
     },
     setCurrentModule: (module: number, title: string = '') => 
