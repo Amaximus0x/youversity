@@ -3,14 +3,47 @@ const STATIC_ASSETS = [
   '/',
   '/app.css',
   '/app.js',
-  '/favicon.png'
+  '/favicon.png',
+  '/google-icon.svg'
 ];
+
+// Helper function to check if URL is supported for caching
+function isRequestCacheable(request) {
+  try {
+    const url = new URL(request.url);
+    return request.method === 'GET' && 
+           (url.protocol === 'http:' || url.protocol === 'https:') &&
+           !url.pathname.startsWith('/api/');
+  } catch {
+    return false;
+  }
+}
+
+// Helper function to get full URL for static assets
+function getAssetUrl(path) {
+  return new URL(path, self.location.origin).href;
+}
 
 // Install event - cache static assets
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(STATIC_ASSETS);
+      return Promise.all(
+        STATIC_ASSETS.map(path => {
+          const url = getAssetUrl(path);
+          return fetch(url)
+            .then(response => {
+              if (!response.ok) {
+                throw new Error(`Failed to fetch ${url}`);
+              }
+              return cache.put(path, response);
+            })
+            .catch(error => {
+              console.warn(`Failed to cache ${path}:`, error);
+              return Promise.resolve();
+            });
+        })
+      );
     })
   );
 });
@@ -30,35 +63,38 @@ self.addEventListener('activate', (event) => {
 
 // Fetch event - serve from cache, then network
 self.addEventListener('fetch', (event) => {
+  // Skip unsupported requests early
+  if (!isRequestCacheable(event.request)) {
+    return;
+  }
+
   event.respondWith(
     caches.match(event.request).then((response) => {
-      // Return cached response if found
       if (response) {
         return response;
       }
 
-      // Clone the request because it can only be used once
       const fetchRequest = event.request.clone();
 
-      // Make network request and cache the response
-      return fetch(fetchRequest).then((response) => {
-        // Check if response is valid
-        if (!response || response.status !== 200 || response.type !== 'basic') {
-          return response;
-        }
-
-        // Clone the response because it can only be used once
-        const responseToCache = response.clone();
-
-        caches.open(CACHE_NAME).then((cache) => {
-          // Don't cache API responses that contain user-specific data
-          if (!event.request.url.includes('/api/user/')) {
-            cache.put(event.request, responseToCache);
+      return fetch(fetchRequest)
+        .then((response) => {
+          if (!response || response.status !== 200 || response.type !== 'basic') {
+            return response;
           }
-        });
 
-        return response;
-      });
+          const responseToCache = response.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(event.request, responseToCache);
+          });
+
+          return response;
+        })
+        .catch(() => {
+          return new Response('Network request failed', {
+            status: 404,
+            statusText: 'Not Found'
+          });
+        });
     })
   );
 }); 
