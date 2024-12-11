@@ -1,7 +1,7 @@
 <script lang="ts">
   import { page } from '$app/stores';
   import { user, isAuthenticated } from '$lib/stores/auth';
-  import { signInWithGoogle, signOutUser } from '$lib/services/auth';
+  import { signOutUser } from '$lib/services/auth';
   import CourseGenerationProgress from '$lib/components/CourseGenerationProgress.svelte';
   import Skeleton from '$lib/components/Skeleton.svelte';
   import { 
@@ -196,13 +196,6 @@
             <span>{item.label}</span>
           </a>
         {/each}
-        <button 
-          on:click={handleAuth}
-          class="flex flex-col items-center justify-center flex-1 h-full text-xs py-1 text-[#2A4D61]"
-        >
-          <LogOut class="w-6 h-6 mb-1" />
-          <span>{$user ? 'Sign Out' : 'Sign In'}</span>
-        </button>
       </div>
     </nav>
   </div>
