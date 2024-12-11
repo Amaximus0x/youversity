@@ -21,6 +21,11 @@ type LoadingState = {
   isInitialBuild: boolean;
   error: string | null;
   isCreateCourse: boolean;
+  notification: {
+    show: boolean;
+    type: 'success' | 'error' | null;
+    message: string;
+  };
 };
 
 // Initialize from localStorage if available
@@ -41,7 +46,12 @@ const getInitialState = () => {
     courseId: null,
     isInitialBuild: false,
     error: null,
-    isCreateCourse: false
+    isCreateCourse: false,
+    notification: {
+      show: false,
+      type: null,
+      message: ''
+    }
   };
 };
 
@@ -74,7 +84,12 @@ const createLoadingStore = () => {
         courseTitle,
         isInitialBuild,
         isCreateCourse,
-        minimized: false
+        minimized: false,
+        notification: {
+          show: false,
+          type: null,
+          message: ''
+        }
       }));
 
       // Set auto-minimize timeout
@@ -84,15 +99,31 @@ const createLoadingStore = () => {
         }, 3000);
       }
     },
-    stopLoading: (courseId: string | null = null) => update(state => ({
-      ...state,
-      isLoading: false,
-      currentModule: 0,
-      currentStep: '',
-      progress: 100,
-      courseId,
-      isCreateCourse: false
-    })),
+    stopLoading: (courseId: string | null = null) => update(state => {
+      // Ensure we have the course title before stopping
+      if (!state.courseTitle) {
+        console.warn('No course title found when stopping loading');
+      }
+      
+      return {
+        ...state,
+        isLoading: false,
+        currentModule: 0,
+        currentStep: '',
+        progress: 100,
+        courseId,
+        isCreateCourse: false,
+        notification: !state.isInitialBuild ? {
+          show: true,
+          type: 'success',
+          message: `Your Course is ready,\n${state.courseTitle || 'Untitled Course'}`
+        } : {
+          show: false,
+          type: null,
+          message: ''
+        }
+      };
+    }),
     setMinimized: (minimized: boolean) => update(state => ({ ...state, minimized })),
     clearState: () => {
       if (browser) {
@@ -124,7 +155,20 @@ const createLoadingStore = () => {
     setError: (error: string | null) => update(state => ({ 
       ...state, 
       error,
-      isLoading: error ? true : state.isLoading
+      isLoading: error ? true : state.isLoading,
+      notification: error && !state.isInitialBuild ? {
+        show: true,
+        type: 'error',
+        message: `Course generation failed\n${error}`
+      } : state.notification
+    })),
+    clearNotification: () => update(state => ({
+      ...state,
+      notification: {
+        show: false,
+        type: null,
+        message: ''
+      }
     })),
     clearError: () => update(state => ({ ...state, error: null }))
   };

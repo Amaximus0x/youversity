@@ -54,8 +54,7 @@ Module 2 Search Prompt
 .....`;
 
   try {
-    console.log("Sending request to OpenAI API");
-    console.log(`[OpenAI API] Using model: ${OPENAI_CONFIG.model}`);
+    console.log('Sending request to OpenAI API');
     const response = await axios.post(
       'https://api.openai.com/v1/chat/completions',
       {
@@ -72,6 +71,7 @@ Module 2 Search Prompt
     );
 
     console.log('Received response from OpenAI API');
+    console.log('Response:', response.data);
     const content = response.data.choices[0].message.content;
     const lines = content.split('\n').filter(line => line.trim() !== '');
 
