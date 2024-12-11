@@ -30,6 +30,7 @@
       });
 
       const data = await response.json();
+      console.log('Course structure:', data);
 
       if (!data.success) {
         throw new Error(data.error || 'Failed to generate course');

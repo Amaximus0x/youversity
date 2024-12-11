@@ -54,7 +54,8 @@ Module 2 Search Prompt
 .....`;
 
   try {
-    console.log('Sending request to OpenAI API');
+    console.log("Sending request to OpenAI API");
+    console.log(`[OpenAI API] Using model: ${OPENAI_CONFIG.model}`);
     const response = await axios.post(
       'https://api.openai.com/v1/chat/completions',
       {

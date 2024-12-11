@@ -119,7 +119,7 @@ function isEnglishVideo(video) {
     "(français)",
     "(deutsch)",
     "subtitles",
-    "субтитры",
+    "субтитр",
     "مترجم",
     "字幕"
   ];
@@ -148,7 +148,7 @@ const GET = async ({ url }) => {
     const videos = await GetListByKeyword(query, moduleTitle || "", /* @__PURE__ */ new Set(), moduleIndex);
     if (videos.every((v) => !v.videoId)) {
       console.log("No videos found, retrying with simplified query...");
-      const simplifiedQuery = query.split(" ").slice(0, 3).join(" ");
+      const simplifiedQuery = query.split(" ").slice(0, 5).join(" ");
       const retryVideos = await GetListByKeyword(simplifiedQuery, moduleTitle || "", /* @__PURE__ */ new Set(), moduleIndex);
       return json({ videos: retryVideos });
     }

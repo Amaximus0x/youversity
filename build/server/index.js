@@ -1,7 +1,7 @@
-import { c as create_ssr_component, s as setContext, v as validate_component, m as missing_component } from './chunks/ssr-vuZdlTfL.js';
+import { c as create_ssr_component, s as setContext, v as validate_component, m as missing_component } from './chunks/ssr-DRTqH5r_.js';
 import { H as HttpError, j as json, t as text, R as Redirect, S as SvelteKitError, A as ActionFailure } from './chunks/index-DzcLzHBX.js';
 import { d as decode_pathname, h as has_data_suffix, s as strip_data_suffix, a as decode_params, n as normalize_path, b as disable_search, c as add_data_suffix, m as make_trackable, r as resolve } from './chunks/exports-CTha0ECg.js';
-import { r as readable, w as writable } from './chunks/index2-DBzPtTNm.js';
+import { r as readable, w as writable } from './chunks/index2-CVYpWdHq.js';
 import { p as public_env, s as safe_public_env, a as set_private_env, b as set_public_env, c as set_safe_public_env } from './chunks/shared-server-BfUoNEXY.js';
 
 let base = "";
@@ -91,7 +91,7 @@ const options = {
   app_dir: "_app",
   app_template_contains_nonce: false,
   csp: { "mode": "auto", "directives": { "upgrade-insecure-requests": false, "block-all-mixed-content": false }, "reportOnly": { "upgrade-insecure-requests": false, "block-all-mixed-content": false } },
-  csrf_check_origin: false,
+  csrf_check_origin: true,
   embedded: false,
   env_public_prefix: "PUBLIC_",
   env_private_prefix: "",
@@ -173,7 +173,7 @@ const options = {
 		<div class="error">
 			<span class="status">` + status + '</span>\n			<div class="message">\n				<h1>' + message + "</h1>\n			</div>\n		</div>\n	</body>\n</html>\n"
   },
-  version_hash: "wr9aic"
+  version_hash: "6sez98"
 };
 async function get_hooks() {
   return {

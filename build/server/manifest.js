@@ -7,20 +7,20 @@ function __memo(fn) {
 return {
 	appDir: "_app",
 	appPath: "_app",
-	assets: new Set(["favicon.png"]),
-	mimeTypes: {".png":"image/png"},
+	assets: new Set(["favicon.png","favicon.png.ico","images/course-placeholder.png","service-worker.js"]),
+	mimeTypes: {".png":"image/png",".js":"text/javascript"},
 	_: {
-		client: {"start":"_app/immutable/entry/start.DVmCEMDf.js","app":"_app/immutable/entry/app.I29R-eE3.js","imports":["_app/immutable/entry/start.DVmCEMDf.js","_app/immutable/chunks/entry.XLM3-e4P.js","_app/immutable/chunks/scheduler.DhsztkH2.js","_app/immutable/chunks/index.hQFG0jTX.js","_app/immutable/entry/app.I29R-eE3.js","_app/immutable/chunks/scheduler.DhsztkH2.js","_app/immutable/chunks/index.DK03Zu-C.js"],"stylesheets":[],"fonts":[],"uses_env_dynamic_public":false},
+		client: {"start":"_app/immutable/entry/start.DcgfPk8h.js","app":"_app/immutable/entry/app.ZNz6JPSg.js","imports":["_app/immutable/entry/start.DcgfPk8h.js","_app/immutable/chunks/entry.DtpcrjWd.js","_app/immutable/chunks/scheduler.Bnsic3yX.js","_app/immutable/chunks/index.B8ZMw-jm.js","_app/immutable/entry/app.ZNz6JPSg.js","_app/immutable/chunks/scheduler.Bnsic3yX.js","_app/immutable/chunks/index.C8E8-Cgp.js"],"stylesheets":[],"fonts":[],"uses_env_dynamic_public":false},
 		nodes: [
-			__memo(() => import('./chunks/0-Hx6C8x7q.js')),
-			__memo(() => import('./chunks/1-BF56Pj7K.js')),
-			__memo(() => import('./chunks/2-1SJF0KAL.js')),
-			__memo(() => import('./chunks/3-B1QOoI65.js')),
-			__memo(() => import('./chunks/4-ByWsWLKs.js')),
-			__memo(() => import('./chunks/5-ChUay0K9.js')),
-			__memo(() => import('./chunks/6-Bh5joO_-.js')),
-			__memo(() => import('./chunks/7-eIlNcOur.js')),
-			__memo(() => import('./chunks/8-BM0iW-1m.js'))
+			__memo(() => import('./chunks/0-DI6MkAJ5.js')),
+			__memo(() => import('./chunks/1-BAtU2ymT.js')),
+			__memo(() => import('./chunks/2-B_jikYy5.js')),
+			__memo(() => import('./chunks/3-XaPdykKh.js')),
+			__memo(() => import('./chunks/4-C-g-mCNF.js')),
+			__memo(() => import('./chunks/5-Dzu_MppT.js')),
+			__memo(() => import('./chunks/6-DEH6kU7k.js')),
+			__memo(() => import('./chunks/7-D51wNIxh.js')),
+			__memo(() => import('./chunks/8-rsTWufsX.js'))
 		],
 		routes: [
 			{
@@ -56,35 +56,35 @@ return {
 				pattern: /^\/api\/create-final-course\/?$/,
 				params: [],
 				page: null,
-				endpoint: __memo(() => import('./chunks/_server.ts-C3lJRgtu.js'))
+				endpoint: __memo(() => import('./chunks/_server.ts-B9dws0im.js'))
 			},
 			{
 				id: "/api/generate-course",
 				pattern: /^\/api\/generate-course\/?$/,
 				params: [],
 				page: null,
-				endpoint: __memo(() => import('./chunks/_server.ts-DU1BoQ--.js'))
+				endpoint: __memo(() => import('./chunks/_server.ts-ZHVUi1p2.js'))
 			},
 			{
 				id: "/api/search-videos",
 				pattern: /^\/api\/search-videos\/?$/,
 				params: [],
 				page: null,
-				endpoint: __memo(() => import('./chunks/_server.ts-CR5UjOgQ.js'))
+				endpoint: __memo(() => import('./chunks/_server.ts-CHJkHRtz.js'))
 			},
 			{
 				id: "/api/video-metadata",
 				pattern: /^\/api\/video-metadata\/?$/,
 				params: [],
 				page: null,
-				endpoint: __memo(() => import('./chunks/_server.ts-CJFQV0lw.js'))
+				endpoint: __memo(() => import('./chunks/_server.ts-DgIurZ1-.js'))
 			},
 			{
 				id: "/api/video-transcript",
 				pattern: /^\/api\/video-transcript\/?$/,
 				params: [],
 				page: null,
-				endpoint: __memo(() => import('./chunks/_server.ts-BW5LR4Hz.js'))
+				endpoint: __memo(() => import('./chunks/_server.ts-4wG_ZH_7.js'))
 			},
 			{
 				id: "/course/[id]",

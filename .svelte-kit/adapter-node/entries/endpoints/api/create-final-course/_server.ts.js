@@ -2,7 +2,11 @@ import { j as json } from "../../../../chunks/index.js";
 import { d as private_env } from "../../../../chunks/shared-server.js";
 import axios from "axios";
 import pLimit from "p-limit";
-import { OPENAI_CONFIG } from "../../../../../../src/lib/config/openai";
+import { O as OPENAI_CONFIG } from "../../../../chunks/openai.js";
+function preprocessTranscript(transcript) {
+  if (!transcript) return "";
+  return transcript.replace(/\s+/g, " ").replace(/\[\d{1,2}:\d{2}\]/g, "").replace(/^[A-Za-z]+:\s*/gm, "").replace(/<[^>]*>/g, "").replace(/https?:\/\/[^\s]+/g, "").split("\n").map((line) => line.trim()).filter((line) => line.length > 0).join("\n").replace(/[^\w\s.,!?;:'"()\n-]/g, "").trim();
+}
 const openAIRateLimit = pLimit(3);
 const RPM_LIMIT = 200;
 const DELAY_BETWEEN_REQUESTS = Math.ceil(60 * 1e3 / RPM_LIMIT);
@@ -22,10 +26,27 @@ async function makeOpenAIRequest(prompt, retries = 2) {
               "Authorization": `Bearer ${private_env.OPENAI_API_KEY}`,
               "Content-Type": "application/json"
             },
-            timeout: 3e4
+            timeout: 3e4,
+            transformResponse: [(data) => {
+              const cleanData = typeof data === "string" ? data.replace(/^\)\]\}\'/, "") : data;
+              try {
+                return JSON.parse(cleanData);
+              } catch (e) {
+                return cleanData;
+              }
+            }]
           }
         );
-        return JSON.parse(response.data.choices[0].message.content);
+        const content = response.data.choices[0].message.content;
+        const cleanedContent = content.replace(/```json\n?|\n?```/g, "").trim();
+        try {
+          return JSON.parse(cleanedContent);
+        } catch (parseError) {
+          console.error("JSON Parse Error:", parseError);
+          console.error("Raw content:", content);
+          console.error("Cleaned content:", cleanedContent);
+          throw new Error("Invalid JSON response from OpenAI");
+        }
       } catch (error) {
         if (i === retries - 1) throw error;
         await new Promise((resolve) => setTimeout(resolve, 1e3 * (i + 1)));
@@ -37,11 +58,15 @@ async function generateQuiz(transcript, moduleTitle, isFinalQuiz = false) {
   try {
     if (typeof transcript !== "string") {
       console.error("Invalid transcript type:", typeof transcript);
-      return generateFallbackQuiz(moduleTitle);
+      return null;
+    }
+    const processedTranscript = preprocessTranscript(transcript);
+    if (!processedTranscript) {
+      console.error(`Empty transcript after processing for: ${moduleTitle}`);
+      return null;
     }
     console.log(`Starting quiz generation for: ${moduleTitle}`);
-    console.log(`Transcript preview: ${transcript.substring(0, 100)}...`);
-    console.log(`Generating quiz for ${moduleTitle} with transcript length: ${transcript.length}`);
+    console.log(`Processed transcript length: ${processedTranscript.length} characters`);
     const prompt = `You are an AI language model tasked with creating a 5-question quiz based on the provided YouTube video transcript. The quiz should be in a rigid JSON format for coding purposes.
 
 Instructions:
@@ -89,79 +114,22 @@ Use clear and concise language suitable for a general audience.
 Avoid ambiguous or misleading questions and options.
 
 Transcript:
-${transcript.substring(0, 4e3)}`;
+${processedTranscript.substring(0, 4e3)}`;
     try {
       const quiz = await makeOpenAIRequest(prompt);
       if (!quiz.quiz || !Array.isArray(quiz.quiz) || quiz.quiz.length !== 5) {
         console.error(`Invalid quiz structure for ${moduleTitle}`);
-        return generateFallbackQuiz(moduleTitle);
+        return null;
       }
       return quiz;
     } catch (error) {
       console.error(`Error generating quiz for ${moduleTitle}:`, error);
-      return generateFallbackQuiz(moduleTitle);
+      return null;
     }
   } catch (error) {
     console.error(`Error in quiz generation for ${moduleTitle}:`, error);
-    return generateFallbackQuiz(moduleTitle);
+    return null;
   }
-}
-function generateFallbackQuiz(moduleTitle) {
-  return {
-    quiz: [
-      {
-        question: `What is the main topic covered in ${moduleTitle}?`,
-        type: "multiple-choice",
-        options: {
-          "a": moduleTitle,
-          "b": "General Knowledge",
-          "c": "Basic Concepts",
-          "d": "Advanced Topics"
-        },
-        answer: "a"
-      },
-      {
-        question: "Is this module part of a structured learning course?",
-        type: "true/false",
-        options: {
-          "a": "True",
-          "b": "False"
-        },
-        answer: "a"
-      },
-      {
-        question: "What best describes this module's content?",
-        type: "multiple-choice",
-        options: {
-          "a": "Introductory Material",
-          "b": "Advanced Concepts",
-          "c": "Practical Examples",
-          "d": "Theoretical Framework"
-        },
-        answer: "a"
-      },
-      {
-        question: "This module is designed for:",
-        type: "multiple-choice",
-        options: {
-          "a": "Beginners",
-          "b": "Intermediate Learners",
-          "c": "Advanced Users",
-          "d": "All Skill Levels"
-        },
-        answer: "d"
-      },
-      {
-        question: "The content in this module is educational.",
-        type: "true/false",
-        options: {
-          "a": "True",
-          "b": "False"
-        },
-        answer: "a"
-      }
-    ]
-  };
 }
 async function generateConclusion(courseOverview, moduleDetails) {
   const conclusionPrompt = `
@@ -177,25 +145,6 @@ async function generateConclusion(courseOverview, moduleDetails) {
   `;
   return makeOpenAIRequest(conclusionPrompt);
 }
-function createYouTubePlaylist(course) {
-  try {
-    if (!course.Final_Module_YouTube_Video_URL || course.Final_Module_YouTube_Video_URL.length === 0) {
-      return "";
-    }
-    const videoIds = course.Final_Module_YouTube_Video_URL.map((url) => {
-      const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([^&?]+)/);
-      return match ? match[1] : "";
-    }).filter((id) => id);
-    if (videoIds.length === 0) {
-      return "";
-    }
-    const playlistUrl = `https://www.youtube.com/watch_videos?video_ids=${videoIds.join(",")}`;
-    return playlistUrl;
-  } catch (error) {
-    console.error("Error creating YouTube playlist URL:", error);
-    return "";
-  }
-}
 async function generateFinalCourse(courseStructure, selectedVideos, moduleTranscripts) {
   try {
     const [courseOverview, moduleDetails] = await Promise.all([
@@ -205,10 +154,13 @@ async function generateFinalCourse(courseStructure, selectedVideos, moduleTransc
     const { moduleQuizzes, finalQuiz } = await generateAllQuizzes(moduleTranscripts, courseStructure);
     const conclusion = await generateConclusion(courseOverview, moduleDetails);
     const videoUrls = selectedVideos.map((video) => video.videoUrl);
-    const playlistUrl = createYouTubePlaylist({
-      Final_Course_Title: courseOverview.Final_Course_Title,
-      Final_Module_YouTube_Video_URL: videoUrls
-    });
+    let thumbnailUrl = "";
+    if (selectedVideos[0]?.videoUrl) {
+      const videoId = new URL(selectedVideos[0].videoUrl).searchParams.get("v");
+      if (videoId) {
+        thumbnailUrl = `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
+      }
+    }
     return {
       Final_Course_Title: courseOverview.Final_Course_Title,
       Final_Course_Objective: courseOverview.Final_Course_Objective,
@@ -219,7 +171,7 @@ async function generateFinalCourse(courseStructure, selectedVideos, moduleTransc
       Final_Module_Quiz: moduleQuizzes,
       Final_Course_Quiz: finalQuiz,
       Final_Course_Conclusion: conclusion.Final_Course_Conclusion,
-      YouTube_Playlist_URL: playlistUrl
+      Final_Course_Thumbnail: thumbnailUrl
     };
   } catch (error) {
     console.error("Error in generateFinalCourse:", error);
@@ -249,14 +201,14 @@ async function generateModuleDetails(courseStructure, selectedVideos) {
     const batch = courseStructure.OG_Module_Title.slice(i, i + batchSize).map(async (title, index) => {
       const moduleIndex = i + index;
       const modulePrompt = `
-          Based on the following module information, generate a refined module title and objective:
+          Based on the following module information, generate a refined module title and objective. Do not include any asterisks (*) in the title:
           Module Title: ${title}
           Video Title: ${selectedVideos[moduleIndex].title}
           Video Description: ${selectedVideos[moduleIndex].description}
 
           Provide the response in JSON format with the following keys:
           {
-            "Final_Module_Title": "refined module title",
+            "Final_Module_Title": "refined module title (no asterisks)",
             "Final_Module_Objective": "refined module objective"
           }
         `;
@@ -270,38 +222,44 @@ async function generateModuleDetails(courseStructure, selectedVideos) {
 async function generateAllQuizzes(moduleTranscripts, courseStructure) {
   const moduleQuizzes = [];
   let allTranscripts = "";
+  const batchSize = 3;
   console.log("Starting quiz generation for all modules...");
-  for (let i = 0; i < moduleTranscripts.length; i++) {
-    const transcript = moduleTranscripts[i];
-    console.log(`Processing module ${i + 1} of ${moduleTranscripts.length}`);
-    if (i > 0) {
-      await new Promise((resolve) => setTimeout(resolve, DELAY_BETWEEN_REQUESTS));
-    }
-    try {
-      const quiz = await generateQuiz(transcript, courseStructure.OG_Module_Title[i]);
-      moduleQuizzes.push(quiz);
-      allTranscripts += `Module ${i + 1} Content:
-${transcript}
+  for (let i = 0; i < moduleTranscripts.length; i += batchSize) {
+    const batch = moduleTranscripts.slice(i, i + batchSize).map(async (transcript, index) => {
+      const moduleIndex = i + index;
+      try {
+        const processedTranscript = preprocessTranscript(transcript);
+        const quiz = await generateQuiz(processedTranscript, courseStructure.OG_Module_Title[moduleIndex]);
+        if (quiz) {
+          allTranscripts += `Module ${moduleIndex + 1} Content:
+${processedTranscript}
 
 `;
-      console.log(`Successfully generated quiz for module ${i + 1}`);
-    } catch (error) {
-      console.error(`Error processing module ${i + 1}:`, error);
-      moduleQuizzes.push(generateFallbackQuiz(courseStructure.OG_Module_Title[i]));
+        }
+        console.log(`Successfully generated quiz for module ${moduleIndex + 1}`);
+        return quiz;
+      } catch (error) {
+        console.error(`Error processing module ${moduleIndex + 1}:`, error);
+        return null;
+      }
+    });
+    const batchResults = await Promise.all(batch);
+    moduleQuizzes.push(...batchResults);
+    if (i + batchSize < moduleTranscripts.length) {
+      await new Promise((resolve) => setTimeout(resolve, DELAY_BETWEEN_REQUESTS));
     }
   }
   console.log(`Generated ${moduleQuizzes.length} module quizzes`);
-  await new Promise((resolve) => setTimeout(resolve, DELAY_BETWEEN_REQUESTS));
   console.log("Generating final course quiz...");
   try {
-    const finalTranscript = allTranscripts.substring(0, 4e3);
+    const finalTranscript = preprocessTranscript(allTranscripts).substring(0, 4e3);
     const finalQuiz = await generateQuiz(finalTranscript, courseStructure.OG_Course_Title, true);
     return { moduleQuizzes, finalQuiz };
   } catch (error) {
     console.error("Error generating final quiz:", error);
     return {
       moduleQuizzes,
-      finalQuiz: generateFallbackQuiz(courseStructure.OG_Course_Title)
+      finalQuiz: null
     };
   }
 }
@@ -323,9 +281,15 @@ const POST = async ({ request }) => {
       if (!finalCourse || !finalCourse.Final_Course_Title) {
         throw new Error("Invalid course generation result");
       }
-      return json({
+      return new Response(JSON.stringify({
         success: true,
         course: finalCourse
+      }), {
+        headers: {
+          "Content-Type": "application/json",
+          // Prevent browsers from doing XSSI protection
+          "X-Content-Type-Options": "nosniff"
+        }
       });
     } catch (error) {
       console.error("Error in course generation:", error);

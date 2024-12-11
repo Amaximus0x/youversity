@@ -9,13 +9,23 @@
       "_shared-server.js"
     ]
   },
-  "_CourseGenerationProgress.js": {
-    "file": "chunks/CourseGenerationProgress.js",
-    "name": "CourseGenerationProgress",
+  "_CourseList.js": {
+    "file": "chunks/CourseList.js",
+    "name": "CourseList",
     "imports": [
       "_ssr.js",
-      "_index2.js",
+      "_Icon.js",
       "_client.js"
+    ]
+  },
+  "_Icon.js": {
+    "file": "chunks/Icon.js",
+    "name": "Icon",
+    "imports": [
+      "_ssr.js"
+    ],
+    "css": [
+      "_app/immutable/assets/Icon.BvdsXIbv.css"
     ]
   },
   "_auth.js": {
@@ -86,6 +96,10 @@
       "src/hooks.server.ts"
     ]
   },
+  "_openai.js": {
+    "file": "chunks/openai.js",
+    "name": "openai"
+  },
   "_shared-server.js": {
     "file": "chunks/shared-server.js",
     "name": "shared-server"
@@ -144,10 +158,12 @@
       "_stores.js",
       "_auth.js",
       "_auth2.js",
-      "_CourseGenerationProgress.js"
+      "_index2.js",
+      "_client.js",
+      "_Icon.js"
     ],
     "css": [
-      "_app/immutable/assets/_layout.BeOLqhxq.css"
+      "_app/immutable/assets/_layout.DAFUdvGt.css"
     ]
   },
   "src/routes/+page.svelte": {
@@ -159,7 +175,10 @@
       "_ssr.js",
       "_auth.js",
       "_auth2.js",
-      "_stores.js"
+      "_client.js",
+      "_firebase.js",
+      "_CourseList.js",
+      "_Icon.js"
     ]
   },
   "src/routes/api/auth/refresh-token/+server.ts": {
@@ -196,7 +215,8 @@
     "isEntry": true,
     "imports": [
       "_index.js",
-      "_shared-server.js"
+      "_shared-server.js",
+      "_openai.js"
     ]
   },
   "src/routes/api/generate-course/+server.ts": {
@@ -206,7 +226,8 @@
     "isEntry": true,
     "imports": [
       "_index.js",
-      "_shared-server.js"
+      "_shared-server.js",
+      "_openai.js"
     ]
   },
   "src/routes/api/search-videos/+server.ts": {
@@ -268,7 +289,10 @@
       "_firebase.js",
       "_client.js",
       "_auth.js",
-      "_CourseGenerationProgress.js"
+      "_stores.js"
+    ],
+    "css": [
+      "_app/immutable/assets/_page.S6UQkjpw.css"
     ]
   },
   "src/routes/login/+page.svelte": {
@@ -298,10 +322,7 @@
     "src": "src/routes/my-courses/+page.svelte",
     "isEntry": true,
     "imports": [
-      "_ssr.js",
-      "_auth.js",
-      "_firebase.js",
-      "_client.js"
+      "_ssr.js"
     ]
   },
   "src/routes/profile/+page.server.ts": {
@@ -320,7 +341,10 @@
     "isEntry": true,
     "imports": [
       "_ssr.js",
-      "_client.js"
+      "_client.js",
+      "_auth.js",
+      "_firebase.js",
+      "_CourseList.js"
     ]
   },
   "src/routes/protected/+page.svelte": {

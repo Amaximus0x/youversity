@@ -1,7 +1,7 @@
 import { d as derived, w as writable } from "./index2.js";
 import { a as auth } from "./firebase.js";
 const user = writable(null);
-const isAuthenticated = derived(user, ($user) => !!$user);
+derived(user, ($user) => !!$user);
 async function refreshToken() {
   try {
     const currentUser = auth.currentUser;
@@ -27,6 +27,5 @@ auth.onAuthStateChanged(async (newUser) => {
   }
 });
 export {
-  isAuthenticated as i,
   user as u
 };

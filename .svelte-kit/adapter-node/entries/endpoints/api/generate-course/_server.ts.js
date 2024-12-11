@@ -1,7 +1,7 @@
 import { j as json } from "../../../../chunks/index.js";
 import { d as private_env } from "../../../../chunks/shared-server.js";
 import axios from "axios";
-import { OPENAI_CONFIG } from "../../../../../../src/lib/config/openai";
+import { O as OPENAI_CONFIG } from "../../../../chunks/openai.js";
 const POST = async ({ request }) => {
   try {
     const { courseInput } = await request.json();
@@ -33,7 +33,7 @@ const POST = async ({ request }) => {
   }
 };
 async function generateCourse(User_Course_Input) {
-  const prompt = `Build a 10 module course plan based on the input below, with course title and individual module titles. For each module, include one sentence search prompt for youtube to find the best video match for that module. Do not include "Search Prompt:" before each search prompt.
+  const prompt = `Build a 10 module course plan based on the input below, with course title and individual module titles. For each module, include one sentence search prompt for youtube to find the best video match for that module. Do not include "Search Prompt:" before each search prompt. Do not include any asterisks (*) in the titles.
 
 Here is the course objective - simplify if needed:
 
@@ -48,6 +48,7 @@ Module 2 Search Prompt
 .....`;
   try {
     console.log("Sending request to OpenAI API");
+    console.log(`[OpenAI API] Using model: ${OPENAI_CONFIG.model}`);
     const response = await axios.post(
       "https://api.openai.com/v1/chat/completions",
       {
