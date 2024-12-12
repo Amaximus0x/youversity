@@ -235,6 +235,9 @@ async function generateFinalCourse(
     // Generate quizzes
     const { moduleQuizzes, finalQuiz } = await generateAllQuizzes(moduleTranscripts, courseStructure);
 
+    // Check if we have any valid quizzes
+    const hasValidQuizzes = moduleQuizzes.some(quiz => quiz !== null);
+
     // Generate conclusion after we have all other data
     const conclusion = await generateConclusion(courseOverview, moduleDetails);
 
@@ -250,6 +253,12 @@ async function generateFinalCourse(
       }
     }
 
+    // Create a note about missing transcripts if no quizzes were generated
+    let courseConclusion = conclusion.Final_Course_Conclusion;
+    if (!hasValidQuizzes) {
+      courseConclusion += '\n\nNote: This course does not include quizzes as transcripts were not available for the video content. You can still learn from the video materials, but self-assessment through quizzes is not available.';
+    }
+
     return {
       Final_Course_Title: courseOverview.Final_Course_Title,
       Final_Course_Objective: courseOverview.Final_Course_Objective,
@@ -259,7 +268,7 @@ async function generateFinalCourse(
       Final_Module_YouTube_Video_URL: videoUrls,
       Final_Module_Quiz: moduleQuizzes,
       Final_Course_Quiz: finalQuiz,
-      Final_Course_Conclusion: conclusion.Final_Course_Conclusion,
+      Final_Course_Conclusion: courseConclusion,
       Final_Course_Thumbnail: thumbnailUrl
     };
   } catch (error) {
@@ -321,7 +330,8 @@ async function generateModuleDetails(courseStructure: CourseStructure, selectedV
 
 async function generateAllQuizzes(moduleTranscripts: string[], courseStructure: CourseStructure) {
   const moduleQuizzes: (Quiz | null)[] = [];
-  let allTranscripts = '';
+  let validTranscripts = '';
+  let validTranscriptCount = 0;
   const batchSize = 3; // Process 3 quizzes in parallel
 
   console.log('Starting quiz generation for all modules...');
@@ -333,11 +343,20 @@ async function generateAllQuizzes(moduleTranscripts: string[], courseStructure: 
       .map(async (transcript, index) => {
         const moduleIndex = i + index;
         try {
+          // Check if transcript is missing or invalid
+          if (!transcript || 
+              transcript === 'No transcript available for this video' || 
+              transcript === 'No transcript available after multiple attempts') {
+            console.log(`Skipping quiz generation for module ${moduleIndex + 1} - No valid transcript`);
+            return null;
+          }
+
           // Pre-process transcript before quiz generation
           const processedTranscript = preprocessTranscript(transcript);
           const quiz = await generateQuiz(processedTranscript, courseStructure.OG_Module_Title[moduleIndex]);
           if (quiz) {
-            allTranscripts += `Module ${moduleIndex + 1} Content:\n${processedTranscript}\n\n`;
+            validTranscripts += `Module ${moduleIndex + 1} Content:\n${processedTranscript}\n\n`;
+            validTranscriptCount++;
           }
           console.log(`Successfully generated quiz for module ${moduleIndex + 1}`);
           return quiz;
@@ -357,18 +376,27 @@ async function generateAllQuizzes(moduleTranscripts: string[], courseStructure: 
   }
 
   console.log(`Generated ${moduleQuizzes.length} module quizzes`);
+  console.log(`Found ${validTranscriptCount} valid transcripts`);
   
-  // Generate final course quiz with preprocessed transcripts
-  console.log('Generating final course quiz...');
-  try {
-    const finalTranscript = preprocessTranscript(allTranscripts).substring(0, 4000);
-    const finalQuiz = await generateQuiz(finalTranscript, courseStructure.OG_Course_Title, true);
-    return { moduleQuizzes, finalQuiz };
-  } catch (error) {
-    console.error('Error generating final quiz:', error);
-    return { 
-      moduleQuizzes, 
-      finalQuiz: null 
+  // Generate final course quiz only if there are valid transcripts
+  if (validTranscriptCount > 0) {
+    console.log('Generating final course quiz...');
+    try {
+      const finalTranscript = preprocessTranscript(validTranscripts).substring(0, 4000);
+      const finalQuiz = await generateQuiz(finalTranscript, courseStructure.OG_Course_Title, true);
+      return { moduleQuizzes, finalQuiz };
+    } catch (error) {
+      console.error('Error generating final quiz:', error);
+      return { 
+        moduleQuizzes, 
+        finalQuiz: null 
+      };
+    }
+  } else {
+    console.log('No valid transcripts found - skipping final quiz generation');
+    return {
+      moduleQuizzes,
+      finalQuiz: null
     };
   }
 }
