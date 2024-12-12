@@ -31,29 +31,59 @@ async function fetchTranscriptFromYoutube(videoId: string) {
     
     const patterns = [
       /ytInitialPlayerResponse\s*=\s*({.+?});/,
-      /\"captions\":{\"playerCaptionsTracklistRenderer\":(.+?)}}/,
-      /\"captionTracks\":(\[.+?\])/
+      /\{"playerCaptionsTracklistRenderer":({.+?})\}/,
+      /\{"captionTracks":(\[.+?\])\}/,
+      /"captions":\{"playerCaptionsTracklistRenderer":({.+?})\}/,
+      /"playerCaptionsTracklistRenderer":({.+?})\}/
     ];
 
     let captionTracks;
+    let matchFound = false;
     
     for (const pattern of patterns) {
       const match = html.match(pattern);
       if (match) {
         try {
+          console.log(`Trying pattern: ${pattern}`);
           const data = JSON.parse(match[1]);
+          
           if (data.captions?.playerCaptionsTracklistRenderer?.captionTracks) {
             captionTracks = data.captions.playerCaptionsTracklistRenderer.captionTracks;
-            console.log(`Found caption tracks using pattern: ${pattern}`);
+            matchFound = true;
+            console.log('Found caption tracks in captions.playerCaptionsTracklistRenderer');
+            break;
+          } else if (data.captionTracks) {
+            captionTracks = data.captionTracks;
+            matchFound = true;
+            console.log('Found caption tracks directly');
             break;
           } else if (Array.isArray(data)) {
             captionTracks = data;
-            console.log(`Found caption tracks array using pattern: ${pattern}`);
+            matchFound = true;
+            console.log('Found caption tracks array');
+            break;
+          } else if (data.playerCaptionsTracklistRenderer?.captionTracks) {
+            captionTracks = data.playerCaptionsTracklistRenderer.captionTracks;
+            matchFound = true;
+            console.log('Found caption tracks in playerCaptionsTracklistRenderer');
             break;
           }
         } catch (e) {
-          console.warn('Failed to parse match:', e);
+          console.warn(`Failed to parse match for pattern ${pattern}:`, e);
           continue;
+        }
+      }
+    }
+
+    if (!matchFound) {
+      console.log('Trying alternative extraction method');
+      const captionsMatch = html.match(/"captionTracks":\[(.*?)\]}/);
+      if (captionsMatch) {
+        try {
+          captionTracks = JSON.parse(`[${captionsMatch[1]}]`);
+          console.log('Found caption tracks using alternative method');
+        } catch (e) {
+          console.warn('Failed to parse alternative caption tracks:', e);
         }
       }
     }
@@ -66,9 +96,11 @@ async function fetchTranscriptFromYoutube(videoId: string) {
     console.log(`Found ${captionTracks.length} caption tracks`);
     
     const captionTrack = captionTracks.find(
-      (track: any) => (track.languageCode === 'en' && !track.kind) ||
-                     (track.languageCode === 'en' && track.kind === 'asr') ||
-                     track.vssId?.includes('en')
+      (track: any) => 
+        (track.languageCode === 'en' && !track.kind) ||
+        (track.languageCode === 'en' && track.kind === 'asr') ||
+        track.vssId?.includes('en') ||
+        track.vssId?.includes('a.en')
     );
 
     if (!captionTrack?.baseUrl) {
@@ -84,7 +116,14 @@ async function fetchTranscriptFromYoutube(videoId: string) {
 
     const transcriptResponse = await axios.get(captionTrack.baseUrl, {
       timeout: 10000,
-      maxRedirects: 5
+      maxRedirects: 5,
+      headers: {
+        'Accept': '*/*',
+        'Accept-Language': 'en-US,en;q=0.9',
+        'Cache-Control': 'no-cache',
+        'Pragma': 'no-cache',
+        'Referer': 'https://www.youtube.com/'
+      }
     });
 
     console.log('Successfully fetched transcript XML');
@@ -128,7 +167,7 @@ async function parseTranscriptXml(transcriptXml: string): string {
     console.log('Final transcript length:', cleanTranscript.length);
     console.log('Transcript preview:', cleanTranscript.substring(0, 200));
     
-    return cleanTranscript;
+    return cleanTranscript || 'No transcript available for this video';
   } catch (error) {
     console.error('Error parsing transcript:', error);
     return 'No transcript available for this video';
