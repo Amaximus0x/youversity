@@ -3,23 +3,50 @@ import { getFirestore, collection, addDoc, query, where, getDocs, doc, getDoc, u
 import { getAuth, setPersistence, browserLocalPersistence, signInWithPopup, GoogleAuthProvider, signOut } from 'firebase/auth';
 
 const firebaseConfig = {
-  apiKey: "AIzaSyAOzl4NcFW95BEhRw-t3meFAyzfCo-vZIs",
-  authDomain: "youversity-c8632.firebaseapp.com",
-  projectId: "youversity-c8632",
-  storageBucket: "youversity-c8632.appspot.com",
-  messagingSenderId: "1021633759112",
-  appId: "1:1021633759112:web:6476141a5dd9527b97dc3d"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID
 };
 
+// Validate Firebase config
+const missingEnvVars = Object.entries(firebaseConfig)
+  .filter(([_, value]) => !value)
+  .map(([key]) => key);
+
+if (missingEnvVars.length > 0) {
+  console.error('Missing Firebase configuration variables:', missingEnvVars);
+  throw new Error(`Missing required Firebase configuration: ${missingEnvVars.join(', ')}`);
+}
+
+console.log('Initializing Firebase with config:', {
+  ...firebaseConfig,
+  apiKey: '***' // Hide API key in logs
+});
+
 // Initialize Firebase
-export const app = initializeApp(firebaseConfig);
+let app;
+try {
+  app = initializeApp(firebaseConfig);
+  console.log('Firebase initialized successfully');
+} catch (error) {
+  console.error('Error initializing Firebase:', error);
+  throw error;
+}
+
 export const db = getFirestore(app);
 export const auth = getAuth(app);
 
 // Enable persistence
-setPersistence(auth, browserLocalPersistence).catch((error) => {
-  console.error("Auth persistence error:", error);
-});
+setPersistence(auth, browserLocalPersistence)
+  .then(() => {
+    console.log('Firebase Auth persistence enabled');
+  })
+  .catch((error) => {
+    console.error('Auth persistence error:', error);
+  });
 
 // Firebase utility functions
 export async function saveCourseToFirebase(userId: string, courseData: any) {
