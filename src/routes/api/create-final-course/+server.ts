@@ -401,69 +401,142 @@ async function generateAllQuizzes(moduleTranscripts: string[], courseStructure: 
   }
 }
 
-export const POST: RequestHandler = async ({ request }) => {
-  try {
-    const data = await request.json();
+function validateCourseStructure(data: any): data is CourseStructure {
+    // Basic structure validation
+    if (!data || typeof data !== 'object') return false;
     
-    // Validate required fields
-    if (!data.courseStructure || !data.selectedVideos || !data.moduleTranscripts) {
-      return json({
-        success: false,
-        error: 'Missing required data'
-      }, { status: 400 });
-    }
-
-    try {
-      const finalCourse = await generateFinalCourse(
-        data.courseStructure,
-        data.selectedVideos,
-        data.moduleTranscripts
-      );
-
-      // Validate the generated course
-      if (!finalCourse || !finalCourse.Final_Course_Title) {
-        throw new Error('Invalid course generation result');
-      }
-
-      return new Response(JSON.stringify({
-        success: true,
-        course: finalCourse
-      }), {
-        headers: {
-          'Content-Type': 'application/json',
-          // Prevent browsers from doing XSSI protection
-          'X-Content-Type-Options': 'nosniff'
+    // Check required fields exist and are not empty
+    const requiredFields = [
+        'OG_Course_Title',
+        'OG_Course_Objective',
+        'OG_Module_Title',
+        'OG_Module_YouTube_Search_Prompt'
+    ];
+    
+    for (const field of requiredFields) {
+        if (!(field in data) || !data[field] || 
+            (typeof data[field] === 'string' && data[field].trim() === '')) {
+            console.error(`Missing or empty required field: ${field}`);
+            return false;
         }
-      });
-    } catch (error: any) {
-      console.error('Error in course generation:', error);
-      
-      // Handle rate limit errors
-      if (error.response?.status === 429) {
-        return json({
-          success: false,
-          error: 'Rate limit exceeded. Please try again in a few minutes.'
-        }, { status: 429 });
-      }
-
-      // Handle OpenAI API errors
-      if (error.response?.data?.error) {
-        return json({
-          success: false,
-          error: error.response.data.error.message || 'OpenAI API error'
-        }, { status: 500 });
-      }
-
-      return json({
-        success: false,
-        error: error.message || 'Error generating course content'
-      }, { status: 500 });
     }
-  } catch (error: any) {
-    console.error('Error processing request:', error);
-    return json({
-      success: false,
-      error: 'Invalid request data'
-    }, { status: 400 });
-  }
+    
+    // Validate arrays have same length and no empty/undefined elements
+    if (!Array.isArray(data.OG_Module_Title) || 
+        !Array.isArray(data.OG_Module_YouTube_Search_Prompt)) {
+        console.error('Module titles or search prompts are not arrays');
+        return false;
+    }
+    
+    if (data.OG_Module_Title.length !== data.OG_Module_YouTube_Search_Prompt.length) {
+        console.error('Mismatch in length between module titles and search prompts');
+        return false;
+    }
+    
+    // Check for empty or malformed entries
+    const hasValidEntries = data.OG_Module_Title.every((title, index) => {
+        const isValidTitle = typeof title === 'string' && title.trim() !== '';
+        const isValidPrompt = typeof data.OG_Module_YouTube_Search_Prompt[index] === 'string' 
+            && data.OG_Module_YouTube_Search_Prompt[index].trim() !== '';
+        
+        if (!isValidTitle) {
+            console.error(`Invalid module title at index ${index}`);
+        }
+        if (!isValidPrompt) {
+            console.error(`Invalid search prompt at index ${index}`);
+        }
+        
+        return isValidTitle && isValidPrompt;
+    });
+    
+    if (!hasValidEntries) {
+        return false;
+    }
+
+    // Validate course objective specifically
+    if (typeof data.OG_Course_Objective !== 'string' || 
+        data.OG_Course_Objective.trim().length < 10) {
+        console.error('Course objective is missing or too short');
+        return false;
+    }
+    
+    return true;
+}
+
+export const POST: RequestHandler = async ({ request }) => {
+    try {
+        const data = await request.json();
+        
+        // Log the received data for debugging
+        console.log('Received course structure:', JSON.stringify(data.courseStructure, null, 2));
+        
+        // Validate required fields
+        if (!data.courseStructure || !data.selectedVideos || !data.moduleTranscripts) {
+            const missingFields = [];
+            if (!data.courseStructure) missingFields.push('courseStructure');
+            if (!data.selectedVideos) missingFields.push('selectedVideos');
+            if (!data.moduleTranscripts) missingFields.push('moduleTranscripts');
+            
+            return json({
+                success: false,
+                error: `Missing required data: ${missingFields.join(', ')}`
+            }, { status: 400 });
+        }
+
+        if (!validateCourseStructure(data.courseStructure)) {
+            return json({
+                success: false,
+                error: 'Invalid course structure format or missing required fields. Check server logs for details.'
+            }, { status: 400 });
+        }
+
+        try {
+            const finalCourse = await generateFinalCourse(
+                data.courseStructure,
+                data.selectedVideos,
+                data.moduleTranscripts
+            );
+
+            // Validate the generated course
+            if (!finalCourse || !finalCourse.Final_Course_Title) {
+                throw new Error('Invalid course generation result');
+            }
+
+            return json({
+                success: true,
+                course: finalCourse
+            });
+            
+        } catch (error: any) {
+            console.error('Error in course generation:', error);
+            
+            // Handle rate limit errors
+            if (error.response?.status === 429) {
+                return json({
+                    success: false,
+                    error: 'Rate limit exceeded. Please try again in a few minutes.'
+                }, { status: 429 });
+            }
+
+            // Handle OpenAI API errors
+            if (error.response?.data?.error) {
+                return json({
+                    success: false,
+                    error: error.response.data.error.message || 'OpenAI API error'
+                }, { status: 500 });
+            }
+
+            return json({
+                success: false,
+                error: error.message || 'Error generating course content'
+            }, { status: 500 });
+        }
+
+    } catch (error: any) {
+        console.error('Error processing request:', error);
+        return json({
+            success: false,
+            error: 'Invalid request data'
+        }, { status: 400 });
+    }
 };
