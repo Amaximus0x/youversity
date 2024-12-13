@@ -82,17 +82,34 @@ Module 2 Search Prompt
       OG_Module_YouTube_Search_Prompt: [],
     };
 
-    for (let i = 2; i < lines.length && courseStructure.OG_Module_Title.length < 10; i += 2) {
-      const moduleTitle = lines[i]
-        .replace(/^Module \d+ Title:\s*/, '')
-        .replace(/^Module \d+:\s*/, '');
-      const searchPrompt = lines[i + 1]
-        .replace(/^Module \d+ Search Prompt:\s*/, '')
-        .replace(/^Search Prompt:\s*/, '')
-        .replace(/["\\\n]/g, '');
+    // Process module titles and search prompts
+    for (let i = 0; i < 10; i++) {
+      const titleIndex = i * 2 + 2; // Skip course title and objective
+      const promptIndex = titleIndex + 1;
       
-      courseStructure.OG_Module_Title.push(moduleTitle);
-      courseStructure.OG_Module_YouTube_Search_Prompt.push(searchPrompt);
+      if (titleIndex < lines.length && promptIndex < lines.length) {
+        const moduleTitle = lines[titleIndex]
+          .replace(/^Module \d+ Title:\s*/, '')
+          .replace(/^Module \d+:\s*/, '')
+          .trim();
+        const searchPrompt = lines[promptIndex]
+          .replace(/^Module \d+ Search Prompt:\s*/, '')
+          .replace(/^Search Prompt:\s*/, '')
+          .replace(/["\\\n]/g, '')
+          .trim();
+
+        // Ensure we're not mixing up titles and prompts
+        if (!moduleTitle.toLowerCase().includes('search') && 
+            !moduleTitle.toLowerCase().includes('find') && 
+            !moduleTitle.toLowerCase().includes('watch')) {
+          courseStructure.OG_Module_Title.push(moduleTitle);
+          courseStructure.OG_Module_YouTube_Search_Prompt.push(searchPrompt);
+        } else {
+          // If we detect a prompt in title position, swap them
+          courseStructure.OG_Module_Title.push(searchPrompt);
+          courseStructure.OG_Module_YouTube_Search_Prompt.push(moduleTitle);
+        }
+      }
     }
 
     if (!courseStructure.OG_Course_Title || !courseStructure.OG_Course_Objective || courseStructure.OG_Module_Title.length === 0) {
