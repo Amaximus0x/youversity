@@ -91,9 +91,9 @@
   </div>
 {:else}
   <div class="min-h-screen bg-[#F5F5F5] font-sans">
-    <div class="flex">
+    {#if !$page.data.hideNav}
       <!-- Sidebar - hidden on mobile -->
-      <aside class="hidden md:block w-64 bg-white h-screen sticky top-0 border-r border-[#E8EAED] z-10">
+      <aside class="hidden md:block w-64 bg-white h-screen fixed top-0 left-0 border-r border-[#E8EAED] z-10">
         <div class="flex items-center h-16 px-6 border-b border-[#E8EAED]">
           <a href="/" class="flex items-center space-x-3">
             <img 
@@ -139,10 +139,10 @@
         </div>
       </aside>
 
-      <!-- Main Content -->
-      <main class="flex-1 pb-16 md:pb-0">
+      <!-- Main Content with Navigation -->
+      <main class="md:ml-64">
         <!-- Header -->
-        <header class="bg-white border-b border-[#E8EAED] px-6 h-16 flex justify-between items-center fixed top-0 right-0 w-[calc(100%-16rem)] z-20">
+        <header class="bg-white border-b border-[#E8EAED] px-6 h-16 flex justify-between items-center fixed top-0 right-0 left-64 z-20">
           <div class="relative w-1/2">
             <input
               type="text"
@@ -175,29 +175,34 @@
         <div class="p-8 mt-16">
           <slot />
         </div>
-      </main>
-    </div>
 
-    <!-- Mobile Bottom Navigation -->
-    <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-white shadow-lg border-t border-gray-200">
-      <div class="flex justify-around items-center h-16">
-        {#each mobileNavItems as item}
-          <a 
-            href={item.href}
-            class="flex flex-col items-center justify-center flex-1 h-full text-xs py-1
-              {$page.url.pathname === item.href 
-                ? 'text-[#EE434A]' 
-                : 'text-[#2A4D61]'}"
-          >
-            <svelte:component 
-              this={item.icon} 
-              class="w-6 h-6 mb-1" 
-            />
-            <span>{item.label}</span>
-          </a>
-        {/each}
-      </div>
-    </nav>
+        <!-- Mobile Bottom Navigation -->
+        <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-white shadow-lg border-t border-gray-200">
+          <div class="flex justify-around items-center h-16">
+            {#each mobileNavItems as item}
+              <a 
+                href={item.href}
+                class="flex flex-col items-center justify-center flex-1 h-full text-xs py-1
+                  {$page.url.pathname === item.href 
+                    ? 'text-[#EE434A]' 
+                    : 'text-[#2A4D61]'}"
+              >
+                <svelte:component 
+                  this={item.icon} 
+                  class="w-6 h-6 mb-1" 
+                />
+                <span>{item.label}</span>
+              </a>
+            {/each}
+          </div>
+        </nav>
+      </main>
+    {:else}
+      <!-- Content without Navigation -->
+      <main class="w-full">
+        <slot />
+      </main>
+    {/if}
   </div>
 {/if}
 

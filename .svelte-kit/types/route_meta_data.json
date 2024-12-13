@@ -1,5 +1,8 @@
 {
-	"/": [],
+	"/": [
+		"src/routes/+layout.ts",
+		"src/routes/+layout.ts"
+	],
 	"/api/auth/refresh-token": [
 		"src/routes/api/auth/refresh-token/+server.ts"
 	],
@@ -24,20 +27,29 @@
 	"/api/video-transcript": [
 		"src/routes/api/video-transcript/+server.ts"
 	],
-	"/course/[id]": [],
+	"/course/[id]": [
+		"src/routes/+layout.ts"
+	],
 	"/create-course": [
-		"src/routes/create-course/+page.server.ts"
+		"src/routes/create-course/+page.server.ts",
+		"src/routes/+layout.ts"
 	],
 	"/login": [
 		"src/routes/login/+page.server.ts",
 		"src/routes/login/+layout.ts",
-		"src/routes/login/+layout.ts"
+		"src/routes/+layout.ts",
+		"src/routes/login/+layout.ts",
+		"src/routes/+layout.ts"
 	],
 	"/my-courses": [
-		"src/routes/my-courses/+page.server.ts"
+		"src/routes/my-courses/+page.server.ts",
+		"src/routes/+layout.ts"
 	],
 	"/profile": [
-		"src/routes/profile/+page.server.ts"
+		"src/routes/profile/+page.server.ts",
+		"src/routes/+layout.ts"
 	],
-	"/protected": []
+	"/protected": [
+		"src/routes/+layout.ts"
+	]
 }
