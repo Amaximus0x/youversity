@@ -1,4 +1,4 @@
-export async function getVideoTranscript(videoId: string, maxRetries = 3): Promise<string> {
+export async function getVideoTranscript(videoId: string, maxRetries = 5): Promise<string> {
   const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
   let lastError: Error | null = null;
   
