@@ -3,12 +3,6 @@
 		"src/routes/+layout.ts",
 		"src/routes/+layout.ts"
 	],
-	"/api/auth/refresh-token": [
-		"src/routes/api/auth/refresh-token/+server.ts"
-	],
-	"/api/auth/session": [
-		"src/routes/api/auth/session/+server.ts"
-	],
 	"/api/courses": [
 		"src/routes/api/courses/+server.ts"
 	],

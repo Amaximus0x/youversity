@@ -11,14 +11,20 @@
   import Skeleton from '$lib/components/Skeleton.svelte';
 
   export let data: PageData;
-  const { profile } = data;
-
+  
   let userCourses: (FinalCourseStructure & { id: string })[] = [];
   let loading = false;
   let error: string | null = null;
   let filteredCourses = userCourses;
   let showShareModal = false;
   let selectedCourseId = '';
+
+  $: profile = $user ? {
+    name: $user.displayName,
+    email: $user.email,
+    image: $user.photoURL,
+    id: $user.uid
+  } : null;
 
   $: if ($user) {
     loadUserCourses();
