@@ -1,7 +1,7 @@
 <script lang="ts">
     import { createEventDispatcher, onMount } from 'svelte';
     import { updateProfile } from 'firebase/auth';
-    import { updateUserProfile, createUserProfile, getUserProfile } from '$lib/services/profile';
+    import { updateUserProfile, getUserProfile } from '$lib/services/profile';
     import { auth } from '$lib/firebase';
     import type { User } from 'firebase/auth';
   
@@ -9,8 +9,8 @@
   
     const dispatch = createEventDispatcher();
   
-    let displayName = user.displayName || '';
-    let photoURL = user.photoURL || '';
+    let displayName = user?.displayName || '';
+    let photoURL = user?.photoURL || '';
     let dateOfBirth = '';
     let gender = '';
     let country = '';
@@ -18,17 +18,20 @@
     let error: string | null = null;
   
     onMount(async () => {
-      try {
-        const profile = await getUserProfile(user.uid);
-        if (profile) {
-          displayName = profile.displayName || '';
-          photoURL = profile.photoURL || '';
-          dateOfBirth = profile.dateOfBirth || '';
-          gender = profile.gender || '';
-          country = profile.country || '';
+      if (user?.uid) {
+        try {
+          const profile = await getUserProfile(user.uid);
+          if (profile) {
+            displayName = profile.displayName || user.displayName || '';
+            photoURL = profile.photoURL || user.photoURL || '';
+            dateOfBirth = profile.dateOfBirth || '';
+            gender = profile.gender || '';
+            country = profile.country || '';
+          }
+        } catch (err) {
+          console.error('Error loading profile:', err);
+          error = 'Failed to load profile data';
         }
-      } catch (err) {
-        console.error('Error loading profile:', err);
       }
     });
   
@@ -60,11 +63,11 @@
           updatedAt: new Date()
         });
         
-        // Reload the page to reflect changes
+        dispatch('close');
         window.location.reload();
-      } catch (err: any) {
+      } catch (err) {
         console.error('Profile update error:', err);
-        error = err.message || 'Failed to update profile';
+        error = 'Failed to update profile. Please try again.';
       } finally {
         loading = false;
       }

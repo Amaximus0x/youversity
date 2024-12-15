@@ -125,11 +125,6 @@
               <span class="text-gray-600 font-semibold">Email:</span>
               <span class="text-gray-800">{profile.email || 'Not provided'}</span>
             </div>
-
-            <div class="profile-field">
-              <span class="text-gray-600 font-semibold">User ID:</span>
-              <span class="text-gray-800 break-all">{profile.id || 'Not available'}</span>
-            </div>
           </div>
 
           <div class="space-y-2">
