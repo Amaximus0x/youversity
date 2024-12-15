@@ -14,6 +14,7 @@
     let dateOfBirth = '';
     let gender = '';
     let country = '';
+    let phoneNumber = ''; 
     let loading = false;
     let error: string | null = null;
   
@@ -27,6 +28,7 @@
             dateOfBirth = profile.dateOfBirth || '';
             gender = profile.gender || '';
             country = profile.country || '';
+            phoneNumber = profile.phoneNumber || '';
           }
         } catch (err) {
           console.error('Error loading profile:', err);
@@ -60,6 +62,7 @@
           dateOfBirth,
           gender,
           country,
+          phoneNumber,
           updatedAt: new Date()
         });
         
@@ -142,6 +145,17 @@
             class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
           />
         </div>
+
+        <!-- Added Phone Number field -->
+      <div>
+        <label for="phoneNumber" class="block text-sm font-medium text-gray-700">Phone Number</label>
+        <input
+          type="tel"
+          id="phoneNumber"
+          bind:value={phoneNumber}
+          class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+        />
+      </div>
   
         <div class="flex justify-end space-x-3">
           <button
