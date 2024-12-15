@@ -10,6 +10,7 @@
   import { onMount } from 'svelte';
   import Skeleton from '$lib/components/Skeleton.svelte';
   import ProfileEditModal from '$lib/components/ProfileEditModal.svelte';
+  import { getUserProfile } from '$lib/services/profile';
 
   export let data: PageData;
   
@@ -96,42 +97,72 @@
         </div>
       </div>
     {:else}
-      <div class="flex justify-between items-start">
-        <div class="flex flex-col md:flex-row md:items-center gap-6">
+      <div class="flex flex-col lg:flex-row gap-6">
+        <div class="flex-shrink-0 flex flex-col items-center">
           {#if profile.image}
-            <div class="flex-shrink-0">
-              <img 
-                src={profile.image} 
-                alt={profile.name || 'Profile'} 
-                class="w-24 h-24 rounded-full"
-              />
-            </div>
+            <img 
+              src={profile.image} 
+              alt={profile.name || 'Profile'} 
+              class="w-32 h-32 rounded-full mb-4 object-cover border-4 border-blue-100"
+            />
           {/if}
-          
-          <div class="space-y-2">
-            <div>
-              <span class="font-semibold">Name:</span>
-              <span>{profile.name || 'Not provided'}</span>
-            </div>
-            
-            <div>
-              <span class="font-semibold">Email:</span>
-              <span>{profile.email || 'Not provided'}</span>
-            </div>
-            
-            <div>
-              <span class="font-semibold">User ID:</span>
-              <span>{profile.id || 'Not available'}</span>
-            </div>
-          </div>
+          <button
+            on:click={() => showEditModal = true}
+            class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 w-full"
+          >
+            Edit Profile
+          </button>
         </div>
 
-        <button
-          on:click={() => showEditModal = true}
-          class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
-        >
-          Edit Profile
-        </button>
+        <div class="flex-grow grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="space-y-2">
+            <div class="profile-field">
+              <span class="text-gray-600 font-semibold">Name:</span>
+              <span class="text-gray-800">{profile.name || 'Not provided'}</span>
+            </div>
+            
+            <div class="profile-field">
+              <span class="text-gray-600 font-semibold">Email:</span>
+              <span class="text-gray-800">{profile.email || 'Not provided'}</span>
+            </div>
+
+            <div class="profile-field">
+              <span class="text-gray-600 font-semibold">User ID:</span>
+              <span class="text-gray-800 break-all">{profile.id || 'Not available'}</span>
+            </div>
+          </div>
+
+          <div class="space-y-2">
+            {#await getUserProfile(profile.id) then userProfile}
+              <div class="profile-field">
+                <span class="text-gray-600 font-semibold">Date of Birth:</span>
+                <span class="text-gray-800">{userProfile?.dateOfBirth || 'Not provided'}</span>
+              </div>
+
+              <div class="profile-field">
+                <span class="text-gray-600 font-semibold">Gender:</span>
+                <span class="text-gray-800">{userProfile?.gender || 'Not provided'}</span>
+              </div>
+
+              <div class="profile-field">
+                <span class="text-gray-600 font-semibold">Country:</span>
+                <span class="text-gray-800">{userProfile?.country || 'Not provided'}</span>
+              </div>
+
+              <div class="profile-field">
+                <span class="text-gray-600 font-semibold">Phone Number:</span>
+                <span class="text-gray-800">{userProfile?.phoneNumber || 'Not provided'}</span>
+              </div>
+
+              <div class="profile-field">
+                <span class="text-gray-600 font-semibold">Member Since:</span>
+                <span class="text-gray-800">
+                  {userProfile?.createdAt ? new Date(userProfile.createdAt).toLocaleDateString() : 'Not available'}
+                </span>
+              </div>
+            {/await}
+          </div>
+        </div>
       </div>
 
       {#if showEditModal}
@@ -165,3 +196,15 @@
     onClose={() => showShareModal = false}
   />
 {/if} 
+
+<style>
+  .profile-field {
+    @apply flex flex-col;
+  }
+
+  @screen md {
+    .profile-field {
+      @apply flex-row gap-2;
+    }
+  }
+</style> 
