@@ -31,20 +31,28 @@
     }
   
     onMount(async () => {
+      console.log('Modal mounted, user:', user);
       if (user?.uid) {
         try {
+          // First set basic data from Firebase Auth user
+          displayName = user.displayName || '';
+          photoURL = user.photoURL || '';
+          previewURL = user.photoURL || '';
+          console.log('Auth data set:', { displayName, photoURL, previewURL });
+
+          // Then fetch and set additional data from Firestore
           const profile = await getUserProfile(user.uid);
+          console.log('Firestore profile:', profile);
           if (profile) {
-            // Only set values if they exist in the profile
-            if (profile.displayName) displayName = profile.displayName;
-            if (profile.photoURL) {
-              photoURL = profile.photoURL;
-              previewURL = profile.photoURL;
-            }
-            if (profile.dateOfBirth) dateOfBirth = profile.dateOfBirth;
-            if (profile.gender) gender = profile.gender;
-            if (profile.country) country = profile.country;
-            if (profile.phoneNumber) phoneNumber = profile.phoneNumber;
+            // Update fields with Firestore data if available
+            displayName = profile.displayName || displayName;
+            photoURL = profile.photoURL || photoURL;
+            previewURL = profile.photoURL || previewURL;
+            dateOfBirth = profile.dateOfBirth || '';
+            gender = profile.gender || '';
+            country = profile.country || '';
+            phoneNumber = profile.phoneNumber || '';
+            console.log('All data set:', { displayName, photoURL, dateOfBirth, gender, country, phoneNumber });
           }
         } catch (err) {
           console.error('Error loading profile:', err);

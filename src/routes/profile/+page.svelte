@@ -162,7 +162,7 @@
 
       {#if showEditModal}
         <ProfileEditModal 
-          {user} 
+          user={$user} 
           on:close={() => showEditModal = false} 
         />
       {/if}
