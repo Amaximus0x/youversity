@@ -1,6 +1,7 @@
 import { db } from '$lib/firebase';
 import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { app } from '$lib/firebase';
 
 export interface UserProfile {
   displayName: string;
@@ -115,12 +116,17 @@ export async function updateUserProfile(userId: string, updates: Partial<UserPro
 
 export async function uploadProfileImage(userId: string, file: File): Promise<string> {
   try {
-    const storage = getStorage();
+    // Initialize storage with the app instance
+    const storage = getStorage(app);
+    // Create a reference to the storage bucket
     const storageRef = ref(storage, `profile-images/${userId}`);
-    
-    await uploadBytes(storageRef, file);
-    const downloadURL = await getDownloadURL(storageRef);
-    
+    // Upload the file to Firebase Storage
+    const snapshot = await uploadBytes(storageRef, file);
+    console.log('Uploaded file successfully');
+    // Get the download URL for the uploaded file
+    const downloadURL = await getDownloadURL(snapshot.ref);
+    console.log('File available at', downloadURL);
+    // Return the download URL
     return downloadURL;
   } catch (error) {
     console.error('Error uploading profile image:', error);
