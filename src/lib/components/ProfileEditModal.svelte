@@ -1,6 +1,8 @@
 <script lang="ts">
-    import { createEventDispatcher } from 'svelte';
-    import { updateProfile } from '$lib/firebase';
+    import { createEventDispatcher, onMount } from 'svelte';
+    import { updateProfile } from 'firebase/auth';
+    import { updateUserProfile, createUserProfile, getUserProfile } from '$lib/services/profile';
+    import { auth } from '$lib/firebase';
     import type { User } from 'firebase/auth';
   
     export let user: User;
@@ -15,18 +17,47 @@
     let loading = false;
     let error: string | null = null;
   
+    onMount(async () => {
+      try {
+        const profile = await getUserProfile(user.uid);
+        if (profile) {
+          displayName = profile.displayName || '';
+          photoURL = profile.photoURL || '';
+          dateOfBirth = profile.dateOfBirth || '';
+          gender = profile.gender || '';
+          country = profile.country || '';
+        }
+      } catch (err) {
+        console.error('Error loading profile:', err);
+      }
+    });
+  
     async function handleSubmit(e: SubmitEvent) {
       e.preventDefault();
       loading = true;
       error = null;
   
       try {
-        await updateProfile(user, {
+        const currentUser = auth.currentUser;
+        if (!currentUser) {
+          throw new Error('No authenticated user found');
+        }
+
+        // First update Firebase Auth user profile
+        await updateProfile(currentUser, {
+          displayName,
+          photoURL
+        });
+
+        // Update Firestore profile
+        await updateUserProfile(currentUser.uid, {
           displayName,
           photoURL,
+          email: currentUser.email || '',
           dateOfBirth,
           gender,
-          country
+          country,
+          updatedAt: new Date()
         });
         
         // Reload the page to reflect changes

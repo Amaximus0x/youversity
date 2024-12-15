@@ -9,6 +9,7 @@
   import CourseFilter from '$lib/components/CourseFilter.svelte';
   import { onMount } from 'svelte';
   import Skeleton from '$lib/components/Skeleton.svelte';
+  import ProfileEditModal from '$lib/components/ProfileEditModal.svelte';
 
   export let data: PageData;
   
@@ -18,6 +19,7 @@
   let filteredCourses = userCourses;
   let showShareModal = false;
   let selectedCourseId = '';
+  let showEditModal = false;
 
   $: profile = $user ? {
     name: $user.displayName,
@@ -94,34 +96,50 @@
         </div>
       </div>
     {:else}
-      <div class="flex flex-col md:flex-row md:items-center gap-6">
-        {#if profile.image}
-          <div class="flex-shrink-0">
-            <img 
-              src={profile.image} 
-              alt={profile.name || 'Profile'} 
-              class="w-24 h-24 rounded-full"
-            />
-          </div>
-        {/if}
-        
-        <div class="space-y-2">
-          <div>
-            <span class="font-semibold">Name:</span>
-            <span>{profile.name || 'Not provided'}</span>
-          </div>
+      <div class="flex justify-between items-start">
+        <div class="flex flex-col md:flex-row md:items-center gap-6">
+          {#if profile.image}
+            <div class="flex-shrink-0">
+              <img 
+                src={profile.image} 
+                alt={profile.name || 'Profile'} 
+                class="w-24 h-24 rounded-full"
+              />
+            </div>
+          {/if}
           
-          <div>
-            <span class="font-semibold">Email:</span>
-            <span>{profile.email || 'Not provided'}</span>
-          </div>
-          
-          <div>
-            <span class="font-semibold">User ID:</span>
-            <span>{profile.id || 'Not available'}</span>
+          <div class="space-y-2">
+            <div>
+              <span class="font-semibold">Name:</span>
+              <span>{profile.name || 'Not provided'}</span>
+            </div>
+            
+            <div>
+              <span class="font-semibold">Email:</span>
+              <span>{profile.email || 'Not provided'}</span>
+            </div>
+            
+            <div>
+              <span class="font-semibold">User ID:</span>
+              <span>{profile.id || 'Not available'}</span>
+            </div>
           </div>
         </div>
+
+        <button
+          on:click={() => showEditModal = true}
+          class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
+        >
+          Edit Profile
+        </button>
       </div>
+
+      {#if showEditModal}
+        <ProfileEditModal 
+          {user} 
+          on:close={() => showEditModal = false} 
+        />
+      {/if}
     {/if}
   </div>
 

@@ -6,6 +6,7 @@ export interface UserProfile {
   displayName: string;
   email: string;
   photoURL: string;
+  dateOfBirth?: string;
   nickName?: string;
   gender?: string;
   country?: string;
@@ -53,12 +54,33 @@ export async function getUserProfile(userId: string): Promise<UserProfile | null
 export async function updateUserProfile(userId: string, updates: Partial<UserProfile>) {
   try {
     const userRef = doc(db, 'users', userId);
+    const userDoc = await getDoc(userRef);
+
     const updatedData = {
       ...updates,
       updatedAt: new Date()
     };
 
-    await updateDoc(userRef, updatedData);
+    if (!userDoc.exists()) {
+      // If document doesn't exist, create it with setDoc
+      await setDoc(userRef, {
+        ...updatedData,
+        createdAt: new Date(),
+        email: updates.email || '',
+        displayName: updates.displayName || '',
+        photoURL: updates.photoURL || ''
+      });
+    } else {
+      // If document exists, update it with only the fields that are provided
+      const updateData: Partial<UserProfile> = {};
+      Object.entries(updates).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== '') {
+          updateData[key] = value;
+        }
+      });
+      await updateDoc(userRef, updateData);
+    }
+
     return updatedData;
   } catch (error) {
     console.error('Error updating user profile:', error);
