@@ -121,9 +121,6 @@ export async function uploadProfileImage(userId: string, file: File): Promise<st
     await uploadBytes(storageRef, file);
     const downloadURL = await getDownloadURL(storageRef);
     
-    // Update user profile with new photo URL
-    await updateUserProfile(userId, { photoURL: downloadURL });
-    
     return downloadURL;
   } catch (error) {
     console.error('Error uploading profile image:', error);
