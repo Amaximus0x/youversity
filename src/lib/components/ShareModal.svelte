@@ -28,12 +28,18 @@
     
     const urls = {
       whatsapp: `https://wa.me/?text=${encodedText}`,
-      facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`,
+      facebook: `https://www.facebook.com/share.php?u=${encodeURIComponent(shareUrl)}`,
       twitter: `https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent('Check out this course:')}`,
       email: `mailto:?subject=${encodeURIComponent('Check out this course')}&body=${encodedText}`
     };
 
+  //   if (platform === 'facebook') {
+  //   // Open Facebook in a new tab without size constraints
+  //   window.open(urls[platform], '_blank');
+  // } else {
+    // Keep popup behavior for other platforms
     window.open(urls[platform], '_blank', 'width=600,height=400');
+  // }
   }
 </script>
 
