@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Copy, X } from 'lucide-svelte';
+  import { Copy, X, Mail, Facebook, Twitter, Instagram, Share2 } from 'lucide-svelte';
   import { fade } from 'svelte/transition';
   import { browser } from '$app/environment';
 
@@ -20,6 +20,20 @@
     } catch (err) {
       console.error('Failed to copy:', err);
     }
+  }
+
+  function shareToSocial(platform: string) {
+    const text = `Check out this course: ${shareUrl}`;
+    const encodedText = encodeURIComponent(text);
+    
+    const urls = {
+      whatsapp: `https://wa.me/?text=${encodedText}`,
+      facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`,
+      twitter: `https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent('Check out this course:')}`,
+      email: `mailto:?subject=${encodeURIComponent('Check out this course')}&body=${encodedText}`
+    };
+
+    window.open(urls[platform], '_blank', 'width=600,height=400');
   }
 </script>
 
@@ -42,7 +56,7 @@
 
       <h2 class="text-xl font-semibold mb-4 text-[#2A4D61]">Share Course</h2>
       
-      <div class="flex items-center gap-2 bg-gray-50 p-3 rounded-lg">
+      <div class="flex items-center gap-2 bg-gray-50 p-3 rounded-lg mb-4">
         <input
           type="text"
           readonly
@@ -54,6 +68,36 @@
           on:click={copyToClipboard}
         >
           <Copy class="w-5 h-5 text-[#2A4D61]" />
+        </button>
+      </div>
+
+      <div class="flex justify-center gap-4 mt-4">
+        <button
+          class="p-2 hover:bg-gray-100 rounded-full text-green-600"
+          on:click={() => shareToSocial('whatsapp')}
+        >
+          <Share2 class="w-5 h-5" />
+        </button>
+        
+        <button
+          class="p-2 hover:bg-gray-100 rounded-full text-blue-600"
+          on:click={() => shareToSocial('facebook')}
+        >
+          <Facebook class="w-5 h-5" />
+        </button>
+        
+        <button
+          class="p-2 hover:bg-gray-100 rounded-full text-black"
+          on:click={() => shareToSocial('twitter')}
+        >
+          <Twitter class="w-5 h-5" />
+        </button>
+        
+        <button
+          class="p-2 hover:bg-gray-100 rounded-full text-gray-600"
+          on:click={() => shareToSocial('email')}
+        >
+          <Mail class="w-5 h-5" />
         </button>
       </div>
 
