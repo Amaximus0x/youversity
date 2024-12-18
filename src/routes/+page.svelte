@@ -2,7 +2,7 @@
   import { user } from '$lib/stores/auth';
   import { signInWithGoogle } from '$lib/services/auth';
   import { page } from '$app/stores';
-  import { getUserCourses } from '$lib/firebase';
+  import { getUserCourses, getPublicCourses, toggleCoursePrivacy } from '$lib/firebase';
   import type { FinalCourseStructure } from '$lib/types/course';
   import { 
     ArrowRight, 
@@ -29,6 +29,7 @@
   let filteredCourses: (FinalCourseStructure & { id: string })[] = [];
   let showShareModal = false;
   let selectedCourseId = '';
+  let publicCourses: (FinalCourseStructure & { id: string })[] = [];
 
   // Update filteredCourses when userCourses changes
   $: {
@@ -55,6 +56,16 @@
       loading = false;
     }
   }
+
+  onMount(async () => {
+    try {
+      console.log('Fetching public courses on home page...');
+      publicCourses = await getPublicCourses();
+      console.log('Public courses loaded on home page:', publicCourses);
+    } catch (error) {
+      console.error('Error loading public courses:', error);
+    }
+  });
 
   const trendingCourses = [
     { id: 1, title: 'Blockchain Fundamentals', author: 'Crypto Expert', image: '/placeholder.svg', likes: 1200, dislikes: 50, views: 15000 },
@@ -131,6 +142,19 @@
   function getSkeletonItems(count: number) {
     return Array(count).fill(null);
   }
+
+  async function handleTogglePrivacy(courseId: string, isPublic: boolean) {
+    try {
+      await toggleCoursePrivacy(courseId, isPublic);
+      // Refresh the courses list
+      await loadUserCourses();
+      // Refresh public courses if viewing them
+      const updatedPublicCourses = await getPublicCourses();
+      publicCourses = updatedPublicCourses;
+    } catch (error) {
+      console.error('Error toggling course privacy:', error);
+    }
+  }
 </script>
 
 <div class="container mx-auto px-4 py-6 pb-20 sm:pb-6 sm:py-8 max-w-7xl">
@@ -204,6 +228,7 @@
           {loading}
           {error}
           onShare={handleShareCourse}
+          onTogglePrivacy={handleTogglePrivacy}
         />
       {/if}
     </div>
@@ -212,31 +237,31 @@
     <section class="mb-12">
       <h2 class="text-xl sm:text-2xl font-semibold text-[#2A4D61] mb-6">Trending Courses</h2>
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-        {#each trendingCourses as course}
+        {#each publicCourses as course}
           <div class="bg-white rounded-lg shadow-md overflow-hidden">
             <img 
-              src={course.image} 
-              alt={course.title}
+              src={course.Final_Course_Thumbnail || '/placeholder.svg'} 
+              alt={course.Final_Course_Title}
               class="w-full h-32 sm:h-48 object-cover"
               loading="lazy"
             />
             <div class="p-4">
-              <h3 class="font-semibold text-base sm:text-lg text-[#2A4D61] mb-2">{course.title}</h3>
-              <p class="text-sm text-[#1E3443]/80 mb-4">{course.author}</p>
+              <h3 class="font-semibold text-base sm:text-lg text-[#2A4D61] mb-2">
+                {course.Final_Course_Title}
+              </h3>
+              <p class="text-sm text-[#1E3443]/80 mb-4">
+                {course.Final_Course_Objective}
+              </p>
               <div class="flex items-center justify-between text-sm">
                 <div class="flex items-center gap-4">
                   <span class="flex items-center gap-1">
                     <ThumbsUp class="w-4 h-4" />
-                    {course.likes}
-                  </span>
-                  <span class="flex items-center gap-1">
-                    <ThumbsDown class="w-4 h-4" />
-                    {course.dislikes}
+                    {course.likes || 0}
                   </span>
                 </div>
                 <span class="flex items-center gap-1">
                   <Eye class="w-4 h-4" />
-                  {course.views}
+                  {course.views || 0}
                 </span>
               </div>
             </div>

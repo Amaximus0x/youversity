@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app';
-import { getFirestore, collection, addDoc, query, where, getDocs, doc, getDoc, updateDoc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { getFirestore, collection, addDoc, query, where, getDocs, doc, getDoc, updateDoc, setDoc, serverTimestamp, orderBy, limit } from 'firebase/firestore';
 import { getAuth, setPersistence, browserLocalPersistence, signInWithPopup, GoogleAuthProvider, signOut } from 'firebase/auth';
 import { getStorage } from 'firebase/storage';
 
@@ -45,17 +45,20 @@ setPersistence(auth, browserLocalPersistence)
 // Firebase utility functions
 export async function saveCourseToFirebase(userId: string, courseData: any) {
   try {
-    // Create a new document reference in the public courses collection
     const publicCourseRef = doc(collection(db, 'courses'));
     const courseId = publicCourseRef.id;
 
-    // Add creation timestamp and ID
+    // Add required metadata for public courses
     const courseWithMetadata = {
       ...courseData,
       createdAt: serverTimestamp(),
       id: courseId,
       createdBy: userId,
-      userId
+      userId,
+      isPublic: false,  // Default to private
+      views: 0,         // Required for orderBy
+      likes: 0,
+      updatedAt: serverTimestamp()
     };
 
     // Save to public courses collection
@@ -87,7 +90,10 @@ export async function saveCourseToFirebase(userId: string, courseData: any) {
 
 export async function getUserCourses(userId: string) {
   try {
-    const q = query(collection(db, 'courses'), where('userId', '==', userId));
+    const q = query(
+      collection(db, 'courses'), 
+      where('createdBy', '==', userId)
+    );
     const querySnapshot = await getDocs(q);
     return querySnapshot.docs.map(doc => ({
       id: doc.id,
@@ -222,4 +228,57 @@ export async function getSharedCourse(courseId: string) {
     console.error('Error getting shared course:', error);
     throw error;
   }
-} 
+}
+
+export async function getPublicCourses() {
+  try {
+    console.log('Fetching public courses...');
+    const q = query(
+      collection(db, 'courses'),
+      where('isPublic', '==', true),
+      orderBy('views', 'desc'),
+      limit(6)
+    );
+    console.log('Query created:', q);
+    const querySnapshot = await getDocs(q);
+    console.log('Query results:', querySnapshot.size, 'documents found');
+    
+    const courses = querySnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+    console.log('Mapped courses:', courses);
+    return courses;
+  } catch (error) {
+    console.error('Error fetching public courses:', error);
+    throw new Error('Failed to fetch public courses');
+  }
+}
+
+export async function toggleCoursePrivacy(courseId: string, isPublic: boolean) {
+  try {
+    console.log('Toggling course privacy:', courseId, 'to', isPublic);
+    const courseRef = doc(db, 'courses', courseId);
+    const before = await getDoc(courseRef);
+    console.log('Course before update:', before.data());
+    
+    // Ensure views field exists when making public
+    const updateData: any = {
+      isPublic,
+      updatedAt: serverTimestamp()
+    };
+    
+    if (isPublic && !before.data()?.views) {
+      updateData.views = 0;
+    }
+    
+    await updateDoc(courseRef, updateData);
+    
+    const after = await getDoc(courseRef);
+    console.log('Course after update:', after.data());
+    return true;
+  } catch (error) {
+    console.error('Error toggling course privacy:', error);
+    throw new Error('Failed to update course privacy');
+  }
+}

@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { FinalCourseStructure } from '$lib/types/course';
-  import { Share2, Play } from 'lucide-svelte';
+  import { Share2, Play, Globe, Lock } from 'lucide-svelte';
   import { goto } from '$app/navigation';
   import Skeleton from './Skeleton.svelte';
 
@@ -8,6 +8,7 @@
   export let loading = false;
   export let error: string | null = null;
   export let onShare: (courseId: string) => void;
+  export let onTogglePrivacy: (courseId: string, isPublic: boolean) => void;
 
   function handleCourseClick(courseId: string) {
     goto(`/course/${courseId}`);
@@ -82,6 +83,19 @@
                 }}
               >
                 <Share2 class="w-5 h-5 text-[#2A4D61]" />
+              </button>
+              <button
+                class="p-1 hover:bg-[#F5F5F5] rounded-full transition-colors duration-200"
+                on:click|stopPropagation={(e) => {
+                  e.preventDefault();
+                  onTogglePrivacy(course.id, !course.isPublic);
+                }}
+              >
+                {#if course.isPublic}
+                  <Globe class="w-5 h-5 text-green-600" />
+                {:else}
+                  <Lock class="w-5 h-5 text-[#2A4D61]" />
+                {/if}
               </button>
             </div>
             <div class="w-full h-2 bg-[#D9E1E3] rounded-full mb-2">

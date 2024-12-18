@@ -2,7 +2,7 @@
   import { page } from '$app/stores';
   import type { PageData } from './$types';
   import { user } from '$lib/stores/auth';
-  import { getUserCourses } from '$lib/firebase';
+  import { getUserCourses, toggleCoursePrivacy } from '$lib/firebase';
   import type { FinalCourseStructure } from '$lib/types/course';
   import CourseList from '$lib/components/CourseList.svelte';
   import ShareModal from '$lib/components/ShareModal.svelte';
@@ -74,6 +74,15 @@
     }
     
     filteredCourses = sortedCourses;
+  }
+
+  async function handleTogglePrivacy(courseId: string, isPublic: boolean) {
+    try {
+      await toggleCoursePrivacy(courseId, isPublic);
+      await loadUserCourses();
+    } catch (error) {
+      console.error('Error toggling course privacy:', error);
+    }
   }
 </script>
 
@@ -180,6 +189,7 @@
       {loading}
       {error}
       onShare={handleShareCourse}
+      onTogglePrivacy={handleTogglePrivacy}
     />
   </div>
 </div>

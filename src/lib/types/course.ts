@@ -38,6 +38,11 @@ export interface FinalCourseStructure {
   Final_Course_Conclusion: string;
   YouTube_Playlist_URL: string;
   Final_Course_Thumbnail?: string;
+  isPublic: boolean;
+  createdBy: string;
+  createdAt: Date;
+  likes?: number;
+  views?: number;
 }
   
 export interface VideoItem {

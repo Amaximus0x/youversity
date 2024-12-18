@@ -186,7 +186,14 @@
         // Update loading state with the final course title before saving
         loadingState.startLoading(data.course.Final_Course_Title, false);
         
-        const courseId = await saveCourseToFirebase($user.uid, data.course);
+        const courseId = await saveCourseToFirebase($user.uid, {
+          ...data.course,
+          isPublic: false,
+          createdBy: $user.uid,
+          createdAt: new Date(),
+          views: 0,
+          likes: 0
+        });
         
         loadingState.setStep('Course creation complete!');
         loadingState.setProgress(100);
