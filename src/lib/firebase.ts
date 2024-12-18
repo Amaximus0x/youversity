@@ -302,14 +302,14 @@ export async function likeCourse(courseId: string, userId: string) {
         likes: likes - 1,
         likedBy: likedBy.filter((id: string) => id !== userId)
       });
+      return { likes: likes - 1, likedBy: likedBy.filter((id: string) => id !== userId) };
     } else {
       await updateDoc(courseRef, {
         likes: likes + 1,
         likedBy: [...likedBy, userId]
       });
+      return { likes: likes + 1, likedBy: [...likedBy, userId] };
     }
-    
-    return true;
   } catch (error) {
     console.error('Error liking course:', error);
     throw new Error('Failed to like course');

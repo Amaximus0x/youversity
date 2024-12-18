@@ -260,9 +260,20 @@
                 <div class="flex items-center space-x-4">
                   <button 
                     class="flex items-center space-x-1 hover:text-[#EE434A] transition-colors"
-                    on:click|stopPropagation={() => {
+                    on:click|stopPropagation={async (e) => {
+                      e.preventDefault();
                       if ($user) {
-                        likeCourse(course.id, $user.uid);
+                        try {
+                          const updatedLikeData = await likeCourse(course.id, $user.uid);
+                          // Update the course in publicCourses array
+                          publicCourses = publicCourses.map(c => 
+                            c.id === course.id 
+                              ? { ...c, likes: updatedLikeData.likes, likedBy: updatedLikeData.likedBy }
+                              : c
+                          );
+                        } catch (error) {
+                          console.error('Error updating like:', error);
+                        }
                       } else {
                         goto('/login');
                       }
