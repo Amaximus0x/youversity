@@ -282,3 +282,36 @@ export async function toggleCoursePrivacy(courseId: string, isPublic: boolean) {
     throw new Error('Failed to update course privacy');
   }
 }
+
+export async function likeCourse(courseId: string, userId: string) {
+  try {
+    const courseRef = doc(db, 'courses', courseId);
+    const courseDoc = await getDoc(courseRef);
+    
+    if (!courseDoc.exists()) {
+      throw new Error('Course not found');
+    }
+    
+    const data = courseDoc.data();
+    const likes = data.likes || 0;
+    const likedBy = data.likedBy || [];
+    
+    // Toggle like
+    if (likedBy.includes(userId)) {
+      await updateDoc(courseRef, {
+        likes: likes - 1,
+        likedBy: likedBy.filter((id: string) => id !== userId)
+      });
+    } else {
+      await updateDoc(courseRef, {
+        likes: likes + 1,
+        likedBy: [...likedBy, userId]
+      });
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Error liking course:', error);
+    throw new Error('Failed to like course');
+  }
+}

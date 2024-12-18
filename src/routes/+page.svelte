@@ -2,7 +2,7 @@
   import { user } from '$lib/stores/auth';
   import { signInWithGoogle } from '$lib/services/auth';
   import { page } from '$app/stores';
-  import { getUserCourses, getPublicCourses, toggleCoursePrivacy } from '$lib/firebase';
+  import { getUserCourses, getPublicCourses, toggleCoursePrivacy, likeCourse } from '$lib/firebase';
   import type { FinalCourseStructure } from '$lib/types/course';
   import { 
     ArrowRight, 
@@ -11,7 +11,8 @@
     ThumbsDown, 
     Eye,
     Play,
-    Plus 
+    Plus,
+    ArrowUp
   } from 'lucide-svelte';
   import { goto } from '$app/navigation';
   import CourseFilter from '$lib/components/CourseFilter.svelte';
@@ -238,7 +239,10 @@
       <h2 class="text-xl sm:text-2xl font-semibold text-[#2A4D61] mb-6">Trending Courses</h2>
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         {#each publicCourses as course}
-          <div class="bg-white rounded-lg shadow-md overflow-hidden">
+          <div 
+            class="bg-white rounded-lg shadow-md overflow-hidden cursor-pointer hover:shadow-lg transition-shadow duration-200"
+            on:click={() => goto(`/course/${course.id}`)}
+          >
             <img 
               src={course.Final_Course_Thumbnail || '/placeholder.svg'} 
               alt={course.Final_Course_Title}
@@ -252,17 +256,26 @@
               <p class="text-sm text-[#1E3443]/80 mb-4">
                 {course.Final_Course_Objective}
               </p>
-              <div class="flex items-center justify-between text-sm">
-                <div class="flex items-center gap-4">
-                  <span class="flex items-center gap-1">
-                    <ThumbsUp class="w-4 h-4" />
-                    {course.likes || 0}
-                  </span>
+              <div class="flex items-center justify-between text-sm text-[#1E3443]/60">
+                <div class="flex items-center space-x-4">
+                  <button 
+                    class="flex items-center space-x-1 hover:text-[#EE434A] transition-colors"
+                    on:click|stopPropagation={() => {
+                      if ($user) {
+                        likeCourse(course.id, $user.uid);
+                      } else {
+                        goto('/login');
+                      }
+                    }}
+                  >
+                    <ArrowUp class="w-4 h-4 {course.likedBy?.includes($user?.uid) ? 'text-[#EE434A]' : ''}" />
+                    <span>{course.likes || 0}</span>
+                  </button>
+                  <div class="flex items-center space-x-1">
+                    <Eye class="w-4 h-4" />
+                    <span>{course.views || 0}</span>
+                  </div>
                 </div>
-                <span class="flex items-center gap-1">
-                  <Eye class="w-4 h-4" />
-                  {course.views || 0}
-                </span>
               </div>
             </div>
           </div>

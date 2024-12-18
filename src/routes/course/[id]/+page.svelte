@@ -37,31 +37,25 @@
 
       while (attempts < maxAttempts) {
         try {
+          // Try to load as public course first
+          courseDetails = await getSharedCourse(courseId);
+          isSharedView = true;
+
+          // If authenticated, try to get user's progress
           if ($user) {
-            // Authenticated user flow
-            const [course, progress] = await Promise.all([
-              getUserCourse($user.uid, courseId),
-              getCourseProgress($user.uid, courseId)
-            ]);
-            
-            moduleProgress = progress?.moduleProgress || [];
-            
-            if (!course) {
-              // Try to load as shared course if not found in user's courses
-              courseDetails = await getSharedCourse(courseId);
-              isSharedView = true;
-            } else {
-              courseDetails = course;
+            try {
+              const progress = await getCourseProgress($user.uid, courseId);
+              moduleProgress = progress?.moduleProgress || [];
+            } catch (err) {
+              console.log('No existing progress found:', err);
             }
-          } else {
-            // Unauthenticated user flow - load shared course
-            courseDetails = await getSharedCourse(courseId);
-            isSharedView = true;
           }
 
-          if (courseDetails) {
-            break; // Successfully loaded the course
+          if (!courseDetails) {
+            throw new Error('Course not found');
           }
+
+          break; // Successfully loaded the course
         } catch (err) {
           console.log(`Attempt ${attempts + 1} failed:`, err);
         }

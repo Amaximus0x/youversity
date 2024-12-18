@@ -15,17 +15,33 @@ service cloud.firestore {
     // Public courses collection
     match /courses/{courseId} {
       // Allow reading for all users
-      allow read, get: if true;
+      allow read: if true;
       
       // Allow creation with validation
       allow create: if request.auth != null 
         && request.resource.data.keys().hasAll(['Final_Course_Title', 'createdBy'])
         && request.resource.data.createdBy == request.auth.uid;
       
-      // Allow updates only by course creator
-      allow update: if request.auth != null 
-        && request.auth.uid == resource.data.createdBy
-        && request.resource.data.keys().hasAll(['Final_Course_Title', 'createdBy']);
+      // Allow updates by course creator OR authenticated users updating likes
+      allow update: if request.auth != null && (
+        // Course creator can update everything
+        request.auth.uid == resource.data.createdBy ||
+        // Any authenticated user can update likes and likedBy
+        (
+          request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['likes', 'likedBy']) &&
+          (
+            // Adding like
+            (request.resource.data.likes == resource.data.likes + 1 &&
+             request.resource.data.likedBy.hasAll(resource.data.likedBy) &&
+             request.resource.data.likedBy.size() == resource.data.likedBy.size() + 1) ||
+            // Removing like
+            (request.resource.data.likes == resource.data.likes - 1 &&
+             resource.data.likedBy.hasAll(request.resource.data.likedBy) &&
+             request.resource.data.likedBy.size() == resource.data.likedBy.size() - 1)
+          )
+        )
+      );
       
       // Allow deletion only by course creator
       allow delete: if request.auth != null 
