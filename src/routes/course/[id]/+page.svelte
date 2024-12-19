@@ -96,25 +96,21 @@
     quizSubmitted = true;
 
     if ($user) {
-      if (isCreator) {
-        // Original creator progress update logic
-        const updatedProgress = {
-          ...moduleProgress[currentModule],
-          completed: quizScore >= 70,
-          quizAttempts: (moduleProgress[currentModule]?.quizAttempts || 0) + 1,
-          bestScore: Math.max(quizScore, moduleProgress[currentModule]?.bestScore || 0),
-          lastAttemptDate: new Date()
-        };
+      try {
+        if (isCreator) {
+          // Update creator's progress
+          const updatedProgress = {
+            ...moduleProgress[currentModule],
+            completed: quizScore >= 70,
+            quizAttempts: (moduleProgress[currentModule]?.quizAttempts || 0) + 1,
+            bestScore: Math.max(quizScore, moduleProgress[currentModule]?.bestScore || 0),
+            lastAttemptDate: new Date()
+          };
 
-        try {
-          await updateModuleProgress($user.uid, $page.params.id, currentModule, updatedProgress);
+          await updateModuleProgress($user.uid, courseDetails.id, currentModule, updatedProgress);
           moduleProgress[currentModule] = updatedProgress;
-        } catch (err) {
-          console.error('Error updating module progress:', err);
-        }
-      } else {
-        // Enrollment progress update logic
-        try {
+        } else {
+          // Update enrolled user's progress
           await updateEnrollmentQuizResult(
             $user.uid,
             courseDetails.id,
@@ -122,14 +118,13 @@
             quizScore,
             quizScore >= 70
           );
-          // Refresh enrollment progress
           enrollmentProgress = await getEnrollmentProgress($user.uid, courseDetails.id);
           if (enrollmentProgress) {
             moduleProgress = enrollmentProgress.moduleProgress;
           }
-        } catch (err) {
-          console.error('Error updating enrollment progress:', err);
         }
+      } catch (err) {
+        console.error('Error updating progress:', err);
       }
     }
   }
@@ -182,6 +177,31 @@
       </div>
     </header>
 
+    <!-- Progress Section -->
+    {#if $user}
+    <div class="bg-white rounded-lg shadow-md p-4">
+      <h3 class="font-semibold text-lg mb-4">Your Progress</h3>
+      <div class="space-y-4">
+        <div class="flex justify-between items-center">
+          <span>Module Completion</span>
+          <span class="font-semibold">
+            {isCreator 
+              ? moduleProgress.filter(m => m?.completed).length
+              : enrollmentProgress?.completedModules.length} / {courseDetails.Final_Module_Title.length}
+          </span>
+        </div>
+        <div class="w-full h-2 bg-gray-200 rounded-full">
+          <div
+            class="h-full bg-green-600 rounded-full"
+            style="width: {isCreator 
+              ? (moduleProgress.filter(m => m?.completed).length / courseDetails.Final_Module_Title.length * 100)
+              : (enrollmentProgress?.completedModules.length / courseDetails.Final_Module_Title.length * 100)}%"
+          ></div>
+        </div>
+      </div>
+    </div>
+  {/if}
+
     <!-- Course Content -->
     <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
       <!-- Module List -->
@@ -225,26 +245,7 @@
           </div>
         </div>
 
-        <!-- Progress Section (For enrolled users) -->
-        {#if enrollmentProgress && !isCreator}
-          <div class="bg-white rounded-lg shadow-md p-4">
-            <h3 class="font-semibold text-lg mb-4">Your Progress</h3>
-            <div class="space-y-4">
-              <div class="flex justify-between items-center">
-                <span>Module Completion</span>
-                <span class="font-semibold">
-                  {enrollmentProgress.completedModules.length} / {courseDetails.Final_Module_Title.length}
-                </span>
-              </div>
-              <div class="w-full h-2 bg-gray-200 rounded-full">
-                <div
-                  class="h-full bg-green-600 rounded-full"
-                  style="width: {(enrollmentProgress.completedModules.length / courseDetails.Final_Module_Title.length) * 100}%"
-                ></div>
-              </div>
-            </div>
-          </div>
-        {/if}
+        
 
         
 
@@ -265,6 +266,24 @@
               }}
             >
               Take Module Quiz
+            </button>
+          </div>
+        {/if}
+
+        <!-- Final Quiz Section -->
+        {#if courseDetails.Final_Course_Quiz}
+          <div class="bg-white rounded-lg shadow-md p-4 mt-8">
+            <h2 class="text-2xl font-semibold mb-4">Final Course Quiz</h2>
+            <p class="text-gray-600 mb-4">Test your knowledge of the entire course material.</p>
+            <button
+              class="bg-green-500 text-white px-6 py-3 rounded-lg hover:bg-green-600"
+              on:click={() => {
+                currentModule = -1; // Indicate this is the final quiz
+                currentQuiz = courseDetails.Final_Course_Quiz;
+                showQuiz = true;
+              }}
+            >
+              Take Final Quiz
             </button>
           </div>
         {/if}
