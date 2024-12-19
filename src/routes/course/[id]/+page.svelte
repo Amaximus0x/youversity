@@ -159,44 +159,46 @@
   <div class="text-red-500 text-center p-4">{error}</div>
 {:else if courseDetails}
   <div class="max-w-7xl mx-auto px-4 py-8">
-    <!-- Course Header -->
-    <header class="mb-8">
-      <h1 class="text-3xl font-bold text-red-800 mb-4">{courseDetails.Final_Course_Title}</h1>
-      <p class="text-lg text-red-700">{courseDetails.Final_Course_Objective}</p>
+    <!-- Course Header with Actions -->
+    <div class="flex justify-between items-start mb-8">
+      <div>
+        <h1 class="text-3xl font-bold text-red-800 mb-4">{courseDetails.Final_Course_Title}</h1>
+        <p class="text-lg text-red-700">{courseDetails.Final_Course_Objective}</p>
+      </div>
       
       {#if !isCreator && courseDetails}
-        <div class="mt-4">
-          <CourseActions courseId={courseDetails.id} />
-        </div>
+        <CourseActions courseId={courseDetails.id} />
       {/if}
+    </div>
 
-      <!-- Course Introduction -->
-      <div class="mb-8">
-        <h2 class="text-2xl font-semibold mb-4">Course Introduction</h2>
-        <p class="text-gray-700">{courseDetails.Final_Course_Introduction}</p>
-      </div>
-    </header>
+    <!-- Course Introduction -->
+    <div class="mb-8">
+      <h2 class="text-2xl font-semibold mb-4">Course Introduction</h2>
+      <p class="text-gray-700">{courseDetails.Final_Course_Introduction}</p>
+    </div>
 
     <!-- Progress Section -->
     {#if $user}
-    <div class="bg-white rounded-lg shadow-md p-4">
-      <h3 class="font-semibold text-lg mb-4">Your Progress</h3>
-      <div class="space-y-4">
-        <div class="flex justify-between items-center">
-          <span>Module Completion</span>
-          <span class="font-semibold">
-            {isCreator 
-              ? moduleProgress.filter(m => m?.completed).length
-              : enrollmentProgress?.completedModules.length} / {courseDetails.Final_Module_Title.length}
-          </span>
-        </div>
-        <div class="w-full h-2 bg-gray-200 rounded-full">
-          <div
-            class="h-full bg-green-600 rounded-full"
-            style="width: {isCreator 
-              ? (moduleProgress.filter(m => m?.completed).length / courseDetails.Final_Module_Title.length * 100)
-              : (enrollmentProgress?.completedModules.length / courseDetails.Final_Module_Title.length * 100)}%"
-          ></div>
+    <div class="mb-12">
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <h3 class="font-semibold text-lg mb-4">Your Progress</h3>
+        <div class="space-y-4">
+          <div class="flex justify-between text-sm text-gray-600 mb-2">
+            <span>Module Completion</span>
+            <span>
+              {isCreator 
+                ? moduleProgress.filter(m => m?.completed).length
+                : enrollmentProgress?.completedModules.length} / {courseDetails.Final_Module_Title.length}
+            </span>
+          </div>
+          <div class="w-full h-2.5 bg-gray-200 rounded-full">
+            <div 
+              class="bg-green-600 h-2.5 rounded-full transition-all duration-300"
+              style="width: {isCreator 
+                ? (moduleProgress.filter(m => m?.completed).length / courseDetails.Final_Module_Title.length * 100)
+                : (enrollmentProgress?.completedModules.length / courseDetails.Final_Module_Title.length * 100)}%"
+            />
+          </div>
         </div>
       </div>
     </div>
@@ -230,18 +232,40 @@
       <div class="lg:col-span-3 space-y-6">
         <!-- Video Section -->
         <div class="bg-white rounded-lg shadow-md overflow-hidden">
-          <div class="aspect-w-16 aspect-h-9">
+          <div class="flex-grow relative" style="min-height: 400px;">
             <iframe
-              src={`https://www.youtube.com/embed/${new URL(courseDetails.Final_Module_YouTube_Video_URL[currentModule]).searchParams.get('v')}`}
+              src={`https://www.youtube.com/embed/${new URL(courseDetails.Final_Module_YouTube_Video_URL[currentModule]).searchParams.get('v')}?enablejsapi=0&origin=${window.location.origin}`}
               title={courseDetails.Final_Module_Title[currentModule]}
               frameborder="0"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowfullscreen
+              loading="lazy"
+              class="absolute inset-0 w-full h-full rounded"
             ></iframe>
           </div>
           <div class="p-4">
             <h3 class="text-xl font-semibold mb-2">{courseDetails.Final_Module_Title[currentModule]}</h3>
             <p class="text-[#1E3443]/80">{courseDetails.Final_Module_Objective[currentModule]}</p>
+            <!-- Quiz Section -->
+        {#if courseDetails.Final_Module_Quiz[currentModule]}
+        
+          <h3 class="font-semibold text-lg mb-4">Module Quiz</h3>
+          <button
+            class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+            on:click={() => {
+              const moduleQuiz = courseDetails?.Final_Module_Quiz?.[currentModule];
+              if (!moduleQuiz) {
+                console.error(`No quiz found for module ${currentModule + 1}`);
+                return;
+              }
+              currentQuiz = moduleQuiz;
+              showQuiz = true;
+            }}
+          >
+            Take Module Quiz
+          </button>
+        
+      {/if}
           </div>
         </div>
 
@@ -249,26 +273,7 @@
 
         
 
-        <!-- Quiz Section -->
-        {#if courseDetails.Final_Module_Quiz[currentModule]}
-          <div class="bg-white rounded-lg shadow-md p-4">
-            <h3 class="font-semibold text-lg mb-4">Module Quiz</h3>
-            <button
-              class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-              on:click={() => {
-                const moduleQuiz = courseDetails?.Final_Module_Quiz?.[currentModule];
-                if (!moduleQuiz) {
-                  console.error(`No quiz found for module ${currentModule + 1}`);
-                  return;
-                }
-                currentQuiz = moduleQuiz;
-                showQuiz = true;
-              }}
-            >
-              Take Module Quiz
-            </button>
-          </div>
-        {/if}
+        
 
         <!-- Final Quiz Section -->
         {#if courseDetails.Final_Course_Quiz}
