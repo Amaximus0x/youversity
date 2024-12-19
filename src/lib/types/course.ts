@@ -69,3 +69,43 @@ export interface CourseProgress {
   startDate: Date;
   lastAccessDate: Date;
 }
+
+export interface CourseBookmark {
+  userId: string;
+  courseId: string;
+  createdAt: Date;
+}
+
+export interface CourseEnrollment {
+  userId: string;
+  courseId: string;
+  enrolledAt: Date;
+  lastAccessedAt: Date;
+  completedModules: number[];
+  progress: CourseProgress;
+}
+
+export interface EnrollmentProgress {
+  userId: string;
+  courseId: string;
+  enrolledAt: Date;
+  lastAccessedAt: Date;
+  moduleProgress: ModuleProgress[];
+  completedModules: number[];
+  quizResults: {
+    moduleQuizzes: {
+      [moduleIndex: number]: {
+        attempts: number;
+        bestScore: number;
+        lastAttemptDate: Date;
+        completed: boolean;
+      };
+    };
+    finalQuiz?: {
+      attempts: number;
+      bestScore: number;
+      lastAttemptDate: Date;
+      completed: boolean;
+    };
+  };
+}

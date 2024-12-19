@@ -326,3 +326,188 @@ export async function likeCourse(courseId: string, userId: string) {
     throw new Error('Failed to like course');
   }
 }
+
+export async function bookmarkCourse(userId: string, courseId: string) {
+  try {
+    const bookmarkId = `${userId}_${courseId}`;
+    const bookmarkRef = doc(db, 'bookmarks', bookmarkId);
+    const bookmarkDoc = await getDoc(bookmarkRef);
+    
+    if (bookmarkDoc.exists()) {
+      // Remove bookmark if it exists
+      await deleteDoc(bookmarkRef);
+      return { bookmarked: false };
+    } else {
+      // Add bookmark
+      await setDoc(bookmarkRef, {
+        userId,
+        courseId,
+        createdAt: serverTimestamp()
+      });
+      return { bookmarked: true };
+    }
+  } catch (error) {
+    console.error('Error toggling bookmark:', error);
+    throw new Error('Failed to toggle bookmark');
+  }
+}
+
+export async function enrollInCourse(userId: string, courseId: string) {
+  try {
+    const enrollmentId = `${userId}_${courseId}`;
+    const enrollmentRef = doc(db, 'enrollments', enrollmentId);
+    const enrollmentDoc = await getDoc(enrollmentRef);
+    
+    if (enrollmentDoc.exists()) {
+      throw new Error('Already enrolled in this course');
+    }
+    
+    const enrollment: CourseEnrollment = {
+      userId,
+      courseId,
+      enrolledAt: new Date(),
+      lastAccessedAt: new Date(),
+      completedModules: [],
+      progress: {
+        userId,
+        courseId,
+        moduleProgress: [],
+        lastAccessedModule: 0,
+        startDate: new Date(),
+        lastAccessDate: new Date()
+      }
+    };
+    
+    await setDoc(enrollmentRef, enrollment);
+    return enrollment;
+  } catch (error) {
+    console.error('Error enrolling in course:', error);
+    throw new Error('Failed to enroll in course');
+  }
+}
+
+export async function getEnrollmentStatus(userId: string, courseId: string) {
+  try {
+    const enrollmentId = `${userId}_${courseId}`;
+    const enrollmentRef = doc(db, 'enrollments', enrollmentId);
+    const enrollmentDoc = await getDoc(enrollmentRef);
+    return enrollmentDoc.exists();
+  } catch (error) {
+    console.error('Error checking enrollment status:', error);
+    throw new Error('Failed to check enrollment status');
+  }
+}
+
+export async function getUserBookmarks(userId: string) {
+  try {
+    const q = query(
+      collection(db, 'bookmarks'),
+      where('userId', '==', userId)
+    );
+    const querySnapshot = await getDocs(q);
+    
+    // Get all bookmarked courses
+    const bookmarkedCourses = await Promise.all(
+      querySnapshot.docs.map(async (doc) => {
+        const courseRef = doc(db, 'courses', doc.data().courseId);
+        const courseDoc = await getDoc(courseRef);
+        return courseDoc.exists() ? {
+          id: courseDoc.id,
+          ...courseDoc.data()
+        } : null;
+      })
+    );
+    
+    return bookmarkedCourses.filter(course => course !== null);
+  } catch (error) {
+    console.error('Error fetching bookmarks:', error);
+    throw new Error('Failed to fetch bookmarks');
+  }
+}
+
+export async function getEnrollmentProgress(userId: string, courseId: string) {
+  try {
+    const enrollmentRef = doc(db, 'enrollments', `${userId}_${courseId}`);
+    const enrollmentDoc = await getDoc(enrollmentRef);
+    
+    if (!enrollmentDoc.exists()) {
+      const initialProgress: EnrollmentProgress = {
+        userId,
+        courseId,
+        enrolledAt: new Date(),
+        lastAccessedAt: new Date(),
+        moduleProgress: [],
+        completedModules: [],
+        quizResults: {
+          moduleQuizzes: {}
+        }
+      };
+      await setDoc(enrollmentRef, initialProgress);
+      return initialProgress;
+    }
+    
+    return enrollmentDoc.data() as EnrollmentProgress;
+  } catch (error) {
+    console.error('Error getting enrollment progress:', error);
+    throw error;
+  }
+}
+
+export async function updateEnrollmentQuizResult(
+  userId: string,
+  courseId: string,
+  moduleIndex: number | null,
+  score: number,
+  completed: boolean
+) {
+  try {
+    const enrollmentRef = doc(db, 'enrollments', `${userId}_${courseId}`);
+    const enrollmentDoc = await getDoc(enrollmentRef);
+    const enrollment = enrollmentDoc.data() as EnrollmentProgress;
+
+    const updateData: any = {
+      lastAccessedAt: new Date()
+    };
+
+    if (moduleIndex !== null) {
+      // Module quiz update
+      const currentModuleQuiz = enrollment.quizResults.moduleQuizzes[moduleIndex] || {
+        attempts: 0,
+        bestScore: 0,
+        completed: false
+      };
+
+      updateData[`quizResults.moduleQuizzes.${moduleIndex}`] = {
+        attempts: currentModuleQuiz.attempts + 1,
+        bestScore: Math.max(currentModuleQuiz.bestScore, score),
+        lastAttemptDate: new Date(),
+        completed: completed || currentModuleQuiz.completed
+      };
+
+      // Update completed modules if passed
+      if (completed && !enrollment.completedModules.includes(moduleIndex)) {
+        updateData.completedModules = [...enrollment.completedModules, moduleIndex];
+      }
+    } else {
+      // Final quiz update
+      const currentFinalQuiz = enrollment.quizResults.finalQuiz || {
+        attempts: 0,
+        bestScore: 0,
+        completed: false
+      };
+
+      updateData['quizResults.finalQuiz'] = {
+        attempts: currentFinalQuiz.attempts + 1,
+        bestScore: Math.max(currentFinalQuiz.bestScore, score),
+        lastAttemptDate: new Date(),
+        completed: completed || currentFinalQuiz.completed
+      };
+    }
+
+    await updateDoc(enrollmentRef, updateData);
+    return updateData;
+  } catch (error) {
+    console.error('Error updating quiz result:', error);
+    throw error;
+  }
+}
