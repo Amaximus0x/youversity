@@ -210,12 +210,23 @@ export async function getCourseProgress(userId: string, courseId: string) {
 export async function getSharedCourse(courseId: string) {
   try {
     console.log('Fetching shared course:', courseId);
-    const courseDoc = await getDoc(doc(db, 'courses', courseId));
+    const courseRef = doc(db, 'courses', courseId);
+    const courseDoc = await getDoc(courseRef);
     console.log('Course exists:', courseDoc.exists());
     
     if (courseDoc.exists()) {
       const data = courseDoc.data();
       console.log('Course data:', data);
+
+      // Increment views if it's a public course
+      if (data.isPublic) {
+        const currentViews = data.views || 0;
+        await updateDoc(courseRef, {
+          views: currentViews + 1
+        });
+        data.views = currentViews + 1;
+      }
+
       return {
         ...data,
         id: courseDoc.id,
