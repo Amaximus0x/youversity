@@ -285,6 +285,10 @@
               on:click={() => {
                 currentModule = -1; // Indicate this is the final quiz
                 currentQuiz = courseDetails.Final_Course_Quiz;
+                selectedAnswers = {};
+                quizResults = {};
+                quizSubmitted = false;
+                quizScore = 0;
                 showQuiz = true;
               }}
             >

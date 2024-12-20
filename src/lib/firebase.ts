@@ -304,18 +304,26 @@ export async function likeCourse(courseId: string, userId: string) {
     }
     
     const data = courseDoc.data();
+    
+    // Check if the course is public
+    if (!data.isPublic) {
+      throw new Error('Cannot like a private course');
+    }
+    
     const likes = data.likes || 0;
     const likedBy = data.likedBy || [];
     
     // Toggle like
     if (likedBy.includes(userId)) {
       await updateDoc(courseRef, {
+        ...data,  // Preserve all existing fields
         likes: likes - 1,
         likedBy: likedBy.filter((id: string) => id !== userId)
       });
       return { likes: likes - 1, likedBy: likedBy.filter((id: string) => id !== userId) };
     } else {
       await updateDoc(courseRef, {
+        ...data,  // Preserve all existing fields
         likes: likes + 1,
         likedBy: [...likedBy, userId]
       });
