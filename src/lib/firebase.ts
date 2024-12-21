@@ -91,15 +91,34 @@ export async function saveCourseToFirebase(userId: string, courseData: any) {
 
 export async function getUserCourses(userId: string) {
   try {
-    const q = query(
-      collection(db, 'courses'), 
+    // Get courses created by user
+    const createdCoursesQuery = query(
+      collection(db, 'courses'),
       where('createdBy', '==', userId)
     );
-    const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map(doc => ({
+    const createdCoursesSnapshot = await getDocs(createdCoursesQuery);
+    const createdCourses = createdCoursesSnapshot.docs.map(doc => ({
       id: doc.id,
-      ...doc.data()
+      ...doc.data(),
+      isCreator: true
     }));
+
+    // Get enrolled courses from user's subcollection
+    const enrolledCoursesRef = collection(db, `users/${userId}/courses`);
+    const enrolledCoursesSnapshot = await getDocs(enrolledCoursesRef);
+    const enrolledCourses = enrolledCoursesSnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data(),
+      isCreator: false,
+      isEnrolled: true
+    }));
+
+    // Combine and sort by most recent
+    return [...createdCourses, ...enrolledCourses].sort((a, b) => {
+      const dateA = a.enrolledAt?.toDate?.() || a.createdAt?.toDate?.() || new Date();
+      const dateB = b.enrolledAt?.toDate?.() || b.createdAt?.toDate?.() || new Date();
+      return dateB.getTime() - dateA.getTime();
+    });
   } catch (error) {
     console.error('Error fetching user courses:', error);
     throw new Error('Failed to fetch courses');
@@ -371,6 +390,17 @@ export async function enrollInCourse(userId: string, courseId: string) {
       throw new Error('Already enrolled in this course');
     }
     
+    // Get course data first
+    const courseRef = doc(db, 'courses', courseId);
+    const courseDoc = await getDoc(courseRef);
+    
+    if (!courseDoc.exists()) {
+      throw new Error('Course not found');
+    }
+    
+    const courseData = courseDoc.data();
+    
+    // Create enrollment
     const enrollment: CourseEnrollment = {
       userId,
       courseId,
@@ -386,8 +416,19 @@ export async function enrollInCourse(userId: string, courseId: string) {
         lastAccessDate: new Date()
       }
     };
-    
+
+    // Add to enrollments collection
     await setDoc(enrollmentRef, enrollment);
+    
+    // Add to user's courses subcollection
+    const userCourseRef = doc(db, `users/${userId}/courses/${courseId}`);
+    await setDoc(userCourseRef, {
+      ...courseData,
+      enrolledAt: serverTimestamp(),
+      id: courseId,
+      isEnrolled: true
+    });
+
     return enrollment;
   } catch (error) {
     console.error('Error enrolling in course:', error);
