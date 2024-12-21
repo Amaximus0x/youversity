@@ -10,7 +10,8 @@
     updateModuleProgress, 
     getSharedCourse,
     getEnrollmentProgress,
-    updateEnrollmentQuizResult 
+    updateEnrollmentQuizResult,
+    getEnrollmentStatus
   } from '$lib/firebase';
   import type { FinalCourseStructure, Quiz, QuizQuestion, ModuleProgress, EnrollmentProgress } from '$lib/types/course';
   import { Play, CheckCircle, Circle } from 'lucide-svelte';
@@ -29,6 +30,8 @@
   let quizScore = 0;
   let currentQuiz: Quiz | null = null;
   let quizResults: { [key: string]: boolean } = {};
+  let showProgress = false;
+  let isEnrolled = false;
 
   onMount(async () => {
     try {
@@ -44,26 +47,27 @@
         isCreator = courseDetails.createdBy === $user.uid;
         
         if (!isCreator) {
-          // Load enrollment progress for enrolled users
-          enrollmentProgress = await getEnrollmentProgress($user.uid, courseId);
-          
-          // Initialize module progress from enrollment if it exists
-          if (enrollmentProgress) {
-            moduleProgress = enrollmentProgress.moduleProgress;
+          // Check enrollment status first
+          isEnrolled = await getEnrollmentStatus($user.uid, courseId);
+          if (isEnrolled) {
+            // Only load progress if user is enrolled
+            enrollmentProgress = await getEnrollmentProgress($user.uid, courseId);
+            showProgress = true;
           }
         } else {
           // Load creator's progress
           try {
             const progress = await getCourseProgress($user.uid, courseId);
             moduleProgress = progress?.moduleProgress || [];
+            showProgress = true; // Always show progress for creator
           } catch (err) {
             console.log('No existing progress found:', err);
           }
         }
       }
 
-      // Initialize module progress if not exists
-      if (!moduleProgress.length && courseDetails) {
+      // Initialize module progress if needed
+      if (showProgress && !moduleProgress.length && courseDetails) {
         moduleProgress = Array(courseDetails.Final_Module_Title.length).fill(null);
         if ($user) {
           moduleProgress[0] = {
@@ -167,7 +171,7 @@
       </div>
       
       {#if !isCreator && courseDetails}
-        <CourseActions courseId={courseDetails.id} />
+        <CourseActions {courseId} {isEnrolled} />
       {/if}
     </div>
 
@@ -178,7 +182,7 @@
     </div>
 
     <!-- Progress Section -->
-    {#if $user}
+    {#if showProgress && $user}
     <div class="mb-12">
       <div class="bg-white rounded-lg shadow-md p-6">
         <h3 class="font-semibold text-lg mb-4">Your Progress</h3>
@@ -230,25 +234,29 @@
 
       <!-- Module Content -->
       <div class="lg:col-span-3 space-y-6">
-        <!-- Video Section -->
+        <!-- Video/Quiz Section -->
         <div class="bg-white rounded-lg shadow-md overflow-hidden">
-          <div class="flex-grow relative" style="min-height: 400px;">
-            <iframe
-              src={`https://www.youtube.com/embed/${new URL(courseDetails.Final_Module_YouTube_Video_URL[currentModule]).searchParams.get('v')}?enablejsapi=0&origin=${window.location.origin}`}
-              title={courseDetails.Final_Module_Title[currentModule]}
-              frameborder="0"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowfullscreen
-              loading="lazy"
-              class="absolute inset-0 w-full h-full rounded"
-            ></iframe>
-          </div>
-          <div class="p-4">
-            <h3 class="text-xl font-semibold mb-2">{courseDetails.Final_Module_Title[currentModule]}</h3>
-            <p class="text-[#1E3443]/80">{courseDetails.Final_Module_Objective[currentModule]}</p>
-            <!-- Quiz Section -->
-        {#if courseDetails.Final_Module_Quiz[currentModule]}
-        
+          {#if currentModule >= 0}
+            <div class="flex-grow relative" style="min-height: 400px;">
+              <iframe
+                src={`https://www.youtube.com/embed/${new URL(courseDetails.Final_Module_YouTube_Video_URL[currentModule]).searchParams.get('v')}?enablejsapi=0&origin=${window.location.origin}`}
+                title={courseDetails.Final_Module_Title[currentModule]}
+                frameborder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowfullscreen
+                loading="lazy"
+                class="absolute inset-0 w-full h-full rounded"
+              ></iframe>
+            </div>
+            <div class="p-4">
+              <h3 class="text-xl font-semibold mb-2">{courseDetails.Final_Module_Title[currentModule]}</h3>
+              <p class="text-[#1E3443]/80">{courseDetails.Final_Module_Objective[currentModule]}</p>
+            </div>
+          {/if}
+        </div>
+
+        <!-- Module Quiz Section -->
+        {#if currentModule >= 0 && courseDetails.Final_Module_Quiz[currentModule]?.quiz?.length > 0}
           <h3 class="font-semibold text-lg mb-4">Module Quiz</h3>
           <button
             class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
@@ -264,19 +272,10 @@
           >
             Take Module Quiz
           </button>
-        
-      {/if}
-          </div>
-        </div>
-
-        
-
-        
-
-        
+        {/if}
 
         <!-- Final Quiz Section -->
-        {#if courseDetails.Final_Course_Quiz}
+        {#if courseDetails.Final_Course_Quiz?.quiz?.length > 0 && currentModule >= 0}
           <div class="bg-white rounded-lg shadow-md p-4 mt-8">
             <h2 class="text-2xl font-semibold mb-4">Final Course Quiz</h2>
             <p class="text-gray-600 mb-4">Test your knowledge of the entire course material.</p>

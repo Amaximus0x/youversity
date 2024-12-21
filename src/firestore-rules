@@ -14,7 +14,7 @@ service cloud.firestore {
 
     // Public courses collection
     match /courses/{courseId} {
-      // Allow reading for all users
+      // Allow reading for all authenticated and unauthenticated users
       allow read: if true;
       
       // Allow creation with validation
@@ -24,26 +24,11 @@ service cloud.firestore {
       
       // Allow updates by course creator OR likes/views by any authenticated user
       allow update: if request.auth != null && (
-        // Course creator can update everything
         request.auth.uid == resource.data.createdBy ||
-        
-        // Any authenticated user can update likes and likedBy for public courses
         (
           resource.data.isPublic == true &&
-          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likes', 'likedBy']) &&
-          request.resource.data.createdBy == resource.data.createdBy &&  // Preserve creator
-          request.resource.data.isPublic == resource.data.isPublic &&    // Preserve public status
-          (
-            // Adding like
-            (request.resource.data.likes == resource.data.likes + 1 &&
-             request.resource.data.likedBy.hasAll(resource.data.likedBy) &&
-             request.resource.data.likedBy.size() == resource.data.likedBy.size() + 1 &&
-             request.resource.data.likedBy.hasAll([request.auth.uid])) ||
-            // Removing like
-            (request.resource.data.likes == resource.data.likes - 1 &&
-             resource.data.likedBy.hasAll(request.resource.data.likedBy) &&
-             request.resource.data.likedBy.size() == resource.data.likedBy.size() - 1)
-          )
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likes', 'likedBy', 'views']) &&
+          request.resource.data.createdBy == resource.data.createdBy
         )
       );
       

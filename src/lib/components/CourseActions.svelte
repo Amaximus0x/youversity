@@ -55,7 +55,7 @@
       <span>Bookmarked</span>
     {:else}
       <Bookmark class="w-5 h-5" />
-      <span>Bookmark</span>
+      <span>Make Bookmark</span>
     {/if}
   </button>
 
