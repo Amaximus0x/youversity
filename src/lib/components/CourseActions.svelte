@@ -1,13 +1,24 @@
 <script lang="ts">
   import { user } from '$lib/stores/auth';
-  import { bookmarkCourse, enrollInCourse, getEnrollmentStatus } from '$lib/firebase';
+  import { bookmarkCourse, enrollInCourse, getEnrollmentStatus, isBookmarked as checkBookmarkStatus } from '$lib/firebase';
   import { Bookmark, BookmarkCheck, GraduationCap } from 'lucide-svelte';
   import { onMount } from 'svelte';
-    import { goto } from '$app/navigation';
+  import { goto } from '$app/navigation';
 
   export let courseId: string;
   export let isBookmarked = false;
   export let isEnrolled = false;
+
+  onMount(async () => {
+    if ($user) {
+      try {
+        isBookmarked = await checkBookmarkStatus($user.uid, courseId);
+        isEnrolled = await getEnrollmentStatus($user.uid, courseId);
+      } catch (error) {
+        console.error('Error checking bookmark status:', error);
+      }
+    }
+  });
 
   async function toggleBookmark() {
     if (!$user) {
@@ -37,12 +48,6 @@
       console.error('Error enrolling in course:', error);
     }
   }
-
-  onMount(async () => {
-    if ($user) {
-      isEnrolled = await getEnrollmentStatus($user.uid, courseId);
-    }
-  });
 </script>
 
 <div class="flex gap-2">

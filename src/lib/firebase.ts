@@ -1,7 +1,8 @@
 import { initializeApp } from 'firebase/app';
-import { getFirestore, collection, addDoc, query, where, getDocs, doc, getDoc, updateDoc, setDoc, serverTimestamp, orderBy, limit } from 'firebase/firestore';
+import { getFirestore, collection, addDoc, query, where, getDocs, doc, getDoc, updateDoc, setDoc, serverTimestamp, orderBy, limit, deleteDoc } from 'firebase/firestore';
 import { getAuth, setPersistence, browserLocalPersistence, signInWithPopup, GoogleAuthProvider, signOut } from 'firebase/auth';
 import { getStorage } from 'firebase/storage';
+import type { CourseEnrollment, EnrollmentProgress, FinalCourseStructure, ModuleProgress } from './types/course';
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -557,5 +558,19 @@ export async function getBookmarkedCourses(userId: string): Promise<(FinalCourse
   } catch (error) {
     console.error('Error getting bookmarked courses:', error);
     throw error;
+  }
+}
+
+
+// Check if a course is bookmarked by a user
+export async function isBookmarked(userId: string, courseId: string): Promise<boolean> {
+  try {
+    const bookmarkId = `${userId}_${courseId}`;
+    const bookmarkRef = doc(db, 'bookmarks', bookmarkId);
+    const bookmarkDoc = await getDoc(bookmarkRef);
+    return bookmarkDoc.exists();
+  } catch (error) {
+    console.error('Error checking bookmark status:', error);
+    return false;
   }
 }
