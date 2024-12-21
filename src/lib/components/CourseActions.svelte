@@ -3,6 +3,7 @@
   import { bookmarkCourse, enrollInCourse, getEnrollmentStatus } from '$lib/firebase';
   import { Bookmark, BookmarkCheck, GraduationCap } from 'lucide-svelte';
   import { onMount } from 'svelte';
+    import { goto } from '$app/navigation';
 
   export let courseId: string;
   export let isBookmarked = false;
