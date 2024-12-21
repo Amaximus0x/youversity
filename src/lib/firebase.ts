@@ -408,7 +408,6 @@ export async function getEnrollmentStatus(userId: string, courseId: string) {
 
 export async function getUserBookmarks(userId: string) {
   try {
-    // Simpler query without ordering first
     const q = query(
       collection(db, 'bookmarks'),
       where('userId', '==', userId),
@@ -418,15 +417,15 @@ export async function getUserBookmarks(userId: string) {
     
     // Get all bookmarked courses
     const bookmarkedCourses = await Promise.all(
-      querySnapshot.docs.map(async (doc) => {
-        const courseRef = doc(db, 'courses', doc.data().courseId);
+      querySnapshot.docs.map(async (bookmark) => {
+        const courseRef = doc(db, 'courses', bookmark.data().courseId);
         const courseDoc = await getDoc(courseRef);
         if (courseDoc.exists()) {
           const courseData = courseDoc.data();
           return {
             id: courseDoc.id,
             ...courseData,
-            bookmarkedAt: doc.data().createdAt?.toDate?.() || null
+            bookmarkedAt: bookmark.data().createdAt?.toDate?.() || null
           };
         }
         return null;

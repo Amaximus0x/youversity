@@ -8,7 +8,8 @@
   export let loading = false;
   export let error: string | null = null;
   export let onShare: (courseId: string) => void;
-  export let onTogglePrivacy: (courseId: string, isPublic: boolean) => void;
+  export let onTogglePrivacy: ((courseId: string, isPublic: boolean) => void) | undefined = undefined;
+  export let showPrivacyToggle = true;
 
   function handleCourseClick(courseId: string) {
     goto(`/course/${courseId}`);

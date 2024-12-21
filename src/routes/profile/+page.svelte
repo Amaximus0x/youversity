@@ -249,6 +249,7 @@
       loading={bookmarksLoading}
       error={bookmarksError}
       onShare={handleShareCourse}
+      onTogglePrivacy={handleTogglePrivacy}
       showPrivacyToggle={false}
     />
   </div>
