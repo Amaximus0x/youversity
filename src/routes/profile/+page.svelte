@@ -2,7 +2,7 @@
   import { page } from '$app/stores';
   import type { PageData } from './$types';
   import { user } from '$lib/stores/auth';
-  import { getUserCourses, toggleCoursePrivacy } from '$lib/firebase';
+  import { getUserCourses, toggleCoursePrivacy, getUserBookmarks } from '$lib/firebase';
   import type { FinalCourseStructure } from '$lib/types/course';
   import CourseList from '$lib/components/CourseList.svelte';
   import ShareModal from '$lib/components/ShareModal.svelte';
@@ -15,9 +15,13 @@
   export let data: PageData;
   
   let userCourses: (FinalCourseStructure & { id: string })[] = [];
+  let bookmarkedCourses: (FinalCourseStructure & { id: string })[] = [];
   let loading = false;
+  let bookmarksLoading = false;
   let error: string | null = null;
+  let bookmarksError: string | null = null;
   let filteredCourses = userCourses;
+  let filteredBookmarks = bookmarkedCourses;
   let showShareModal = false;
   let selectedCourseId = '';
   let showEditModal = false;
@@ -31,6 +35,7 @@
 
   $: if ($user) {
     loadUserCourses();
+    loadBookmarkedCourses();
   }
 
   async function loadUserCourses() {
@@ -44,6 +49,22 @@
       error = err.message;
     } finally {
       loading = false;
+    }
+  }
+
+  async function loadBookmarkedCourses() {
+    if (!$user) return;
+    
+    try {
+      bookmarksLoading = true;
+      bookmarksError = null;
+      bookmarkedCourses = await getUserBookmarks($user.uid);
+      filteredBookmarks = [...bookmarkedCourses];
+    } catch (err) {
+      console.error('Error loading bookmarked courses:', err);
+      bookmarksError = err.message;
+    } finally {
+      bookmarksLoading = false;
     }
   }
 
@@ -74,6 +95,30 @@
     }
     
     filteredCourses = sortedCourses;
+  }
+
+  function handleBookmarksFilterChange(event: any) {
+    const filterValue = event.detail;
+    let sortedCourses = [...bookmarkedCourses];
+    
+    switch (filterValue) {
+      case 'name-asc':
+        sortedCourses.sort((a, b) => a.Final_Course_Title.localeCompare(b.Final_Course_Title));
+        break;
+      case 'name-desc':
+        sortedCourses.sort((a, b) => b.Final_Course_Title.localeCompare(a.Final_Course_Title));
+        break;
+      case 'date-new':
+        sortedCourses.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        break;
+      case 'date-old':
+        sortedCourses.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+        break;
+      default:
+        sortedCourses = [...bookmarkedCourses];
+    }
+    
+    filteredBookmarks = sortedCourses;
   }
 
   async function handleTogglePrivacy(courseId: string, isPublic: boolean) {
@@ -190,6 +235,21 @@
       {error}
       onShare={handleShareCourse}
       onTogglePrivacy={handleTogglePrivacy}
+    />
+  </div>
+
+  <div class="mb-12">
+    <div class="flex justify-between items-center mb-6">
+      <h2 class="text-2xl font-bold text-[#2A4D61]">Bookmarked Courses</h2>
+      <CourseFilter on:filterChange={handleBookmarksFilterChange} />
+    </div>
+    
+    <CourseList 
+      courses={filteredBookmarks}
+      loading={bookmarksLoading}
+      error={bookmarksError}
+      onShare={handleShareCourse}
+      showPrivacyToggle={false}
     />
   </div>
 </div>

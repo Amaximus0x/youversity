@@ -408,9 +408,11 @@ export async function getEnrollmentStatus(userId: string, courseId: string) {
 
 export async function getUserBookmarks(userId: string) {
   try {
+    // Simpler query without ordering first
     const q = query(
       collection(db, 'bookmarks'),
-      where('userId', '==', userId)
+      where('userId', '==', userId),
+      orderBy('createdAt', 'desc')
     );
     const querySnapshot = await getDocs(q);
     
@@ -419,17 +421,28 @@ export async function getUserBookmarks(userId: string) {
       querySnapshot.docs.map(async (doc) => {
         const courseRef = doc(db, 'courses', doc.data().courseId);
         const courseDoc = await getDoc(courseRef);
-        return courseDoc.exists() ? {
-          id: courseDoc.id,
-          ...courseDoc.data()
-        } : null;
+        if (courseDoc.exists()) {
+          const courseData = courseDoc.data();
+          return {
+            id: courseDoc.id,
+            ...courseData,
+            bookmarkedAt: doc.data().createdAt?.toDate?.() || null
+          };
+        }
+        return null;
       })
     );
     
-    return bookmarkedCourses.filter(course => course !== null);
+    // Sort in memory instead
+    return bookmarkedCourses
+      .filter(course => course !== null)
+      .sort((a, b) => {
+        if (!a.bookmarkedAt || !b.bookmarkedAt) return 0;
+        return b.bookmarkedAt.getTime() - a.bookmarkedAt.getTime();
+      });
   } catch (error) {
     console.error('Error fetching bookmarks:', error);
-    throw new Error('Failed to fetch bookmarks');
+    throw error;
   }
 }
 
@@ -516,6 +529,34 @@ export async function updateEnrollmentQuizResult(
     return updateData;
   } catch (error) {
     console.error('Error updating quiz result:', error);
+    throw error;
+  }
+}
+
+export async function getBookmarkedCourses(userId: string): Promise<(FinalCourseStructure & { id: string })[]> {
+  try {
+    const userBookmarksRef = collection(db, 'users', userId, 'bookmarks');
+    const bookmarksSnapshot = await getDocs(userBookmarksRef);
+    
+    const bookmarkedCourses = await Promise.all(
+      bookmarksSnapshot.docs.map(async (doc) => {
+        const courseRef = doc.data().courseRef;
+        const courseDoc = await getDoc(courseRef);
+        if (courseDoc.exists()) {
+          return {
+            ...(courseDoc.data() as FinalCourseStructure),
+            id: courseDoc.id
+          };
+        }
+        return null;
+      })
+    );
+
+    return bookmarkedCourses.filter((course): course is FinalCourseStructure & { id: string } => 
+      course !== null
+    );
+  } catch (error) {
+    console.error('Error getting bookmarked courses:', error);
     throw error;
   }
 }

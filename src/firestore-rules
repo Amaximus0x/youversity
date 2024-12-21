@@ -51,12 +51,11 @@ service cloud.firestore {
     
     // Bookmarks collection
     match /bookmarks/{bookmarkId} {
-      allow read: if request.auth != null && 
-        bookmarkId.matches(request.auth.uid + '_.*');
+      allow read: if request.auth != null;
       allow create: if request.auth != null && 
         bookmarkId == request.auth.uid + '_' + request.resource.data.courseId;
       allow delete: if request.auth != null && 
-        bookmarkId.matches(request.auth.uid + '_.*');
+        bookmarkId.startsWith(request.auth.uid + '_');
     }
     
     // Enrollments collection

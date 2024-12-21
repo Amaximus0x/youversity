@@ -46,11 +46,15 @@
       if ($user) {
         isCreator = courseDetails.createdBy === $user.uid;
         
+        // Check if user is creator or if course is public
+        if (!isCreator && !courseDetails.isPublic) {
+          throw new Error('You do not have access to this course');
+        }
+        
         if (!isCreator) {
-          // Check enrollment status first
+          // Check enrollment status for non-creators
           isEnrolled = await getEnrollmentStatus($user.uid, courseId);
           if (isEnrolled) {
-            // Only load progress if user is enrolled
             enrollmentProgress = await getEnrollmentProgress($user.uid, courseId);
             showProgress = true;
           }
@@ -59,10 +63,15 @@
           try {
             const progress = await getCourseProgress($user.uid, courseId);
             moduleProgress = progress?.moduleProgress || [];
-            showProgress = true; // Always show progress for creator
+            showProgress = true;
           } catch (err) {
             console.log('No existing progress found:', err);
           }
+        }
+      } else {
+        // For non-authenticated users, only allow access to public courses
+        if (!courseDetails.isPublic) {
+          throw new Error('Please login to access this course');
         }
       }
 
@@ -171,7 +180,10 @@
       </div>
       
       {#if !isCreator && courseDetails}
-        <CourseActions {courseId} {isEnrolled} />
+        <CourseActions 
+          courseId={$page.params.id} 
+          {isEnrolled} 
+        />
       {/if}
     </div>
 
