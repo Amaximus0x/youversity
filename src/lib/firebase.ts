@@ -106,19 +106,31 @@ export async function getUserCourses(userId: string) {
     // Get enrolled courses from user's subcollection
     const enrolledCoursesRef = collection(db, `users/${userId}/courses`);
     const enrolledCoursesSnapshot = await getDocs(enrolledCoursesRef);
-    const enrolledCourses = enrolledCoursesSnapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data(),
-      isCreator: false,
-      isEnrolled: true
-    }));
+    const enrolledCourses = enrolledCoursesSnapshot.docs
+      .map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        isCreator: false,
+        isEnrolled: true
+      }))
+      // Filter out courses that the user has created
+      .filter(enrolledCourse => 
+        !createdCourses.some(createdCourse => createdCourse.id === enrolledCourse.id)
+      );
 
     // Combine and sort by most recent
-    return [...createdCourses, ...enrolledCourses].sort((a, b) => {
+    const allCourses = [...createdCourses, ...enrolledCourses].sort((a, b) => {
       const dateA = a.enrolledAt?.toDate?.() || a.createdAt?.toDate?.() || new Date();
       const dateB = b.enrolledAt?.toDate?.() || b.createdAt?.toDate?.() || new Date();
       return dateB.getTime() - dateA.getTime();
     });
+
+    // Remove any duplicates based on course ID
+    const uniqueCourses = Array.from(
+      new Map(allCourses.map(course => [course.id, course])).values()
+    );
+
+    return uniqueCourses;
   } catch (error) {
     console.error('Error fetching user courses:', error);
     throw new Error('Failed to fetch courses');
