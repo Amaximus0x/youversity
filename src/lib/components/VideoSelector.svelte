@@ -18,7 +18,7 @@
     export let moduleVideos: VideoItem[][];
     export let selectedVideos: number[];
     export let error: string | null;
-    export let loading = false;
+    export const loading = (false);
   
     let sliderRefs: HTMLDivElement[] = [];
     let showLeftArrows: boolean[] = [];
@@ -324,6 +324,24 @@
         loadingState.set(null);
       }
     }
+
+    let loadingModules: Record<number, boolean> = {};
+
+    async function handleRegenerateModuleVideos(moduleIndex: number) {
+      try {
+        error = null;
+        loadingModules[moduleIndex] = true;
+        const searchPrompt = courseStructure.OG_Module_YouTube_Search_Prompt[moduleIndex];
+        await fetchVideosForModule(searchPrompt, moduleIndex);
+        selectedVideos[moduleIndex] = 0;
+        selectedVideos = [...selectedVideos];
+      } catch (err) {
+        console.error(`Error regenerating videos for module ${moduleIndex + 1}:`, err);
+        error = `Failed to regenerate videos for module ${moduleIndex + 1}`;
+      } finally {
+        loadingModules[moduleIndex] = false;
+      }
+    }
 </script>
   
 <div class="container mx-auto px-4 py-8">
@@ -339,10 +357,44 @@
           <h2 class="text-xl font-semibold text-[#2A4D61]">
             Module {moduleIndex + 1}: {moduleTitle}
           </h2>
+          <button
+            class="p-2 hover:bg-gray-100 rounded-full transition-colors duration-200"
+            on:click={() => handleRegenerateModuleVideos(moduleIndex)}
+            disabled={loadingModules[moduleIndex]}
+            title="Regenerate module videos"
+          >
+            <svg 
+              class="w-5 h-5 text-[#2A4D61] {loadingModules[moduleIndex] ? 'animate-spin' : ''}" 
+              viewBox="0 0 24 24" 
+              fill="none" 
+              stroke="currentColor"
+            >
+              <path 
+                stroke-linecap="round" 
+                stroke-linejoin="round" 
+                stroke-width="2" 
+                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" 
+              />
+            </svg>
+          </button>
         </div>
 
-        {#if loading}
-          <div class="text-center py-4">Loading videos...</div>
+        {#if loadingModules[moduleIndex]}
+          <div class="relative">
+            <div class="flex gap-4 pb-4 px-2 overflow-hidden">
+              {#each Array(3) as _, i}
+                <div class="relative flex-shrink-0" style="width: calc((100% - 4rem) / 3.5)">
+                  <div class="w-full rounded-lg bg-gray-100 animate-pulse">
+                    <div class="aspect-video bg-gray-200 rounded-t-lg"></div>
+                    <div class="p-4">
+                      <div class="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                      <div class="h-3 bg-gray-200 rounded w-1/4"></div>
+                    </div>
+                  </div>
+                </div>
+              {/each}
+            </div>
+          </div>
         {:else if !moduleVideos[moduleIndex]?.length}
           <div class="text-center py-4">No videos available for this module.</div>
         {:else}
