@@ -31,6 +31,7 @@
       isBookmarked = result.bookmarked;
     } catch (error) {
       console.error('Error toggling bookmark:', error);
+      // Optionally show error to user via toast/notification
     }
   }
 

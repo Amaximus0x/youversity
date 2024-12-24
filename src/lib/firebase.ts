@@ -369,21 +369,57 @@ export async function likeCourse(courseId: string, userId: string) {
 
 export async function bookmarkCourse(userId: string, courseId: string) {
   try {
+    if (!userId || !courseId) {
+      throw new Error('User ID and Course ID are required');
+    }
+
     const bookmarkId = `${userId}_${courseId}`;
     const bookmarkRef = doc(db, 'bookmarks', bookmarkId);
     const bookmarkDoc = await getDoc(bookmarkRef);
     
     if (bookmarkDoc.exists()) {
+      // Verify the bookmark belongs to the user
+      const bookmarkData = bookmarkDoc.data();
+      if (bookmarkData.userId !== userId) {
+        throw new Error('Unauthorized to modify this bookmark');
+      }
+
       // Remove bookmark if it exists
       await deleteDoc(bookmarkRef);
+      
+      // Also remove from user's bookmarks subcollection
+      const userBookmarkRef = doc(db, `users/${userId}/bookmarks/${courseId}`);
+      try {
+        await deleteDoc(userBookmarkRef);
+      } catch (error) {
+        console.error('Error deleting from user bookmarks:', error);
+        // Continue even if subcollection delete fails
+      }
+      
       return { bookmarked: false };
     } else {
-      // Add bookmark
+      // Get course reference first
+      const courseRef = doc(db, 'courses', courseId);
+      const courseDoc = await getDoc(courseRef);
+      
+      if (!courseDoc.exists()) {
+        throw new Error('Course not found');
+      }
+      
+      // Add to main bookmarks collection
       await setDoc(bookmarkRef, {
         userId,
         courseId,
         createdAt: serverTimestamp()
       });
+      
+      // Add to user's bookmarks subcollection
+      const userBookmarkRef = doc(db, `users/${userId}/bookmarks/${courseId}`);
+      await setDoc(userBookmarkRef, {
+        courseRef: courseRef,
+        createdAt: serverTimestamp()
+      });
+      
       return { bookmarked: true };
     }
   } catch (error) {
