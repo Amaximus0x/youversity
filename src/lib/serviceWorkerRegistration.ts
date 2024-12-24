@@ -5,6 +5,18 @@ export function register() {
         .register('/service-worker.js')
         .then(registration => {
           console.log('ServiceWorker registration successful');
+          
+          // Handle updates
+          registration.addEventListener('updatefound', () => {
+            const newWorker = registration.installing;
+            if (newWorker) {
+              newWorker.addEventListener('statechange', () => {
+                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                  console.log('New service worker available');
+                }
+              });
+            }
+          });
         })
         .catch(error => {
           console.error('ServiceWorker registration failed:', error);
@@ -20,7 +32,7 @@ export function unregister() {
         registration.unregister();
       })
       .catch(error => {
-        console.error(error.message);
+        console.error('Service worker unregister failed:', error);
       });
   }
 } 

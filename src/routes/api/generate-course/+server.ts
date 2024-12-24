@@ -9,7 +9,7 @@ export const POST: RequestHandler = async ({ request }) => {
   try {
     const { courseInput } = await request.json();
 
-    if (!courseInput) {
+    if (!courseInput?.trim()) {
       return json({ 
         success: false, 
         error: 'Course input is required' 
@@ -18,15 +18,40 @@ export const POST: RequestHandler = async ({ request }) => {
 
     try {
       const courseStructure = await generateCourse(courseInput);
+      
+      // Validate course structure
+      if (!courseStructure || 
+          !courseStructure.OG_Course_Title || 
+          !courseStructure.OG_Course_Objective || 
+          !Array.isArray(courseStructure.OG_Module_Title) ||
+          !Array.isArray(courseStructure.OG_Module_YouTube_Search_Prompt) ||
+          courseStructure.OG_Module_Title.length !== 10 ||
+          courseStructure.OG_Module_YouTube_Search_Prompt.length !== 10) {
+        console.error('Invalid course structure:', courseStructure);
+        return json({ 
+          success: false, 
+          error: 'Failed to generate a valid course structure' 
+        }, { status: 500 });
+      }
+
       return json({ 
         success: true, 
         courseStructure 
       });
-    } catch (error) {
+
+    } catch (error: any) {
       console.error('Error generating course:', error);
+      
+      if (error.response?.data?.error) {
+        return json({ 
+          success: false, 
+          error: `OpenAI API error: ${error.response.data.error.message}` 
+        }, { status: 500 });
+      }
+
       return json({ 
         success: false, 
-        error: error.message 
+        error: error.message || 'Failed to generate course' 
       }, { status: 500 });
     }
   } catch (error) {
@@ -39,94 +64,81 @@ export const POST: RequestHandler = async ({ request }) => {
 };
 
 async function generateCourse(User_Course_Input: string): Promise<CourseStructure> {
-  const prompt = `Build a 10 module course plan based on the input below, with course title and individual module titles. For each module, include one sentence search prompt for youtube to find the best video match for that module. Do not include "Search Prompt:" before each search prompt.
+  const prompt = `Create a structured 10-module course plan based on this objective: "${User_Course_Input}"
 
 Please format your response exactly as follows:
-
-Course Title: [Course title]
-ourse Objective: [Course objective]
-Module 1 Title: [Clear, concise title]
-earch Prompt: [YouTube search query]
-Module 2 Title: [Clear, concise title]
-earch Prompt: [YouTube search query]
-[Continue this pattern for all 10 modules]
-Course objective: ${User_Course_Input}`;
+Course Title: [The main course title]
+Course Objective: [A clear course objective]
+Module 1 Title: [First module title]
+Module 1 Search Prompt: [YouTube search query for module 1]
+Module 2 Title: [Second module title]
+Module 2 Search Prompt: [YouTube search query for module 2]
+[Continue this exact pattern for all 10 modules]`;
 
   try {
     console.log('Sending request to OpenAI API');
-    const response = await axios.post('https://api.openai.com/v1/chat/completions', 
+    const response = await axios.post(
+      'https://api.openai.com/v1/chat/completions',
       {
         model: OPENAI_CONFIG.model,
         messages: [{ role: 'user', content: prompt }],
         temperature: OPENAI_CONFIG.temperature,
+        max_tokens: 2000
       },
       {
         headers: {
           'Authorization': `Bearer ${env.OPENAI_API_KEY}`,
           'Content-Type': 'application/json',
         },
-    });
+      }
+    );
 
-    console.log('Received response from OpenAI API');
-    console.log('Response:', response.data);
     const content = response.data.choices[0].message.content;
-   const lines = content.split('\n').filter(line => line.trim() !== '');
+    const lines = content.split('\n').filter(line => line.trim() !== '');
+    
     const courseStructure: CourseStructure = {
-     OG_Course_Title: '',
-     OG_Course_Objective: '',
-     OG_Module_Title: [],
-     OG_Module_YouTube_Search_Prompt: [],
-   };
-    let currentModule = -1; // Track which module we're processing
+      OG_Course_Title: '',
+      OG_Course_Objective: '',
+      OG_Module_Title: [],
+      OG_Module_YouTube_Search_Prompt: []
+    };
+
+    // First, get course title and objective
     for (let i = 0; i < lines.length; i++) {
-     const line = lines[i].trim();
-      // Parse course title and objective
-     if (line.startsWith('Course Title:')) {
-       courseStructure.OG_Course_Title = line.replace('Course Title:', '').trim();
-       continue;
-     }
-     if (line.startsWith('Course Objective:')) {
-       courseStructure.OG_Course_Objective = line.replace('Course Objective:', '').trim();
-       continue;
-     }
-      // Parse module titles and search prompts
-     if (line.match(/^Module \d+ Title:/)) {
-       currentModule++;
-       const title = line.replace(/^Module \d+ Title:/, '').trim();
-       if (title && !title.toLowerCase().includes('module') && !title.toLowerCase().includes('search prompt')) {
-         courseStructure.OG_Module_Title[currentModule] = title;
-       }
-     } else if (line.startsWith('Search Prompt:')) {
-       const prompt = line
-         .replace('Search Prompt:', '')
-         .trim()
-         .replace(/['"\\]/g, ''); // Remove quotes and backslashes
-       if (prompt && !prompt.toLowerCase().includes('module') && !prompt.toLowerCase().includes('title')) {
-         courseStructure.OG_Module_YouTube_Search_Prompt[currentModule] = prompt;
-       }
-     }
-   }
-    // Validate the course structure
-   if (!courseStructure.OG_Course_Title || 
-       !courseStructure.OG_Course_Objective || 
-       courseStructure.OG_Module_Title.length === 0 ||
-       courseStructure.OG_Module_Title.length !== courseStructure.OG_Module_YouTube_Search_Prompt.length) {
-     console.error('Invalid course structure:', courseStructure);
-     throw new Error('Invalid course structure generated');
-   }
-    // Remove any null/undefined entries and ensure arrays are the same length
-   courseStructure.OG_Module_Title = courseStructure.OG_Module_Title.filter(Boolean);
-   courseStructure.OG_Module_YouTube_Search_Prompt = courseStructure.OG_Module_YouTube_Search_Prompt.filter(Boolean);
-    // Ensure we have exactly 10 modules
-   if (courseStructure.OG_Module_Title.length !== 10) {
-     throw new Error('Invalid number of modules generated');
-   }
+      const line = lines[i].trim();
+      
+      if (line.startsWith('Course Title:')) {
+        courseStructure.OG_Course_Title = line.replace('Course Title:', '').trim();
+      } else if (line.startsWith('Course Objective:')) {
+        courseStructure.OG_Course_Objective = line.replace('Course Objective:', '').trim();
+      } else if (line.match(/^Module \d+ Title:/)) {
+        // Process module title and its corresponding search prompt
+        const moduleTitle = line.replace(/^Module \d+ Title:/, '').trim();
+        const searchPrompt = lines[i + 1]
+          .replace(/^Module \d+ Search Prompt:/, '')
+          .replace(/^Search Prompt:/, '')
+          .replace(/["\\\n]/g, '') // Remove quotes and other special characters
+          .trim();
+        
+        courseStructure.OG_Module_Title.push(moduleTitle);
+        courseStructure.OG_Module_YouTube_Search_Prompt.push(searchPrompt);
+        
+        // Skip the next line since we've already processed it
+        i++;
+      }
+    }
+
+    // Validate the structure before returning
+    if (!courseStructure.OG_Course_Title || 
+        !courseStructure.OG_Course_Objective || 
+        courseStructure.OG_Module_Title.length !== 10 ||
+        courseStructure.OG_Module_YouTube_Search_Prompt.length !== 10) {
+      throw new Error('Invalid course structure generated');
+    }
+
     return courseStructure;
- } catch (error) {
-   console.error('Error in generateCourse:', error);
-   if (error.response) {
-     console.error('OpenAI API response:', error.response.data);
-   }
-   throw new Error(`Failed to generate course: ${error.message}`);
- }
+  } catch (error) {
+    console.error('Error in generateCourse:', error);
+    throw error;
+  }
 }
