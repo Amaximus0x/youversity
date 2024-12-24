@@ -1,8 +1,6 @@
 const CACHE_NAME = 'youversity-cache-v1';
 const STATIC_ASSETS = [
   '/',
-  '/app.css',
-  '/app.js',
   '/favicon.png',
   '/google-icon.svg'
 ];
@@ -13,15 +11,12 @@ function isRequestCacheable(request) {
     const url = new URL(request.url);
     return request.method === 'GET' && 
            (url.protocol === 'http:' || url.protocol === 'https:') &&
-           !url.pathname.startsWith('/api/');
+           !url.pathname.startsWith('/api/') &&
+           !url.protocol.startsWith('chrome-extension') &&
+           !(self.location.hostname === 'localhost' && url.pathname.match(/\.(js|css)$/));
   } catch {
     return false;
   }
-}
-
-// Helper function to get full URL for static assets
-function getAssetUrl(path) {
-  return new URL(path, self.location.origin).href;
 }
 
 // Install event - cache static assets
@@ -30,11 +25,12 @@ self.addEventListener('install', (event) => {
     caches.open(CACHE_NAME).then((cache) => {
       return Promise.all(
         STATIC_ASSETS.map(path => {
-          const url = getAssetUrl(path);
-          return fetch(url)
+          const url = new URL(path, self.location.origin).href;
+          return fetch(url, { cache: 'reload' })
             .then(response => {
               if (!response.ok) {
-                throw new Error(`Failed to fetch ${url}`);
+                console.warn(`Failed to fetch ${path}: ${response.status} ${response.statusText}`);
+                return;
               }
               return cache.put(path, response);
             })
@@ -45,6 +41,34 @@ self.addEventListener('install', (event) => {
         })
       );
     })
+  );
+});
+
+// Fetch event - serve from cache, then network
+self.addEventListener('fetch', (event) => {
+  if (!isRequestCacheable(event.request)) {
+    return;
+  }
+
+  event.respondWith(
+    caches.match(event.request)
+      .then((response) => {
+        if (response) {
+          return response;
+        }
+
+        return fetch(event.request.clone()).then((response) => {
+          if (!response || response.status !== 200) {
+            return response;
+          }
+
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(event.request, response.clone());
+          });
+
+          return response;
+        });
+      })
   );
 });
 
@@ -59,42 +83,4 @@ self.addEventListener('activate', (event) => {
       );
     })
   );
-});
-
-// Fetch event - serve from cache, then network
-self.addEventListener('fetch', (event) => {
-  // Skip unsupported requests early
-  if (!isRequestCacheable(event.request)) {
-    return;
-  }
-
-  event.respondWith(
-    caches.match(event.request).then((response) => {
-      if (response) {
-        return response;
-      }
-
-      const fetchRequest = event.request.clone();
-
-      return fetch(fetchRequest)
-        .then((response) => {
-          if (!response || response.status !== 200 || response.type !== 'basic') {
-            return response;
-          }
-
-          const responseToCache = response.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, responseToCache);
-          });
-
-          return response;
-        })
-        .catch(() => {
-          return new Response('Network request failed', {
-            status: 404,
-            statusText: 'Not Found'
-          });
-        });
-    })
-  );
-});
+}); 
