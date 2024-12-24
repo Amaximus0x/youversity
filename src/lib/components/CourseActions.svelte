@@ -1,22 +1,32 @@
 <script lang="ts">
   import { user } from '$lib/stores/auth';
   import { bookmarkCourse, enrollInCourse, getEnrollmentStatus, isBookmarked as checkBookmarkStatus } from '$lib/firebase';
-  import { Bookmark, BookmarkCheck, GraduationCap } from 'lucide-svelte';
+  import { Bookmark, BookmarkCheck, GraduationCap, Loader2 } from 'lucide-svelte';
   import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
 
   export let courseId: string;
   export let isBookmarked = false;
   export let isEnrolled = false;
+  
+  let isLoading = true;
 
   onMount(async () => {
     if ($user) {
       try {
-        isBookmarked = await checkBookmarkStatus($user.uid, courseId);
-        isEnrolled = await getEnrollmentStatus($user.uid, courseId);
+        const [bookmarkStatus, enrollmentStatus] = await Promise.all([
+          checkBookmarkStatus($user.uid, courseId),
+          getEnrollmentStatus($user.uid, courseId)
+        ]);
+        isBookmarked = bookmarkStatus;
+        isEnrolled = enrollmentStatus;
       } catch (error) {
-        console.error('Error checking bookmark status:', error);
+        console.error('Error checking status:', error);
+      } finally {
+        isLoading = false;
       }
+    } else {
+      isLoading = false;
     }
   });
 
@@ -27,11 +37,13 @@
     }
     
     try {
+      isLoading = true;
       const result = await bookmarkCourse($user.uid, courseId);
       isBookmarked = result.bookmarked;
     } catch (error) {
       console.error('Error toggling bookmark:', error);
-      // Optionally show error to user via toast/notification
+    } finally {
+      isLoading = false;
     }
   }
 
@@ -53,15 +65,23 @@
 
 <div class="flex gap-2">
   <button
-    class="flex items-center gap-2 px-4 py-2 rounded-lg border hover:bg-gray-50"
+    class="flex items-center gap-2 px-4 py-2 rounded-lg border hover:bg-gray-50 transition-all duration-200 relative {isLoading ? 'opacity-50' : ''}"
     on:click={toggleBookmark}
+    disabled={isLoading}
   >
-    {#if isBookmarked}
-      <BookmarkCheck class="w-5 h-5 text-blue-600" />
-      <span>Bookmarked</span>
+    {#if isLoading}
+      <Loader2 class="w-5 h-5 animate-spin" />
+      <span>Loading...</span>
+    {:else if isBookmarked}
+      <div class="transition-opacity duration-200">
+        <BookmarkCheck class="w-5 h-5 text-blue-600" />
+        <span>Bookmarked</span>
+      </div>
     {:else}
-      <Bookmark class="w-5 h-5" />
-      <span>Make Bookmark</span>
+      <div class="transition-opacity duration-200">
+        <Bookmark class="w-5 h-5" />
+        <span>Make Bookmark</span>
+      </div>
     {/if}
   </button>
 
@@ -83,3 +103,13 @@
     </button>
   {/if}
 </div>
+
+<style>
+  .transition-all {
+    transition: all 0.2s ease-in-out;
+  }
+  
+  button:disabled {
+    cursor: not-allowed;
+  }
+</style>
