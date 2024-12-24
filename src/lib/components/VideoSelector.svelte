@@ -331,10 +331,57 @@
       try {
         error = null;
         loadingModules[moduleIndex] = true;
-        const searchPrompt = courseStructure.OG_Module_YouTube_Search_Prompt[moduleIndex];
-        await fetchVideosForModule(searchPrompt, moduleIndex);
-        selectedVideos[moduleIndex] = 0;
-        selectedVideos = [...selectedVideos];
+        
+        // Get the base search prompt
+        const basePrompt = courseStructure.OG_Module_YouTube_Search_Prompt[moduleIndex];
+        const moduleTitle = courseStructure.OG_Module_Title[moduleIndex];
+        
+        // Create a more diverse search prompt
+        const searchVariations = [
+          basePrompt,
+          `${moduleTitle} tutorial`,
+          `learn ${moduleTitle} guide`,
+          `${moduleTitle} explained in detail`,
+          `${basePrompt} advanced concepts`
+        ];
+        
+        // Try different search variations until we get different videos
+        for (let i = 0; i < searchVariations.length; i++) {
+          const searchPrompt = searchVariations[i];
+          
+          // Keep track of current video IDs to ensure we get different ones
+          const currentVideoIds = new Set(
+            moduleVideos[moduleIndex]?.map(v => v.videoId) || []
+          );
+          
+          // Add diversity parameter to the fetch URL
+          const response = await fetch(
+            `/api/search-videos?query=${encodeURIComponent(searchPrompt)}&moduleTitle=${encodeURIComponent(moduleTitle)}&moduleIndex=${moduleIndex}&diversity=${i}&excludeIds=${Array.from(currentVideoIds).join(',')}`,
+            {
+              headers: {
+                'Accept': 'application/json',
+                'Cross-Origin-Opener-Policy': 'same-origin'
+              }
+            }
+          );
+
+          if (!response.ok) continue;
+          
+          const data = await response.json();
+          
+          // Check if we got different videos
+          const hasNewVideos = data.videos.some(
+            (v: VideoItem) => !currentVideoIds.has(v.videoId)
+          );
+          
+          if (hasNewVideos) {
+            moduleVideos[moduleIndex] = data.videos;
+            moduleVideos = [...moduleVideos];
+            selectedVideos[moduleIndex] = 0;
+            selectedVideos = [...selectedVideos];
+            break;
+          }
+        }
       } catch (err) {
         console.error(`Error regenerating videos for module ${moduleIndex + 1}:`, err);
         error = `Failed to regenerate videos for module ${moduleIndex + 1}`;
