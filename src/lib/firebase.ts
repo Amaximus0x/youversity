@@ -483,13 +483,12 @@ export async function enrollInCourse(userId: string, courseId: string) {
 
 export async function getEnrollmentStatus(userId: string, courseId: string) {
   try {
-    const enrollmentId = `${userId}_${courseId}`;
-    const enrollmentRef = doc(db, 'enrollments', enrollmentId);
-    const enrollmentDoc = await getDoc(enrollmentRef);
-    return enrollmentDoc.exists();
+    const userCourseRef = doc(db, `users/${userId}/courses/${courseId}`);
+    const userCourseDoc = await getDoc(userCourseRef);
+    return userCourseDoc.exists() && userCourseDoc.data().isEnrolled === true;
   } catch (error) {
     console.error('Error checking enrollment status:', error);
-    throw new Error('Failed to check enrollment status');
+    return false;
   }
 }
 

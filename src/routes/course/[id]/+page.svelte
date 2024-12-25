@@ -57,6 +57,7 @@
           if (isEnrolled) {
             enrollmentProgress = await getEnrollmentProgress($user.uid, courseId);
             showProgress = true;
+            moduleProgress = enrollmentProgress?.moduleProgress || [];
           }
         } else {
           // Load creator's progress
