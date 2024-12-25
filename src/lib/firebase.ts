@@ -493,27 +493,40 @@ export async function getEnrollmentStatus(userId: string, courseId: string) {
   }
 }
 
-export async function getUserBookmarks(userId: string) {
+interface CourseData {
+  id?: string;
+  createdAt: any;
+  createdBy: string;
+  userId: string;
+  isPublic: boolean;
+  views: number;
+  likes: number;
+  updatedAt: any;
+  [key: string]: any; // For other course-specific fields
+}
+
+interface BookmarkedCourse extends CourseData {
+  id: string;
+  bookmarkedAt: Date | null;
+}
+
+export async function getUserBookmarks(userId: string): Promise<BookmarkedCourse[]> {
   try {
-    const q = query(
-      collection(db, 'bookmarks'),
-      where('userId', '==', userId),
-      orderBy('createdAt', 'desc')
-    );
-    const querySnapshot = await getDocs(q);
+    const userBookmarksRef = collection(db, `users/${userId}/bookmarks`);
+    const bookmarksSnapshot = await getDocs(userBookmarksRef);
     
     // Get all bookmarked courses
     const bookmarkedCourses = await Promise.all(
-      querySnapshot.docs.map(async (bookmark) => {
-        const courseRef = doc(db, 'courses', bookmark.data().courseId);
+      bookmarksSnapshot.docs.map(async (doc) => {
+        const courseRef = doc.data().courseRef;
         const courseDoc = await getDoc(courseRef);
         if (courseDoc.exists()) {
-          const courseData = courseDoc.data();
+          const courseData = courseDoc.data() as CourseData;
           return {
             id: courseDoc.id,
             ...courseData,
-            bookmarkedAt: bookmark.data().createdAt?.toDate?.() || null
-          };
+            bookmarkedAt: doc.data().createdAt?.toDate?.() || null
+          } as BookmarkedCourse;
         }
         return null;
       })
@@ -521,7 +534,7 @@ export async function getUserBookmarks(userId: string) {
     
     // Sort in memory instead
     return bookmarkedCourses
-      .filter(course => course !== null)
+      .filter((course): course is BookmarkedCourse => course !== null)
       .sort((a, b) => {
         if (!a.bookmarkedAt || !b.bookmarkedAt) return 0;
         return b.bookmarkedAt.getTime() - a.bookmarkedAt.getTime();
