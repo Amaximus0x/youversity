@@ -49,7 +49,7 @@ export async function saveCourseToFirebase(userId: string, courseData: any) {
     const publicCourseRef = doc(collection(db, 'courses'));
     const courseId = publicCourseRef.id;
 
-    // Add required metadata for public courses
+    // Add required metadata for courses
     const courseWithMetadata = {
       ...courseData,
       createdAt: serverTimestamp(),
@@ -62,12 +62,16 @@ export async function saveCourseToFirebase(userId: string, courseData: any) {
       updatedAt: serverTimestamp()
     };
 
-    // Save to public courses collection
+    // Save to courses collection
     await setDoc(publicCourseRef, courseWithMetadata);
 
     // Save reference to user's courses collection
     const userCourseRef = doc(db, `users/${userId}/courses/${courseId}`);
-    await setDoc(userCourseRef, courseWithMetadata);
+    await setDoc(userCourseRef, {
+      courseRef: publicCourseRef,
+      createdAt: serverTimestamp(),
+      isCreator: true
+    });
 
     // Verify the course was saved by attempting to read it
     let attempts = 0;
@@ -106,20 +110,32 @@ export async function getUserCourses(userId: string) {
     // Get enrolled courses from user's subcollection
     const enrolledCoursesRef = collection(db, `users/${userId}/courses`);
     const enrolledCoursesSnapshot = await getDocs(enrolledCoursesRef);
-    const enrolledCourses = enrolledCoursesSnapshot.docs
-      .map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-        isCreator: false,
-        isEnrolled: true
-      }))
-      // Filter out courses that the user has created
-      .filter(enrolledCourse => 
-        !createdCourses.some(createdCourse => createdCourse.id === enrolledCourse.id)
-      );
+    
+    // Get full course data for enrolled courses
+    const enrolledCourses = await Promise.all(
+      enrolledCoursesSnapshot.docs
+        .filter(doc => !doc.data().isCreator) // Only get enrolled courses, not created ones
+        .map(async (doc) => {
+          const courseRef = doc.data().courseRef;
+          const courseDoc = await getDoc(courseRef);
+          if (courseDoc.exists()) {
+            return {
+              id: courseDoc.id,
+              ...courseDoc.data(),
+              isCreator: false,
+              isEnrolled: true,
+              enrolledAt: doc.data().createdAt?.toDate?.() || new Date()
+            };
+          }
+          return null;
+        })
+    );
+
+    // Filter out null values and courses that don't exist anymore
+    const validEnrolledCourses = enrolledCourses.filter(course => course !== null);
 
     // Combine and sort by most recent
-    const allCourses = [...createdCourses, ...enrolledCourses].sort((a, b) => {
+    const allCourses = [...createdCourses, ...validEnrolledCourses].sort((a, b) => {
       const dateA = a.enrolledAt?.toDate?.() || a.createdAt?.toDate?.() || new Date();
       const dateB = b.enrolledAt?.toDate?.() || b.createdAt?.toDate?.() || new Date();
       return dateB.getTime() - dateA.getTime();
@@ -188,14 +204,21 @@ export async function updateModuleProgress(
   progress: ModuleProgress
 ) {
   try {
-    const courseRef = doc(db, 'courses', courseId);
-    const progressRef = doc(db, 'courseProgress', `${userId}_${courseId}`);
+    const userCourseRef = doc(db, `users/${userId}/courses/${courseId}`);
+    const userCourseDoc = await getDoc(userCourseRef);
     
-    const progressSnap = await getDoc(progressRef);
-    let currentProgress = progressSnap.data() || {
-      userId,
-      courseId,
+    if (!userCourseDoc.exists()) {
+      throw new Error('Not enrolled in this course');
+    }
+
+    const currentData = userCourseDoc.data();
+    const currentProgress = currentData.progress || {
       moduleProgress: [],
+      lastAccessedModule: 0,
+      completedModules: [],
+      quizResults: {
+        moduleQuizzes: {}
+      },
       startDate: new Date(),
       lastAccessDate: new Date()
     };
@@ -203,7 +226,9 @@ export async function updateModuleProgress(
     currentProgress.moduleProgress[moduleIndex] = progress;
     currentProgress.lastAccessDate = new Date();
     
-    await setDoc(progressRef, currentProgress);
+    await updateDoc(userCourseRef, {
+      'progress': currentProgress
+    });
     
     return currentProgress;
   } catch (error) {
@@ -373,29 +398,12 @@ export async function bookmarkCourse(userId: string, courseId: string) {
       throw new Error('User ID and Course ID are required');
     }
 
-    const bookmarkId = `${userId}_${courseId}`;
-    const bookmarkRef = doc(db, 'bookmarks', bookmarkId);
-    const bookmarkDoc = await getDoc(bookmarkRef);
+    const userBookmarkRef = doc(db, `users/${userId}/bookmarks/${courseId}`);
+    const userBookmarkDoc = await getDoc(userBookmarkRef);
     
-    if (bookmarkDoc.exists()) {
-      // Verify the bookmark belongs to the user
-      const bookmarkData = bookmarkDoc.data();
-      if (bookmarkData.userId !== userId) {
-        throw new Error('Unauthorized to modify this bookmark');
-      }
-
+    if (userBookmarkDoc.exists()) {
       // Remove bookmark if it exists
-      await deleteDoc(bookmarkRef);
-      
-      // Also remove from user's bookmarks subcollection
-      const userBookmarkRef = doc(db, `users/${userId}/bookmarks/${courseId}`);
-      try {
-        await deleteDoc(userBookmarkRef);
-      } catch (error) {
-        console.error('Error deleting from user bookmarks:', error);
-        // Continue even if subcollection delete fails
-      }
-      
+      await deleteDoc(userBookmarkRef);
       return { bookmarked: false };
     } else {
       // Get course reference first
@@ -406,15 +414,7 @@ export async function bookmarkCourse(userId: string, courseId: string) {
         throw new Error('Course not found');
       }
       
-      // Add to main bookmarks collection
-      await setDoc(bookmarkRef, {
-        userId,
-        courseId,
-        createdAt: serverTimestamp()
-      });
-      
-      // Add to user's bookmarks subcollection
-      const userBookmarkRef = doc(db, `users/${userId}/bookmarks/${courseId}`);
+      // Add to user's bookmarks subcollection only
       await setDoc(userBookmarkRef, {
         courseRef: courseRef,
         createdAt: serverTimestamp()
@@ -430,14 +430,6 @@ export async function bookmarkCourse(userId: string, courseId: string) {
 
 export async function enrollInCourse(userId: string, courseId: string) {
   try {
-    const enrollmentId = `${userId}_${courseId}`;
-    const enrollmentRef = doc(db, 'enrollments', enrollmentId);
-    const enrollmentDoc = await getDoc(enrollmentRef);
-    
-    if (enrollmentDoc.exists()) {
-      throw new Error('Already enrolled in this course');
-    }
-    
     // Get course data first
     const courseRef = doc(db, 'courses', courseId);
     const courseDoc = await getDoc(courseRef);
@@ -446,38 +438,43 @@ export async function enrollInCourse(userId: string, courseId: string) {
       throw new Error('Course not found');
     }
     
-    const courseData = courseDoc.data();
+    // Check if already enrolled
+    const userCourseRef = doc(db, `users/${userId}/courses/${courseId}`);
+    const userCourseDoc = await getDoc(userCourseRef);
     
-    // Create enrollment
-    const enrollment: CourseEnrollment = {
-      userId,
-      courseId,
-      enrolledAt: new Date(),
-      lastAccessedAt: new Date(),
-      completedModules: [],
+    if (userCourseDoc.exists()) {
+      throw new Error('Already enrolled in this course');
+    }
+
+    const now = new Date();
+    
+    // Create enrollment with initial progress
+    const enrollmentData = {
+      courseRef: courseRef,
+      createdAt: now,
+      isEnrolled: true,
       progress: {
-        userId,
-        courseId,
         moduleProgress: [],
         lastAccessedModule: 0,
-        startDate: new Date(),
-        lastAccessDate: new Date()
+        completedModules: [],
+        quizResults: {
+          moduleQuizzes: {}
+        },
+        startDate: now,
+        lastAccessDate: now
       }
     };
 
-    // Add to enrollments collection
-    await setDoc(enrollmentRef, enrollment);
-    
-    // Add to user's courses subcollection
-    const userCourseRef = doc(db, `users/${userId}/courses/${courseId}`);
-    await setDoc(userCourseRef, {
-      ...courseData,
-      enrolledAt: serverTimestamp(),
-      id: courseId,
-      isEnrolled: true
-    });
+    // Add to user's courses subcollection with progress data
+    await setDoc(userCourseRef, enrollmentData);
 
-    return enrollment;
+    return {
+      ...courseDoc.data(),
+      id: courseId,
+      isEnrolled: true,
+      enrolledAt: now,
+      progress: enrollmentData.progress
+    };
   } catch (error) {
     console.error('Error enrolling in course:', error);
     throw new Error('Failed to enroll in course');
@@ -537,26 +534,24 @@ export async function getUserBookmarks(userId: string) {
 
 export async function getEnrollmentProgress(userId: string, courseId: string) {
   try {
-    const enrollmentRef = doc(db, 'enrollments', `${userId}_${courseId}`);
-    const enrollmentDoc = await getDoc(enrollmentRef);
+    const userCourseRef = doc(db, `users/${userId}/courses/${courseId}`);
+    const userCourseDoc = await getDoc(userCourseRef);
     
-    if (!enrollmentDoc.exists()) {
-      const initialProgress: EnrollmentProgress = {
-        userId,
-        courseId,
-        enrolledAt: new Date(),
-        lastAccessedAt: new Date(),
-        moduleProgress: [],
-        completedModules: [],
-        quizResults: {
-          moduleQuizzes: {}
-        }
-      };
-      await setDoc(enrollmentRef, initialProgress);
-      return initialProgress;
+    if (!userCourseDoc.exists()) {
+      throw new Error('Not enrolled in this course');
     }
     
-    return enrollmentDoc.data() as EnrollmentProgress;
+    const data = userCourseDoc.data();
+    return data.progress || {
+      moduleProgress: [],
+      lastAccessedModule: 0,
+      completedModules: [],
+      quizResults: {
+        moduleQuizzes: {}
+      },
+      startDate: new Date(),
+      lastAccessDate: new Date()
+    };
   } catch (error) {
     console.error('Error getting enrollment progress:', error);
     throw error;
@@ -654,9 +649,8 @@ export async function getBookmarkedCourses(userId: string): Promise<(FinalCourse
 // Check if a course is bookmarked by a user
 export async function isBookmarked(userId: string, courseId: string): Promise<boolean> {
   try {
-    const bookmarkId = `${userId}_${courseId}`;
-    const bookmarkRef = doc(db, 'bookmarks', bookmarkId);
-    const bookmarkDoc = await getDoc(bookmarkRef);
+    const userBookmarkRef = doc(db, `users/${userId}/bookmarks/${courseId}`);
+    const bookmarkDoc = await getDoc(userBookmarkRef);
     return bookmarkDoc.exists();
   } catch (error) {
     console.error('Error checking bookmark status:', error);
