@@ -236,7 +236,7 @@
 
     <!-- Trending Community Courses Section -->
     <section class="mb-12">
-      <h2 class="text-xl sm:text-2xl font-semibold text-[#2A4D61] mb-6">Trending Courses</h2>
+      <h2 class="text-xl sm:text-2xl font-semibold text-[#2A4D61] mb-6" id="trending-courses">Trending Courses</h2>
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         {#each publicCourses as course}
           <div 

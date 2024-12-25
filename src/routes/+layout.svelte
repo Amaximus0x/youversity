@@ -23,7 +23,7 @@
   // Sidebar items configuration
   const sidebarItems = [
     { icon: Home, label: 'Home', href: '/', isActive: true },
-    { icon: TrendingUp, label: 'Trending', href: '/trending', isActive: false },
+    { icon: TrendingUp, label: 'Trending', href: '#trending-courses', isActive: false },
     { icon: User, label: 'My Profile', href: '/profile', isActive: false },
     { icon: Settings, label: 'Settings', href: '/settings', isActive: false },
   ];
@@ -31,7 +31,7 @@
   // Mobile navigation items (simplified version of sidebar items)
   const mobileNavItems = [
     { icon: Home, label: 'Home', href: '/' },
-    { icon: TrendingUp, label: 'Trending', href: '/trending' },
+    { icon: TrendingUp, label: 'Trending', href: '#trending-courses' },
     { icon: User, label: 'Profile', href: '/profile' },
     { icon: Settings, label: 'Settings', href: '/settings' },
   ];
