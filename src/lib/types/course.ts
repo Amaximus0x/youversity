@@ -1,3 +1,5 @@
+import type { Timestamp } from 'firebase/firestore';
+
 export interface CourseStructure {
   OG_Course_Title: string;
   OG_Course_Objective: string;
@@ -58,7 +60,8 @@ export interface ModuleProgress {
   completed: boolean;
   quizAttempts: number;
   bestScore: number;
-  lastAttemptDate?: Date;
+  lastAttemptDate: Timestamp;
+  timeTaken?: number;
 }
 
 export interface CourseProgress {
@@ -83,6 +86,14 @@ export interface CourseEnrollment {
   lastAccessedAt: Date;
   completedModules: number[];
   progress: CourseProgress;
+}
+
+export interface QuizResult {
+  attempts: number;
+  bestScore: number;
+  lastAttemptDate: Timestamp;
+  completed: boolean;
+  timeTaken?: number;
 }
 
 export interface EnrollmentProgress {

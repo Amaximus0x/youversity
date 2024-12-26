@@ -34,7 +34,7 @@
   let isEnrolled = false;
   let quizTimer = 0;
   let timerInterval: NodeJS.Timeout;
-  let previousScores: { score: number, date: Date }[] = [];
+  let previousScores: { score: number, date: Date, timeTaken?: number }[] = [];
   let showResultAnimation = false;
 
   onMount(async () => {
@@ -148,11 +148,11 @@
         completed: quizScore >= 70,
         quizAttempts: (moduleProgress[currentModule]?.quizAttempts || 0) + 1,
         bestScore: Math.max(quizScore, moduleProgress[currentModule]?.bestScore || 0),
-        lastAttemptDate: new Date()
+        lastAttemptDate: new Date(),
+        timeTaken: quizTimer
       };
 
       if (isCreator) {
-        // Update creator's progress
         await updateModuleProgress(
           $user.uid, 
           $page.params.id, 
@@ -160,48 +160,47 @@
           updatedProgress
         );
         moduleProgress[currentModule] = updatedProgress;
+        
+        // Update previous scores for creator
+        previousScores = [{
+          score: quizScore,
+          date: new Date(),
+          timeTaken: quizTimer
+        }];
+        if (moduleProgress[currentModule]?.bestScore) {
+          previousScores.unshift({
+            score: moduleProgress[currentModule].bestScore,
+            date: moduleProgress[currentModule].lastAttemptDate,
+            timeTaken: moduleProgress[currentModule].timeTaken
+          });
+        }
       } else {
-        // Update enrolled user's progress
         await updateEnrollmentQuizResult(
           $user.uid,
           $page.params.id,
           currentModule,
           quizScore,
-          quizScore >= 70
+          quizScore >= 70,
+          quizTimer
         );
         
-        // Refresh enrollment progress to get updated data
         enrollmentProgress = await getEnrollmentProgress($user.uid, $page.params.id);
         if (enrollmentProgress) {
           moduleProgress = enrollmentProgress.moduleProgress;
           
-          // Update previous scores with current attempt
           if (currentModule >= 0) {
             const currentModuleQuiz = enrollmentProgress.quizResults?.moduleQuizzes?.[currentModule];
             if (currentModuleQuiz) {
               previousScores = [{
                 score: quizScore,
-                date: new Date()
+                date: new Date(),
+                timeTaken: quizTimer
               }];
               if (currentModuleQuiz.bestScore && currentModuleQuiz.lastAttemptDate) {
                 previousScores.unshift({
                   score: currentModuleQuiz.bestScore,
-                  date: currentModuleQuiz.lastAttemptDate
-                });
-              }
-            }
-          } else {
-            // Final quiz scores
-            const finalQuiz = enrollmentProgress.quizResults?.finalQuiz;
-            if (finalQuiz) {
-              previousScores = [{
-                score: quizScore,
-                date: new Date()
-              }];
-              if (finalQuiz.bestScore && finalQuiz.lastAttemptDate) {
-                previousScores.unshift({
-                  score: finalQuiz.bestScore,
-                  date: finalQuiz.lastAttemptDate
+                  date: currentModuleQuiz.lastAttemptDate,
+                  timeTaken: currentModuleQuiz.timeTaken
                 });
               }
             }
@@ -265,31 +264,31 @@
     </div>
 
     <!-- Progress Section -->
-    {#if showProgress && $user}
-    <div class="mb-12">
-      <div class="bg-white rounded-lg shadow-md p-6">
-        <h3 class="font-semibold text-lg mb-4">Your Progress</h3>
-        <div class="space-y-4">
-          <div class="flex justify-between text-sm text-gray-600 mb-2">
-            <span>Module Completion</span>
-            <span>
-              {isCreator 
-                ? moduleProgress.filter(m => m?.completed).length
-                : enrollmentProgress?.completedModules.length} / {courseDetails.Final_Module_Title.length}
-            </span>
-          </div>
-          <div class="w-full h-2.5 bg-gray-200 rounded-full">
-            <div 
-              class="bg-green-600 h-2.5 rounded-full transition-all duration-300"
-              style="width: {isCreator 
-                ? (moduleProgress.filter(m => m?.completed).length / courseDetails.Final_Module_Title.length * 100)
-                : (enrollmentProgress?.completedModules.length / courseDetails.Final_Module_Title.length * 100)}%"
-            />
+    {#if showProgress && $user && (isCreator || isEnrolled)}
+      <div class="mb-12">
+        <div class="bg-white rounded-lg shadow-md p-6">
+          <h3 class="font-semibold text-lg mb-4">Your Progress</h3>
+          <div class="space-y-4">
+            <div class="flex justify-between text-sm text-gray-600 mb-2">
+              <span>Module Completion</span>
+              <span>
+                {isCreator 
+                  ? moduleProgress.filter(m => m?.completed).length
+                  : enrollmentProgress?.completedModules?.length || 0} / {courseDetails.Final_Module_Title.length}
+              </span>
+            </div>
+            <div class="w-full h-2.5 bg-gray-200 rounded-full">
+              <div 
+                class="bg-green-600 h-2.5 rounded-full transition-all duration-300"
+                style="width: {isCreator 
+                  ? (moduleProgress.filter(m => m?.completed).length / courseDetails.Final_Module_Title.length * 100)
+                  : ((enrollmentProgress?.completedModules?.length || 0) / courseDetails.Final_Module_Title.length * 100)}%"
+              />
+            </div>
           </div>
         </div>
       </div>
-    </div>
-  {/if}
+    {/if}
 
     <!-- Course Content -->
     <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
@@ -301,10 +300,10 @@
             <button
               class="w-full text-left p-3 rounded-lg flex items-center gap-3 transition-colors
                 {currentModule === index ? 'bg-blue-50 text-blue-600' : 'hover:bg-gray-50'}
-                {enrollmentProgress?.completedModules?.includes(index) || moduleProgress[index]?.completed ? 'text-green-600' : ''}"
+                {(isCreator || isEnrolled) && (enrollmentProgress?.completedModules?.includes(index) || moduleProgress[index]?.completed) ? 'text-green-600' : ''}"
               on:click={() => currentModule = index}
             >
-              {#if enrollmentProgress?.completedModules?.includes(index) || moduleProgress[index]?.completed}
+              {#if (isCreator || isEnrolled) && (enrollmentProgress?.completedModules?.includes(index) || moduleProgress[index]?.completed)}
                 <CheckCircle class="w-5 h-5 text-green-600 flex-shrink-0" />
               {:else}
                 <Circle class="w-5 h-5 flex-shrink-0" />
@@ -342,7 +341,8 @@
         {#if currentModule >= 0 && courseDetails.Final_Module_Quiz[currentModule]?.quiz?.length > 0}
           <h3 class="font-semibold text-lg mb-4">Module Quiz</h3>
           <button
-            class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+            class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={!isEnrolled && !isCreator}
             on:click={() => {
               const moduleQuiz = courseDetails?.Final_Module_Quiz?.[currentModule];
               if (!moduleQuiz) {
@@ -354,17 +354,27 @@
               showQuiz = true;
               startQuizTimer();
               
-              // Load previous scores for this module if available
-              if (enrollmentProgress?.quizResults?.moduleQuizzes?.[currentModule]) {
+              // Load previous scores for this module
+              if (isCreator) {
+                if (moduleProgress[currentModule]) {
+                  const moduleData = moduleProgress[currentModule];
+                  previousScores = [{
+                    score: moduleData.bestScore || 0,
+                    date: moduleData.lastAttemptDate?.toDate() || new Date(),
+                    timeTaken: moduleData.timeTaken
+                  }];
+                }
+              } else if (enrollmentProgress?.quizResults?.moduleQuizzes?.[currentModule]) {
                 const moduleQuizData = enrollmentProgress.quizResults.moduleQuizzes[currentModule];
                 previousScores = [{
-                  score: moduleQuizData.bestScore,
-                  date: moduleQuizData.lastAttemptDate
+                  score: moduleQuizData.bestScore || 0,
+                  date: moduleQuizData.lastAttemptDate?.toDate() || new Date(),
+                  timeTaken: moduleQuizData.timeTaken
                 }];
               }
             }}
           >
-            Take Module Quiz
+            {isEnrolled || isCreator ? 'Take Module Quiz' : 'Enroll to Take Quiz'}
           </button>
         {/if}
 
@@ -374,25 +384,36 @@
             <h2 class="text-2xl font-semibold mb-4">Final Course Quiz</h2>
             <p class="text-gray-600 mb-4">Test your knowledge of the entire course material.</p>
             <button
-              class="bg-green-500 text-white px-6 py-3 rounded-lg hover:bg-green-600"
+              class="bg-green-500 text-white px-6 py-3 rounded-lg hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={!isEnrolled && !isCreator}
               on:click={() => {
                 resetQuizState();
                 currentModule = -1; // Indicate this is the final quiz
-                currentQuiz = courseDetails?.Final_Course_Quiz;
+                currentQuiz = courseDetails?.Final_Course_Quiz || null;
                 showQuiz = true;
                 startQuizTimer();
                 
-                // Load previous scores for final quiz if available
-                if (enrollmentProgress?.quizResults?.finalQuiz) {
+                // Load previous scores for final quiz
+                if (isCreator) {
+                  if (moduleProgress[currentModule]) {
+                    const moduleData = moduleProgress[currentModule];
+                    previousScores = [{
+                      score: moduleData.bestScore || 0,
+                      date: moduleData.lastAttemptDate?.toDate() || new Date(),
+                      timeTaken: moduleData.timeTaken
+                    }];
+                  }
+                } else if (enrollmentProgress?.quizResults?.finalQuiz) {
                   const finalQuizData = enrollmentProgress.quizResults.finalQuiz;
                   previousScores = [{
-                    score: finalQuizData.bestScore,
-                    date: finalQuizData.lastAttemptDate
+                    score: finalQuizData.bestScore || 0,
+                    date: finalQuizData.lastAttemptDate?.toDate() || new Date(),
+                    timeTaken: finalQuizData.timeTaken
                   }];
                 }
               }}
             >
-              Take Final Quiz
+              {isEnrolled || isCreator ? 'Take Final Quiz' : 'Enroll to Take Quiz'}
             </button>
           </div>
         {/if}
@@ -443,10 +464,25 @@
         <div class="mb-6 bg-gray-50 p-4 rounded-lg">
           <h4 class="font-medium mb-2">Previous Attempts</h4>
           <div class="space-y-2">
-            {#each previousScores as {score, date}}
+            {#each previousScores as {score, date, timeTaken}}
               <div class="flex justify-between text-sm">
                 <span>{score}%</span>
-                <span class="text-gray-500">{new Date(date).toLocaleDateString()}</span>
+                <div class="text-gray-500 flex gap-4">
+                  {#if timeTaken !== undefined}
+                    <span>Time: {Math.floor(timeTaken / 60)}m {timeTaken % 60}s</span>
+                  {/if}
+                  <span>
+                    {date instanceof Date && !isNaN(date.getTime()) 
+                      ? date.toLocaleString('en-US', { 
+                          year: 'numeric', 
+                          month: 'short', 
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })
+                      : 'Invalid Date'}
+                  </span>
+                </div>
               </div>
             {/each}
           </div>
