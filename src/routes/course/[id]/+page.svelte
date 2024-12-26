@@ -230,13 +230,13 @@
             <button
               class="w-full text-left p-3 rounded-lg flex items-center gap-3 transition-colors
                 {currentModule === index ? 'bg-blue-50 text-blue-600' : 'hover:bg-gray-50'}
-                {enrollmentProgress?.completedModules.includes(index) ? 'text-green-600' : ''}"
+                {enrollmentProgress?.completedModules?.includes(index) || moduleProgress[index]?.completed ? 'text-green-600' : ''}"
               on:click={() => currentModule = index}
             >
-              {#if enrollmentProgress?.completedModules.includes(index)}
-                <CheckCircle class="w-5 h-5 text-green-600" />
+              {#if enrollmentProgress?.completedModules?.includes(index) || moduleProgress[index]?.completed}
+                <CheckCircle class="w-5 h-5 text-green-600 flex-shrink-0" />
               {:else}
-                <Circle class="w-5 h-5" />
+                <Circle class="w-5 h-5 flex-shrink-0" />
               {/if}
               <span class="line-clamp-2">{title}</span>
             </button>
