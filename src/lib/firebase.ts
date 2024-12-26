@@ -239,25 +239,39 @@ export async function updateModuleProgress(
 
 export async function getCourseProgress(userId: string, courseId: string) {
   try {
-    const progressRef = doc(db, 'courseProgress', `${userId}_${courseId}`);
-    const progressSnap = await getDoc(progressRef);
+    const userCourseRef = doc(db, `users/${userId}/courses/${courseId}`);
+    const userCourseDoc = await getDoc(userCourseRef);
     
-    if (!progressSnap.exists()) {
+    if (!userCourseDoc.exists()) {
       const initialProgress = {
-        userId,
-        courseId,
         moduleProgress: [],
         lastAccessedModule: 0,
+        completedModules: [],
+        quizResults: {
+          moduleQuizzes: {}
+        },
         startDate: new Date(),
         lastAccessDate: new Date()
       };
       
-      // Create initial progress document
-      await setDoc(progressRef, initialProgress);
+      // Create initial progress in the user's course document
+      await updateDoc(userCourseRef, {
+        progress: initialProgress
+      });
+      
       return initialProgress;
     }
     
-    return progressSnap.data();
+    return userCourseDoc.data().progress || {
+      moduleProgress: [],
+      lastAccessedModule: 0,
+      completedModules: [],
+      quizResults: {
+        moduleQuizzes: {}
+      },
+      startDate: new Date(),
+      lastAccessDate: new Date()
+    };
   } catch (error) {
     console.error('Error fetching course progress:', error);
     throw new Error('Failed to fetch course progress');
@@ -578,23 +592,34 @@ export async function updateEnrollmentQuizResult(
   completed: boolean
 ) {
   try {
-    const enrollmentRef = doc(db, 'enrollments', `${userId}_${courseId}`);
-    const enrollmentDoc = await getDoc(enrollmentRef);
-    const enrollment = enrollmentDoc.data() as EnrollmentProgress;
+    const userCourseRef = doc(db, `users/${userId}/courses/${courseId}`);
+    const userCourseDoc = await getDoc(userCourseRef);
+    
+    if (!userCourseDoc.exists()) {
+      throw new Error('Not enrolled in this course');
+    }
 
-    const updateData: any = {
-      lastAccessedAt: new Date()
+    const currentData = userCourseDoc.data();
+    const currentProgress = currentData.progress || {
+      moduleProgress: [],
+      lastAccessedModule: 0,
+      completedModules: [],
+      quizResults: {
+        moduleQuizzes: {}
+      },
+      startDate: new Date(),
+      lastAccessDate: new Date()
     };
 
     if (moduleIndex !== null) {
       // Module quiz update
-      const currentModuleQuiz = enrollment.quizResults.moduleQuizzes[moduleIndex] || {
+      const currentModuleQuiz = currentProgress.quizResults.moduleQuizzes[moduleIndex] || {
         attempts: 0,
         bestScore: 0,
         completed: false
       };
 
-      updateData[`quizResults.moduleQuizzes.${moduleIndex}`] = {
+      currentProgress.quizResults.moduleQuizzes[moduleIndex] = {
         attempts: currentModuleQuiz.attempts + 1,
         bestScore: Math.max(currentModuleQuiz.bestScore, score),
         lastAttemptDate: new Date(),
@@ -602,18 +627,18 @@ export async function updateEnrollmentQuizResult(
       };
 
       // Update completed modules if passed
-      if (completed && !enrollment.completedModules.includes(moduleIndex)) {
-        updateData.completedModules = [...enrollment.completedModules, moduleIndex];
+      if (completed && !currentProgress.completedModules.includes(moduleIndex)) {
+        currentProgress.completedModules.push(moduleIndex);
       }
     } else {
       // Final quiz update
-      const currentFinalQuiz = enrollment.quizResults.finalQuiz || {
+      const currentFinalQuiz = currentProgress.quizResults.finalQuiz || {
         attempts: 0,
         bestScore: 0,
         completed: false
       };
 
-      updateData['quizResults.finalQuiz'] = {
+      currentProgress.quizResults.finalQuiz = {
         attempts: currentFinalQuiz.attempts + 1,
         bestScore: Math.max(currentFinalQuiz.bestScore, score),
         lastAttemptDate: new Date(),
@@ -621,8 +646,9 @@ export async function updateEnrollmentQuizResult(
       };
     }
 
-    await updateDoc(enrollmentRef, updateData);
-    return updateData;
+    currentProgress.lastAccessDate = new Date();
+    await updateDoc(userCourseRef, { progress: currentProgress });
+    return currentProgress;
   } catch (error) {
     console.error('Error updating quiz result:', error);
     throw error;
