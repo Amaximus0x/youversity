@@ -114,7 +114,6 @@
         if (isCreator) {
           // Update creator's progress
           const updatedProgress = {
-            ...moduleProgress[currentModule],
             completed: quizScore >= 70,
             quizAttempts: (moduleProgress[currentModule]?.quizAttempts || 0) + 1,
             bestScore: Math.max(quizScore, moduleProgress[currentModule]?.bestScore || 0),

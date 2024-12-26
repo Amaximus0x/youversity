@@ -223,11 +223,33 @@ export async function updateModuleProgress(
       lastAccessDate: new Date()
     };
 
+    // Update module progress
     currentProgress.moduleProgress[moduleIndex] = progress;
-    currentProgress.lastAccessDate = new Date();
     
+    // Update last accessed module
+    currentProgress.lastAccessedModule = moduleIndex;
+    
+    // Update last access date
+    currentProgress.lastAccessDate = new Date();
+
+    // Update quiz results if there's quiz data
+    if (progress.quizAttempts !== undefined || progress.bestScore !== undefined) {
+      currentProgress.quizResults.moduleQuizzes[moduleIndex] = {
+        attempts: progress.quizAttempts || 0,
+        bestScore: progress.bestScore || 0,
+        lastAttemptDate: new Date(),
+        completed: progress.completed || false
+      };
+
+      // Update completed modules if quiz is passed
+      if (progress.completed && !currentProgress.completedModules.includes(moduleIndex)) {
+        currentProgress.completedModules.push(moduleIndex);
+      }
+    }
+    
+    // Update the entire progress object
     await updateDoc(userCourseRef, {
-      'progress': currentProgress
+      progress: currentProgress
     });
     
     return currentProgress;
