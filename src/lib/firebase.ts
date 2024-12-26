@@ -223,14 +223,38 @@ export async function updateModuleProgress(
       lastAccessDate: new Date()
     };
 
+    // Initialize moduleProgress array if it doesn't exist or is too short
+    if (!Array.isArray(currentProgress.moduleProgress)) {
+      currentProgress.moduleProgress = [];
+    }
+    while (currentProgress.moduleProgress.length <= moduleIndex) {
+      currentProgress.moduleProgress.push({
+        completed: false,
+        quizAttempts: 0,
+        bestScore: 0,
+        lastAttemptDate: new Date()
+      });
+    }
+
     // Update module progress
-    currentProgress.moduleProgress[moduleIndex] = progress;
+    currentProgress.moduleProgress[moduleIndex] = {
+      ...currentProgress.moduleProgress[moduleIndex],
+      ...progress
+    };
     
     // Update last accessed module
     currentProgress.lastAccessedModule = moduleIndex;
     
     // Update last access date
     currentProgress.lastAccessDate = new Date();
+
+    // Initialize quizResults if needed
+    if (!currentProgress.quizResults) {
+      currentProgress.quizResults = { moduleQuizzes: {} };
+    }
+    if (!currentProgress.quizResults.moduleQuizzes) {
+      currentProgress.quizResults.moduleQuizzes = {};
+    }
 
     // Update quiz results if there's quiz data
     if (progress.quizAttempts !== undefined || progress.bestScore !== undefined) {
@@ -240,6 +264,11 @@ export async function updateModuleProgress(
         lastAttemptDate: new Date(),
         completed: progress.completed || false
       };
+
+      // Initialize completedModules array if needed
+      if (!Array.isArray(currentProgress.completedModules)) {
+        currentProgress.completedModules = [];
+      }
 
       // Update completed modules if quiz is passed
       if (progress.completed && !currentProgress.completedModules.includes(moduleIndex)) {

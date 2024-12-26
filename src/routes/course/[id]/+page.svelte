@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { onMount, onDestroy } from 'svelte';
   import { page } from '$app/stores';
   import { goto } from '$app/navigation';
   import { user } from '$lib/stores/auth';
@@ -14,7 +14,7 @@
     getEnrollmentStatus
   } from '$lib/firebase';
   import type { FinalCourseStructure, Quiz, QuizQuestion, ModuleProgress, EnrollmentProgress } from '$lib/types/course';
-  import { Play, CheckCircle, Circle } from 'lucide-svelte';
+  import { Play, CheckCircle, Circle, Timer, Trophy, XCircle } from 'lucide-svelte';
   import CourseActions from '$lib/components/CourseActions.svelte';
 
   let courseDetails: FinalCourseStructure | null = null;
@@ -32,6 +32,10 @@
   let quizResults: { [key: string]: boolean } = {};
   let showProgress = false;
   let isEnrolled = false;
+  let quizTimer = 0;
+  let timerInterval: NodeJS.Timeout;
+  let previousScores: { score: number, date: Date }[] = [];
+  let showResultAnimation = false;
 
   onMount(async () => {
     try {
@@ -96,8 +100,33 @@
     }
   });
 
+  function startQuizTimer() {
+    if (timerInterval) clearInterval(timerInterval);
+    quizTimer = 0;
+    timerInterval = setInterval(() => {
+      quizTimer++;
+    }, 1000);
+  }
+
+  onDestroy(() => {
+    if (timerInterval) clearInterval(timerInterval);
+  });
+
+  function resetQuizState() {
+    selectedAnswers = {};
+    quizResults = {};
+    quizSubmitted = false;
+    quizScore = 0;
+    showResultAnimation = false;
+    previousScores = [];
+    quizTimer = 0;
+    if (timerInterval) clearInterval(timerInterval);
+  }
+
   async function handleQuizSubmit() {
-    if (!currentQuiz || !courseDetails) return;
+    if (!currentQuiz || !courseDetails || !$user) return;
+    
+    if (timerInterval) clearInterval(timerInterval);
     
     let correctAnswers = 0;
     currentQuiz.quiz.forEach((question, index) => {
@@ -108,37 +137,79 @@
 
     quizScore = Math.round((correctAnswers / currentQuiz.quiz.length) * 100);
     quizSubmitted = true;
+    showResultAnimation = true;
+    
+    setTimeout(() => {
+      showResultAnimation = false;
+    }, 3000);
 
-    if ($user) {
-      try {
-        if (isCreator) {
-          // Update creator's progress
-          const updatedProgress = {
-            completed: quizScore >= 70,
-            quizAttempts: (moduleProgress[currentModule]?.quizAttempts || 0) + 1,
-            bestScore: Math.max(quizScore, moduleProgress[currentModule]?.bestScore || 0),
-            lastAttemptDate: new Date()
-          };
+    try {
+      const updatedProgress = {
+        completed: quizScore >= 70,
+        quizAttempts: (moduleProgress[currentModule]?.quizAttempts || 0) + 1,
+        bestScore: Math.max(quizScore, moduleProgress[currentModule]?.bestScore || 0),
+        lastAttemptDate: new Date()
+      };
 
-          await updateModuleProgress($user.uid, courseDetails.id, currentModule, updatedProgress);
-          moduleProgress[currentModule] = updatedProgress;
-        } else {
-          // Update enrolled user's progress
-          await updateEnrollmentQuizResult(
-            $user.uid,
-            courseDetails.id,
-            currentModule,
-            quizScore,
-            quizScore >= 70
-          );
-          enrollmentProgress = await getEnrollmentProgress($user.uid, courseDetails.id);
-          if (enrollmentProgress) {
-            moduleProgress = enrollmentProgress.moduleProgress;
+      if (isCreator) {
+        // Update creator's progress
+        await updateModuleProgress(
+          $user.uid, 
+          $page.params.id, 
+          currentModule, 
+          updatedProgress
+        );
+        moduleProgress[currentModule] = updatedProgress;
+      } else {
+        // Update enrolled user's progress
+        await updateEnrollmentQuizResult(
+          $user.uid,
+          $page.params.id,
+          currentModule,
+          quizScore,
+          quizScore >= 70
+        );
+        
+        // Refresh enrollment progress to get updated data
+        enrollmentProgress = await getEnrollmentProgress($user.uid, $page.params.id);
+        if (enrollmentProgress) {
+          moduleProgress = enrollmentProgress.moduleProgress;
+          
+          // Update previous scores with current attempt
+          if (currentModule >= 0) {
+            const currentModuleQuiz = enrollmentProgress.quizResults?.moduleQuizzes?.[currentModule];
+            if (currentModuleQuiz) {
+              previousScores = [{
+                score: quizScore,
+                date: new Date()
+              }];
+              if (currentModuleQuiz.bestScore && currentModuleQuiz.lastAttemptDate) {
+                previousScores.unshift({
+                  score: currentModuleQuiz.bestScore,
+                  date: currentModuleQuiz.lastAttemptDate
+                });
+              }
+            }
+          } else {
+            // Final quiz scores
+            const finalQuiz = enrollmentProgress.quizResults?.finalQuiz;
+            if (finalQuiz) {
+              previousScores = [{
+                score: quizScore,
+                date: new Date()
+              }];
+              if (finalQuiz.bestScore && finalQuiz.lastAttemptDate) {
+                previousScores.unshift({
+                  score: finalQuiz.bestScore,
+                  date: finalQuiz.lastAttemptDate
+                });
+              }
+            }
           }
         }
-      } catch (err) {
-        console.error('Error updating progress:', err);
       }
+    } catch (err) {
+      console.error('Error updating progress:', err);
     }
   }
 
@@ -278,8 +349,19 @@
                 console.error(`No quiz found for module ${currentModule + 1}`);
                 return;
               }
+              resetQuizState();
               currentQuiz = moduleQuiz;
               showQuiz = true;
+              startQuizTimer();
+              
+              // Load previous scores for this module if available
+              if (enrollmentProgress?.quizResults?.moduleQuizzes?.[currentModule]) {
+                const moduleQuizData = enrollmentProgress.quizResults.moduleQuizzes[currentModule];
+                previousScores = [{
+                  score: moduleQuizData.bestScore,
+                  date: moduleQuizData.lastAttemptDate
+                }];
+              }
             }}
           >
             Take Module Quiz
@@ -294,13 +376,20 @@
             <button
               class="bg-green-500 text-white px-6 py-3 rounded-lg hover:bg-green-600"
               on:click={() => {
+                resetQuizState();
                 currentModule = -1; // Indicate this is the final quiz
-                currentQuiz = courseDetails.Final_Course_Quiz;
-                selectedAnswers = {};
-                quizResults = {};
-                quizSubmitted = false;
-                quizScore = 0;
+                currentQuiz = courseDetails?.Final_Course_Quiz;
                 showQuiz = true;
+                startQuizTimer();
+                
+                // Load previous scores for final quiz if available
+                if (enrollmentProgress?.quizResults?.finalQuiz) {
+                  const finalQuizData = enrollmentProgress.quizResults.finalQuiz;
+                  previousScores = [{
+                    score: finalQuizData.bestScore,
+                    date: finalQuizData.lastAttemptDate
+                  }];
+                }
               }}
             >
               Take Final Quiz
@@ -337,9 +426,34 @@
 
 {#if showQuiz && currentQuiz}
   <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-    <div class="bg-white rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-      <h3 class="text-xl font-semibold mb-4 text-[#2A4D61]">Quiz</h3>
+    <div class="bg-white rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto relative">
+      <!-- Quiz Header -->
+      <div class="flex justify-between items-center mb-6">
+        <h3 class="text-xl font-semibold text-[#2A4D61]">Quiz</h3>
+        {#if !quizSubmitted}
+          <div class="flex items-center gap-2 text-gray-600">
+            <Timer class="w-5 h-5" />
+            <span>{Math.floor(quizTimer / 60)}:{(quizTimer % 60).toString().padStart(2, '0')}</span>
+          </div>
+        {/if}
+      </div>
+
+      <!-- Previous Scores -->
+      {#if previousScores.length > 0}
+        <div class="mb-6 bg-gray-50 p-4 rounded-lg">
+          <h4 class="font-medium mb-2">Previous Attempts</h4>
+          <div class="space-y-2">
+            {#each previousScores as {score, date}}
+              <div class="flex justify-between text-sm">
+                <span>{score}%</span>
+                <span class="text-gray-500">{new Date(date).toLocaleDateString()}</span>
+              </div>
+            {/each}
+          </div>
+        </div>
+      {/if}
       
+      <!-- Quiz Questions -->
       <div class="space-y-6">
         {#each currentQuiz.quiz as question, index}
           <div class="mb-6">
@@ -372,6 +486,7 @@
           </div>
         {/each}
 
+        <!-- Quiz Controls -->
         <div class="flex justify-end gap-4 mt-6">
           {#if !quizSubmitted}
             <button
@@ -386,10 +501,8 @@
               type="button"
               class="bg-[#4CAF50] text-white px-6 py-2 rounded-lg hover:bg-[#45A049] transition-colors duration-200"
               on:click={() => {
-                selectedAnswers = {};
-                quizResults = {};
-                quizSubmitted = false;
-                quizScore = 0;
+                resetQuizState();
+                startQuizTimer();
               }}
             >
               Try Again
@@ -398,21 +511,58 @@
           <button
             type="button"
             class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition-colors duration-200"
-            on:click={() => showQuiz = false}
+            on:click={() => {
+              showQuiz = false;
+              resetQuizState();
+            }}
           >
             Close
           </button>
         </div>
 
+        <!-- Quiz Results -->
         {#if quizSubmitted}
           <div class="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
             <p class="text-lg font-semibold text-[#2A4D61]">Your Score: {quizScore}%</p>
             <p class="text-sm mt-1 text-gray-600">
               {quizScore >= 70 ? 'Congratulations! You passed the quiz.' : 'Keep trying! You need 70% to pass.'}
             </p>
+            <p class="text-sm text-gray-500 mt-2">
+              Time taken: {Math.floor(quizTimer / 60)}m {quizTimer % 60}s
+            </p>
           </div>
         {/if}
       </div>
+
+      <!-- Result Animation -->
+      {#if showResultAnimation}
+        <div class="fixed inset-0 flex items-center justify-center pointer-events-none">
+          <div class="transform scale-150 transition-transform duration-500 {quizScore >= 70 ? 'text-green-500' : 'text-red-500'}">
+            {#if quizScore >= 70}
+              <Trophy class="w-24 h-24 animate-bounce" />
+            {:else}
+              <XCircle class="w-24 h-24 animate-bounce" />
+            {/if}
+          </div>
+        </div>
+      {/if}
     </div>
   </div>
 {/if} 
+
+<style>
+  .animate-bounce {
+    animation: bounce 1s infinite;
+  }
+
+  @keyframes bounce {
+    0%, 100% {
+      transform: translateY(-25%);
+      animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
+    }
+    50% {
+      transform: translateY(0);
+      animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
+    }
+  }
+</style> 
