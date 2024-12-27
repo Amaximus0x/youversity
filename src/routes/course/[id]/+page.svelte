@@ -359,15 +359,14 @@
               
               // Load previous scores for this module
               if (isCreator) {
-                if (moduleProgress[currentModule]) {
-                  const moduleData = moduleProgress[currentModule];
+                if (moduleProgress[currentModule]?.quizAttempts > 0) {
                   previousScores = [{
-                    score: moduleData.bestScore || 0,
-                    date: moduleData.lastAttemptDate?.toDate() || new Date(),
-                    timeTaken: moduleData.timeTaken
+                    score: moduleProgress[currentModule].bestScore || 0,
+                    date: moduleProgress[currentModule].lastAttemptDate?.toDate() || new Date(),
+                    timeTaken: moduleProgress[currentModule].timeTaken
                   }];
                 }
-              } else if (enrollmentProgress?.quizResults?.moduleQuizzes?.[currentModule]) {
+              } else if (enrollmentProgress?.quizResults?.moduleQuizzes?.[currentModule]?.attempts > 0) {
                 const moduleQuizData = enrollmentProgress.quizResults.moduleQuizzes[currentModule];
                 previousScores = [{
                   score: moduleQuizData.bestScore || 0,
@@ -398,15 +397,14 @@
                 
                 // Load previous scores for final quiz
                 if (isCreator) {
-                  if (moduleProgress[currentModule]) {
-                    const moduleData = moduleProgress[currentModule];
+                  if (moduleProgress[currentModule]?.quizAttempts > 0) {
                     previousScores = [{
-                      score: moduleData.bestScore || 0,
-                      date: moduleData.lastAttemptDate?.toDate() || new Date(),
-                      timeTaken: moduleData.timeTaken
+                      score: moduleProgress[currentModule].bestScore || 0,
+                      date: moduleProgress[currentModule].lastAttemptDate?.toDate() || new Date(),
+                      timeTaken: moduleProgress[currentModule].timeTaken
                     }];
                   }
-                } else if (enrollmentProgress?.quizResults?.finalQuiz) {
+                } else if (enrollmentProgress?.quizResults?.finalQuiz?.attempts > 0) {
                   const finalQuizData = enrollmentProgress.quizResults.finalQuiz;
                   previousScores = [{
                     score: finalQuizData.bestScore || 0,
