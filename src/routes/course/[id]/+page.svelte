@@ -164,19 +164,7 @@
         );
         moduleProgress[currentModule] = updatedProgress;
         
-        // Update previous scores for creator
-        previousScores = [{
-          score: quizScore,
-          date: new Date(),
-          timeTaken: quizTimer
-        }];
-        if (moduleProgress[currentModule]?.bestScore) {
-          previousScores.unshift({
-            score: moduleProgress[currentModule].bestScore,
-            date: moduleProgress[currentModule].lastAttemptDate,
-            timeTaken: moduleProgress[currentModule].timeTaken
-          });
-        }
+       // Don't update previous scores here - they will be loaded when starting a new attempt
       } else {
         await updateEnrollmentQuizResult(
           $user.uid,
@@ -190,24 +178,7 @@
         enrollmentProgress = await getEnrollmentProgress($user.uid, $page.params.id);
         if (enrollmentProgress) {
           moduleProgress = enrollmentProgress.moduleProgress;
-          
-          if (currentModule >= 0) {
-            const currentModuleQuiz = enrollmentProgress.quizResults?.moduleQuizzes?.[currentModule];
-            if (currentModuleQuiz) {
-              previousScores = [{
-                score: quizScore,
-                date: new Date(),
-                timeTaken: quizTimer
-              }];
-              if (currentModuleQuiz.bestScore && currentModuleQuiz.lastAttemptDate) {
-                previousScores.unshift({
-                  score: currentModuleQuiz.bestScore,
-                  date: currentModuleQuiz.lastAttemptDate,
-                  timeTaken: currentModuleQuiz.timeTaken
-                });
-              }
-            }
-          }
+          // Don't update previous scores here - they will be loaded when starting a new attempt
         }
       }
     } catch (err) {
