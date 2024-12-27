@@ -550,7 +550,7 @@ export async function getEnrollmentStatus(userId: string, courseId: string) {
   try {
     const userCourseRef = doc(db, `users/${userId}/courses/${courseId}`);
     const userCourseDoc = await getDoc(userCourseRef);
-    return userCourseDoc.exists() && userCourseDoc.data().isEnrolled === true;
+    return userCourseDoc.exists() && userCourseDoc.data().isEnrolled;
   } catch (error) {
     console.error('Error checking enrollment status:', error);
     return false;

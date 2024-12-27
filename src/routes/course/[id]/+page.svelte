@@ -55,22 +55,25 @@
           throw new Error('You do not have access to this course');
         }
         
+        // Always check enrollment status for non-creators
         if (!isCreator) {
-          // Check enrollment status for non-creators
           isEnrolled = await getEnrollmentStatus($user.uid, courseId);
+        }
+        
+        // Show progress if user is creator or enrolled
+        if (isCreator || isEnrolled) {
+          showProgress = true;
           if (isEnrolled) {
             enrollmentProgress = await getEnrollmentProgress($user.uid, courseId);
-            showProgress = true;
             moduleProgress = enrollmentProgress?.moduleProgress || [];
-          }
-        } else {
-          // Load creator's progress
-          try {
-            const progress = await getCourseProgress($user.uid, courseId);
-            moduleProgress = progress?.moduleProgress || [];
-            showProgress = true;
-          } catch (err) {
-            console.log('No existing progress found:', err);
+          } else {
+            // Load creator's progress
+            try {
+              const progress = await getCourseProgress($user.uid, courseId);
+              moduleProgress = progress?.moduleProgress || [];
+            } catch (err) {
+              console.log('No existing progress found:', err);
+            }
           }
         }
       } else {
