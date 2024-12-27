@@ -640,7 +640,8 @@ export async function updateEnrollmentQuizResult(
   courseId: string,
   moduleIndex: number | null,
   score: number,
-  completed: boolean
+  completed: boolean,
+  timeTaken: number
 ) {
   try {
     const userCourseRef = doc(db, `users/${userId}/courses/${courseId}`);
@@ -673,8 +674,9 @@ export async function updateEnrollmentQuizResult(
       currentProgress.quizResults.moduleQuizzes[moduleIndex] = {
         attempts: currentModuleQuiz.attempts + 1,
         bestScore: Math.max(currentModuleQuiz.bestScore, score),
-        lastAttemptDate: new Date(),
-        completed: completed || currentModuleQuiz.completed
+        lastAttemptDate: serverTimestamp(),
+        completed: completed || currentModuleQuiz.completed,
+        timeTaken
       };
 
       // Update completed modules if passed
@@ -692,12 +694,13 @@ export async function updateEnrollmentQuizResult(
       currentProgress.quizResults.finalQuiz = {
         attempts: currentFinalQuiz.attempts + 1,
         bestScore: Math.max(currentFinalQuiz.bestScore, score),
-        lastAttemptDate: new Date(),
-        completed: completed || currentFinalQuiz.completed
+        lastAttemptDate: serverTimestamp(),
+        completed: completed || currentFinalQuiz.completed,
+        timeTaken
       };
     }
 
-    currentProgress.lastAccessDate = new Date();
+    currentProgress.lastAccessDate = serverTimestamp();
     await updateDoc(userCourseRef, { progress: currentProgress });
     return currentProgress;
   } catch (error) {
