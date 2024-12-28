@@ -105,18 +105,10 @@ export interface EnrollmentProgress {
   completedModules: number[];
   quizResults: {
     moduleQuizzes: {
-      [moduleIndex: number]: {
-        attempts: number;
-        bestScore: number;
-        lastAttemptDate: Date;
-        completed: boolean;
-      };
+      [moduleIndex: number]: QuizResult;
     };
-    finalQuiz?: {
-      attempts: number;
-      bestScore: number;
-      lastAttemptDate: Date;
-      completed: boolean;
-    };
+    finalQuiz?: QuizResult;
   };
+  startDate: Timestamp;
+  lastAccessDate: Timestamp;
 }

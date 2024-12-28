@@ -16,6 +16,7 @@
   import type { FinalCourseStructure, Quiz, QuizQuestion, ModuleProgress, EnrollmentProgress } from '$lib/types/course';
   import { Play, CheckCircle, Circle, Timer, Trophy, XCircle } from 'lucide-svelte';
   import CourseActions from '$lib/components/CourseActions.svelte';
+  import { Timestamp } from 'firebase/firestore';
 
   let courseDetails: FinalCourseStructure | null = null;
   let enrollmentProgress: EnrollmentProgress | null = null;
@@ -91,7 +92,7 @@
             completed: false,
             quizAttempts: 0,
             bestScore: 0,
-            lastAttemptDate: new Date()
+            lastAttemptDate: Timestamp.fromDate(new Date())
           };
         }
       }
@@ -151,7 +152,7 @@
         completed: quizScore >= 70,
         quizAttempts: (moduleProgress[currentModule]?.quizAttempts || 0) + 1,
         bestScore: Math.max(quizScore, moduleProgress[currentModule]?.bestScore || 0),
-        lastAttemptDate: new Date(),
+        lastAttemptDate: Timestamp.fromDate(new Date()),
         timeTaken: quizTimer
       };
 
@@ -164,7 +165,7 @@
         );
         moduleProgress[currentModule] = updatedProgress;
         
-       // Don't update previous scores here - they will be loaded when starting a new attempt
+        // Don't update previous scores here - they will be loaded when starting a new attempt
       } else {
         await updateEnrollmentQuizResult(
           $user.uid,
@@ -331,17 +332,24 @@
               // Load previous scores for this module
               if (isCreator) {
                 if (moduleProgress[currentModule]?.quizAttempts > 0) {
+                  const moduleData = moduleProgress[currentModule];
+                  const date = moduleData.lastAttemptDate instanceof Date 
+                    ? moduleData.lastAttemptDate 
+                    : moduleData.lastAttemptDate?.toDate?.() || new Date();
                   previousScores = [{
-                    score: moduleProgress[currentModule].bestScore || 0,
-                    date: moduleProgress[currentModule].lastAttemptDate?.toDate() || new Date(),
-                    timeTaken: moduleProgress[currentModule].timeTaken
+                    score: moduleData.bestScore || 0,
+                    date,
+                    timeTaken: moduleData.timeTaken
                   }];
                 }
               } else if (enrollmentProgress?.quizResults?.moduleQuizzes?.[currentModule]?.attempts > 0) {
                 const moduleQuizData = enrollmentProgress.quizResults.moduleQuizzes[currentModule];
+                const date = moduleQuizData.lastAttemptDate instanceof Date 
+                  ? moduleQuizData.lastAttemptDate 
+                  : moduleQuizData.lastAttemptDate?.toDate?.() || new Date();
                 previousScores = [{
                   score: moduleQuizData.bestScore || 0,
-                  date: moduleQuizData.lastAttemptDate?.toDate() || new Date(),
+                  date,
                   timeTaken: moduleQuizData.timeTaken
                 }];
               }
@@ -369,17 +377,24 @@
                 // Load previous scores for final quiz
                 if (isCreator) {
                   if (moduleProgress[currentModule]?.quizAttempts > 0) {
+                    const moduleData = moduleProgress[currentModule];
+                    const date = moduleData.lastAttemptDate instanceof Date 
+                      ? moduleData.lastAttemptDate 
+                      : moduleData.lastAttemptDate?.toDate?.() || new Date();
                     previousScores = [{
-                      score: moduleProgress[currentModule].bestScore || 0,
-                      date: moduleProgress[currentModule].lastAttemptDate?.toDate() || new Date(),
-                      timeTaken: moduleProgress[currentModule].timeTaken
+                      score: moduleData.bestScore || 0,
+                      date,
+                      timeTaken: moduleData.timeTaken
                     }];
                   }
                 } else if (enrollmentProgress?.quizResults?.finalQuiz?.attempts > 0) {
                   const finalQuizData = enrollmentProgress.quizResults.finalQuiz;
+                  const date = finalQuizData.lastAttemptDate instanceof Date 
+                    ? finalQuizData.lastAttemptDate 
+                    : finalQuizData.lastAttemptDate?.toDate?.() || new Date();
                   previousScores = [{
                     score: finalQuizData.bestScore || 0,
-                    date: finalQuizData.lastAttemptDate?.toDate() || new Date(),
+                    date,
                     timeTaken: finalQuizData.timeTaken
                   }];
                 }

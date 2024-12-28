@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app';
-import { getFirestore, collection, addDoc, query, where, getDocs, doc, getDoc, updateDoc, setDoc, serverTimestamp, orderBy, limit, deleteDoc } from 'firebase/firestore';
+import { getFirestore, collection, addDoc, query, where, getDocs, doc, getDoc, updateDoc, setDoc, serverTimestamp, orderBy, limit, deleteDoc, Timestamp } from 'firebase/firestore';
 import { getAuth, setPersistence, browserLocalPersistence, signInWithPopup, GoogleAuthProvider, signOut } from 'firebase/auth';
 import { getStorage } from 'firebase/storage';
 import type { CourseEnrollment, EnrollmentProgress, FinalCourseStructure, ModuleProgress } from './types/course';
@@ -659,8 +659,8 @@ export async function updateEnrollmentQuizResult(
       quizResults: {
         moduleQuizzes: {}
       },
-      startDate: new Date(),
-      lastAccessDate: new Date()
+      startDate: Timestamp.fromDate(new Date()),
+      lastAccessDate: Timestamp.fromDate(new Date())
     };
 
     if (moduleIndex !== null) {
@@ -674,7 +674,7 @@ export async function updateEnrollmentQuizResult(
       currentProgress.quizResults.moduleQuizzes[moduleIndex] = {
         attempts: currentModuleQuiz.attempts + 1,
         bestScore: Math.max(currentModuleQuiz.bestScore, score),
-        lastAttemptDate: serverTimestamp(),
+        lastAttemptDate: Timestamp.fromDate(new Date()),
         completed: completed || currentModuleQuiz.completed,
         timeTaken
       };
@@ -694,13 +694,13 @@ export async function updateEnrollmentQuizResult(
       currentProgress.quizResults.finalQuiz = {
         attempts: currentFinalQuiz.attempts + 1,
         bestScore: Math.max(currentFinalQuiz.bestScore, score),
-        lastAttemptDate: serverTimestamp(),
+        lastAttemptDate: Timestamp.fromDate(new Date()),
         completed: completed || currentFinalQuiz.completed,
         timeTaken
       };
     }
 
-    currentProgress.lastAccessDate = serverTimestamp();
+    currentProgress.lastAccessDate = Timestamp.fromDate(new Date());
     await updateDoc(userCourseRef, { progress: currentProgress });
     return currentProgress;
   } catch (error) {
