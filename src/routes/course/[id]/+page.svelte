@@ -17,6 +17,7 @@
   import { Play, CheckCircle, Circle, Timer, Trophy, XCircle } from 'lucide-svelte';
   import CourseActions from '$lib/components/CourseActions.svelte';
   import { Timestamp } from 'firebase/firestore';
+  import CourseRatings from '$lib/components/CourseRatings.svelte';
 
   let courseDetails: FinalCourseStructure | null = null;
   let enrollmentProgress: EnrollmentProgress | null = null;
@@ -410,6 +411,13 @@
           <h2 class="text-2xl font-semibold mb-4">Course Conclusion</h2>
           <p class="text-gray-700">{courseDetails.Final_Course_Conclusion}</p>
         </div>
+
+        <!-- Course Ratings -->
+        {#if courseDetails.isPublic}
+          <div class="mt-8">
+            <CourseRatings courseId={$page.params.id} />
+          </div>
+        {/if}
 
         <!-- YouTube Playlist Button -->
         <div class="mt-12 border-t pt-8">

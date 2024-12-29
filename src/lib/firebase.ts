@@ -2,7 +2,7 @@ import { initializeApp } from 'firebase/app';
 import { getFirestore, collection, addDoc, query, where, getDocs, doc, getDoc, updateDoc, setDoc, serverTimestamp, orderBy, limit, deleteDoc, Timestamp } from 'firebase/firestore';
 import { getAuth, setPersistence, browserLocalPersistence, signInWithPopup, GoogleAuthProvider, signOut } from 'firebase/auth';
 import { getStorage } from 'firebase/storage';
-import type { CourseEnrollment, EnrollmentProgress, FinalCourseStructure, ModuleProgress } from './types/course';
+import type { CourseEnrollment, EnrollmentProgress, FinalCourseStructure, ModuleProgress, CourseRating } from './types/course';
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -747,5 +747,104 @@ export async function isBookmarked(userId: string, courseId: string): Promise<bo
   } catch (error) {
     console.error('Error checking bookmark status:', error);
     return false;
+  }
+}
+
+export async function submitCourseRating(
+  userId: string,
+  courseId: string,
+  rating: number,
+  review: string,
+  userDisplayName: string,
+  userPhotoURL?: string
+) {
+  try {
+    const courseRef = doc(db, 'courses', courseId);
+    const courseDoc = await getDoc(courseRef);
+    
+    if (!courseDoc.exists()) {
+      throw new Error('Course not found');
+    }
+
+    if (!courseDoc.data().isPublic) {
+      throw new Error('Cannot rate a private course');
+    }
+
+    const ratingRef = doc(db, `courses/${courseId}/ratings/${userId}`);
+    const ratingDoc = await getDoc(ratingRef);
+    const now = Timestamp.fromDate(new Date());
+
+    const ratingData: CourseRating = {
+      userId,
+      courseId,
+      rating,
+      review,
+      userDisplayName,
+      userPhotoURL,
+      createdAt: now,
+      updatedAt: now
+    };
+
+    if (ratingDoc.exists()) {
+      // Update existing rating
+      await updateDoc(ratingRef, {
+        ...ratingData,
+        createdAt: ratingDoc.data().createdAt // Keep original creation date
+      });
+    } else {
+      // Create new rating
+      await setDoc(ratingRef, ratingData);
+    }
+
+    // Update course average rating
+    const ratingsQuery = collection(db, `courses/${courseId}/ratings`);
+    const ratingsSnapshot = await getDocs(ratingsQuery);
+    let totalRating = 0;
+    ratingsSnapshot.forEach(doc => {
+      totalRating += doc.data().rating;
+    });
+    const averageRating = totalRating / ratingsSnapshot.size;
+
+    await updateDoc(courseRef, {
+      averageRating,
+      totalRatings: ratingsSnapshot.size
+    });
+
+    return ratingData;
+  } catch (error) {
+    console.error('Error submitting course rating:', error);
+    throw error;
+  }
+}
+
+export async function getCourseRatings(courseId: string) {
+  try {
+    const ratingsQuery = query(
+      collection(db, `courses/${courseId}/ratings`),
+      orderBy('createdAt', 'desc')
+    );
+    const ratingsSnapshot = await getDocs(ratingsQuery);
+    
+    return ratingsSnapshot.docs.map(doc => ({
+      ...doc.data()
+    })) as CourseRating[];
+  } catch (error) {
+    console.error('Error getting course ratings:', error);
+    throw error;
+  }
+}
+
+export async function getUserCourseRating(userId: string, courseId: string) {
+  try {
+    const ratingRef = doc(db, `courses/${courseId}/ratings/${userId}`);
+    const ratingDoc = await getDoc(ratingRef);
+    
+    if (ratingDoc.exists()) {
+      return ratingDoc.data() as CourseRating;
+    }
+    return null;
+  } catch (error) {
+    console.error('Error getting user course rating:', error);
+    throw error;
   }
 }

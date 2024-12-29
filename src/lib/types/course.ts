@@ -45,8 +45,21 @@ export interface FinalCourseStructure {
   createdAt: Date;
   likes?: number;
   views?: number;
+  averageRating?: number;
+  totalRatings?: number;
 }
-  
+
+export interface CourseRating {
+  userId: string;
+  courseId: string;
+  rating: number;
+  review: string;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+  userDisplayName: string;
+  userPhotoURL?: string;
+}
+
 export interface VideoItem {
   videoId: string;
   videoUrl: string;
