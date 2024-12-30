@@ -388,28 +388,41 @@ export async function getPublicCourses() {
   }
 }
 
-export async function toggleCoursePrivacy(courseId: string, isPublic: boolean) {
+export async function toggleCoursePrivacy(courseId: string, newIsPublic: boolean) {
   try {
-    console.log('Toggling course privacy:', courseId, 'to', isPublic);
+    console.log('Toggling course privacy:', courseId, 'to', newIsPublic);
     const courseRef = doc(db, 'courses', courseId);
-    const before = await getDoc(courseRef);
-    console.log('Course before update:', before.data());
+    const courseDoc = await getDoc(courseRef);
     
-    // Ensure views field exists when making public
-    const updateData: any = {
-      isPublic,
-      updatedAt: serverTimestamp()
-    };
-    
-    if (isPublic && !before.data()?.views) {
-      updateData.views = 0;
+    if (!courseDoc.exists()) {
+      throw new Error('Course not found');
     }
+
+    const existingData = courseDoc.data();
+    console.log('Course before update:', existingData);
     
+    // Create update data with the new isPublic value
+    const updateData = {
+      isPublic: newIsPublic,
+      updatedAt: serverTimestamp(),
+      views: newIsPublic ? (existingData.views || 0) : existingData.views
+    };
+
+    // Update only the necessary fields
     await updateDoc(courseRef, updateData);
     
-    const after = await getDoc(courseRef);
-    console.log('Course after update:', after.data());
-    return true;
+    // Get the updated document
+    const updatedDoc = await getDoc(courseRef);
+    const updatedData = updatedDoc.data();
+    console.log('Course after update:', updatedData);
+    
+    // Return the complete updated course data
+    return {
+      id: courseId,
+      ...existingData,
+      ...updatedData,
+      isPublic: newIsPublic // Ensure the isPublic value is correct
+    };
   } catch (error) {
     console.error('Error toggling course privacy:', error);
     throw new Error('Failed to update course privacy');

@@ -146,12 +146,22 @@
 
   async function handleTogglePrivacy(courseId: string, isPublic: boolean) {
     try {
-      await toggleCoursePrivacy(courseId, isPublic);
-      // Refresh the courses list
-      await loadUserCourses();
-      // Refresh public courses if viewing them
+      const updatedCourse = await toggleCoursePrivacy(courseId, isPublic);
+      console.log('Updated course:', updatedCourse);
+      
+      // Update the course in userCourses
+      userCourses = userCourses.map(course => 
+        course.id === courseId 
+          ? { ...course, ...updatedCourse }
+          : course
+      );
+      
+      // Refresh public courses list
       const updatedPublicCourses = await getPublicCourses();
       publicCourses = updatedPublicCourses;
+      
+      // Update filtered courses
+      filteredCourses = [...userCourses];
     } catch (error) {
       console.error('Error toggling course privacy:', error);
     }

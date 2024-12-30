@@ -11,10 +11,11 @@
   export let loading = false;
   export let error: string | null = null;
   export let onShare: (courseId: string) => void;
-  export let onTogglePrivacy: ((courseId: string, isPublic: boolean) => void) | undefined = undefined;
+  export let onTogglePrivacy: ((courseId: string, isPublic: boolean) => Promise<void>) | undefined = undefined;
   export let showPrivacyToggle = true;
 
   let courseProgress: { [courseId: string]: number } = {};
+  let privacyLoading: { [courseId: string]: boolean } = {};
 
   // Add reactivity to courses array
   $: if (courses && $user?.uid) {
@@ -38,6 +39,25 @@
       courseProgress = { ...courseProgress }; // Trigger reactivity
     } catch (error) {
       console.error('Error loading progress:', error);
+    }
+  }
+
+  async function handlePrivacyToggle(courseId: string, currentIsPublic: boolean) {
+    if (!onTogglePrivacy) return;
+    
+    try {
+      privacyLoading[courseId] = true;
+      privacyLoading = { ...privacyLoading }; // Trigger reactivity
+      
+      // Pass the desired new state (opposite of current state)
+      await onTogglePrivacy(courseId, !currentIsPublic);
+      
+      // The course update will be handled by the parent component
+    } catch (error) {
+      console.error('Error toggling privacy:', error);
+    } finally {
+      privacyLoading[courseId] = false;
+      privacyLoading = { ...privacyLoading }; // Trigger reactivity
     }
   }
 
@@ -128,11 +148,14 @@
               </button>
               {#if showPrivacyToggle && onTogglePrivacy}
                 <button
-                  class="p-1 hover:bg-[#F5F5F5] rounded-full transition-colors duration-200"
+                  class="p-1 hover:bg-[#F5F5F5] rounded-full transition-colors duration-200 {privacyLoading[course.id] ? 'opacity-50 cursor-not-allowed' : ''}"
                   on:click|stopPropagation={(e) => {
                     e.preventDefault();
-                    onTogglePrivacy(course.id, course.isPublic);
+                    if (!privacyLoading[course.id]) {
+                      handlePrivacyToggle(course.id, course.isPublic);
+                    }
                   }}
+                  disabled={privacyLoading[course.id]}
                 >
                   {#if course.isPublic}
                     <Globe class="w-5 h-5 text-green-600" />
