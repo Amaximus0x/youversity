@@ -759,6 +759,7 @@ export async function submitCourseRating(
   userPhotoURL?: string
 ) {
   try {
+    console.log('Submitting rating:', { userId, courseId, rating, review });
     const courseRef = doc(db, 'courses', courseId);
     const courseDoc = await getDoc(courseRef);
     
@@ -785,14 +786,16 @@ export async function submitCourseRating(
       updatedAt: now
     };
 
+    console.log('Rating data to save:', ratingData);
+
     if (ratingDoc.exists()) {
-      // Update existing rating
+      console.log('Updating existing rating');
       await updateDoc(ratingRef, {
         ...ratingData,
         createdAt: ratingDoc.data().createdAt // Keep original creation date
       });
     } else {
-      // Create new rating
+      console.log('Creating new rating');
       await setDoc(ratingRef, ratingData);
     }
 
@@ -801,9 +804,12 @@ export async function submitCourseRating(
     const ratingsSnapshot = await getDocs(ratingsQuery);
     let totalRating = 0;
     ratingsSnapshot.forEach(doc => {
-      totalRating += doc.data().rating;
+      const rating = Number(doc.data().rating);
+      console.log('Individual rating:', rating);
+      totalRating += rating;
     });
     const averageRating = totalRating / ratingsSnapshot.size;
+    console.log('New average rating:', averageRating, 'Total ratings:', ratingsSnapshot.size);
 
     await updateDoc(courseRef, {
       averageRating,
@@ -819,15 +825,25 @@ export async function submitCourseRating(
 
 export async function getCourseRatings(courseId: string) {
   try {
+    console.log('Fetching ratings for course:', courseId);
     const ratingsQuery = query(
       collection(db, `courses/${courseId}/ratings`),
       orderBy('createdAt', 'desc')
     );
     const ratingsSnapshot = await getDocs(ratingsQuery);
+    console.log('Raw ratings data:', ratingsSnapshot.docs.map(doc => doc.data()));
     
-    return ratingsSnapshot.docs.map(doc => ({
-      ...doc.data()
-    })) as CourseRating[];
+    const ratings = ratingsSnapshot.docs.map(doc => {
+      const data = doc.data();
+      console.log('Rating document:', data);
+      return {
+        ...data,
+        rating: Number(data.rating) // Ensure rating is a number
+      };
+    }) as CourseRating[];
+    
+    console.log('Processed ratings:', ratings);
+    return ratings;
   } catch (error) {
     console.error('Error getting course ratings:', error);
     throw error;

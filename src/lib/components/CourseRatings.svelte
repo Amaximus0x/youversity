@@ -14,11 +14,13 @@
   let error: string | null = null;
   let submitting = false;
   let showReviewForm = false;
+  let averageRating = 0;
 
   onMount(async () => {
     try {
       loading = true;
       ratings = await getCourseRatings(courseId);
+      console.log('Loaded ratings:', ratings);
       
       if ($user) {
         const existingRating = await getUserCourseRating($user.uid, courseId);
@@ -27,6 +29,9 @@
           userReview = existingRating.review;
         }
       }
+      
+      // Calculate initial average
+      averageRating = getAverageRating();
     } catch (err) {
       console.error('Error loading ratings:', err);
       error = err instanceof Error ? err.message : 'Failed to load ratings';
@@ -72,10 +77,35 @@
     });
   }
 
-  function getAverageRating() {
-    if (ratings.length === 0) return 0;
-    const total = ratings.reduce((sum, r) => sum + r.rating, 0);
-    return total / ratings.length;
+  function getAverageRating(): number {
+    console.log('Calculating average for ratings:', ratings);
+    if (!ratings || ratings.length === 0) {
+      console.log('No ratings available');
+      return 0;
+    }
+    
+    let validRatings = ratings.filter(r => typeof r.rating === 'number' && !isNaN(r.rating));
+    console.log('Valid ratings:', validRatings);
+    
+    if (validRatings.length === 0) {
+      console.log('No valid numeric ratings found');
+      return 0;
+    }
+    
+    const total = validRatings.reduce((sum, r) => sum + r.rating, 0);
+    const average = total / validRatings.length;
+    console.log('Total:', total, 'Count:', validRatings.length, 'Average:', average);
+    
+    return Number(average.toFixed(1));
+  }
+
+  // Update averageRating whenever ratings change
+  $: {
+    if (ratings) {
+      console.log('Ratings updated:', ratings);
+      averageRating = getAverageRating();
+      console.log('New average rating:', averageRating);
+    }
   }
 </script>
 
@@ -86,14 +116,17 @@
   <div class="flex items-center gap-4 mb-8">
     <div class="flex items-center">
       {#each Array(5) as _, i}
-        <Star 
-          class="w-6 h-6 {i < Math.floor(getAverageRating()) ? 'text-yellow-400' : 'text-gray-300'}"
-          fill={i < Math.floor(getAverageRating()) ? 'currentColor' : 'none'}
-        />
+        {#if i < Math.floor(averageRating)}
+          <Star class="w-6 h-6 text-yellow-400" fill="currentColor" />
+        {:else if i === Math.floor(averageRating) && (averageRating % 1) >= 0.5}
+          <StarHalf class="w-6 h-6 text-yellow-400" fill="currentColor" />
+        {:else}
+          <Star class="w-6 h-6 text-gray-300" fill="none" />
+        {/if}
       {/each}
     </div>
-    <span class="text-lg font-medium">{getAverageRating().toFixed(1)}</span>
-    <span class="text-gray-500">({ratings.length} reviews)</span>
+    <span class="text-lg font-medium">{averageRating}</span>
+    <span class="text-gray-500">({ratings.length} {ratings.length === 1 ? 'review' : 'reviews'})</span>
   </div>
 
   <!-- Add Review Button -->

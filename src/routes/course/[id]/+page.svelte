@@ -412,13 +412,6 @@
           <p class="text-gray-700">{courseDetails.Final_Course_Conclusion}</p>
         </div>
 
-        <!-- Course Ratings -->
-        {#if courseDetails.isPublic}
-          <div class="mt-8">
-            <CourseRatings courseId={$page.params.id} />
-          </div>
-        {/if}
-
         <!-- YouTube Playlist Button -->
         <div class="mt-12 border-t pt-8">
           <div class="flex flex-col items-center gap-4">
@@ -435,6 +428,13 @@
             </p>
           </div>
         </div>
+
+        <!-- Course Ratings -->
+        {#if courseDetails.isPublic}
+          <div class="mt-12 border-t pt-8">
+            <CourseRatings courseId={$page.params.id} />
+          </div>
+        {/if}
       </div>
     </div>
   </div>
