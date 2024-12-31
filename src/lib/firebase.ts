@@ -56,7 +56,7 @@ export async function saveCourseToFirebase(userId: string, courseData: any) {
       id: courseId,
       createdBy: userId,
       userId,
-      isPublic: false,  // Default to private
+      isPublic: true,  // Default to public
       views: 0,         // Required for orderBy
       likes: 0,
       updatedAt: serverTimestamp()
