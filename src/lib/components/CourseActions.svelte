@@ -57,7 +57,7 @@
       isLoading = true;
       await enrollInCourse($user.uid, courseId);
       isEnrolled = true;
-      goto(`/course/${courseId}`);
+      window.location.reload();
     } catch (error) {
       console.error('Error enrolling in course:', error);
     } finally {
