@@ -11,7 +11,7 @@
     "start": "node build/index.js"
   },
   "devDependencies": {
-    "@sveltejs/adapter-vercel": "^4.0.0",
+    "@sveltejs/adapter-vercel": "^5.5.2",
     "@sveltejs/kit": "^2.0.0",
     "@sveltejs/vite-plugin-svelte": "^3.0.0",
     "autoprefixer": "^10.4.14",
@@ -33,6 +33,6 @@
     "youversity": "file:"
   },
   "engines": {
-    "node": "18.x"
+    "node": "20.x"
   }
 }
