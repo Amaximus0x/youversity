@@ -151,14 +151,22 @@
         <!-- Header -->
         <header class="bg-white border-b border-[#E8EAED] px-6 h-16 flex justify-between items-center fixed top-0 right-0 left-64 z-20">
           <div class="relative w-1/2">
-            <form on:submit={handleSearch} class="w-full">
-              <input
-                type="text"
-                placeholder="Search courses..."
-                bind:value={searchQuery}
-                class="w-full pl-10 py-2 pr-4 rounded-lg bg-[#F5F5F5] border-none focus:outline-none focus:ring-2 focus:ring-[#EE434A] text-sm"
-              />
-              <Search class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+            <form on:submit={handleSearch} class="w-full flex">
+              <div class="relative flex-1">
+                <input
+                  type="text"
+                  placeholder="Search courses..."
+                  bind:value={searchQuery}
+                  class="w-full pl-10 py-2 pr-4 rounded-l-lg bg-[#F5F5F5] border-none focus:outline-none focus:ring-2 focus:ring-[#EE434A] text-sm"
+                />
+                <Search class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              </div>
+              <button
+                type="submit"
+                class="px-4 py-2 bg-[#EE434A] text-white rounded-r-lg hover:bg-[#D93D44] transition-colors duration-200 flex items-center justify-center"
+              >
+                <Search class="w-5 h-5" />
+              </button>
             </form>
           </div>
 
