@@ -378,11 +378,36 @@ export async function getPublicCourses() {
     const courses = querySnapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data()
-    }));
+    } as FinalCourseStructure & { id: string }));
     console.log('Mapped courses:', courses);
     return courses;
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Error fetching public courses:', error);
+    // Check if the error is due to missing index
+    if (error instanceof Error && error.message?.includes('index')) {
+      console.log('Missing index. Falling back to basic query...');
+      // Fallback to a basic query without ordering
+      try {
+        const basicQuery = query(
+          collection(db, 'courses'),
+          where('isPublic', '==', true)
+        );
+        const basicSnapshot = await getDocs(basicQuery);
+        const basicCourses = basicSnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        } as FinalCourseStructure & { id: string }));
+        // Sort in memory instead
+        return basicCourses.sort((a, b) => {
+          const dateA = a.createdAt instanceof Timestamp ? a.createdAt.toDate() : new Date(0);
+          const dateB = b.createdAt instanceof Timestamp ? b.createdAt.toDate() : new Date(0);
+          return dateB.getTime() - dateA.getTime();
+        });
+      } catch (fallbackError) {
+        console.error('Fallback query failed:', fallbackError);
+        throw new Error('Failed to fetch public courses');
+      }
+    }
     throw new Error('Failed to fetch public courses');
   }
 }
