@@ -369,8 +369,7 @@ export async function getPublicCourses() {
     const q = query(
       collection(db, 'courses'),
       where('isPublic', '==', true),
-      orderBy('views', 'desc'),
-      limit(6)
+      orderBy('createdAt', 'desc')
     );
     console.log('Query created:', q);
     const querySnapshot = await getDocs(q);
