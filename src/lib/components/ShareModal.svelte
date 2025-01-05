@@ -45,11 +45,16 @@
 
 {#if show}
   <div 
+    role="dialog"
+    aria-modal="true"
+    tabindex="-1"
+    on:keydown={(e) => e.key === 'Escape' && onClose()}
     class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
     transition:fade
     on:click={onClose}
   >
     <div 
+      role="document"
       class="bg-white rounded-lg p-6 max-w-md w-full mx-4 relative"
       on:click|stopPropagation
     >

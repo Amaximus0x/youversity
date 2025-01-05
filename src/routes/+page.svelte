@@ -253,6 +253,9 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
           {#each publicCourses as course}
             <div 
+              role="button"
+              tabindex="0"
+              on:keydown={(e) => e.key === 'Enter' && goto(`/course/${course.id}`)}
               class="bg-white rounded-lg shadow-md overflow-hidden cursor-pointer hover:shadow-lg transition-shadow duration-200"
               on:click={() => goto(`/course/${course.id}`)}
             >
