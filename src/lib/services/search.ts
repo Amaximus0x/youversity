@@ -75,8 +75,12 @@ export async function searchCourses(
         break;
       case 'latest':
         results.sort((a, b) => {
-          const dateA = a.createdAt instanceof Date ? a.createdAt : new Date(a.createdAt);
-          const dateB = b.createdAt instanceof Date ? b.createdAt : new Date(b.createdAt);
+          const dateA = a.createdAt instanceof Date 
+            ? a.createdAt 
+            : a.createdAt?.toDate?.() || new Date(a.createdAt);
+          const dateB = b.createdAt instanceof Date 
+            ? b.createdAt 
+            : b.createdAt?.toDate?.() || new Date(b.createdAt);
           return dateB.getTime() - dateA.getTime();
         });
         break;

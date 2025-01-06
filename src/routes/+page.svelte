@@ -61,8 +61,27 @@
   onMount(async () => {
     try {
       console.log('Fetching public courses on home page...');
+      // Initial load
       publicCourses = await getPublicCourses();
       console.log('Public courses loaded on home page:', publicCourses);
+
+      // Set up an interval to refresh the public courses every minute
+      const refreshInterval = setInterval(async () => {
+        try {
+          const updatedCourses = await getPublicCourses();
+          if (JSON.stringify(updatedCourses) !== JSON.stringify(publicCourses)) {
+            publicCourses = updatedCourses;
+            console.log('Public courses refreshed:', publicCourses);
+          }
+        } catch (error) {
+          console.error('Error refreshing public courses:', error);
+        }
+      }, 60000); // 60 seconds
+
+      // Cleanup interval on component unmount
+      return () => {
+        clearInterval(refreshInterval);
+      };
     } catch (error) {
       console.error('Error loading public courses:', error);
     }

@@ -366,41 +366,59 @@ export async function getSharedCourse(courseId: string) {
 export async function getPublicCourses() {
   try {
     console.log('Fetching public courses...');
+    // Add cache control and limit to ensure fresh data
     const q = query(
       collection(db, 'courses'),
       where('isPublic', '==', true),
       orderBy('createdAt', 'desc')
     );
-    console.log('Query created:', q);
+    
+    // Force a fresh read from the server
     const querySnapshot = await getDocs(q);
     console.log('Query results:', querySnapshot.size, 'documents found');
     
-    const courses = querySnapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    } as FinalCourseStructure & { id: string }));
-    console.log('Mapped courses:', courses);
+    const courses = querySnapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        ...data,
+        createdAt: data.createdAt?.toDate?.() || new Date(),
+        updatedAt: data.updatedAt?.toDate?.() || new Date()
+      } as FinalCourseStructure & { id: string };
+    });
+    
+    // Sort in memory to ensure consistent ordering
+    courses.sort((a, b) => {
+      const dateA = a.createdAt instanceof Date ? a.createdAt : new Date(a.createdAt);
+      const dateB = b.createdAt instanceof Date ? b.createdAt : new Date(b.createdAt);
+      return dateB.getTime() - dateA.getTime();
+    });
+    
+    console.log('Processed courses:', courses.length);
     return courses;
   } catch (error: unknown) {
     console.error('Error fetching public courses:', error);
-    // Check if the error is due to missing index
     if (error instanceof Error && error.message?.includes('index')) {
       console.log('Missing index. Falling back to basic query...');
-      // Fallback to a basic query without ordering
       try {
         const basicQuery = query(
           collection(db, 'courses'),
           where('isPublic', '==', true)
         );
         const basicSnapshot = await getDocs(basicQuery);
-        const basicCourses = basicSnapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        } as FinalCourseStructure & { id: string }));
-        // Sort in memory instead
+        const basicCourses = basicSnapshot.docs.map(doc => {
+          const data = doc.data();
+          return {
+            id: doc.id,
+            ...data,
+            createdAt: data.createdAt?.toDate?.() || new Date(),
+            updatedAt: data.updatedAt?.toDate?.() || new Date()
+          } as FinalCourseStructure & { id: string };
+        });
+        
         return basicCourses.sort((a, b) => {
-          const dateA = a.createdAt instanceof Timestamp ? a.createdAt.toDate() : new Date(0);
-          const dateB = b.createdAt instanceof Timestamp ? b.createdAt.toDate() : new Date(0);
+          const dateA = a.createdAt instanceof Date ? a.createdAt : new Date(a.createdAt);
+          const dateB = b.createdAt instanceof Date ? b.createdAt : new Date(b.createdAt);
           return dateB.getTime() - dateA.getTime();
         });
       } catch (fallbackError) {
