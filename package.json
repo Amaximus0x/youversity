@@ -5,12 +5,15 @@
   "scripts": {
     "dev": "vite dev",
     "build": "vite build",
+    "build:vercel": "DEPLOYMENT_PLATFORM=vercel vite build",
+    "build:replit": "DEPLOYMENT_PLATFORM=replit vite build",
     "preview": "vite preview",
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
     "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
     "start": "node build/index.js"
   },
   "devDependencies": {
+    "@sveltejs/adapter-node": "^5.2.11",
     "@sveltejs/adapter-vercel": "^5.5.2",
     "@sveltejs/kit": "^2.0.0",
     "@sveltejs/vite-plugin-svelte": "^3.0.0",
