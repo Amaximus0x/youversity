@@ -219,7 +219,7 @@
         </button>
         <div class="relative w-full">
           <div 
-            class="absolute left-4 top-1/2 -translate-y-1/2 transition-all duration-300 ease-in-out" 
+            class="absolute left-4 top-1/2 -translate-y-1/2 transition-all duration-200 ease-in-out" 
             class:opacity-0={isInputFocused}
             class:translate-x-[-10px]={isInputFocused}
           >
@@ -235,7 +235,7 @@
             placeholder="Enter what you want to learn..."
             on:focus={() => isInputFocused = true}
             on:blur={() => isInputFocused = false}
-            class="w-full pl-12 pr-32 h-[52px] rounded-[32px] border-[1.5px] border-[rgba(0,0,0,0.05)] focus:outline-none focus:border-[#EE434A] text-base bg-white transition-all duration-300 ease-in-out"
+            class="w-full pl-12 pr-32 h-[52px] rounded-[32px] border-[1.5px] border-[rgba(0,0,0,0.05)] focus:outline-none focus:border-[#EE434A] text-base bg-white transition-all duration-200 ease-in-out"
           />
         </div>
       </form>

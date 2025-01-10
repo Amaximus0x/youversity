@@ -183,19 +183,23 @@
       <!-- Main Content with Navigation -->
       <main class="md:ml-64">
         <!-- Header -->
-        <header class="bg-white border-b border-[rgba(0,0,0,0.05)] px-4 py-6 flex flex-col gap-2.5 fixed top-0 right-0 left-64 z-20 h-24">
+        <header class="bg-white border-b border-[rgba(0,0,0,0.05)] px-4 h-16 flex items-center fixed top-0 right-0 left-64 z-20">
           <div class="flex justify-between items-center gap-8 w-full">
             <div class="flex-1 max-w-[611px] mx-auto">
               <form on:submit={handleSearch} class="w-full flex items-center bg-white border-[1.5px] {
                 isSearchFocused ? 'border-[#EE434A]' : 'border-[rgba(0,0,0,0.05)]'
-              } rounded-2xl h-12 transition-colors">
-                {#if !isSearchFocused}
+              } rounded-2xl h-12 transition-all duration-300 ease-in-out">
+                <div 
+                  class="transition-all duration-200 ease-in-out ml-4 {
+                    isSearchFocused ? 'opacity-0 translate-x-[-10px]' : 'opacity-60'
+                  }"
+                >
                   <img 
                     src="/icons/search-01.svg" 
                     alt="Search"
-                    class="w-6 h-6 opacity-60 ml-4" 
+                    class="w-6 h-6" 
                   />
-                {/if}
+                </div>
                 <input
                   type="text"
                   placeholder="Search Courses..."
