@@ -98,7 +98,7 @@
   <div class="min-h-screen bg-[#F5F5F5] font-sans">
     {#if !$page.data.hideNav}
       <!-- Sidebar - hidden on mobile -->
-      <aside class="hidden md:block w-64 bg-white h-screen fixed top-0 left-0 border-r border-[#E8EAED] z-10">
+      <aside class="hidden md:block w-64 bg-white h-screen fixed top-0 left-0 border-r border-[#E8EAED] z-10 flex flex-col">
         <div class="flex items-center h-16 px-6 border-b border-[#E8EAED]">
           <a href="/" class="flex items-center space-x-3">
             <img 
@@ -110,41 +110,69 @@
           </a>
         </div>
 
-        <nav class="py-2">
+        <nav class="py-6 flex-1">
           {#each sidebarItems as item}
             <a 
               href={item.href} 
-              class="flex items-center mx-2 px-4 h-[44px] transition-colors rounded-full {
+              class="flex items-center mx-4 px-4 h-[44px] transition-colors rounded-lg {
                 $page.url.pathname === item.href 
-                  ? 'bg-[#E8F0FE] text-[#EE434A]' 
+                  ? 'text-[#EE434A]' 
                   : 'text-[#5F6368] hover:bg-[#F8F9FA]'
               }"
             >
               <img 
                 src={item.icon} 
                 alt={item.label}
-                class="{
+                style={$page.url.pathname === item.href ? 'filter: invert(45%) sepia(95%) saturate(1648%) hue-rotate(325deg) brightness(97%) contrast(91%);' : ''}
+                class="w-5 h-5 mr-3 {
                   $page.url.pathname === item.href
-                    ? 'text-[#EE434A]'
-                    : 'text-[#5F6368]'
-                } w-[20px] h-[20px] mr-3" 
+                    ? 'opacity-100'
+                    : 'opacity-60'
+                }" 
               />
-              <span class="text-[14px] font-medium">{item.label}</span>
+              <span class="text-[15px] font-normal">{item.label}</span>
             </a>
           {/each}
         </nav>
 
-        <div class="absolute bottom-0 w-full border-t border-[#E8EAED]">
+        <!-- Help Center Section -->
+        <div class="px-4 pb-6">
+          <div class="relative mt-[15px] flex flex-col items-start p-8 pb-4 gap-8 w-[198px] border border-[rgba(0,0,0,0.05)] rounded-2xl bg-white">
+            <div class="flex flex-col items-center w-full gap-2">
+              <img 
+                src="/icons/help-circle.svg" 
+                alt="Help"
+                class="w-[42px] h-[42px] absolute -top-5 left-1/2 transform -translate-x-1/2" 
+              />
+              <h3 class="text-[15px] font-medium text-[#202124] mt-4">Help Center</h3>
+            </div>
+            <div class="flex flex-col items-center w-full">
+              <p class="text-[13px] leading-5 text-[#5F6368] text-center">
+                Having Trouble carrying out<br />
+                a task?<br />
+                Please contact us
+              </p>
+              <a 
+                href="/help"
+                class="mt-4 w-full py-2 px-4 text-[#EE434A] text-[13px] font-medium border border-[#EE434A] rounded-lg hover:bg-[#FFF2F3] transition-colors text-center"
+              >
+                Go to help center
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <div class="border-t border-[#E8EAED]">
           <button 
             on:click={handleAuth}
-            class="flex items-center w-full mx-2 px-4 h-[44px] text-[#5F6368] hover:bg-[#F8F9FA] rounded-full my-2"
+            class="flex items-center w-full px-8 h-[44px] text-[#5F6368] hover:bg-[#F8F9FA]"
           >
             <img 
               src="/icons/logout-03.svg" 
               alt="Sign Out"
-              class="w-[20px] h-[20px] mr-3" 
+              class="w-5 h-5 mr-3 opacity-60" 
             />
-            <span class="text-[14px] font-medium">{$user ? 'Sign Out' : 'Sign In'}</span>
+            <span class="text-[15px] font-normal">{$user ? 'Sign Out' : 'Sign In'}</span>
           </button>
         </div>
       </aside>
@@ -210,7 +238,12 @@
                 <img 
                   src={item.icon}
                   alt={item.label}
-                  class="w-6 h-6 mb-1" 
+                  style={$page.url.pathname === item.href ? 'filter: invert(45%) sepia(95%) saturate(1648%) hue-rotate(325deg) brightness(97%) contrast(91%);' : ''}
+                  class="w-6 h-6 mb-1 {
+                    $page.url.pathname === item.href
+                      ? 'opacity-100'
+                      : 'opacity-60'
+                  }" 
                 />
                 <span>{item.label}</span>
               </a>
