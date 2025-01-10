@@ -31,6 +31,7 @@
   let showShareModal = false;
   let selectedCourseId = '';
   let publicCourses: (FinalCourseStructure & { id: string })[] = [];
+  let isInputFocused = false;
 
   // Update filteredCourses when userCourses changes
   $: {
@@ -189,42 +190,54 @@
 
 <div class="container mx-auto px-4 py-6 pb-20 sm:pb-6 sm:py-8 max-w-7xl">
   <!-- Create Course Section -->
-  <div class="relative overflow-hidden bg-gradient-to-br from-[#F5F5F5] to-white rounded-lg shadow-lg p-4 sm:p-8 md:p-12 mb-6 sm:mb-12">
-    <div class="absolute inset-0 bg-[url('/placeholder.svg')] opacity-5"></div>
-    
-    <div class="max-w-2xl mx-auto text-center relative">
-      <div class="flex items-center justify-center mb-4 sm:mb-6">
-        <img 
-          src="/favicon.png" 
-          alt="Youversity Logo" 
-          class="w-8 h-8 sm:w-12 sm:h-12 object-contain"
-        />
-      </div>
-      <h2 class="text-2xl sm:text-3xl md:text-4xl font-bold text-[#2A4D61] mb-2 sm:mb-4">
-        Create Your Course
+  <div class="relative overflow-hidden bg-gradient-to-br from-[#FFF2F3] to-[#EDFEFF] rounded-lg p-8 sm:p-12 mb-6 sm:mb-12">    
+    <div class="max-w-2xl">
+      <h1 class="text-4xl font-medium mb-2">
+        Hi {$user?.displayName?.split(' ')[0] || ''} 👋
+      </h1>
+      <h2 class="text-4xl font-medium mb-6">
+        What would you like to <span class="text-[#EE434A]">Learn</span>?
       </h2>
-      
-      <p class="text-sm sm:text-base text-[#1E3443]/80 mb-6 sm:mb-8">
-        Enter your learning objective below and we'll help you create a comprehensive course
+      <p class="text-[#494848] text-lg mb-8">
+        Enter your learning objectives below we'll help you create a comprehensive course.
       </p>
 
       <form 
         on:submit={handleCreateCourse} 
-        class="flex flex-col sm:flex-row gap-2 sm:gap-4 max-w-xl mx-auto"
+        class="relative flex-1 max-w-3xl"
       >
-        <input
-          type="text"
-          bind:value={learningObjective}
-          placeholder="Enter what you want to learn..."
-          class="flex-1 px-4 py-2 sm:py-3 rounded-lg border border-[#D9E1E3] focus:outline-none focus:ring-2 focus:ring-[#EE434A] text-sm sm:text-base"
-        />
         <button
           type="submit"
-          class="px-6 py-2 sm:py-3 bg-[#EE434A] text-white rounded-lg hover:bg-[#D63B42] transition-colors duration-200 flex items-center justify-center gap-2 text-sm sm:text-base whitespace-nowrap"
+          class="absolute right-0 z-10 px-6 h-[52px] bg-[#EE434A] text-white rounded-[32px] hover:bg-[#D63B42] transition-colors duration-200 flex items-center gap-2 text-base whitespace-nowrap"
         >
           Create Course
-          <ArrowRight class="w-4 h-4 sm:w-5 sm:h-5" />
+          <img 
+            src="/icons/arrow-right.svg" 
+            alt="Create"
+            class="w-5 h-5" 
+          />
         </button>
+        <div class="relative w-full">
+          <div 
+            class="absolute left-4 top-1/2 -translate-y-1/2 transition-all duration-300 ease-in-out" 
+            class:opacity-0={isInputFocused}
+            class:translate-x-[-10px]={isInputFocused}
+          >
+            <img 
+              src="/icons/ai-magic.svg" 
+              alt="AI Magic"
+              class="w-6 h-6" 
+            />
+          </div>
+          <input
+            type="text"
+            bind:value={learningObjective}
+            placeholder="Enter what you want to learn..."
+            on:focus={() => isInputFocused = true}
+            on:blur={() => isInputFocused = false}
+            class="w-full pl-12 pr-32 h-[52px] rounded-[32px] border-[1.5px] border-[rgba(0,0,0,0.05)] focus:outline-none focus:border-[#EE434A] text-base bg-white transition-all duration-300 ease-in-out"
+          />
+        </div>
       </form>
     </div>
   </div>
