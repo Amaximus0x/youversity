@@ -5,10 +5,6 @@
   import CourseGenerationProgress from '$lib/components/CourseGenerationProgress.svelte';
   import Skeleton from '$lib/components/Skeleton.svelte';
   import { 
-    Home,
-    TrendingUp,
-    Settings,
-    LogOut,
     Search,
     Bell,
     PlusCircle,
@@ -22,18 +18,20 @@
 
   // Sidebar items configuration
   const sidebarItems = [
-    { icon: Home, label: 'Home', href: '/', isActive: true },
-    { icon: TrendingUp, label: 'Trending', href: '#trending-courses', isActive: false },
-    { icon: User, label: 'My Profile', href: '/profile', isActive: false },
-    { icon: Settings, label: 'Settings', href: '/settings', isActive: false },
+    { icon: '/icons/home.svg', label: 'Home', href: '/', isActive: true },
+    { icon: '/icons/fire-02.svg', label: 'Trending', href: '#trending-courses', isActive: false },
+    { icon: '/icons/video-replay.svg', label: 'My Courses', href: '/my-courses', isActive: false },
+    { icon: '/icons/bookmark-03.svg', label: 'Bookmarks', href: '/bookmarks', isActive: false },
+    { icon: '/icons/settings-02.svg', label: 'Settings', href: '/settings', isActive: false },
   ];
 
   // Mobile navigation items (simplified version of sidebar items)
   const mobileNavItems = [
-    { icon: Home, label: 'Home', href: '/' },
-    { icon: TrendingUp, label: 'Trending', href: '#trending-courses' },
-    { icon: User, label: 'Profile', href: '/profile' },
-    { icon: Settings, label: 'Settings', href: '/settings' },
+    { icon: '/icons/home.svg', label: 'Home', href: '/' },
+    { icon: '/icons/fire-02.svg', label: 'Trending', href: '#trending-courses' },
+    { icon: '/icons/video-replay.svg', label: 'My Courses', href: '/my-courses' },
+    { icon: '/icons/bookmark-03.svg', label: 'Bookmarks', href: '/bookmarks' },
+    { icon: '/icons/settings-02.svg', label: 'Settings', href: '/settings' },
   ];
 
   let menuOpen = false;
@@ -122,8 +120,9 @@
                   : 'text-[#5F6368] hover:bg-[#F8F9FA]'
               }"
             >
-              <svelte:component 
-                this={item.icon} 
+              <img 
+                src={item.icon} 
+                alt={item.label}
                 class="{
                   $page.url.pathname === item.href
                     ? 'text-[#EE434A]'
@@ -140,7 +139,11 @@
             on:click={handleAuth}
             class="flex items-center w-full mx-2 px-4 h-[44px] text-[#5F6368] hover:bg-[#F8F9FA] rounded-full my-2"
           >
-            <LogOut class="w-[20px] h-[20px] mr-3" />
+            <img 
+              src="/icons/logout-03.svg" 
+              alt="Sign Out"
+              class="w-[20px] h-[20px] mr-3" 
+            />
             <span class="text-[14px] font-medium">{$user ? 'Sign Out' : 'Sign In'}</span>
           </button>
         </div>
@@ -204,8 +207,9 @@
                     ? 'text-[#EE434A]' 
                     : 'text-[#2A4D61]'}"
               >
-                <svelte:component 
-                  this={item.icon} 
+                <img 
+                  src={item.icon}
+                  alt={item.label}
                   class="w-6 h-6 mb-1" 
                 />
                 <span>{item.label}</span>
