@@ -37,6 +37,7 @@
   let menuOpen = false;
   let searchQuery = '';
   let isOnline = true;
+  let isSearchFocused = false;
 
   function toggleMenu() {
     menuOpen = !menuOpen;
@@ -182,42 +183,63 @@
       <!-- Main Content with Navigation -->
       <main class="md:ml-64">
         <!-- Header -->
-        <header class="bg-white border-b border-[#E8EAED] px-6 h-16 flex justify-between items-center fixed top-0 right-0 left-64 z-20">
-          <div class="relative w-1/2">
-            <form on:submit={handleSearch} class="w-full flex">
-              <div class="relative flex-1">
+        <header class="bg-white border-b border-[rgba(0,0,0,0.05)] px-4 py-6 flex flex-col gap-2.5 fixed top-0 right-0 left-64 z-20 h-24">
+          <div class="flex justify-between items-center gap-8 w-full">
+            <div class="flex-1 max-w-[611px] mx-auto">
+              <form on:submit={handleSearch} class="w-full flex items-center bg-white border-[1.5px] {
+                isSearchFocused ? 'border-[#EE434A]' : 'border-[rgba(0,0,0,0.05)]'
+              } rounded-2xl h-12 transition-colors">
+                {#if !isSearchFocused}
+                  <img 
+                    src="/icons/search-01.svg" 
+                    alt="Search"
+                    class="w-6 h-6 opacity-60 ml-4" 
+                  />
+                {/if}
                 <input
                   type="text"
-                  placeholder="Search courses..."
+                  placeholder="Search Courses..."
                   bind:value={searchQuery}
-                  class="w-full pl-10 py-2 pr-4 rounded-l-lg bg-[#F5F5F5] border-none focus:outline-none focus:ring-2 focus:ring-[#EE434A] text-sm"
+                  on:focus={() => isSearchFocused = true}
+                  on:blur={() => isSearchFocused = false}
+                  class="flex-1 pl-2 pr-1 bg-transparent border-none focus:outline-none text-base text-[#A3A3A3] font-normal"
                 />
-                <Search class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-              </div>
-              <button
-                type="submit"
-                class="px-4 py-2 bg-[#EE434A] text-white rounded-r-lg hover:bg-[#D93D44] transition-colors duration-200 flex items-center justify-center"
-              >
-                <Search class="w-5 h-5" />
-              </button>
-            </form>
-          </div>
+                <div class="flex items-center pl-2 border-l border-[rgba(0,0,0,0.05)]">
+                  <button
+                    type="button"
+                    class="flex items-center gap-2 px-2 py-[6px] border-[1.5px] border-[rgba(0,0,0,0.05)] rounded-2xl bg-white hover:bg-[#FFF2F3] transition-colors mr-1"
+                  >
+                    <img 
+                      src="/icons/filter-icon.svg" 
+                      alt="Filter"
+                      class="w-6 h-6" 
+                    />
+                    <span class="text-base font-normal text-black">Filter</span>
+                  </button>
+                </div>
+              </form>
+            </div>
 
-          <div class="flex items-center space-x-6">
-            <button class="relative p-2 hover:bg-[#F5F5F5] rounded-full">
-              <Bell class="w-5 h-5 text-[#2A4D61]" />
-              <span class="absolute top-1 right-1 w-2 h-2 bg-[#42C1C8] rounded-full"></span>
-            </button>
-            
-            {#if $user}
-              <div class="w-8 h-8 rounded-full bg-gray-200 overflow-hidden">
+            <div class="flex items-center gap-8">
+              <button class="relative w-12 h-12 flex items-center justify-center border border-[rgba(0,0,0,0.05)] rounded-full">
                 <img 
-                  src={$user.photoURL || ''} 
-                  alt={$user.displayName || 'User'} 
-                  class="w-full h-full object-cover"
+                  src="/icons/notification-block-02.svg" 
+                  alt="Notifications"
+                  class="w-6 h-6" 
                 />
-              </div>
-            {/if}
+                <span class="absolute top-3 right-3 w-2 h-2 bg-[#EB434A] rounded-full"></span>
+              </button>
+              
+              {#if $user}
+                <div class="w-12 h-12 rounded-full bg-white border border-[rgba(0,0,0,0.05)] overflow-hidden">
+                  <img 
+                    src={$user.photoURL || ''} 
+                    alt={$user.displayName || 'User'} 
+                    class="w-full h-full object-cover"
+                  />
+                </div>
+              {/if}
+            </div>
           </div>
         </header>
 
