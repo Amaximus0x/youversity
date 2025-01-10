@@ -139,11 +139,13 @@
         <div class="px-4 pb-6">
           <div class="relative mt-[15px] flex flex-col items-start p-8 pb-4 gap-8 w-[198px] border border-[rgba(0,0,0,0.05)] rounded-2xl bg-white">
             <div class="flex flex-col items-center w-full gap-2">
-              <img 
-                src="/icons/help-circle.svg" 
-                alt="Help"
-                class="w-[42px] h-[42px] absolute -top-5 left-1/2 transform -translate-x-1/2" 
-              />
+              <div class="absolute -top-5 left-1/2 transform -translate-x-1/2 w-[52px] h-[52px] bg-white rounded-full flex items-center justify-center">
+                <img 
+                  src="/icons/help-circle.svg" 
+                  alt="Help"
+                  class="w-[42px] h-[42px]" 
+                />
+              </div>
               <h3 class="text-[15px] font-medium text-[#202124] mt-4">Help Center</h3>
             </div>
             <div class="flex flex-col items-center w-full">
