@@ -327,7 +327,6 @@
 
   <!-- Trending Community Courses Section -->
   <section class="mb-12">
-    <h2 class="text-xl sm:text-2xl font-semibold text-[#2A4D61] mb-6" id="trending-courses">Public Courses</h2>
     {#if publicCourses.length > 0}
       <TrendingCourseList courses={publicCourses} />
     {/if}

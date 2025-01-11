@@ -3,6 +3,8 @@
   import type { FinalCourseStructure } from '$lib/types/course';
   import { Eye, ArrowUp } from 'lucide-svelte';
   import ShareModal from '$lib/components/ShareModal.svelte';
+  import { likeCourse } from '$lib/firebase';
+  import { user } from '$lib/stores/auth';
 
   export let courses: (FinalCourseStructure & { id: string })[] = [];
   let showShareModal = false;
@@ -11,6 +13,27 @@
   function handleShare(courseId: string) {
     selectedCourseId = courseId;
     showShareModal = true;
+  }
+
+  async function handleLike(e: Event, courseId: string) {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if ($user) {
+      try {
+        const updatedLikeData = await likeCourse(courseId, $user.uid);
+        // Update the courses array with new like data
+        courses = courses.map(c => 
+          c.id === courseId 
+            ? { ...c, likes: updatedLikeData.likes, likedBy: updatedLikeData.likedBy }
+            : c
+        );
+      } catch (error) {
+        console.error('Error updating like:', error);
+      }
+    } else {
+      goto('/login');
+    }
   }
 </script>
 
@@ -56,10 +79,13 @@
               <Eye class="w-4 h-4" />
               <span>{course.views || 0}</span>
             </div>
-            <div class="flex items-center gap-2">
-              <ArrowUp class="w-4 h-4" />
-              <span>{course.likes || 0}</span>
-            </div>
+            <button 
+              class="flex items-center gap-2 hover:text-[#EE434A] transition-colors"
+              on:click={(e) => handleLike(e, course.id)}
+            >
+              <ArrowUp class="w-4 h-4 {course.likedBy?.includes($user?.uid) ? 'text-[#EE434A]' : ''}" />
+              <span class="{course.likedBy?.includes($user?.uid) ? 'text-[#EE434A]' : ''}">{course.likes || 0}</span>
+            </button>
           </div>
           <div class="mt-auto">
             <button 
