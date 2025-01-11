@@ -17,6 +17,18 @@
   import { onMount } from 'svelte';
   import { fade } from 'svelte/transition';
 
+  let isSearchPage = false;
+  let isMounted = false;
+  
+  onMount(() => {
+    isMounted = true;
+  });
+  
+  // Update isSearchPage only after component is mounted
+  $: if (isMounted) {
+    isSearchPage = $page.url.pathname === '/search';
+  }
+
   // Sidebar items configuration
   const sidebarItems = [
     { icon: '/icons/home.svg', label: 'Home', href: '/', isActive: true },
@@ -39,10 +51,6 @@
   let searchQuery = '';
   let isOnline = true;
   let isSearchFocused = false;
-  let isSearchPage = false;
-
-  // Add reactive statement to check if we're on the search page
-  $: isSearchPage = $page.url.pathname === '/search';
 
   function toggleMenu() {
     menuOpen = !menuOpen;
@@ -217,13 +225,13 @@
                 />
                 <div class="flex items-center pl-2 border-l border-[rgba(0,0,0,0.05)]">
                   <div class="relative w-[106px] h-[36px]">
-                    {#if isSearchPage}
+                    {#if isMounted && isSearchPage}
                       <div class="absolute inset-0 transition-colors duration-300 ease-in-out" 
                            in:fade={{ duration: 200 }} 
                            out:fade={{ duration: 200 }}>
                         <button
                           type="button"
-                          class="flex items-center gap-2 px-2 py-[6px] border-[1.5px] border-[rgba(0,0,0,0.05)] rounded-2xl bg-white hover:bg-[#FFF2F3] transition-colors"
+                          class="flex items-center gap-2 px-2 py-[5px] border-[1.5px] border-[rgba(0,0,0,0.05)] rounded-2xl bg-white hover:bg-[#FFF2F3] transition-colors"
                         >
                           <img 
                             src="/icons/filter-icon.svg" 
@@ -234,22 +242,13 @@
                         </button>
                       </div>
                     {:else}
-                      <div class="absolute inset-0 transition-colors duration-300 ease-in-out"
-                           in:fade={{ duration: 200 }} 
-                           out:fade={{ duration: 200 }}>
+                      <div class="absolute inset-0 transition-colors duration-300 ease-in-out">
                         <button
                           type="submit"
                           class="flex items-center gap-2 px-2 py-[5px] border-[1.5px] border-[rgba(0,0,0,0.05)] rounded-2xl bg-white hover:bg-[#FFF2F3] transition-colors {
                             isSearchFocused ? 'border-[#EE434A] text-[#EE434A]' : ''
                           }"
                         >
-                          <!-- <img 
-                            src="/icons/search-01.svg" 
-                            alt="Search"
-                            class="w-6 h-6 {
-                              isSearchFocused ? 'filter invert-[45%] sepia-[95%] saturate-[1648%] hue-rotate-[325deg] brightness-[97%] contrast-[91%]' : ''
-                            }" 
-                          /> -->
                           <span class="text-base font-normal">Search</span>
                         </button>
                       </div>
