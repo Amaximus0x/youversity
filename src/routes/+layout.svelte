@@ -99,18 +99,20 @@
   <div class="min-h-screen bg-gradient-to-b from-[#FFF2F3] via-white to-[#EDFEFF]">
     {#if !$page.data.hideNav}
       <!-- Sidebar - hidden on mobile -->
-      <aside class="fixed top-16 left-0 bottom-0 w-64 border-r border-[rgba(0,0,0,0.05)] z-40 hidden lg:flex lg:flex-col">
-        <div class="flex items-center h-16 px-6 border-b border-[rgba(0,0,0,0.05)]">
-          <a href="/" class="flex items-center space-x-3">
+      <aside class="fixed top-0 left-0 bottom-0 w-64 border-r border-[rgba(0,0,0,0.05)] z-40 hidden lg:flex lg:flex-col">
+        <!-- Logo section -->
+        <div class="flex items-center h-[72px] px-4 pt-4">
+          <a href="/" class="flex items-center gap-1">
             <img 
               src="/favicon.png" 
               alt="Youversity Logo" 
-              class="w-7 h-7 object-contain"
+              class="w-10 h-10 object-contain"
             />
-            <span class="text-[15px] font-medium text-[#202124]">YouVersity</span>
+            <span class="text-xl font-medium translate-y-[1px]">YouVersity</span>
           </a>
         </div>
 
+        <!-- Navigation section -->
         <nav class="py-6 flex-1">
           {#each sidebarItems as item}
             <a 
@@ -138,7 +140,7 @@
 
         <!-- Help Center Section -->
         <div class="px-4 pb-6">
-          <div class="relative mt-[15px] flex flex-col items-start p-8 pb-4 gap-8 w-[198px] border border-[rgba(0,0,0,0.05)] rounded-2xl bg-white">
+          <div class="relative mt-[15px] flex flex-col items-start p-8 pb-4 gap-8 w-[198px] border border-[rgba(0,0,0,0.05)] rounded-2xl">
             <div class="flex flex-col items-center w-full gap-2">
               <div class="absolute -top-5 left-1/2 transform -translate-x-1/2 w-[52px] h-[52px] bg-white rounded-full flex items-center justify-center">
                 <img 
@@ -147,10 +149,11 @@
                   class="w-[42px] h-[42px]" 
                 />
               </div>
-              <h3 class="text-[15px] font-medium text-[#202124] mt-4">Help Center</h3>
+              <!-- mt-4 adds a margin-top of 1rem (16px) to create spacing above the heading -->
+              <h3 class="text-[15px] font-medium text-[#202124] mt-1">Help Center</h3>
             </div>
             <div class="flex flex-col items-center w-full">
-              <p class="text-[13px] leading-5 text-[#5F6368] text-center">
+              <p class="text-[13px] leading-1 text-[#5F6368] text-center">
                 Having Trouble carrying out<br />
                 a task?<br />
                 Please contact us
@@ -181,10 +184,10 @@
       </aside>
 
       <!-- Main Content with Navigation -->
-      <main class="pt-16 lg:pl-64 min-h-screen">
+      <main class="lg:pl-64 min-h-screen">
         <!-- Header -->
-        <header class="fixed top-0 left-0 right-0 h-16 border-b border-[rgba(0,0,0,0.05)] z-50">
-          <div class="flex justify-between items-center gap-8 w-full px-4">
+        <header class="fixed top-0 left-64 right-0 h-[72px] border-b border-[rgba(0,0,0,0.05)] z-50">
+          <div class="flex justify-between items-center gap-8 w-full h-full px-4">
             <div class="flex-1 max-w-[611px] mx-auto">
               <form on:submit={handleSearch} class="w-full flex items-center bg-white border-[1.5px] {
                 isSearchFocused ? 'border-[#EE434A]' : 'border-[rgba(0,0,0,0.05)]'
@@ -248,7 +251,7 @@
         </header>
 
         <!-- Page Content -->
-        <div class="p-8">
+        <div class="pt-[72px] p-8">
           <slot />
         </div>
 
