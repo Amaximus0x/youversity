@@ -22,6 +22,7 @@
   import { Copy, X } from 'lucide-svelte';
   import CourseList from '$lib/components/CourseList.svelte';
   import Skeleton from '$lib/components/Skeleton.svelte';
+  import TrendingCourseList from '$lib/components/TrendingCourseList.svelte';
 
   let learningObjective = '';
   let userCourses: (FinalCourseStructure & { id: string })[] = [];
@@ -77,30 +78,17 @@
 
   onMount(async () => {
     try {
-      console.log('Fetching public courses on home page...');
-      // Initial load
+      console.log('Fetching trending courses...');
+      // Get courses sorted by views/likes
       publicCourses = await getPublicCourses();
-      console.log('Public courses loaded on home page:', publicCourses);
-
-      // Set up an interval to refresh the public courses every minute
-      const refreshInterval = setInterval(async () => {
-        try {
-          const updatedCourses = await getPublicCourses();
-          if (JSON.stringify(updatedCourses) !== JSON.stringify(publicCourses)) {
-            publicCourses = updatedCourses;
-            console.log('Public courses refreshed:', publicCourses);
-          }
-        } catch (error) {
-          console.error('Error refreshing public courses:', error);
-        }
-      }, 60000); // 60 seconds
-
-      // Cleanup interval on component unmount
-      return () => {
-        clearInterval(refreshInterval);
-      };
+      // Sort by views and likes
+      publicCourses.sort((a, b) => {
+        const scoreA = (a.views || 0) + (a.likes || 0);
+        const scoreB = (b.views || 0) + (b.likes || 0);
+        return scoreB - scoreA;
+      });
     } catch (error) {
-      console.error('Error loading public courses:', error);
+      console.error('Error loading trending courses:', error);
     }
   });
 
@@ -340,71 +328,8 @@
   <!-- Trending Community Courses Section -->
   <section class="mb-12">
     <h2 class="text-xl sm:text-2xl font-semibold text-[#2A4D61] mb-6" id="trending-courses">Public Courses</h2>
-    {#if publicCourses.length === 0}
-      <p class="text-gray-500 text-center py-8">No public courses available yet.</p>
-    {:else}
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
-        {#each publicCourses as course}
-          <div 
-            role="button"
-            tabindex="0"
-            on:keydown={(e) => e.key === 'Enter' && goto(`/course/${course.id}`)}
-            class="bg-white rounded-lg shadow-md overflow-hidden cursor-pointer hover:shadow-lg transition-shadow duration-200"
-            on:click={() => goto(`/course/${course.id}`)}
-          >
-            <img 
-              src={course.Final_Course_Thumbnail || '/placeholder.svg'} 
-              alt={course.Final_Course_Title}
-              class="w-full h-32 sm:h-48 object-cover"
-              loading="lazy"
-            />
-            <div class="p-4">
-              <h3 class="font-semibold text-base sm:text-lg text-[#2A4D61] mb-2 line-clamp-2">
-                {course.Final_Course_Title}
-              </h3>
-              <p class="text-sm text-[#1E3443]/80 mb-4 line-clamp-3">
-                {course.Final_Course_Objective}
-              </p>
-              <div class="flex items-center justify-between text-sm text-[#1E3443]/60">
-                <div class="flex items-center space-x-4">
-                  <button 
-                    class="flex items-center space-x-1 hover:text-[#EE434A] transition-colors"
-                    on:click|stopPropagation={async (e) => {
-                      e.preventDefault();
-                      if ($user) {
-                        try {
-                          const updatedLikeData = await likeCourse(course.id, $user.uid);
-                          publicCourses = publicCourses.map(c => 
-                            c.id === course.id 
-                              ? { ...c, likes: updatedLikeData.likes, likedBy: updatedLikeData.likedBy }
-                              : c
-                          );
-                        } catch (error) {
-                          console.error('Error updating like:', error);
-                        }
-                      } else {
-                        goto('/login');
-                      }
-                    }}
-                  >
-                    <ArrowUp class="w-4 h-4 {course.likedBy?.includes($user?.uid) ? 'text-[#EE434A]' : ''}" />
-                    <span>{course.likes || 0}</span>
-                  </button>
-                  <div class="flex items-center space-x-1">
-                    <Eye class="w-4 h-4" />
-                    <span>{course.views || 0}</span>
-                  </div>
-                </div>
-                <div class="text-xs text-gray-500">
-                  {course.createdAt?.toDate?.() 
-                    ? new Date(course.createdAt.toDate()).toLocaleDateString() 
-                    : 'Recent'}
-                </div>
-              </div>
-            </div>
-          </div>
-        {/each}
-      </div>
+    {#if publicCourses.length > 0}
+      <TrendingCourseList courses={publicCourses} />
     {/if}
   </section>
 </div>
