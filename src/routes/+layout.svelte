@@ -96,7 +96,7 @@
     <NoInternet />
   </div>
 {:else}
-  <div class="min-h-screen bg-[#F5F5F5] font-sans">
+  <div class="min-h-screen bg-gradient-to-br from-[#FFF2F3] to-[#EDFEFF] font-sans">
     {#if !$page.data.hideNav}
       <!-- Sidebar - hidden on mobile -->
       <aside class="hidden md:block w-64 bg-white h-screen fixed top-0 left-0 border-r border-[#E8EAED] z-10 flex flex-col">
