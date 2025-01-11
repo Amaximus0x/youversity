@@ -208,7 +208,7 @@
       >
         <button
           type="submit"
-          class="absolute right-0 z-10 px-6 h-[52px] bg-[#EE434A] text-white rounded-[32px] hover:bg-[#D63B42] transition-colors duration-200 flex items-center gap-2 text-base whitespace-nowrap"
+          class="absolute right-0 z-10 px-6 h-[52px] bg-[#EE434A] text-white rounded-2xl hover:bg-[#D63B42] transition-colors duration-200 flex items-center gap-2 text-base whitespace-nowrap"
         >
           Create Course
           <img 
@@ -219,9 +219,9 @@
         </button>
         <div class="relative w-full">
           <div 
-            class="absolute left-4 top-1/2 -translate-y-1/2 transition-all duration-200 ease-in-out" 
-            class:opacity-0={isInputFocused}
-            class:translate-x-[-10px]={isInputFocused}
+            class="absolute left-4 top-1/2 -translate-y-1/2 transition-all duration-300 ease-in-out {
+              isInputFocused ? 'opacity-0 translate-x-[-10px]' : 'opacity-60'
+            }"
           >
             <img 
               src="/icons/ai-magic.svg" 
@@ -235,7 +235,7 @@
             placeholder="Enter what you want to learn..."
             on:focus={() => isInputFocused = true}
             on:blur={() => isInputFocused = false}
-            class="w-full pl-12 pr-32 h-[52px] rounded-[32px] border-[1.5px] border-[rgba(0,0,0,0.05)] focus:outline-none focus:border-[#EE434A] text-base bg-white transition-all duration-200 ease-in-out"
+            class="w-full pl-12 pr-32 h-[52px] rounded-2xl border-[1.5px] border-[rgba(0,0,0,0.05)] focus:outline-none focus:border-[#EE434A] text-base bg-white transition-colors duration-300 ease-in-out"
           />
         </div>
       </form>
