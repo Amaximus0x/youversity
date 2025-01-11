@@ -33,6 +33,7 @@
   let selectedCourseId = '';
   let publicCourses: (FinalCourseStructure & { id: string })[] = [];
   let isInputFocused = false;
+  let trendingCoursesLoading = true;
 
   // Update filteredCourses when userCourses changes
   $: {
@@ -89,6 +90,8 @@
       });
     } catch (error) {
       console.error('Error loading trending courses:', error);
+    } finally {
+      trendingCoursesLoading = false;
     }
   });
 
@@ -327,9 +330,14 @@
 
   <!-- Trending Community Courses Section -->
   <section class="mb-12">
-    {#if publicCourses.length > 0}
-      <TrendingCourseList courses={publicCourses} />
-    {/if}
+    <div class="flex items-center justify-between mb-6">
+      <h2 class="text-2xl font-medium text-[#2A4D61] font-poppins">Trending Courses</h2>
+      <a href="/trending" class="text-[#42C1C8] text-sm font-medium hover:underline">Show All</a>
+    </div>
+    <TrendingCourseList 
+      courses={publicCourses}
+      loading={trendingCoursesLoading}
+    />
   </section>
 </div>
 

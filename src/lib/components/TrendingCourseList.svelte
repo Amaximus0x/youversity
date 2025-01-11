@@ -5,11 +5,23 @@
   import ShareModal from '$lib/components/ShareModal.svelte';
   import { likeCourse } from '$lib/firebase';
   import { user } from '$lib/stores/auth';
+  import Skeleton from './Skeleton.svelte';
 
   export let courses: (FinalCourseStructure & { id: string })[] = [];
   export let layout: 'grid' | 'scroll' = 'scroll';
+  export let loading = false;
+  export let error: string | null = null;
   let showShareModal = false;
   let selectedCourseId = '';
+
+  function getSkeletonCount(): number {
+    return layout === 'scroll' ? 4 : 8;
+  }
+
+  function getSkeletonWidth(index: number): string {
+    if (layout === 'grid') return 'w-full';
+    return index === 3 ? 'min-w-[70px]' : 'min-w-[280px]';
+  }
 
   function handleShare(courseId: string) {
     selectedCourseId = courseId;
@@ -37,17 +49,41 @@
   }
 </script>
 
-<div class="mb-12">
-  <div class="flex items-center justify-between mb-6">
-    <h2 class="text-2xl font-medium text-[#2A4D61] font-poppins">Trending Courses</h2>
-    <a href="/trending" class="text-[#42C1C8] text-sm font-medium hover:underline">Show All</a>
-  </div>
-
-  <div class="{
-    layout === 'grid' 
-      ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8'
-      : 'flex gap-4 overflow-x-auto pb-4 -mx-4 px-4 hide-scrollbar'
-  }">
+<div class="{
+  layout === 'grid' 
+    ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8'
+    : 'flex gap-4 overflow-x-auto pb-4 -mx-4 px-4 hide-scrollbar'
+}">
+  {#if loading}
+    {#each Array(getSkeletonCount()) as _, i}
+      <div class="bg-white rounded-2xl overflow-hidden {getSkeletonWidth(i)}">
+        <div class="relative">
+          <Skeleton height="156px" />
+        </div>
+        {#if i !== 3 || layout === 'grid'}
+          <div class="p-4">
+            <div class="mb-2">
+              <Skeleton height="24px" width="80%" />
+            </div>
+            <div class="mb-4">
+              <Skeleton height="36px" width="100%" />
+            </div>
+            <div class="flex items-center justify-between mb-4">
+              <Skeleton height="20px" width="60px" />
+              <Skeleton height="20px" width="60px" />
+            </div>
+            <Skeleton height="40px" width="100%" />
+          </div>
+        {/if}
+      </div>
+    {/each}
+  {:else if error}
+    <div class="col-span-full text-center py-8 text-red-500">{error}</div>
+  {:else if courses.length === 0}
+    <div class="col-span-full text-center py-8 text-[#1E3443]/80">
+      No courses found.
+    </div>
+  {:else}
     {#each courses as course}
       <div class="bg-white rounded-2xl overflow-hidden {
         layout === 'grid' 
@@ -106,7 +142,7 @@
         </div>
       </div>
     {/each}
-  </div>
+  {/if}
 </div>
 
 {#if showShareModal}
