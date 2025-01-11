@@ -15,6 +15,7 @@
   import { goto } from '$app/navigation';
   import NoInternet from '$lib/components/NoInternet.svelte';
   import { onMount } from 'svelte';
+  import { fade } from 'svelte/transition';
 
   // Sidebar items configuration
   const sidebarItems = [
@@ -38,6 +39,10 @@
   let searchQuery = '';
   let isOnline = true;
   let isSearchFocused = false;
+  let isSearchPage = false;
+
+  // Add reactive statement to check if we're on the search page
+  $: isSearchPage = $page.url.pathname === '/search';
 
   function toggleMenu() {
     menuOpen = !menuOpen;
@@ -211,17 +216,45 @@
                   class="flex-1 pl-2 pr-1 bg-transparent border-none focus:outline-none text-base text-[#A3A3A3] font-normal"
                 />
                 <div class="flex items-center pl-2 border-l border-[rgba(0,0,0,0.05)]">
-                  <button
-                    type="button"
-                    class="flex items-center gap-2 px-2 py-[6px] border-[1.5px] border-[rgba(0,0,0,0.05)] rounded-2xl bg-white hover:bg-[#FFF2F3] transition-colors mr-1"
-                  >
-                    <img 
-                      src="/icons/filter-icon.svg" 
-                      alt="Filter"
-                      class="w-6 h-6" 
-                    />
-                    <span class="text-base font-normal text-black">Filter</span>
-                  </button>
+                  <div class="relative w-[106px] h-[36px]">
+                    {#if isSearchPage}
+                      <div class="absolute inset-0 transition-colors duration-300 ease-in-out" 
+                           in:fade={{ duration: 200 }} 
+                           out:fade={{ duration: 200 }}>
+                        <button
+                          type="button"
+                          class="flex items-center gap-2 px-2 py-[6px] border-[1.5px] border-[rgba(0,0,0,0.05)] rounded-2xl bg-white hover:bg-[#FFF2F3] transition-colors"
+                        >
+                          <img 
+                            src="/icons/filter-icon.svg" 
+                            alt="Filter"
+                            class="w-6 h-6" 
+                          />
+                          <span class="text-base font-normal text-black">Filter</span>
+                        </button>
+                      </div>
+                    {:else}
+                      <div class="absolute inset-0 transition-colors duration-300 ease-in-out"
+                           in:fade={{ duration: 200 }} 
+                           out:fade={{ duration: 200 }}>
+                        <button
+                          type="submit"
+                          class="flex items-center gap-2 px-2 py-[5px] border-[1.5px] border-[rgba(0,0,0,0.05)] rounded-2xl bg-white hover:bg-[#FFF2F3] transition-colors {
+                            isSearchFocused ? 'border-[#EE434A] text-[#EE434A]' : ''
+                          }"
+                        >
+                          <!-- <img 
+                            src="/icons/search-01.svg" 
+                            alt="Search"
+                            class="w-6 h-6 {
+                              isSearchFocused ? 'filter invert-[45%] sepia-[95%] saturate-[1648%] hue-rotate-[325deg] brightness-[97%] contrast-[91%]' : ''
+                            }" 
+                          /> -->
+                          <span class="text-base font-normal">Search</span>
+                        </button>
+                      </div>
+                    {/if}
+                  </div>
                 </div>
               </form>
             </div>
