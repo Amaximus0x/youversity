@@ -5,6 +5,7 @@ import type { FinalCourseStructure } from '$lib/types/course';
 export type SearchFilter = 'relevance' | 'rating' | 'latest';
 
 interface SearchResult extends FinalCourseStructure {
+  averageRating: number;
   id: string;
   relevanceScore: number;
 }
@@ -60,7 +61,8 @@ export async function searchCourses(
         results.push({
           ...courseData,
           id: doc.id,
-          relevanceScore
+          relevanceScore,
+          averageRating: 0
         });
       }
     });

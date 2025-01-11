@@ -3,9 +3,9 @@
   import { searchCourses, type SearchFilter } from '$lib/services/search';
   import type { FinalCourseStructure } from '$lib/types/course';
   import { onMount } from 'svelte';
-  import CourseList from '$lib/components/CourseList.svelte';
   import { goto } from '$app/navigation';
   import { ArrowUpDown, Star, Clock } from 'lucide-svelte';
+  import TrendingCourseList from '$lib/components/TrendingCourseList.svelte';
 
   let searchQuery = '';
   let currentFilter: SearchFilter = 'relevance';
@@ -58,7 +58,7 @@
   });
 </script>
 
-<div class="container mx-auto px-4 py-8">
+<div class="max-w-[1440px] mx-auto px-8 py-8">
   <div class="mb-8">
     <h1 class="text-2xl font-bold text-[#2A4D61] mb-4">
       Search Results for "{searchQuery}"
@@ -92,10 +92,10 @@
     </div>
   </div>
 
-  <CourseList 
+  <TrendingCourseList 
     courses={searchResults}
+    layout="grid"
     {loading}
     {error}
-    showPrivacyToggle={false}
   />
 </div> 

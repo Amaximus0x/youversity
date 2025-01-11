@@ -49,11 +49,11 @@
     try {
       loading = true;
       error = null;
-      const courses = await getUserCourses($user.uid);
+      const courses = await getUserCourses($user!.uid);
       
       // Load progress for each course
       const coursesWithProgress = await Promise.all(courses.map(async (course) => {
-        const enrollmentProgress = await getEnrollmentProgress($user.uid, course.id);
+        const enrollmentProgress = await getEnrollmentProgress($user!.uid, course.id);
         let progress;
         
         if (enrollmentProgress?.completedModules) {
@@ -70,7 +70,7 @@
       filteredCourses = [...userCourses];
     } catch (err) {
       console.error('Error loading courses:', err);
-      error = err.message;
+      error = (err as Error).message;
     } finally {
       loading = false;
     }

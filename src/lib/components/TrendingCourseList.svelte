@@ -7,6 +7,7 @@
   import { user } from '$lib/stores/auth';
 
   export let courses: (FinalCourseStructure & { id: string })[] = [];
+  export let layout: 'grid' | 'scroll' = 'scroll';
   let showShareModal = false;
   let selectedCourseId = '';
 
@@ -22,7 +23,6 @@
     if ($user) {
       try {
         const updatedLikeData = await likeCourse(courseId, $user.uid);
-        // Update the courses array with new like data
         courses = courses.map(c => 
           c.id === courseId 
             ? { ...c, likes: updatedLikeData.likes, likedBy: updatedLikeData.likedBy }
@@ -43,9 +43,17 @@
     <a href="/trending" class="text-[#42C1C8] text-sm font-medium hover:underline">Show All</a>
   </div>
 
-  <div class="flex gap-4 overflow-x-auto pb-4 -mx-4 px-4 hide-scrollbar">
+  <div class="{
+    layout === 'grid' 
+      ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8'
+      : 'flex gap-4 overflow-x-auto pb-4 -mx-4 px-4 hide-scrollbar'
+  }">
     {#each courses as course}
-      <div class="min-w-[280px] bg-white rounded-2xl overflow-hidden">
+      <div class="bg-white rounded-2xl overflow-hidden {
+        layout === 'grid' 
+          ? 'w-full'
+          : 'min-w-[280px]'
+      }">
         <div class="relative h-[156px]">
           {#if course.Final_Course_Thumbnail}
             <img 
