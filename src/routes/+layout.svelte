@@ -139,8 +139,8 @@
         </nav>
 
         <!-- Help Center Section -->
-        <div class="px-4 pb-6">
-          <div class="relative mt-[15px] flex flex-col items-start p-8 pb-4 gap-8 w-[198px] border border-[rgba(0,0,0,0.05)] rounded-2xl">
+        <div class="px-7 pb-6">
+          <div class="relative mt-[15px] flex flex-col items-start p-6 pb-4 gap-4 w-[198px] border border-[rgba(0,0,0,0.05)] rounded-2xl">
             <div class="flex flex-col items-center w-full gap-2">
               <div class="absolute -top-5 left-1/2 transform -translate-x-1/2 w-[52px] h-[52px] bg-white rounded-full flex items-center justify-center">
                 <img 
@@ -149,18 +149,17 @@
                   class="w-[42px] h-[42px]" 
                 />
               </div>
-              <!-- mt-4 adds a margin-top of 1rem (16px) to create spacing above the heading -->
               <h3 class="text-[15px] font-medium text-[#202124] mt-1">Help Center</h3>
             </div>
             <div class="flex flex-col items-center w-full">
-              <p class="text-[13px] leading-1 text-[#5F6368] text-center">
+              <p class="text-[13px] leading-relaxed text-gray-400 text-center">
                 Having Trouble carrying out<br />
                 a task?<br />
                 Please contact us
               </p>
               <a 
                 href="/help"
-                class="mt-4 w-full py-2 px-4 text-[#EE434A] text-[13px] font-medium border border-[#EE434A] rounded-lg hover:bg-[#FFF2F3] transition-colors text-center"
+                class="mt-4 w-full py-2 px-4 text-[#EE434A] text-[12px] font-medium border border-[#EE434A] rounded-lg hover:bg-[#FFF2F3] transition-colors text-center"
               >
                 Go to help center
               </a>
