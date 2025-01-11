@@ -96,11 +96,11 @@
     <NoInternet />
   </div>
 {:else}
-  <div class="min-h-screen bg-gradient-to-br from-[#FFF2F3] to-[#EDFEFF] font-sans">
+  <div class="min-h-screen bg-gradient-to-b from-[#FFF2F3] via-white to-[#EDFEFF]">
     {#if !$page.data.hideNav}
       <!-- Sidebar - hidden on mobile -->
-      <aside class="hidden md:block w-64 bg-white h-screen fixed top-0 left-0 border-r border-[#E8EAED] z-10 flex flex-col">
-        <div class="flex items-center h-16 px-6 border-b border-[#E8EAED]">
+      <aside class="fixed top-16 left-0 bottom-0 w-64 border-r border-[rgba(0,0,0,0.05)] z-40 hidden lg:flex lg:flex-col">
+        <div class="flex items-center h-16 px-6 border-b border-[rgba(0,0,0,0.05)]">
           <a href="/" class="flex items-center space-x-3">
             <img 
               src="/favicon.png" 
@@ -181,10 +181,10 @@
       </aside>
 
       <!-- Main Content with Navigation -->
-      <main class="md:ml-64">
+      <main class="pt-16 lg:pl-64 min-h-screen">
         <!-- Header -->
-        <header class="bg-white border-b border-[rgba(0,0,0,0.05)] px-4 h-16 flex items-center fixed top-0 right-0 left-64 z-20">
-          <div class="flex justify-between items-center gap-8 w-full">
+        <header class="fixed top-0 left-0 right-0 h-16 border-b border-[rgba(0,0,0,0.05)] z-50">
+          <div class="flex justify-between items-center gap-8 w-full px-4">
             <div class="flex-1 max-w-[611px] mx-auto">
               <form on:submit={handleSearch} class="w-full flex items-center bg-white border-[1.5px] {
                 isSearchFocused ? 'border-[#EE434A]' : 'border-[rgba(0,0,0,0.05)]'
@@ -248,12 +248,12 @@
         </header>
 
         <!-- Page Content -->
-        <div class="p-8 mt-16">
+        <div class="p-8">
           <slot />
         </div>
 
         <!-- Mobile Bottom Navigation -->
-        <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-white shadow-lg border-t border-gray-200">
+        <nav class="fixed bottom-0 left-0 right-0 h-16 border-t border-[rgba(0,0,0,0.05)] z-50 lg:hidden">
           <div class="flex justify-around items-center h-16">
             {#each mobileNavItems as item}
               <a 
@@ -292,6 +292,11 @@
 
 <style>
   :global(body) {
-    @apply antialiased;
+    @apply antialiased bg-gradient-to-b from-[#FFF2F3] via-white to-[#EDFEFF];
+  }
+
+  /* Add backdrop blur to fixed elements while keeping background transparent */
+  :global(.fixed) {
+    @apply backdrop-blur-[2px];
   }
 </style>
