@@ -51,7 +51,7 @@
 
 <div class="{
   layout === 'grid' 
-    ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8'
+    ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4'
     : 'flex gap-4 overflow-x-auto pb-4 -mx-4 px-4 hide-scrollbar'
 }">
   {#if loading}
