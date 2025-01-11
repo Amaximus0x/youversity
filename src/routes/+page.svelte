@@ -2,7 +2,7 @@
   import { user } from '$lib/stores/auth';
   import { signInWithGoogle } from '$lib/services/auth';
   import { page } from '$app/stores';
-  import { getUserCourses, getPublicCourses, toggleCoursePrivacy, likeCourse } from '$lib/firebase';
+  import { getUserCourses, getPublicCourses, toggleCoursePrivacy, likeCourse, getEnrollmentProgress } from '$lib/firebase';
   import type { FinalCourseStructure } from '$lib/types/course';
   import { 
     ArrowRight, 
@@ -49,13 +49,23 @@
       loading = true;
       error = null;
       const courses = await getUserCourses($user.uid);
-      // Calculate progress for each course
-      userCourses = courses.map(course => ({
-        ...course,
-        progress: course.completedModules?.length 
-          ? Math.round((course.completedModules.length / course.Final_Module_Title.length) * 100)
-          : undefined
+      
+      // Load progress for each course
+      const coursesWithProgress = await Promise.all(courses.map(async (course) => {
+        const enrollmentProgress = await getEnrollmentProgress($user.uid, course.id);
+        let progress;
+        
+        if (enrollmentProgress?.completedModules) {
+          progress = Math.round((enrollmentProgress.completedModules.length / course.Final_Module_Title.length) * 100);
+        }
+        
+        return {
+          ...course,
+          progress: progress
+        };
       }));
+
+      userCourses = coursesWithProgress;
       filteredCourses = [...userCourses];
     } catch (err) {
       console.error('Error loading courses:', err);
@@ -298,9 +308,10 @@
                 <img src="/icons/share-icon.svg" alt="Share" class="w-5 h-5" />
               </button>
             </div>
-            <div class="p-4 flex flex-col h-[156px]">
-              <h3 class="font-medium text-base text-black mb-4">{course.Final_Course_Title}</h3>
-              {#if course.progress !== undefined}
+            <div class="p-4 flex flex-col min-h-[156px]">
+              <h3 class="font-medium text-base text-black mb-2 line-clamp-2">{course.Final_Course_Title}</h3>
+              <p class="text-[#5F6368] text-sm mb-4 line-clamp-2">{course.Final_Course_Description || course.Final_Course_Objective}</p>
+              {#if typeof course.progress === 'number'}
                 <div class="flex items-center gap-2 mb-4">
                   <div class="flex-1 h-2 bg-[#D9E1E3] rounded-full">
                     <div 
@@ -311,12 +322,12 @@
                   <span class="text-sm text-[#5F6368]">{course.progress}%</span>
                 </div>
               {/if}
-              <div class="mt-auto">
+              <div class="mt-auto pt-2">
                 <button 
                   class="w-full py-2 bg-[#EE434A] hover:bg-[#D63B42] text-white rounded-lg transition-colors duration-200 text-base font-medium"
                   on:click={() => goto(`/course/${course.id}`)}
                 >
-                  Continue
+                  {typeof course.progress === 'number' ? 'Continue' : 'Start Learning'}
                 </button>
               </div>
             </div>
