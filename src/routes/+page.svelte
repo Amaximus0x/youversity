@@ -49,8 +49,14 @@
       loading = true;
       error = null;
       const courses = await getUserCourses($user.uid);
-      userCourses = courses;
-      filteredCourses = [...courses];
+      // Calculate progress for each course
+      userCourses = courses.map(course => ({
+        ...course,
+        progress: course.completedModules?.length 
+          ? Math.round((course.completedModules.length / course.Final_Module_Title.length) * 100)
+          : undefined
+      }));
+      filteredCourses = [...userCourses];
     } catch (err) {
       console.error('Error loading courses:', err);
       error = err.message;
@@ -188,6 +194,21 @@
   }
 </script>
 
+<style>
+  :global(body) {
+    @apply antialiased;
+  }
+
+  .hide-scrollbar {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+  
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;  /* Chrome, Safari and Opera */
+  }
+</style>
+
 <div class="container mx-auto px-4 py-6 pb-20 sm:pb-6 sm:py-8 max-w-7xl">
   <!-- Create Course Section -->
   <div class="relative overflow-hidden rounded-lg p-8 sm:p-12 mb-6 sm:mb-12">    
@@ -244,109 +265,137 @@
 
   {#if $user}
     <div class="mb-8">
-      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-        <h2 class="text-xl sm:text-2xl font-semibold text-[#2A4D61]">Your Courses</h2>
-        <div class="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
-          <CourseFilter on:filterChange={handleFilterChange} />
-        </div>
+      <div class="flex items-center justify-between mb-6">
+        <h2 class="text-2xl font-medium text-[#2A4D61]">Continue Learning</h2>
+        <a href="/my-courses" class="text-[#42C1C8] text-sm font-medium hover:underline">Show All</a>
       </div>
-      
-      {#if loading}
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-          {#each getSkeletonItems(6) as _}
-            <div class="bg-white rounded-lg shadow-md overflow-hidden p-4">
-              <Skeleton height="200px" class="mb-4" />
-              <Skeleton height="24px" width="70%" class="mb-2" />
-              <Skeleton height="20px" width="40%" class="mb-4" />
-              <div class="flex justify-between">
-                <Skeleton height="20px" width="30%" />
-                <Skeleton height="20px" width="30%" />
+      <div class="flex gap-4 overflow-x-auto pb-4 -mx-4 px-4 hide-scrollbar">
+        {#each userCourses as course}
+          <div class="min-w-[280px] bg-white rounded-2xl overflow-hidden">
+            <div class="relative h-[156px]">
+              {#if course.Final_Course_Thumbnail}
+                <img 
+                  src={course.Final_Course_Thumbnail}
+                  alt={course.Final_Course_Title}
+                  class="w-full h-full object-cover"
+                />
+              {:else}
+                <img 
+                  src="https://placehold.co/280x156/lightgray/darkgray.png" 
+                  alt={course.Final_Course_Title} 
+                  class="w-full h-full object-cover" 
+                />
+              {/if}
+              <div class="absolute inset-0 bg-black/30" />
+              <button 
+                class="absolute top-3 right-3 w-8 h-8 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-[2px]"
+                on:click|stopPropagation={(e) => {
+                  e.preventDefault();
+                  selectedCourseId = course.id;
+                  showShareModal = true;
+                }}
+              >
+                <img src="/icons/share-icon.svg" alt="Share" class="w-5 h-5" />
+              </button>
+            </div>
+            <div class="p-4 flex flex-col h-[156px]">
+              <h3 class="font-medium text-base text-black mb-4">{course.Final_Course_Title}</h3>
+              {#if course.progress !== undefined}
+                <div class="flex items-center gap-2 mb-4">
+                  <div class="flex-1 h-2 bg-[#D9E1E3] rounded-full">
+                    <div 
+                      class="h-full bg-[#42C1C8] rounded-full" 
+                      style="width: {course.progress}%" 
+                    />
+                  </div>
+                  <span class="text-sm text-[#5F6368]">{course.progress}%</span>
+                </div>
+              {/if}
+              <div class="mt-auto">
+                <button 
+                  class="w-full py-2 bg-[#EE434A] hover:bg-[#D63B42] text-white rounded-lg transition-colors duration-200 text-base font-medium"
+                  on:click={() => goto(`/course/${course.id}`)}
+                >
+                  Continue
+                </button>
               </div>
             </div>
-          {/each}
-        </div>
-      {:else}
-        <CourseList 
-          courses={filteredCourses}
-          {loading}
-          {error}
-          onShare={handleShareCourse}
-          onTogglePrivacy={handleTogglePrivacy}
-        />
-      {/if}
+          </div>
+        {/each}
+      </div>
     </div>
+  {/if}
 
-    <!-- Trending Community Courses Section -->
-    <section class="mb-12">
-      <h2 class="text-xl sm:text-2xl font-semibold text-[#2A4D61] mb-6" id="trending-courses">Public Courses</h2>
-      {#if publicCourses.length === 0}
-        <p class="text-gray-500 text-center py-8">No public courses available yet.</p>
-      {:else}
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
-          {#each publicCourses as course}
-            <div 
-              role="button"
-              tabindex="0"
-              on:keydown={(e) => e.key === 'Enter' && goto(`/course/${course.id}`)}
-              class="bg-white rounded-lg shadow-md overflow-hidden cursor-pointer hover:shadow-lg transition-shadow duration-200"
-              on:click={() => goto(`/course/${course.id}`)}
-            >
-              <img 
-                src={course.Final_Course_Thumbnail || '/placeholder.svg'} 
-                alt={course.Final_Course_Title}
-                class="w-full h-32 sm:h-48 object-cover"
-                loading="lazy"
-              />
-              <div class="p-4">
-                <h3 class="font-semibold text-base sm:text-lg text-[#2A4D61] mb-2 line-clamp-2">
-                  {course.Final_Course_Title}
-                </h3>
-                <p class="text-sm text-[#1E3443]/80 mb-4 line-clamp-3">
-                  {course.Final_Course_Objective}
-                </p>
-                <div class="flex items-center justify-between text-sm text-[#1E3443]/60">
-                  <div class="flex items-center space-x-4">
-                    <button 
-                      class="flex items-center space-x-1 hover:text-[#EE434A] transition-colors"
-                      on:click|stopPropagation={async (e) => {
-                        e.preventDefault();
-                        if ($user) {
-                          try {
-                            const updatedLikeData = await likeCourse(course.id, $user.uid);
-                            publicCourses = publicCourses.map(c => 
-                              c.id === course.id 
-                                ? { ...c, likes: updatedLikeData.likes, likedBy: updatedLikeData.likedBy }
-                                : c
-                            );
-                          } catch (error) {
-                            console.error('Error updating like:', error);
-                          }
-                        } else {
-                          goto('/login');
+  <!-- Trending Community Courses Section -->
+  <section class="mb-12">
+    <h2 class="text-xl sm:text-2xl font-semibold text-[#2A4D61] mb-6" id="trending-courses">Public Courses</h2>
+    {#if publicCourses.length === 0}
+      <p class="text-gray-500 text-center py-8">No public courses available yet.</p>
+    {:else}
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+        {#each publicCourses as course}
+          <div 
+            role="button"
+            tabindex="0"
+            on:keydown={(e) => e.key === 'Enter' && goto(`/course/${course.id}`)}
+            class="bg-white rounded-lg shadow-md overflow-hidden cursor-pointer hover:shadow-lg transition-shadow duration-200"
+            on:click={() => goto(`/course/${course.id}`)}
+          >
+            <img 
+              src={course.Final_Course_Thumbnail || '/placeholder.svg'} 
+              alt={course.Final_Course_Title}
+              class="w-full h-32 sm:h-48 object-cover"
+              loading="lazy"
+            />
+            <div class="p-4">
+              <h3 class="font-semibold text-base sm:text-lg text-[#2A4D61] mb-2 line-clamp-2">
+                {course.Final_Course_Title}
+              </h3>
+              <p class="text-sm text-[#1E3443]/80 mb-4 line-clamp-3">
+                {course.Final_Course_Objective}
+              </p>
+              <div class="flex items-center justify-between text-sm text-[#1E3443]/60">
+                <div class="flex items-center space-x-4">
+                  <button 
+                    class="flex items-center space-x-1 hover:text-[#EE434A] transition-colors"
+                    on:click|stopPropagation={async (e) => {
+                      e.preventDefault();
+                      if ($user) {
+                        try {
+                          const updatedLikeData = await likeCourse(course.id, $user.uid);
+                          publicCourses = publicCourses.map(c => 
+                            c.id === course.id 
+                              ? { ...c, likes: updatedLikeData.likes, likedBy: updatedLikeData.likedBy }
+                              : c
+                          );
+                        } catch (error) {
+                          console.error('Error updating like:', error);
                         }
-                      }}
-                    >
-                      <ArrowUp class="w-4 h-4 {course.likedBy?.includes($user?.uid) ? 'text-[#EE434A]' : ''}" />
-                      <span>{course.likes || 0}</span>
-                    </button>
-                    <div class="flex items-center space-x-1">
-                      <Eye class="w-4 h-4" />
-                      <span>{course.views || 0}</span>
-                    </div>
+                      } else {
+                        goto('/login');
+                      }
+                    }}
+                  >
+                    <ArrowUp class="w-4 h-4 {course.likedBy?.includes($user?.uid) ? 'text-[#EE434A]' : ''}" />
+                    <span>{course.likes || 0}</span>
+                  </button>
+                  <div class="flex items-center space-x-1">
+                    <Eye class="w-4 h-4" />
+                    <span>{course.views || 0}</span>
                   </div>
-                  <div class="text-xs text-gray-500">
-                    {course.createdAt?.toDate?.() 
-                      ? new Date(course.createdAt.toDate()).toLocaleDateString() 
-                      : 'Recent'}
-                  </div>
+                </div>
+                <div class="text-xs text-gray-500">
+                  {course.createdAt?.toDate?.() 
+                    ? new Date(course.createdAt.toDate()).toLocaleDateString() 
+                    : 'Recent'}
                 </div>
               </div>
             </div>
-          {/each}
-        </div>
-      {/if}
-    </section>
-  {/if}
+          </div>
+        {/each}
+      </div>
+    {/if}
+  </section>
 </div>
 
 {#if showShareModal}
