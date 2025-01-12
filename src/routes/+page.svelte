@@ -327,9 +327,9 @@
           {/each}
         </div>
       {:else}
-        <div class="bg-transparent border border-[rgba(0,0,0,0.05)] rounded-2xl p-8 h-[372px]">
+        <div class="bg-transparent border border-[rgba(0,0,0,0.05)] rounded-2xl p-8 h-[372px] relative overflow-hidden">
           <div class="flex items-start justify-between relative h-full">
-            <div class="max-w-[400px] pt-4">
+            <div class="max-w-[400px] pt-4 z-10">
               <h3 class="text-[32px] leading-tight mb-6">
                 You haven't <span class="text-[#EE434A]">enrolled</span> in<br />
                 a course yet.
