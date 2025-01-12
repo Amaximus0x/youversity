@@ -348,7 +348,7 @@
             </div>
             <div class="absolute bottom-[-32px] right-[-32px]">
               <img 
-                src="/images/Search engines-pana.svg" 
+                src="/images/Search-engines-pana.svg" 
                 alt="No courses" 
                 class="w-[688px] h-auto"
               />
