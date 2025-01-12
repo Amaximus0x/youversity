@@ -109,95 +109,49 @@
   }
 </script>
 
-<div class="bg-white rounded-lg shadow-md p-6">
-  <h2 class="text-2xl font-semibold mb-6">Course Reviews</h2>
-
-  <!-- Average Rating Display -->
-  <div class="flex items-center gap-4 mb-8">
-    <div class="flex items-center">
-      {#each Array(5) as _, i}
-        {#if i < Math.floor(averageRating)}
-          <Star class="w-6 h-6 text-yellow-400" fill="currentColor" />
-        {:else if i === Math.floor(averageRating) && (averageRating % 1) >= 0.5}
-          <StarHalf class="w-6 h-6 text-yellow-400" fill="currentColor" />
-        {:else}
-          <Star class="w-6 h-6 text-gray-300" fill="none" />
-        {/if}
-      {/each}
-    </div>
-    <span class="text-lg font-medium">{averageRating}</span>
-    <span class="text-gray-500">({ratings.length} {ratings.length === 1 ? 'review' : 'reviews'})</span>
+<div class="bg-transparent rounded-2xl border border-[rgba(0,0,0,0.05)] p-6">
+  <div class="flex items-center justify-between mb-6">
+    <h2 class="text-2xl font-medium">Course Reviews</h2>
+    <button 
+      class="text-[#42C1C8] text-base hover:opacity-70 transition-opacity flex items-center gap-1"
+    >
+      Read all
+      <img src="/icons/arrow-right.svg" alt="arrow" class="w-5 h-5" />
+    </button>
   </div>
 
-  <!-- Add Review Button -->
-  {#if $user && !showReviewForm}
-    <button
-      class="mb-8 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-      on:click={() => showReviewForm = true}
-    >
-      Write a Review
-    </button>
-  {/if}
+  <div class="flex items-center gap-8 mb-8">
+    <!-- Total Reviews -->
+    <div>
+      <h3 class="text-[#A3A3A3] text-base mb-1">Total Reviews</h3>
+      <p class="text-[32px] font-medium">1.5k</p>
+    </div>
 
-  <!-- Review Form -->
-  {#if showReviewForm && $user}
-    <form 
-      on:submit|preventDefault={handleSubmitRating}
-      class="mb-8 p-6 bg-gray-50 rounded-lg"
-    >
-      <h3 class="text-lg font-semibold mb-4">Your Review</h3>
-      
-      <div class="mb-4">
-        <label class="block text-sm font-medium text-gray-700 mb-2">Rating</label>
-        <div class="flex gap-2">
+    <!-- Average Ratings -->
+    <div class="border-l border-[rgba(0,0,0,0.05)] pl-8">
+      <h3 class="text-[#A3A3A3] text-base mb-1">Average Ratings</h3>
+      <div class="flex items-center gap-2">
+        <p class="text-[32px] font-medium">3.0</p>
+        <div class="flex items-center gap-1">
           {#each Array(5) as _, i}
-            <button
-              type="button"
-              class="focus:outline-none"
-              on:click={() => userRating = i + 1}
-            >
-              <Star 
-                class="w-6 h-6 {i < userRating ? 'text-yellow-400' : 'text-gray-300'}"
-                fill={i < userRating ? 'currentColor' : 'none'}
-              />
-            </button>
+            <img 
+              src="/icons/star.svg"
+              alt="star"
+              class="w-4 h-4"
+              style={i >= 3 ? 'opacity: 0.2;' : ''}
+            />
           {/each}
         </div>
       </div>
+    </div>
 
-      <div class="mb-4">
-        <label class="block text-sm font-medium text-gray-700 mb-2">Review</label>
-        <textarea
-          bind:value={userReview}
-          class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          rows="4"
-          placeholder="Write your review here..."
-          required
-        ></textarea>
-      </div>
-
-      <div class="flex gap-4">
-        <button
-          type="submit"
-          class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
-          disabled={submitting || !userRating}
-        >
-          {submitting ? 'Submitting...' : 'Submit Review'}
-        </button>
-        <button
-          type="button"
-          class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors"
-          on:click={() => showReviewForm = false}
-        >
-          Cancel
-        </button>
-      </div>
-
-      {#if error}
-        <p class="mt-4 text-red-500">{error}</p>
-      {/if}
-    </form>
-  {/if}
+    <!-- Add Review Button -->
+    <button 
+      class="ml-auto px-4 py-2 bg-[#F5F5F5] text-base rounded-lg hover:bg-[#EBEBEB] transition-colors"
+    >
+      Add Review
+    </button>
+  </div>
 
   <!-- Reviews List -->
   {#if loading}
@@ -207,41 +161,43 @@
       {/each}
     </div>
   {:else if ratings.length === 0}
-    <p class="text-gray-500 text-center py-8">No reviews yet. Be the first to review this course!</p>
+    <p class="text-[#A3A3A3] text-center py-8">No reviews yet. Be the first to review this course!</p>
   {:else}
-    <div class="space-y-6">
+    <div class="space-y-8">
       {#each ratings as rating}
-        <div class="border-b pb-6 last:border-b-0">
-          <div class="flex items-start justify-between mb-2">
+        <div class="pb-8 border-b border-[rgba(0,0,0,0.05)] last:border-b-0">
+          <div class="flex items-start justify-between mb-4">
             <div class="flex items-center gap-3">
               {#if rating.userPhotoURL}
                 <img 
                   src={rating.userPhotoURL} 
                   alt={rating.userDisplayName}
-                  class="w-10 h-10 rounded-full"
+                  class="w-12 h-12 rounded-full"
                 />
               {:else}
-                <div class="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
-                  <span class="text-gray-600 font-medium">
+                <div class="w-12 h-12 rounded-full bg-[#F5F5F5] flex items-center justify-center">
+                  <span class="text-[#2A4D61] font-medium">
                     {rating.userDisplayName[0].toUpperCase()}
                   </span>
                 </div>
               {/if}
               <div>
-                <p class="font-medium">{rating.userDisplayName}</p>
-                <p class="text-sm text-gray-500">{formatDate(rating.createdAt)}</p>
+                <p class="text-base font-medium">{rating.userDisplayName}</p>
+                <p class="text-[#A3A3A3] text-base">{formatDate(rating.createdAt)}</p>
               </div>
             </div>
-            <div class="flex">
+            <div class="flex gap-1">
               {#each Array(5) as _, i}
-                <Star 
-                  class="w-5 h-5 {i < rating.rating ? 'text-yellow-400' : 'text-gray-300'}"
-                  fill={i < rating.rating ? 'currentColor' : 'none'}
+                <img 
+                  src="/icons/star.svg"
+                  alt="star"
+                  class="w-4 h-4"
+                  style={i >= rating.rating ? 'opacity: 0.2;' : ''}
                 />
               {/each}
             </div>
           </div>
-          <p class="text-gray-700">{rating.review}</p>
+          <p class="text-base text-[#494848]">{rating.review}</p>
         </div>
       {/each}
     </div>
