@@ -268,63 +268,88 @@
     <div class="mb-8">
       <div class="flex items-center justify-between mb-6">
         <h2 class="text-2xl font-medium text-[#2A4D61]">Continue Learning</h2>
-        <a href="/my-courses" class="text-[#42C1C8] text-sm font-medium hover:underline">Show All</a>
       </div>
-      <div class="flex gap-4 overflow-x-auto pb-4 -mx-4 px-4 hide-scrollbar">
-        {#each userCourses as course}
-          <div class="min-w-[280px] bg-white rounded-2xl overflow-hidden">
-            <div class="relative h-[156px]">
-              {#if course.Final_Course_Thumbnail}
-                <img 
-                  src={course.Final_Course_Thumbnail}
-                  alt={course.Final_Course_Title}
-                  class="w-full h-full object-cover"
-                />
-              {:else}
-                <img 
-                  src="https://placehold.co/280x156/lightgray/darkgray.png" 
-                  alt={course.Final_Course_Title} 
-                  class="w-full h-full object-cover" 
-                />
-              {/if}
-              <div class="absolute inset-0 bg-black/30" />
-              <button 
-                class="absolute top-3 right-3 w-8 h-8 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-[2px]"
-                on:click|stopPropagation={(e) => {
-                  e.preventDefault();
-                  selectedCourseId = course.id;
-                  showShareModal = true;
-                }}
-              >
-                <img src="/icons/share-icon.svg" alt="Share" class="w-5 h-5" />
-              </button>
-            </div>
-            <div class="p-4 flex flex-col min-h-[156px]">
-              <h3 class="font-medium text-base text-black mb-2 line-clamp-2">{course.Final_Course_Title}</h3>
-              <p class="text-[#5F6368] text-sm mb-4 line-clamp-2">{course.Final_Course_Description || course.Final_Course_Objective}</p>
-              {#if typeof course.progress === 'number'}
-                <div class="flex items-center gap-2 mb-4">
-                  <div class="flex-1 h-2 bg-[#D9E1E3] rounded-full">
-                    <div 
-                      class="h-full bg-[#42C1C8] rounded-full" 
-                      style="width: {course.progress}%" 
-                    />
-                  </div>
-                  <span class="text-sm text-[#5F6368]">{course.progress}%</span>
-                </div>
-              {/if}
-              <div class="mt-auto pt-2">
+
+      {#if userCourses.length > 0}
+        <div class="flex gap-4 overflow-x-auto pb-4 -mx-4 px-4 hide-scrollbar">
+          {#each userCourses as course}
+            <div class="min-w-[280px] bg-white rounded-2xl overflow-hidden">
+              <div class="relative h-[156px]">
+                {#if course.Final_Course_Thumbnail}
+                  <img 
+                    src={course.Final_Course_Thumbnail}
+                    alt={course.Final_Course_Title}
+                    class="w-full h-full object-cover"
+                  />
+                {:else}
+                  <img 
+                    src="https://placehold.co/280x156/lightgray/darkgray.png" 
+                    alt={course.Final_Course_Title} 
+                    class="w-full h-full object-cover" 
+                  />
+                {/if}
+                <div class="absolute inset-0 bg-black/30" />
                 <button 
-                  class="w-full py-2 bg-[#EE434A] hover:bg-[#D63B42] text-white rounded-lg transition-colors duration-200 text-base font-medium"
-                  on:click={() => goto(`/course/${course.id}`)}
+                  class="absolute top-3 right-3 w-8 h-8 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-[2px]"
+                  on:click|stopPropagation={(e) => {
+                    e.preventDefault();
+                    selectedCourseId = course.id;
+                    showShareModal = true;
+                  }}
                 >
-                  {typeof course.progress === 'number' ? 'Continue' : 'Start Learning'}
+                  <img src="/icons/share-icon.svg" alt="Share" class="w-5 h-5" />
                 </button>
               </div>
+              <div class="p-4 flex flex-col min-h-[156px]">
+                <h3 class="font-medium text-base text-black mb-2 line-clamp-2">{course.Final_Course_Title}</h3>
+                <p class="text-[#5F6368] text-sm mb-4 line-clamp-2">{course.Final_Course_Description || course.Final_Course_Objective}</p>
+                {#if typeof course.progress === 'number'}
+                  <div class="flex items-center gap-2 mb-4">
+                    <div class="flex-1 h-2 bg-[#D9E1E3] rounded-full">
+                      <div 
+                        class="h-full bg-[#42C1C8] rounded-full" 
+                        style="width: {course.progress}%" 
+                      />
+                    </div>
+                    <span class="text-sm text-[#5F6368]">{course.progress}%</span>
+                  </div>
+                {/if}
+                <div class="mt-auto pt-2">
+                  <button 
+                    class="w-full py-2 bg-[#EE434A] hover:bg-[#D63B42] text-white rounded-lg transition-colors duration-200 text-base font-medium"
+                    on:click={() => goto(`/course/${course.id}`)}
+                  >
+                    {typeof course.progress === 'number' ? 'Continue' : 'Start Learning'}
+                  </button>
+                </div>
+              </div>
             </div>
+          {/each}
+        </div>
+      {:else}
+        <div class="bg-white rounded-2xl p-8">
+          <div class="flex items-center justify-between">
+            <div class="max-w-[400px]">
+              <h3 class="text-[32px] leading-tight mb-6">
+                You haven't <span class="text-[#EE434A]">enrolled</span> in<br />
+                a course yet.
+              </h3>
+              <a 
+                href="/search"
+                class="inline-flex items-center px-6 py-3 bg-[#EE434A] text-white rounded-lg hover:bg-[#D63B42] transition-colors duration-200"
+              >
+                Explore Course
+                <span class="ml-2">→</span>
+              </a>
+            </div>
+            <img 
+              src="/images/Search engines-pana.svg" 
+              alt="No courses" 
+              class="w-[400px] h-auto"
+            />
           </div>
-        {/each}
-      </div>
+        </div>
+      {/if}
     </div>
   {/if}
 
