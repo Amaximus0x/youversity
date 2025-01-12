@@ -234,7 +234,7 @@
         >
           Create Course
           <img 
-            src="/icons/arrow-right.svg" 
+            src="/icons/arrow-right-io.svg" 
             alt="Create"
             class="w-5 h-5" 
           />
@@ -327,9 +327,9 @@
           {/each}
         </div>
       {:else}
-        <div class="bg-white rounded-2xl p-8">
-          <div class="flex items-center justify-between">
-            <div class="max-w-[400px]">
+        <div class="bg-transparent border border-[rgba(0,0,0,0.05)] rounded-2xl p-8 h-[372px]">
+          <div class="flex items-start justify-between">
+            <div class="max-w-[400px] pt-4">
               <h3 class="text-[32px] leading-tight mb-6">
                 You haven't <span class="text-[#EE434A]">enrolled</span> in<br />
                 a course yet.
@@ -339,14 +339,20 @@
                 class="inline-flex items-center px-6 py-3 bg-[#EE434A] text-white rounded-lg hover:bg-[#D63B42] transition-colors duration-200"
               >
                 Explore Course
-                <span class="ml-2">→</span>
+                <img 
+                  src="/icons/arrow-right-io.svg" 
+                  alt="arrow" 
+                  class="ml-2 w-6 h-6"
+                />
               </a>
             </div>
-            <img 
-              src="/images/Search engines-pana.svg" 
-              alt="No courses" 
-              class="w-[400px] h-auto"
-            />
+            <div class="relative -mb-20 -mr-4 ">
+              <img 
+                src="/images/Search engines-pana.svg" 
+                alt="No courses" 
+                class="w-[550px] h-auto"
+              />
+            </div>
           </div>
         </div>
       {/if}
