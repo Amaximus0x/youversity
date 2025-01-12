@@ -328,7 +328,7 @@
         </div>
       {:else}
         <div class="bg-transparent border border-[rgba(0,0,0,0.05)] rounded-2xl p-8 h-[372px]">
-          <div class="flex items-start justify-between">
+          <div class="flex items-start justify-between relative h-full">
             <div class="max-w-[400px] pt-4">
               <h3 class="text-[32px] leading-tight mb-6">
                 You haven't <span class="text-[#EE434A]">enrolled</span> in<br />
@@ -346,11 +346,11 @@
                 />
               </a>
             </div>
-            <div class="relative -mb-20 -mr-4 ">
+            <div class="absolute bottom-[-32px] right-[-32px]">
               <img 
                 src="/images/Search engines-pana.svg" 
                 alt="No courses" 
-                class="w-[550px] h-auto"
+                class="w-[688px] h-auto"
               />
             </div>
           </div>
