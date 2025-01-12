@@ -16,9 +16,11 @@
   import NoInternet from '$lib/components/NoInternet.svelte';
   import { onMount } from 'svelte';
   import { fade } from 'svelte/transition';
+  import FilterModal from '$lib/components/FilterModal.svelte';
 
   let isSearchPage = false;
   let isMounted = false;
+  let showFilterModal = false;
   
   onMount(() => {
     isMounted = true;
@@ -231,6 +233,7 @@
                            out:fade={{ duration: 200 }}>
                         <button
                           type="button"
+                          on:click={() => showFilterModal = true}
                           class="flex items-center gap-2 px-2 py-[5px] border-[1.5px] border-[rgba(0,0,0,0.05)] rounded-2xl bg-white hover:bg-[#FFF2F3] transition-colors"
                         >
                           <img 
@@ -323,6 +326,11 @@
 {/if}
 
 <CourseGenerationProgress />
+
+<FilterModal 
+  show={showFilterModal}
+  onClose={() => showFilterModal = false}
+/>
 
 <style>
   :global(body) {
