@@ -360,7 +360,7 @@
                   </button>
 
                   <button
-                    class="h-[37px] px-6 bg-[#1E3443] text-white rounded-2xl hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed font-medium flex items-center justify-center w-full"
+                    class="h-[37px] px-6 bg-[#F5F5F5] text-black rounded-2xl hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed font-medium flex items-center justify-center w-full"
                     disabled={(!isEnrolled && !isCreator) || !courseDetails?.Final_Course_Quiz}
                     on:click={() => {
                       try {
@@ -444,8 +444,9 @@
         <!-- Course Modules -->
         <div class="w-[362px] border border-[rgba(0,0,0,0.05)] rounded-2xl">
           <div class="p-4 border-b border-black/[0.05]">
-            <h3 class="text-base font-medium text-black">Course Module</h3>
+            <h3 class="text-base font-medium text-black">Course Modules</h3>
           </div>
+          <!-- 
           {#each courseDetails.Final_Module_Title as title, index}
           <div class="w-[362px] h-[94px] border border-[rgba(0,0,0,0.05)] rounded-2xl p-2 m-2  hover:bg-black/[0.02] transition-colors">
               <button
@@ -458,7 +459,7 @@
                       <span class="text-[#A3A3A3] text-sm whitespace-nowrap">0{index + 1}:</span>
                       <h4 class="text-base font-medium text-[#1E3443] leading-[21px] line-clamp-2">{title}</h4>
                     </div>
-                    <!-- Module Duration will come from the database -->
+                     Module Duration will come from the database
                     <span class="text-sm text-[#A3A3A3]">{index === 0 ? '45' : index === 1 ? '30' : '33'} min</span>
                   </div>
                 </div>
@@ -471,7 +472,34 @@
                 </div>
               </button>
             </div>
+            -->
+          <div class="max-h-[400px] overflow-y-auto">
+            {#each courseDetails.Final_Module_Title as title, index}
+              <div class="w-[362px] h-[94px] border border-[rgba(0,0,0,0.05)] rounded-2xl p-2 m-2 hover:bg-black/[0.02] transition-colors">
+                <button
+                  class="w-full flex items-start gap-4"
+                  on:click={() => currentModule = index}
+                >
+                  <div class="flex-1 min-w-0 p-2">
+                    <div class="flex flex-col gap-4">
+                      <div class="flex items-start gap-2">
+                        <span class="text-[#A3A3A3] text-sm whitespace-nowrap">0{index + 1}:</span>
+                        <h4 class="text-base font-medium text-[#1E3443] leading-[21px] line-clamp-2">{title}</h4>
+                      </div>
+                      <span class="text-sm text-[#A3A3A3]">{index === 0 ? '45' : index === 1 ? '30' : '33'} min</span>
+                    </div>
+                  </div>
+                  <div class="w-[120px] h-[78px] rounded-lg overflow-hidden flex-shrink-0">
+                    <img
+                      src={courseDetails.Final_Course_Thumbnail || '/images/course-placeholder.png'}
+                      alt={title}
+                      class="w-full h-full object-cover"
+                    />
+                  </div>
+                </button>
+              </div>
             {/each}
+          </div>
         </div>
       </div>
     </div>
