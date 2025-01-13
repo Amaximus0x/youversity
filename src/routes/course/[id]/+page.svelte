@@ -218,80 +218,194 @@
     </div>
   {:else if error}
     <div class="text-red-500 text-center p-4">{error}</div>
-  {:else if courseDetails}
+  {:else if courseDetails && courseDetails.Final_Module_Title && courseDetails.Final_Module_Title.length > 0}
+    <!-- Module Navigation -->
+    <div class="flex items-center justify-between mb-6">
+      <div class="flex items-center gap-2">
+        <span class="text-base text-[#A3A3A3]">01:</span>
+        <h2 class="text-[24px] font-medium text-[#1E3443]">
+          {courseDetails.Final_Module_Title[currentModule] || 'Loading module...'}
+        </h2>
+      </div>
+      <div class="flex items-center gap-2">
+        <button 
+          class="px-4 py-2 bg-[#F5F5F5] rounded-lg hover:bg-[#EBEBEB] transition-colors disabled:opacity-50"
+          disabled={currentModule === 0}
+          on:click={() => currentModule = Math.max(0, currentModule - 1)}
+        >
+          <span class="text-base text-[#1E3443]">Prev</span>
+        </button>
+        <button 
+          class="px-4 py-2 bg-[#F5F5F5] rounded-lg hover:bg-[#EBEBEB] transition-colors disabled:opacity-50"
+          disabled={currentModule === (courseDetails?.Final_Module_Title?.length ?? 1) - 1}
+          on:click={() => currentModule = Math.min((courseDetails?.Final_Module_Title?.length ?? 1) - 1, currentModule + 1)}
+        >
+          <span class="text-base text-[#1E3443]">Next</span>
+        </button>
+      </div>
+    </div>
+
     <!-- Course Content Grid -->
-    <div class="grid grid-cols-12 gap-4">
+    <div class="grid grid-cols-12 gap-8">
       <!-- Module Content -->
       <div class="col-span-8">
         {#if currentModule >= 0}
           <div class="bg-white rounded-2xl border border-[rgba(0,0,0,0.05)] overflow-hidden">
             <!-- Video Player -->
             <div class="relative pt-[56.25%]">
-              <iframe
-                src={`https://www.youtube.com/embed/${new URL(courseDetails.Final_Module_YouTube_Video_URL[currentModule]).searchParams.get('v')}?enablejsapi=0&origin=${window.location.origin}`}
-                title={courseDetails.Final_Module_Title[currentModule]}
-                frameborder="0"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowfullscreen
-                loading="lazy"
-                class="absolute inset-0 w-full h-full"
-              ></iframe>
-            </div>
-
-            <!-- Module Info -->
-              <!-- Course Title -->
-            <div class="mb-2">
-               <h1 class="text-[32px] font-medium text-[#1E3443]">{courseDetails.Final_Course_Title}</h1>
-            </div>
-
-            <div class="p-6">
-              <h3 class="text-xl font-medium text-[#1E3443] mb-4">{courseDetails.Final_Module_Title[currentModule]}</h3>
-              <p class="text-base text-[#494848]">{courseDetails.Final_Module_Objective[currentModule]}</p>
-              
-              <!-- Module Quiz Button -->
-              {#if currentModule >= 0 && courseDetails.Final_Module_Quiz[currentModule]?.quiz?.length > 0}
-                <button
-                  class="mt-6 px-6 py-3 bg-[#42C1C8] text-white rounded-lg hover:opacity-70 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
-                  disabled={!isEnrolled && !isCreator}
-                  on:click={() => {
-                    const moduleQuiz = courseDetails?.Final_Module_Quiz?.[currentModule];
-                    if (!moduleQuiz) {
-                      console.error(`No quiz found for module ${currentModule + 1}`);
-                      return;
+              {#if courseDetails?.Final_Module_YouTube_Video_URL?.[currentModule]}
+                <iframe
+                  src={(() => {
+                    try {
+                      const videoUrl = courseDetails.Final_Module_YouTube_Video_URL[currentModule];
+                      const videoId = new URL(videoUrl).searchParams.get('v');
+                      return `https://www.youtube.com/embed/${videoId}?enablejsapi=0&origin=${window.location.origin}`;
+                    } catch (error) {
+                      console.error('Error parsing YouTube URL:', error);
+                      return '';
                     }
-                    resetQuizState();
-                    currentQuiz = moduleQuiz;
-                    showQuiz = true;
-                    startQuizTimer();
-                    
-                    if (isCreator) {
-                      if (moduleProgress[currentModule]?.quizAttempts > 0) {
-                        const moduleData = moduleProgress[currentModule];
-                        const date = moduleData.lastAttemptDate instanceof Date 
-                          ? moduleData.lastAttemptDate 
-                          : moduleData.lastAttemptDate?.toDate?.() || new Date();
-                        previousScores = [{
-                          score: moduleData.bestScore || 0,
-                          date,
-                          timeTaken: moduleData.timeTaken
-                        }];
-                      }
-                    } else if (enrollmentProgress?.quizResults?.moduleQuizzes?.[currentModule]?.attempts > 0) {
-                      const moduleQuizData = enrollmentProgress.quizResults.moduleQuizzes[currentModule];
-                      const date = moduleQuizData.lastAttemptDate instanceof Date 
-                        ? moduleQuizData.lastAttemptDate 
-                        : moduleQuizData.lastAttemptDate?.toDate?.() || new Date();
-                      previousScores = [{
-                        score: moduleQuizData.bestScore || 0,
-                        date,
-                        timeTaken: moduleQuizData.timeTaken
-                      }];
-                    }
-                  }}
-                >
-                  {isEnrolled || isCreator ? 'Take Module Quiz' : 'Enroll to Take Quiz'}
-                </button>
+                  })()}
+                  title={courseDetails?.Final_Module_Title?.[currentModule] || 'Course Video'}
+                  frameborder="0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowfullscreen
+                  loading="lazy"
+                  class="absolute inset-0 w-full h-full"
+                ></iframe>
               {/if}
+            </div>
+
+            <!-- Course Details -->
+            <div class="p-8">
+              {#if courseDetails?.Final_Course_Title}
+                <h1 class="text-[32px] font-medium text-[#1E3443] mb-6">{courseDetails.Final_Course_Title}</h1>
+              {/if}
+              
+              <div class="space-y-6">
+                <!-- Course Introduction -->
+                {#if courseDetails?.Final_Course_Description}
+                  <div>
+                    <h3 class="text-xl font-medium text-[#1E3443] mb-4">Course Introduction</h3>
+                    <p class="text-base text-[#494848]">{courseDetails.Final_Course_Description}</p>
+                  </div>
+                {/if}
+
+                <!-- Module Objectives -->
+                {#if courseDetails?.Final_Module_Content?.[currentModule]}
+                  <div>
+                    <h3 class="text-xl font-medium text-[#1E3443] mb-4">Module Objectives</h3>
+                    <p class="text-base text-[#494848]">{courseDetails.Final_Module_Content[currentModule]}</p>
+                  </div>
+                {/if}
+
+                <!-- Course Conclusion -->
+                {#if courseDetails?.Final_Course_Objective}
+                  <div>
+                    <h3 class="text-xl font-medium text-[#1E3443] mb-4">Course Conclusion</h3>
+                    <p class="text-base text-[#494848]">{courseDetails.Final_Course_Objective}</p>
+                  </div>
+                {/if}
+
+                <!-- Quiz Buttons -->
+                <div class="flex gap-4">
+                  {#if currentModule >= 0 && courseDetails?.Final_Module_Quiz_Questions?.[currentModule] && courseDetails?.Final_Module_Quiz_Options?.[currentModule] && courseDetails?.Final_Module_Quiz_Answers?.[currentModule]}
+                    <button
+                      class="px-6 py-3 bg-[#42C1C8] text-white rounded-lg hover:opacity-70 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+                      disabled={!isEnrolled && !isCreator}
+                      on:click={() => {
+                        try {
+                          const moduleQuestions = courseDetails.Final_Module_Quiz_Questions[currentModule];
+                          const moduleOptions = courseDetails.Final_Module_Quiz_Options[currentModule];
+                          const moduleAnswers = courseDetails.Final_Module_Quiz_Answers[currentModule];
+                          
+                          resetQuizState();
+                          
+                          // Load previous scores if available
+                          if (isCreator && moduleProgress?.[currentModule]?.quizAttempts > 0) {
+                            const moduleData = moduleProgress[currentModule];
+                            const date = moduleData.lastAttemptDate instanceof Date 
+                              ? moduleData.lastAttemptDate 
+                              : moduleData.lastAttemptDate?.toDate?.() || new Date();
+                            previousScores = [{
+                              score: moduleData.bestScore || 0,
+                              date,
+                              timeTaken: moduleData.timeTaken || 0
+                            }];
+                          } else if (enrollmentProgress?.quizResults?.moduleQuizzes?.[currentModule]?.attempts > 0) {
+                            const moduleQuizData = enrollmentProgress.quizResults.moduleQuizzes[currentModule];
+                            const date = moduleQuizData.lastAttemptDate instanceof Date 
+                              ? moduleQuizData.lastAttemptDate 
+                              : moduleQuizData.lastAttemptDate?.toDate?.() || new Date();
+                            previousScores = [{
+                              score: moduleQuizData.bestScore || 0,
+                              date,
+                              timeTaken: moduleQuizData.timeTaken || 0
+                            }];
+                          }
+
+                          // Create quiz with available data
+                          currentQuiz = {
+                            quiz: moduleQuestions.map((question, index) => ({
+                              question: question || '',
+                              options: moduleOptions[index] || {},
+                              answer: moduleAnswers[index] || '',
+                              type: 'multiple-choice'
+                            }))
+                          };
+                          
+                          showQuiz = true;
+                          startQuizTimer();
+                        } catch (error) {
+                          console.error('Error creating module quiz:', error);
+                        }
+                      }}
+                    >
+                      Take Module Quiz
+                    </button>
+                  {/if}
+
+                  <button
+                    class="px-6 py-3 bg-[#EE434A] text-white rounded-lg hover:opacity-70 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled={!isEnrolled && !isCreator}
+                    on:click={() => {
+                      try {
+                        resetQuizState();
+                        currentModule = -1;
+                        
+                        // Load previous scores for final quiz if available
+                        if (isCreator && moduleProgress?.[currentModule]?.quizAttempts > 0) {
+                          const moduleData = moduleProgress[currentModule];
+                          const date = moduleData.lastAttemptDate instanceof Date 
+                            ? moduleData.lastAttemptDate 
+                            : moduleData.lastAttemptDate?.toDate?.() || new Date();
+                          previousScores = [{
+                            score: moduleData.bestScore || 0,
+                            date,
+                            timeTaken: moduleData.timeTaken || 0
+                          }];
+                        } else if (enrollmentProgress?.quizResults?.finalQuiz?.attempts > 0) {
+                          const finalQuizData = enrollmentProgress.quizResults.finalQuiz;
+                          const date = finalQuizData.lastAttemptDate instanceof Date 
+                            ? finalQuizData.lastAttemptDate 
+                            : finalQuizData.lastAttemptDate?.toDate?.() || new Date();
+                          previousScores = [{
+                            score: finalQuizData.bestScore || 0,
+                            date,
+                            timeTaken: finalQuizData.timeTaken || 0
+                          }];
+                        }
+                        
+                        showQuiz = true;
+                        startQuizTimer();
+                      } catch (error) {
+                        console.error('Error creating final quiz:', error);
+                      }
+                    }}
+                  >
+                    Take Final Course Quiz
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         {/if}
