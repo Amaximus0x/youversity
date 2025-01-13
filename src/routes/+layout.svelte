@@ -285,7 +285,7 @@
         </header>
 
         <!-- Page Content -->
-        <div class="pt-[72px] p-8">
+        <div class="pt-[72px] p-0">
           <slot />
         </div>
 

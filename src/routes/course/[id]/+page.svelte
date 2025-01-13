@@ -211,7 +211,7 @@
 </script>
 
 <!-- Course Header -->
-<div class="max-w-[1440px] mx-auto px-8 py-8">
+<div class="max-w-[1440px] mx-auto px-4 py-4">
   {#if loading}
     <div class="flex justify-center items-center min-h-screen">
       <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
@@ -219,38 +219,8 @@
   {:else if error}
     <div class="text-red-500 text-center p-4">{error}</div>
   {:else if courseDetails}
-    <!-- Course Title and Progress -->
-    <div class="mb-8">
-      <h1 class="text-[32px] font-medium text-[#1E3443] mb-6">{courseDetails.Final_Course_Title}</h1>
-      
-      <!-- Progress Section -->
-      {#if showProgress && $user && (isCreator || isEnrolled)}
-        <div class="bg-white rounded-2xl border border-[rgba(0,0,0,0.05)] p-6">
-          <div class="flex items-center justify-between mb-4">
-            <h3 class="text-base font-medium">Your Progress</h3>
-            <div class="flex items-center gap-2">
-              <span class="text-base text-[#A3A3A3]">
-                {isCreator 
-                  ? moduleProgress.filter(m => m?.completed).length
-                  : enrollmentProgress?.completedModules?.length || 0} / {courseDetails.Final_Module_Title.length}
-              </span>
-              <span class="text-base text-[#A3A3A3]">Completed</span>
-            </div>
-          </div>
-          <div class="w-full h-2 bg-[rgba(0,0,0,0.05)] rounded-full overflow-hidden">
-            <div 
-              class="h-full bg-[#42C1C8] rounded-full transition-all duration-300"
-              style="width: {isCreator 
-                ? (moduleProgress.filter(m => m?.completed).length / courseDetails.Final_Module_Title.length * 100)
-                : ((enrollmentProgress?.completedModules?.length || 0) / courseDetails.Final_Module_Title.length * 100)}%"
-            />
-          </div>
-        </div>
-      {/if}
-    </div>
-
     <!-- Course Content Grid -->
-    <div class="grid grid-cols-12 gap-8">
+    <div class="grid grid-cols-12 gap-4">
       <!-- Module Content -->
       <div class="col-span-8">
         {#if currentModule >= 0}
@@ -269,6 +239,11 @@
             </div>
 
             <!-- Module Info -->
+              <!-- Course Title -->
+            <div class="mb-2">
+               <h1 class="text-[32px] font-medium text-[#1E3443]">{courseDetails.Final_Course_Title}</h1>
+            </div>
+
             <div class="p-6">
               <h3 class="text-xl font-medium text-[#1E3443] mb-4">{courseDetails.Final_Module_Title[currentModule]}</h3>
               <p class="text-base text-[#494848]">{courseDetails.Final_Module_Objective[currentModule]}</p>
@@ -322,8 +297,36 @@
         {/if}
       </div>
 
-      <!-- Module List -->
-      <div class="col-span-4">
+      <!-- Right Side Content -->
+      <div class="col-span-4 space-y-8">
+        <!-- Progress Section -->
+        {#if showProgress && $user && (isCreator || isEnrolled)}
+          <div class="bg-[#FFF2F3] rounded-2xl border border-black/[0.05] p-4">
+            <!-- Progress Header -->
+            <div class="pb-2 border-b border-black/[0.05]">
+              <h3 class="text-base font-medium text-black">Your Progress</h3>
+            </div>
+
+            <!-- Progress Bar and Count -->
+            <div class="flex items-center gap-4 pt-2">
+              <div class="flex-1 h-3 bg-black/[0.05] rounded-[2000px] overflow-hidden">
+                <div 
+                  class="h-full bg-[#42C1C8] rounded-[200000px] transition-all duration-300"
+                  style="width: {isCreator 
+                    ? (moduleProgress.filter(m => m?.completed).length / courseDetails.Final_Module_Title.length * 100)
+                    : ((enrollmentProgress?.completedModules?.length || 0) / courseDetails.Final_Module_Title.length * 100)}%"
+                />
+              </div>
+              <span class="text-base text-black">
+                {isCreator 
+                  ? moduleProgress.filter(m => m?.completed).length
+                  : enrollmentProgress?.completedModules?.length || 0}/{courseDetails.Final_Module_Title.length}
+              </span>
+            </div>
+          </div>
+        {/if}
+
+        <!-- Module List -->
         <div class="bg-white rounded-2xl border border-[rgba(0,0,0,0.05)] p-6">
           <h2 class="text-base font-medium mb-6">Course Modules</h2>
           <div class="space-y-4">

@@ -212,7 +212,7 @@
 
 <div class="container mx-auto px-4 py-6 pb-20 sm:pb-6 sm:py-8 max-w-7xl">
   <!-- Create Course Section -->
-  <div class="relative overflow-hidden rounded-lg p-8 sm:p-12 mb-6 sm:mb-12">    
+  <div class="relative overflow-hidden rounded-lg p-8 sm:p-0 mb-6 sm:mb-12">    
     <div class="max-w-2xl">
       <h1 class="text-4xl font-medium mb-2">
         Hi {$user?.displayName?.split(' ')[0] || ''} 👋
