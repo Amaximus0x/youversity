@@ -210,92 +210,53 @@
   }
 </script>
 
-{#if loading}
-  <div class="flex justify-center items-center min-h-screen">
-    <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-  </div>
-{:else if error}
-  <div class="text-red-500 text-center p-4">{error}</div>
-{:else if courseDetails}
-  <div class="max-w-7xl mx-auto px-4 py-8">
-    <!-- Course Header with Actions -->
-    <div class="flex justify-between items-start mb-8">
-      <div>
-        <h1 class="text-3xl font-bold text-red-800 mb-4">{courseDetails.Final_Course_Title}</h1>
-        <p class="text-lg text-red-700">{courseDetails.Final_Course_Objective}</p>
-      </div>
-      
-      {#if !isCreator && courseDetails}
-        <CourseActions 
-          courseId={$page.params.id} 
-          {isEnrolled} 
-        />
-      {/if}
+<!-- Course Header -->
+<div class="max-w-[1440px] mx-auto px-8 py-8">
+  {#if loading}
+    <div class="flex justify-center items-center min-h-screen">
+      <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
     </div>
-
-    <!-- Course Introduction -->
+  {:else if error}
+    <div class="text-red-500 text-center p-4">{error}</div>
+  {:else if courseDetails}
+    <!-- Course Title and Progress -->
     <div class="mb-8">
-      <h2 class="text-2xl font-semibold mb-4">Course Introduction</h2>
-      <p class="text-gray-700">{courseDetails.Final_Course_Introduction}</p>
-    </div>
-
-    <!-- Progress Section -->
-    {#if showProgress && $user && (isCreator || isEnrolled)}
-      <div class="mb-12">
-        <div class="bg-white rounded-lg shadow-md p-6">
-          <h3 class="font-semibold text-lg mb-4">Your Progress</h3>
-          <div class="space-y-4">
-            <div class="flex justify-between text-sm text-gray-600 mb-2">
-              <span>Module Completion</span>
-              <span>
+      <h1 class="text-[32px] font-medium text-[#1E3443] mb-6">{courseDetails.Final_Course_Title}</h1>
+      
+      <!-- Progress Section -->
+      {#if showProgress && $user && (isCreator || isEnrolled)}
+        <div class="bg-white rounded-2xl border border-[rgba(0,0,0,0.05)] p-6">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-base font-medium">Your Progress</h3>
+            <div class="flex items-center gap-2">
+              <span class="text-base text-[#A3A3A3]">
                 {isCreator 
                   ? moduleProgress.filter(m => m?.completed).length
                   : enrollmentProgress?.completedModules?.length || 0} / {courseDetails.Final_Module_Title.length}
               </span>
-            </div>
-            <div class="w-full h-2.5 bg-gray-200 rounded-full">
-              <div 
-                class="bg-green-600 h-2.5 rounded-full transition-all duration-300"
-                style="width: {isCreator 
-                  ? (moduleProgress.filter(m => m?.completed).length / courseDetails.Final_Module_Title.length * 100)
-                  : ((enrollmentProgress?.completedModules?.length || 0) / courseDetails.Final_Module_Title.length * 100)}%"
-              />
+              <span class="text-base text-[#A3A3A3]">Completed</span>
             </div>
           </div>
+          <div class="w-full h-2 bg-[rgba(0,0,0,0.05)] rounded-full overflow-hidden">
+            <div 
+              class="h-full bg-[#42C1C8] rounded-full transition-all duration-300"
+              style="width: {isCreator 
+                ? (moduleProgress.filter(m => m?.completed).length / courseDetails.Final_Module_Title.length * 100)
+                : ((enrollmentProgress?.completedModules?.length || 0) / courseDetails.Final_Module_Title.length * 100)}%"
+            />
+          </div>
         </div>
-      </div>
-    {/if}
+      {/if}
+    </div>
 
-    <!-- Course Content -->
-    <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
-      <!-- Module List -->
-      <div class="lg:col-span-1 bg-white rounded-lg shadow-md p-4">
-        <h2 class="font-semibold text-lg mb-4">Course Modules</h2>
-        <div class="space-y-2">
-          {#each courseDetails.Final_Module_Title as title, index}
-            <button
-              class="w-full text-left p-3 rounded-lg flex items-center gap-3 transition-colors
-                {currentModule === index ? 'bg-blue-50 text-blue-600' : 'hover:bg-gray-50'}
-                {(isCreator || isEnrolled) && (enrollmentProgress?.completedModules?.includes(index) || moduleProgress[index]?.completed) ? 'text-green-600' : ''}"
-              on:click={() => currentModule = index}
-            >
-              {#if (isCreator || isEnrolled) && (enrollmentProgress?.completedModules?.includes(index) || moduleProgress[index]?.completed)}
-                <CheckCircle class="w-5 h-5 text-green-600 flex-shrink-0" />
-              {:else}
-                <Circle class="w-5 h-5 flex-shrink-0" />
-              {/if}
-              <span class="line-clamp-2">{title}</span>
-            </button>
-          {/each}
-        </div>
-      </div>
-
+    <!-- Course Content Grid -->
+    <div class="grid grid-cols-12 gap-8">
       <!-- Module Content -->
-      <div class="lg:col-span-3 space-y-6">
-        <!-- Video/Quiz Section -->
-        <div class="bg-white rounded-lg shadow-md overflow-hidden">
-          {#if currentModule >= 0}
-            <div class="flex-grow relative" style="min-height: 400px;">
+      <div class="col-span-8">
+        {#if currentModule >= 0}
+          <div class="bg-white rounded-2xl border border-[rgba(0,0,0,0.05)] overflow-hidden">
+            <!-- Video Player -->
+            <div class="relative pt-[56.25%]">
               <iframe
                 src={`https://www.youtube.com/embed/${new URL(courseDetails.Final_Module_YouTube_Video_URL[currentModule]).searchParams.get('v')}?enablejsapi=0&origin=${window.location.origin}`}
                 title={courseDetails.Final_Module_Title[currentModule]}
@@ -303,145 +264,111 @@
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowfullscreen
                 loading="lazy"
-                class="absolute inset-0 w-full h-full rounded"
+                class="absolute inset-0 w-full h-full"
               ></iframe>
             </div>
-            <div class="p-4">
-              <h3 class="text-xl font-semibold mb-2">{courseDetails.Final_Module_Title[currentModule]}</h3>
-              <p class="text-[#1E3443]/80">{courseDetails.Final_Module_Objective[currentModule]}</p>
-            </div>
-          {/if}
-        </div>
 
-        <!-- Module Quiz Section -->
-        {#if currentModule >= 0 && courseDetails.Final_Module_Quiz[currentModule]?.quiz?.length > 0}
-          <h3 class="font-semibold text-lg mb-4">Module Quiz</h3>
-          <button
-            class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
-            disabled={!isEnrolled && !isCreator}
-            on:click={() => {
-              const moduleQuiz = courseDetails?.Final_Module_Quiz?.[currentModule];
-              if (!moduleQuiz) {
-                console.error(`No quiz found for module ${currentModule + 1}`);
-                return;
-              }
-              resetQuizState();
-              currentQuiz = moduleQuiz;
-              showQuiz = true;
-              startQuizTimer();
+            <!-- Module Info -->
+            <div class="p-6">
+              <h3 class="text-xl font-medium text-[#1E3443] mb-4">{courseDetails.Final_Module_Title[currentModule]}</h3>
+              <p class="text-base text-[#494848]">{courseDetails.Final_Module_Objective[currentModule]}</p>
               
-              // Load previous scores for this module
-              if (isCreator) {
-                if (moduleProgress[currentModule]?.quizAttempts > 0) {
-                  const moduleData = moduleProgress[currentModule];
-                  const date = moduleData.lastAttemptDate instanceof Date 
-                    ? moduleData.lastAttemptDate 
-                    : moduleData.lastAttemptDate?.toDate?.() || new Date();
-                  previousScores = [{
-                    score: moduleData.bestScore || 0,
-                    date,
-                    timeTaken: moduleData.timeTaken
-                  }];
-                }
-              } else if (enrollmentProgress?.quizResults?.moduleQuizzes?.[currentModule]?.attempts > 0) {
-                const moduleQuizData = enrollmentProgress.quizResults.moduleQuizzes[currentModule];
-                const date = moduleQuizData.lastAttemptDate instanceof Date 
-                  ? moduleQuizData.lastAttemptDate 
-                  : moduleQuizData.lastAttemptDate?.toDate?.() || new Date();
-                previousScores = [{
-                  score: moduleQuizData.bestScore || 0,
-                  date,
-                  timeTaken: moduleQuizData.timeTaken
-                }];
-              }
-            }}
-          >
-            {isEnrolled || isCreator ? 'Take Module Quiz' : 'Enroll to Take Quiz'}
-          </button>
-        {/if}
-
-        <!-- Final Quiz Section -->
-        {#if courseDetails.Final_Course_Quiz?.quiz?.length > 0 && currentModule >= 0}
-          <div class="bg-white rounded-lg shadow-md p-4 mt-8">
-            <h2 class="text-2xl font-semibold mb-4">Final Course Quiz</h2>
-            <p class="text-gray-600 mb-4">Test your knowledge of the entire course material.</p>
-            <button
-              class="bg-green-500 text-white px-6 py-3 rounded-lg hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed"
-              disabled={!isEnrolled && !isCreator}
-              on:click={() => {
-                resetQuizState();
-                currentModule = -1; // Indicate this is the final quiz
-                currentQuiz = courseDetails?.Final_Course_Quiz || null;
-                showQuiz = true;
-                startQuizTimer();
-                
-                // Load previous scores for final quiz
-                if (isCreator) {
-                  if (moduleProgress[currentModule]?.quizAttempts > 0) {
-                    const moduleData = moduleProgress[currentModule];
-                    const date = moduleData.lastAttemptDate instanceof Date 
-                      ? moduleData.lastAttemptDate 
-                      : moduleData.lastAttemptDate?.toDate?.() || new Date();
-                    previousScores = [{
-                      score: moduleData.bestScore || 0,
-                      date,
-                      timeTaken: moduleData.timeTaken
-                    }];
-                  }
-                } else if (enrollmentProgress?.quizResults?.finalQuiz?.attempts > 0) {
-                  const finalQuizData = enrollmentProgress.quizResults.finalQuiz;
-                  const date = finalQuizData.lastAttemptDate instanceof Date 
-                    ? finalQuizData.lastAttemptDate 
-                    : finalQuizData.lastAttemptDate?.toDate?.() || new Date();
-                  previousScores = [{
-                    score: finalQuizData.bestScore || 0,
-                    date,
-                    timeTaken: finalQuizData.timeTaken
-                  }];
-                }
-              }}
-            >
-              {isEnrolled || isCreator ? 'Take Final Quiz' : 'Enroll to Take Quiz'}
-            </button>
-          </div>
-        {/if}
-
-        <!-- Course Conclusion -->
-        <div class="mt-8">
-          <h2 class="text-2xl font-semibold mb-4">Course Conclusion</h2>
-          <p class="text-gray-700">{courseDetails.Final_Course_Conclusion}</p>
-        </div>
-
-        <!-- YouTube Playlist Button -->
-        <div class="mt-12 border-t pt-8">
-          <div class="flex flex-col items-center gap-4">
-            <h3 class="text-xl font-semibold">Watch Complete Course</h3>
-            <button
-              on:click={handlePlaylistClick}
-              class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg transition-colors duration-200"
-            >
-              <Play class="w-6 h-6" />
-              <span>Open YouTube Playlist</span>
-            </button>
-            <p class="text-sm text-gray-600 text-center max-w-md">
-              Watch all course videos in sequence on YouTube. This will open in a new tab.
-            </p>
-          </div>
-        </div>
-
-        <!-- Course Ratings -->
-        {#if courseDetails.isPublic}
-          <div class="mt-12 border-t pt-8">
-            <CourseRatings courseId={$page.params.id} />
+              <!-- Module Quiz Button -->
+              {#if currentModule >= 0 && courseDetails.Final_Module_Quiz[currentModule]?.quiz?.length > 0}
+                <button
+                  class="mt-6 px-6 py-3 bg-[#42C1C8] text-white rounded-lg hover:opacity-70 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={!isEnrolled && !isCreator}
+                  on:click={() => {
+                    const moduleQuiz = courseDetails?.Final_Module_Quiz?.[currentModule];
+                    if (!moduleQuiz) {
+                      console.error(`No quiz found for module ${currentModule + 1}`);
+                      return;
+                    }
+                    resetQuizState();
+                    currentQuiz = moduleQuiz;
+                    showQuiz = true;
+                    startQuizTimer();
+                    
+                    if (isCreator) {
+                      if (moduleProgress[currentModule]?.quizAttempts > 0) {
+                        const moduleData = moduleProgress[currentModule];
+                        const date = moduleData.lastAttemptDate instanceof Date 
+                          ? moduleData.lastAttemptDate 
+                          : moduleData.lastAttemptDate?.toDate?.() || new Date();
+                        previousScores = [{
+                          score: moduleData.bestScore || 0,
+                          date,
+                          timeTaken: moduleData.timeTaken
+                        }];
+                      }
+                    } else if (enrollmentProgress?.quizResults?.moduleQuizzes?.[currentModule]?.attempts > 0) {
+                      const moduleQuizData = enrollmentProgress.quizResults.moduleQuizzes[currentModule];
+                      const date = moduleQuizData.lastAttemptDate instanceof Date 
+                        ? moduleQuizData.lastAttemptDate 
+                        : moduleQuizData.lastAttemptDate?.toDate?.() || new Date();
+                      previousScores = [{
+                        score: moduleQuizData.bestScore || 0,
+                        date,
+                        timeTaken: moduleQuizData.timeTaken
+                      }];
+                    }
+                  }}
+                >
+                  {isEnrolled || isCreator ? 'Take Module Quiz' : 'Enroll to Take Quiz'}
+                </button>
+              {/if}
+            </div>
           </div>
         {/if}
       </div>
-    </div>
-  </div>
-{/if}
 
+      <!-- Module List -->
+      <div class="col-span-4">
+        <div class="bg-white rounded-2xl border border-[rgba(0,0,0,0.05)] p-6">
+          <h2 class="text-base font-medium mb-6">Course Modules</h2>
+          <div class="space-y-4">
+            {#each courseDetails.Final_Module_Title as title, index}
+              <button
+                class="w-full flex items-start gap-4 p-4 rounded-2xl hover:bg-[rgba(0,0,0,0.02)] transition-colors
+                  {currentModule === index ? 'bg-[rgba(0,0,0,0.02)]' : ''}"
+                on:click={() => currentModule = index}
+              >
+                <img 
+                  src="/course-placeholder.png" 
+                  alt={title}
+                  class="w-20 h-20 rounded-lg object-cover flex-shrink-0"
+                />
+                <div class="flex-1 text-left">
+                  <p class="text-base font-medium text-[#1E3443] mb-1 line-clamp-2">{title}</p>
+                  <div class="flex items-center gap-2">
+                    {#if (isCreator || isEnrolled) && (enrollmentProgress?.completedModules?.includes(index) || moduleProgress[index]?.completed)}
+                      <img src="/icons/checkmark-square-active.svg" alt="Completed" class="w-4 h-4" />
+                      <span class="text-sm text-[#42C1C8]">Completed</span>
+                    {:else}
+                      <img src="/icons/checkmark-square-inactive.svg" alt="Not completed" class="w-4 h-4" />
+                      <span class="text-sm text-[#A3A3A3]">Not completed</span>
+                    {/if}
+                  </div>
+                </div>
+              </button>
+            {/each}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Course Reviews -->
+    {#if courseDetails.isPublic}
+      <div class="mt-12">
+        <CourseRatings courseId={$page.params.id} />
+      </div>
+    {/if}
+  {/if}
+</div>
+
+<!-- Quiz Modal -->
 {#if showQuiz && currentQuiz}
-  <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+  <div class="fixed inset-0 bg-black/30 flex items-center justify-center p-4 z-50">
     <div class="bg-white rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto relative">
       <!-- Quiz Header -->
       <div class="flex justify-between items-center mb-6">
