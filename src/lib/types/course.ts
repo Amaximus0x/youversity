@@ -31,23 +31,22 @@ export interface Quiz {
 export interface FinalCourseStructure {
   Final_Course_Title: string;
   Final_Course_Objective: string;
-  Final_Course_Description: string;
-  Final_Course_Thumbnail?: string;
+  Final_Course_Introduction: string;
   Final_Module_Title: string[];
-  Final_Module_Description: string[];
+  Final_Module_Objective: string[];
   Final_Module_YouTube_Video_URL: string[];
-  Final_Module_Content: string[];
-  Final_Module_Quiz_Questions: string[];
-  Final_Module_Quiz_Options: string[][];
-  Final_Module_Quiz_Answers: string[];
-  isPublic?: boolean;
-  createdBy?: string;
-  createdAt?: any;
+  Final_Module_Quiz: Quiz[];
+  Final_Course_Quiz: Quiz;
+  Final_Course_Conclusion: string;
+  YouTube_Playlist_URL: string;
+  Final_Course_Thumbnail?: string;
+  isPublic: boolean;
+  createdBy: string;
+  createdAt: Date;
   likes?: number;
   views?: number;
-  likedBy?: string[];
-  completedModules?: string[];
-  progress?: number;
+  averageRating?: number;
+  totalRatings?: number;
 }
 
 export interface CourseRating {

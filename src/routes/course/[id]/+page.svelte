@@ -284,91 +284,84 @@
               {/if}
               
               <div class="space-y-6">
+                 <!-- Module Objectives -->
+                 {#if courseDetails?.Final_Module_Objective?.[currentModule]}
+                   <div>
+                     <h3 class="text-xl font-medium text-[#1E3443] mb-4">Module Objectives</h3>
+                     <p class="text-base text-[#494848]">{courseDetails.Final_Module_Objective[currentModule]}</p>
+                   </div>
+                 {/if}
+
                 <!-- Course Introduction -->
-                {#if courseDetails?.Final_Course_Description}
+                {#if courseDetails?.Final_Course_Introduction}
                   <div>
                     <h3 class="text-xl font-medium text-[#1E3443] mb-4">Course Introduction</h3>
-                    <p class="text-base text-[#494848]">{courseDetails.Final_Course_Description}</p>
+                    <p class="text-base text-[#494848]">{courseDetails.Final_Course_Introduction}</p>
                   </div>
                 {/if}
 
-                <!-- Module Objectives -->
-                {#if courseDetails?.Final_Module_Content?.[currentModule]}
-                  <div>
-                    <h3 class="text-xl font-medium text-[#1E3443] mb-4">Module Objectives</h3>
-                    <p class="text-base text-[#494848]">{courseDetails.Final_Module_Content[currentModule]}</p>
-                  </div>
-                {/if}
+               
 
                 <!-- Course Conclusion -->
-                {#if courseDetails?.Final_Course_Objective}
+                {#if courseDetails?.Final_Course_Conclusion}
                   <div>
                     <h3 class="text-xl font-medium text-[#1E3443] mb-4">Course Conclusion</h3>
-                    <p class="text-base text-[#494848]">{courseDetails.Final_Course_Objective}</p>
+                    <p class="text-base text-[#494848]">{courseDetails.Final_Course_Conclusion}</p>
                   </div>
                 {/if}
 
                 <!-- Quiz Buttons -->
-                <div class="flex gap-4">
-                  {#if currentModule >= 0 && courseDetails?.Final_Module_Quiz_Questions?.[currentModule] && courseDetails?.Final_Module_Quiz_Options?.[currentModule] && courseDetails?.Final_Module_Quiz_Answers?.[currentModule]}
-                    <button
-                      class="px-6 py-3 bg-[#1E3443] text-white rounded-2xl hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed font-medium"
-                      disabled={!isEnrolled && !isCreator}
-                      on:click={() => {
-                        try {
-                          const moduleQuestions = courseDetails.Final_Module_Quiz_Questions[currentModule];
-                          const moduleOptions = courseDetails.Final_Module_Quiz_Options[currentModule];
-                          const moduleAnswers = courseDetails.Final_Module_Quiz_Answers[currentModule];
-                          
-                          resetQuizState();
-                          
-                          // Load previous scores if available
-                          if (isCreator && moduleProgress?.[currentModule]?.quizAttempts > 0) {
-                            const moduleData = moduleProgress[currentModule];
-                            const date = moduleData.lastAttemptDate instanceof Date 
-                              ? moduleData.lastAttemptDate 
-                              : moduleData.lastAttemptDate?.toDate?.() || new Date();
-                            previousScores = [{
-                              score: moduleData.bestScore || 0,
-                              date,
-                              timeTaken: moduleData.timeTaken || 0
-                            }];
-                          } else if (enrollmentProgress?.quizResults?.moduleQuizzes?.[currentModule]?.attempts > 0) {
-                            const moduleQuizData = enrollmentProgress.quizResults.moduleQuizzes[currentModule];
-                            const date = moduleQuizData.lastAttemptDate instanceof Date 
-                              ? moduleQuizData.lastAttemptDate 
-                              : moduleQuizData.lastAttemptDate?.toDate?.() || new Date();
-                            previousScores = [{
-                              score: moduleQuizData.bestScore || 0,
-                              date,
-                              timeTaken: moduleQuizData.timeTaken || 0
-                            }];
-                          }
+                <div class="flex flex-col gap-4">
+                  <button
+                    class="h-[37px] px-6 bg-[#1E3443] text-white rounded-2xl hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed font-medium flex items-center justify-center w-full"
+                    disabled={(!isEnrolled && !isCreator) || !courseDetails?.Final_Module_Quiz?.[currentModule]}
+                    on:click={() => {
+                      try {
+                        resetQuizState();
+                        
+                        // Load previous scores if available
+                        if (isCreator && moduleProgress?.[currentModule]?.quizAttempts > 0) {
+                          const moduleData = moduleProgress[currentModule];
+                          const date = moduleData.lastAttemptDate instanceof Date 
+                            ? moduleData.lastAttemptDate 
+                            : moduleData.lastAttemptDate?.toDate?.() || new Date();
+                          previousScores = [{
+                            score: moduleData.bestScore || 0,
+                            date,
+                            timeTaken: moduleData.timeTaken || 0
+                          }];
+                        } else if (enrollmentProgress?.quizResults?.moduleQuizzes?.[currentModule]?.attempts > 0) {
+                          const moduleQuizData = enrollmentProgress.quizResults.moduleQuizzes[currentModule];
+                          const date = moduleQuizData.lastAttemptDate instanceof Date 
+                            ? moduleQuizData.lastAttemptDate 
+                            : moduleQuizData.lastAttemptDate?.toDate?.() || new Date();
+                          previousScores = [{
+                            score: moduleQuizData.bestScore || 0,
+                            date,
+                            timeTaken: moduleQuizData.timeTaken || 0
+                          }];
+                        }
 
-                          // Create quiz with available data
-                          currentQuiz = {
-                            quiz: moduleQuestions.map((question, index) => ({
-                              question: question || '',
-                              options: moduleOptions[index] || {},
-                              answer: moduleAnswers[index] || '',
-                              type: 'multiple-choice'
-                            }))
-                          };
-                          
+                        // Get the module quiz
+                        const moduleQuiz = courseDetails.Final_Module_Quiz[currentModule];
+                        if (moduleQuiz) {
+                          currentQuiz = moduleQuiz;
                           showQuiz = true;
                           startQuizTimer();
-                        } catch (error) {
-                          console.error('Error creating module quiz:', error);
+                        } else {
+                          console.error('Module quiz data is not available');
                         }
-                      }}
-                    >
-                      Take Module Quiz
-                    </button>
-                  {/if}
+                      } catch (error) {
+                        console.error('Error creating module quiz:', error);
+                      }
+                    }}
+                  >
+                    Take Module Quiz
+                  </button>
 
                   <button
-                    class="px-6 py-3 bg-[#1E3443] text-white rounded-2xl hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed font-medium"
-                    disabled={!isEnrolled && !isCreator}
+                    class="h-[37px] px-6 bg-[#1E3443] text-white rounded-2xl hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed font-medium flex items-center justify-center w-full"
+                    disabled={(!isEnrolled && !isCreator) || !courseDetails?.Final_Course_Quiz}
                     on:click={() => {
                       try {
                         resetQuizState();
@@ -396,9 +389,15 @@
                             timeTaken: finalQuizData.timeTaken || 0
                           }];
                         }
-                        
-                        showQuiz = true;
-                        startQuizTimer();
+
+                        // Get the final course quiz
+                        if (courseDetails?.Final_Course_Quiz) {
+                          currentQuiz = courseDetails.Final_Course_Quiz;
+                          showQuiz = true;
+                          startQuizTimer();
+                        } else {
+                          console.error('Final quiz data is not available');
+                        }
                       } catch (error) {
                         console.error('Error creating final quiz:', error);
                       }
