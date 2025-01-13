@@ -416,7 +416,7 @@
       <div class="col-span-4 space-y-8">
         <!-- Progress Section -->
         {#if showProgress && $user && (isCreator || isEnrolled)}
-          <div class="bg-[#FFF2F3] rounded-2xl border border-black/[0.05] p-4">
+          <div class=" w-[362px] h-[94px] rounded-2xl border border-black/[0.05] p-4">
             <!-- Progress Header -->
             <div class="pb-2 border-b border-black/[0.05]">
               <h3 class="text-base font-medium text-black">Your Progress</h3>
@@ -441,36 +441,37 @@
           </div>
         {/if}
 
-        <!-- Module List -->
-        <div class="bg-white rounded-2xl border border-[rgba(0,0,0,0.05)] p-6">
-          <h2 class="text-base font-medium mb-6">Course Modules</h2>
-          <div class="space-y-4">
-            {#each courseDetails.Final_Module_Title as title, index}
+        <!-- Course Modules -->
+        <div class="w-[362px] border border-[rgba(0,0,0,0.05)] rounded-2xl">
+          <div class="p-4 border-b border-black/[0.05]">
+            <h3 class="text-base font-medium text-black">Course Module</h3>
+          </div>
+          {#each courseDetails.Final_Module_Title as title, index}
+          <div class="w-[362px] h-[94px] border border-[rgba(0,0,0,0.05)] rounded-2xl p-2 m-2  hover:bg-black/[0.02] transition-colors">
               <button
-                class="w-full flex items-start gap-4 p-4 rounded-2xl hover:bg-[rgba(0,0,0,0.02)] transition-colors
-                  {currentModule === index ? 'bg-[rgba(0,0,0,0.02)]' : ''}"
+                class="w-full flex items-start gap-4}"
                 on:click={() => currentModule = index}
               >
-                <img 
-                  src="/course-placeholder.png" 
-                  alt={title}
-                  class="w-20 h-20 rounded-lg object-cover flex-shrink-0"
-                />
-                <div class="flex-1 text-left">
-                  <p class="text-base font-medium text-[#1E3443] mb-1 line-clamp-2">{title}</p>
-                  <div class="flex items-center gap-2">
-                    {#if (isCreator || isEnrolled) && (enrollmentProgress?.completedModules?.includes(index) || moduleProgress[index]?.completed)}
-                      <img src="/icons/checkmark-square-active.svg" alt="Completed" class="w-4 h-4" />
-                      <span class="text-sm text-[#42C1C8]">Completed</span>
-                    {:else}
-                      <img src="/icons/checkmark-square-inactive.svg" alt="Not completed" class="w-4 h-4" />
-                      <span class="text-sm text-[#A3A3A3]">Not completed</span>
-                    {/if}
+                <div class="flex-1 min-w-0 p-2">
+                  <div class="flex flex-col gap-4">
+                    <div class="flex items-start gap-2">
+                      <span class="text-[#A3A3A3] text-sm whitespace-nowrap">0{index + 1}:</span>
+                      <h4 class="text-base font-medium text-[#1E3443] leading-[21px] line-clamp-2">{title}</h4>
+                    </div>
+                    <!-- Module Duration will come from the database -->
+                    <span class="text-sm text-[#A3A3A3]">{index === 0 ? '45' : index === 1 ? '30' : '33'} min</span>
                   </div>
                 </div>
+                <div class="w-[fit] h-[78px] rounded-lg overflow-hidden flex-shrink-0">
+                  <img
+                    src={courseDetails.Final_Course_Thumbnail || '/images/course-placeholder.png'}
+                    alt={title}
+                    class="w-full h-full object-cover"
+                  />
+                </div>
               </button>
+            </div>
             {/each}
-          </div>
         </div>
       </div>
     </div>
