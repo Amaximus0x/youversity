@@ -255,9 +255,9 @@
               <div class="flex items-center justify-between mb-8">
                 <div class="flex items-center gap-2">
                   <span class="text-base text-[#A3A3A3]">01:</span>
-                  <h2 class="text-[24px] font-medium text-[#1E3443]">
+                  <h4 class="text-[18px] font-medium text-[#1E3443]">
                     {courseDetails.Final_Module_Title[currentModule] || 'Loading module...'}
-                  </h2>
+                  </h4>
                 </div>
                 <div class="flex items-center gap-2">
                   <button 
@@ -312,7 +312,7 @@
                 <div class="flex gap-4">
                   {#if currentModule >= 0 && courseDetails?.Final_Module_Quiz_Questions?.[currentModule] && courseDetails?.Final_Module_Quiz_Options?.[currentModule] && courseDetails?.Final_Module_Quiz_Answers?.[currentModule]}
                     <button
-                      class="px-6 py-3 bg-[#42C1C8] text-white rounded-lg hover:opacity-70 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+                      class="px-6 py-3 bg-[#1E3443] text-white rounded-2xl hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed font-medium"
                       disabled={!isEnrolled && !isCreator}
                       on:click={() => {
                         try {
@@ -367,7 +367,7 @@
                   {/if}
 
                   <button
-                    class="px-6 py-3 bg-[#EE434A] text-white rounded-lg hover:opacity-70 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+                    class="px-6 py-3 bg-[#1E3443] text-white rounded-2xl hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed font-medium"
                     disabled={!isEnrolled && !isCreator}
                     on:click={() => {
                       try {
