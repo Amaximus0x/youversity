@@ -219,40 +219,14 @@
   {:else if error}
     <div class="text-red-500 text-center p-4">{error}</div>
   {:else if courseDetails && courseDetails.Final_Module_Title && courseDetails.Final_Module_Title.length > 0}
-    <!-- Module Navigation -->
-    <div class="flex items-center justify-between mb-6">
-      <div class="flex items-center gap-2">
-        <span class="text-base text-[#A3A3A3]">01:</span>
-        <h2 class="text-[24px] font-medium text-[#1E3443]">
-          {courseDetails.Final_Module_Title[currentModule] || 'Loading module...'}
-        </h2>
-      </div>
-      <div class="flex items-center gap-2">
-        <button 
-          class="px-4 py-2 bg-[#F5F5F5] rounded-lg hover:bg-[#EBEBEB] transition-colors disabled:opacity-50"
-          disabled={currentModule === 0}
-          on:click={() => currentModule = Math.max(0, currentModule - 1)}
-        >
-          <span class="text-base text-[#1E3443]">Prev</span>
-        </button>
-        <button 
-          class="px-4 py-2 bg-[#F5F5F5] rounded-lg hover:bg-[#EBEBEB] transition-colors disabled:opacity-50"
-          disabled={currentModule === (courseDetails?.Final_Module_Title?.length ?? 1) - 1}
-          on:click={() => currentModule = Math.min((courseDetails?.Final_Module_Title?.length ?? 1) - 1, currentModule + 1)}
-        >
-          <span class="text-base text-[#1E3443]">Next</span>
-        </button>
-      </div>
-    </div>
-
     <!-- Course Content Grid -->
-    <div class="grid grid-cols-12 gap-8">
+    <div class="grid grid-cols-12 gap-4">
       <!-- Module Content -->
       <div class="col-span-8">
         {#if currentModule >= 0}
-          <div class="bg-white rounded-2xl border border-[rgba(0,0,0,0.05)] overflow-hidden">
+          <div class=" rounded-2xl overflow-hidden">
             <!-- Video Player -->
-            <div class="relative pt-[56.25%]">
+            <div class="relative pt-[56.25%] rounded-2xl overflow-hidden bg-white">
               {#if courseDetails?.Final_Module_YouTube_Video_URL?.[currentModule]}
                 <iframe
                   src={(() => {
@@ -270,13 +244,41 @@
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                   allowfullscreen
                   loading="lazy"
-                  class="absolute inset-0 w-full h-full"
+                  class="absolute inset-0 w-full h-full rounded-2xl"
                 ></iframe>
               {/if}
             </div>
 
             <!-- Course Details -->
-            <div class="p-8">
+            <div class="mt-4">
+              <!-- Module Navigation -->
+              <div class="flex items-center justify-between mb-8">
+                <div class="flex items-center gap-2">
+                  <span class="text-base text-[#A3A3A3]">01:</span>
+                  <h2 class="text-[24px] font-medium text-[#1E3443]">
+                    {courseDetails.Final_Module_Title[currentModule] || 'Loading module...'}
+                  </h2>
+                </div>
+                <div class="flex items-center gap-2">
+                  <button 
+                    class="px-4 py-2 bg-[#F5F5F5] rounded-lg hover:bg-[#EBEBEB] transition-colors disabled:opacity-50 flex items-center gap-2"
+                    disabled={currentModule === 0}
+                    on:click={() => currentModule = Math.max(0, currentModule - 1)}
+                  >
+                    <img src="/icons/prev.svg" alt="Previous" class="w-4 h-4" />
+                    <span class="text-base text-[#1E3443]">Prev</span>
+                  </button>
+                  <button 
+                    class="px-4 py-2 bg-[#F5F5F5] rounded-lg hover:bg-[#EBEBEB] transition-colors disabled:opacity-50 flex items-center gap-2"
+                    disabled={currentModule === (courseDetails?.Final_Module_Title?.length ?? 1) - 1}
+                    on:click={() => currentModule = Math.min((courseDetails?.Final_Module_Title?.length ?? 1) - 1, currentModule + 1)}
+                  >
+                    <span class="text-base text-[#1E3443]">Next</span>
+                    <img src="/icons/next.svg" alt="Next" class="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+
               {#if courseDetails?.Final_Course_Title}
                 <h1 class="text-[32px] font-medium text-[#1E3443] mb-6">{courseDetails.Final_Course_Title}</h1>
               {/if}
