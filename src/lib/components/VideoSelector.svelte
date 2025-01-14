@@ -1,4 +1,5 @@
 <script lang="ts">
+    import type { SvelteComponentTyped } from "svelte";
     import { onMount } from 'svelte';
     import { fade, fly, scale } from 'svelte/transition';
     import type { CourseStructure, VideoItem } from '$lib/types/course';
@@ -13,6 +14,14 @@
     import { loadingState } from '$lib/stores/loadingState';
     import CourseGenerationProgress from './CourseGenerationProgress.svelte';
     import { browser } from '$app/environment';
+  
+    interface $$Props {
+        courseStructure: CourseStructure;
+        moduleVideos: VideoItem[][];
+        selectedVideos: number[];
+        loading: boolean;
+        error: string | null;
+    }
   
     export let courseStructure: CourseStructure;
     export let moduleVideos: VideoItem[][];
