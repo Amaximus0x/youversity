@@ -17,7 +17,9 @@
   let currentModuleIndex = 0;
 
   async function fetchVideosForModule(searchPrompt: string, moduleIndex: number, retryCount = 0) {
-    const moduleTitle = courseStructure!.OG_Module_Title[moduleIndex];
+    if (!courseStructure) return;
+    
+    const moduleTitle = courseStructure.OG_Module_Title[moduleIndex];
     loadingState.setCurrentModule(moduleIndex + 1, moduleTitle);
     loadingState.setStep(`Searching videos for Module ${moduleIndex + 1}: ${moduleTitle}`);
     const maxRetries = 3;
@@ -43,18 +45,14 @@
       }
       const data = await response.json();
       
+      // Update the videos for this module
       moduleVideos[moduleIndex] = data.videos;
-      if (selectedVideos[moduleIndex] === undefined) {
-        selectedVideos[moduleIndex] = 0;
-      }
+      moduleVideos = [...moduleVideos]; // Trigger reactivity
       
-      moduleVideos = [...moduleVideos];
-      selectedVideos = [...selectedVideos];
-
-      const progress = ((moduleIndex + 1) / courseStructure!.OG_Module_Title.length) * 100;
+      const progress = ((moduleIndex + 1) / courseStructure.OG_Module_Title.length) * 100;
       loadingState.setProgress(progress);
 
-      if (moduleIndex === courseStructure!.OG_Module_Title.length - 1) {
+      if (moduleIndex === courseStructure.OG_Module_Title.length - 1) {
         loadingState.stopLoading();
       }
     } catch (err: any) {
@@ -140,13 +138,13 @@
 
       courseStructure = data.courseStructure;
       if (courseStructure) {
+        // Initialize arrays with the correct length
+        moduleVideos = new Array(courseStructure.OG_Module_Title.length).fill([]);
+        selectedVideos = new Array(courseStructure.OG_Module_Title.length).fill(0);
+        
         loadingState.setTotalModules(courseStructure.OG_Module_Title.length);
         loadingState.setStep('Course structure generated successfully!');
         loadingState.setProgress(20); // Initial course structure generation is 20% of the process
-        selectedVideos = new Array(courseStructure.OG_Module_Title.length).fill(0);
-
-        // Start video search process
-        loadingState.setStep('Initiating video search for all modules...');
       } else {
         throw new Error('Invalid course structure received');
       }
