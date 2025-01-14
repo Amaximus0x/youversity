@@ -61,7 +61,7 @@
 
     <div
       bind:this={sliderRef}
-      class="flex gap-6 overflow-x-auto scrollbar-hide pb-6 px-2 pt-2"
+      class="flex gap-6 overflow-x-auto scrollbar-hide pb-8 px-2 pt-2"
       on:scroll={updateArrows}
     >
       {#each moduleVideos[currentModuleIndex] as video, videoIndex}
@@ -79,7 +79,7 @@
               <!-- Title and Duration -->
               <div class="p-2 pb-3 flex items-start justify-between">
                 <div>
-                  <h3 class="text-lg font-semibold text-[#2A4D61] line-clamp-1 mb-1">
+                  <h3 class="text-base font-semibold text-[#2A4D61] line-clamp-1 mb-1">
                     {video.title}
                   </h3>
                   <span class="text-sm text-[#2A4D61]/60">
@@ -92,11 +92,11 @@
               </div>
 
               <!-- Thumbnail with Play Button -->
-              <div class="relative aspect-video">
+              <div class="relative aspect-video rounded-xl overflow-hidden p-2">
                 <img
                   src={video.thumbnailUrl}
                   alt={video.title}
-                  class="w-full h-full object-cover"
+                  class="w-full h-full object-cover rounded-xl overflow-hidden"
                 />
                 <div class="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-all duration-200 flex items-center justify-center">
                   <button
