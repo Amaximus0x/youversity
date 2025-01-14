@@ -226,10 +226,10 @@
               </button>
             </div>
             <button
-              class="bg-[#EE434A] hover:bg-[#D93D44] text-white px-6 py-2 rounded-full flex items-center gap-2 transition-colors duration-200"
+              class="bg-[#EE434A] hover:bg-[#D93D44] text-white px-6 py-3 rounded-2xl flex items-center gap-2 transition-colors duration-200"
             >
               Add Custom Video
-              <Plus class="w-5 h-5" />
+              <img src="/icons/plus-sign.svg" class="w-5 h-5" />
             </button>
           </div>
 
@@ -245,13 +245,13 @@
 
       <!-- Generate Course Button -->
       <div 
-        class="sticky bottom-8 flex justify-center mt-8"
+        class="relative flex justify-left mt-4 mb-10 w-[261px] h-[54px]"
         in:fly={{ y: 20, duration: 500, delay: 200 }}
         out:fade
       >
         <button
           on:click={handleSaveCourse}
-          class="bg-[#EE434A] hover:bg-[#D93D44] text-white px-6 py-3 rounded-full text-base shadow-lg flex items-center justify-center transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed min-w-[250px] gap-2"
+          class="bg-[#EE434A] hover:bg-[#D93D44] text-white px-6 py-3 rounded-2xl text-base shadow-lg flex items-center justify-center transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed min-w-[250px] gap-2"
           disabled={!courseStructure.OG_Module_Title.every((_, index) => selectedVideos[index] !== undefined)}
         >
           Generate Final Course

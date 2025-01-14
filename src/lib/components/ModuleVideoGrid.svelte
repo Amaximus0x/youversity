@@ -77,7 +77,7 @@
           >
             <div class="flex flex-col">
               <!-- Title and Duration -->
-              <div class="p-2 pb-3 flex items-start justify-between">
+              <div class="p-2 flex items-start justify-between">
                 <div>
                   <h3 class="text-base font-semibold text-[#2A4D61] line-clamp-1 mb-1">
                     {video.title}
@@ -92,7 +92,7 @@
               </div>
 
               <!-- Thumbnail with Play Button -->
-              <div class="relative aspect-video rounded-xl overflow-hidden p-2">
+              <div class="relative aspect-video rounded-xl overflow-hidden px-2 pb-2">
                 <img
                   src={video.thumbnailUrl}
                   alt={video.title}
