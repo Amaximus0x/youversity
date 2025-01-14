@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { CourseStructure, VideoItem } from '$lib/types/course';
-  import { Play, ChevronLeft, ChevronRight } from 'lucide-svelte';
+  import { Play, ChevronLeft, ChevronRight, Edit2 } from 'lucide-svelte';
   import VideoPlayer from './VideoPlayer.svelte';
   import { fade, scale } from 'svelte/transition';
 
@@ -48,7 +48,7 @@
   }
 </script>
 
-<div class="relative">
+<div class="relative p-2">
   {#if moduleVideos[currentModuleIndex]?.length}
     {#if showLeftArrow}
       <button
@@ -61,56 +61,52 @@
 
     <div
       bind:this={sliderRef}
-      class="flex gap-4 overflow-x-auto scrollbar-hide pb-4 px-2"
+      class="flex gap-6 overflow-x-auto scrollbar-hide pb-6 px-2 pt-2"
       on:scroll={updateArrows}
     >
       {#each moduleVideos[currentModuleIndex] as video, videoIndex}
         <div 
-          class="flex-shrink-0"
-          style="width: calc((100% - 3rem) / 3.2)"
+          class="flex-shrink-0 w-[250px] h-[202px]"
         >
           <div 
-            class="group relative bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer border border-gray-100 h-full"
+            class="group relative bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer border border-gray-100"
             class:ring-2={selectedVideos[currentModuleIndex] === videoIndex}
-            class:ring-[#EE434A]={selectedVideos[currentModuleIndex] === videoIndex}
+            class:ring-[#42C1C8]={selectedVideos[currentModuleIndex] === videoIndex}
             class:ring-offset-2={selectedVideos[currentModuleIndex] === videoIndex}
             on:click={() => selectVideo(videoIndex)}
           >
-            <!-- Video Number and Duration -->
-            <div class="absolute top-3 left-3 z-10 flex items-center gap-2">
-              <span class="bg-black/70 text-white px-2 py-1 rounded-md text-sm">
-                0{videoIndex + 1}
-              </span>
-              <span class="bg-black/70 text-white px-2 py-1 rounded-md text-sm">
-                {video.length} min
-              </span>
-            </div>
-
-            <!-- Thumbnail with Play Button -->
-            <div class="relative aspect-video">
-              <img
-                src={video.thumbnailUrl}
-                alt={video.title}
-                class="w-full h-full object-cover"
-              />
-              <div class="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-all duration-200 flex items-center justify-center">
-                <button
-                  class="text-white opacity-0 group-hover:opacity-100 transition-all duration-200 hover:scale-110 transform"
-                  on:click|stopPropagation={(e) => handlePlayVideo(video, e)}
-                >
-                  <Play class="w-12 h-12" />
+            <div class="flex flex-col">
+              <!-- Title and Duration -->
+              <div class="p-2 pb-3 flex items-start justify-between">
+                <div>
+                  <h3 class="text-lg font-semibold text-[#2A4D61] line-clamp-1 mb-1">
+                    {video.title}
+                  </h3>
+                  <span class="text-sm text-[#2A4D61]/60">
+                    {video.length} min
+                  </span>
+                </div>
+                <button class="text-[#42C1C8] p-1 hover:text-[#2A4D61] transition-colors duration-200">
+                  <Edit2 class="w-5 h-5" />
                 </button>
               </div>
-            </div>
 
-            <!-- Video Info -->
-            <div class="p-4">
-              <h3 class="font-semibold text-[#2A4D61] line-clamp-2 mb-1">
-                {video.title}
-              </h3>
-              <p class="text-sm text-gray-500 line-clamp-2">
-                {video.description || 'No description available'}
-              </p>
+              <!-- Thumbnail with Play Button -->
+              <div class="relative aspect-video">
+                <img
+                  src={video.thumbnailUrl}
+                  alt={video.title}
+                  class="w-full h-full object-cover"
+                />
+                <div class="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-all duration-200 flex items-center justify-center">
+                  <button
+                    class="text-white opacity-0 group-hover:opacity-100 transition-all duration-200 hover:scale-110 transform"
+                    on:click|stopPropagation={(e) => handlePlayVideo(video, e)}
+                  >
+                    <Play class="w-12 h-12" />
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -180,9 +176,9 @@
     display: none;
   }
 
-  .line-clamp-2 {
+  .line-clamp-1 {
     display: -webkit-box;
-    -webkit-line-clamp: 2;
+    -webkit-line-clamp: 1;
     -webkit-box-orient: vertical;
     overflow: hidden;
   }
