@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import ModuleVideoGrid from '$lib/components/ModuleVideoGrid.svelte';
+  import YoutubeUrlInput from '$lib/components/YoutubeUrlInput.svelte';
   import type { CourseStructure, VideoItem } from '$lib/types/course';
   import { loadingState } from '$lib/stores/loadingState';
   import { page } from '$app/stores';
@@ -15,6 +16,16 @@
   let moduleVideos: VideoItem[][] = [];
   let selectedVideos: number[] = [];
   let currentModuleIndex = 0;
+  let showCustomUrlInput = false;
+
+  function handleCustomVideoAdd(video: VideoItem, moduleIndex: number) {
+    if (!moduleVideos[moduleIndex]) {
+      moduleVideos[moduleIndex] = [];
+    }
+    moduleVideos[moduleIndex] = [...moduleVideos[moduleIndex], video];
+    moduleVideos = [...moduleVideos];
+    showCustomUrlInput = false;
+  }
 
   async function fetchVideosForModule(searchPrompt: string, moduleIndex: number, retryCount = 0) {
     if (!courseStructure) return;
@@ -227,11 +238,22 @@
             </div>
             <button
               class="bg-[#EE434A] hover:bg-[#D93D44] text-white px-6 py-3 rounded-2xl flex items-center gap-2 transition-colors duration-200"
+              on:click={() => showCustomUrlInput = true}
             >
               Add Custom Video
-              <img src="/icons/plus-sign.svg" class="w-5 h-5" />
+              <Plus class="w-5 h-5" />
             </button>
           </div>
+
+          {#if showCustomUrlInput}
+            <div class="mb-6">
+              <YoutubeUrlInput
+                moduleIndex={currentModuleIndex}
+                onVideoAdd={handleCustomVideoAdd}
+                class="w-full"
+              />
+            </div>
+          {/if}
 
           <ModuleVideoGrid
             {courseStructure}
