@@ -85,6 +85,7 @@ const createLoadingStore = () => {
         isInitialBuild,
         isCreateCourse,
         minimized: false,
+        currentStep: 'Generating Course',
         notification: {
           show: false,
           type: null,
@@ -92,8 +93,8 @@ const createLoadingStore = () => {
         }
       }));
 
-      // Set auto-minimize timeout
-      if (browser) {
+      // Don't auto-minimize for course generation
+      if (browser && !isCreateCourse) {
         window.loadingStateTimeout = window.setTimeout(() => {
           update(state => ({ ...state, minimized: true }));
         }, 3000);

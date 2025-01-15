@@ -109,16 +109,22 @@
     }
 
     try {
+      loadingState.startLoading('', true);
+      loadingState.setStep('Preparing your course...');
+      
       if ($user) {
         // For authenticated users, go directly to create-course with the objective
-        window.location.href = `/create-course?objective=${encodeURIComponent(learningObjective)}`;
+        await goto(`/create-course?objective=${encodeURIComponent(learningObjective)}`);
       } else {
         // For unauthenticated users, redirect to login with return URL
         const returnUrl = `/create-course?objective=${encodeURIComponent(learningObjective)}`;
-        window.location.href = `/login?redirectTo=${encodeURIComponent(returnUrl)}`;
+        await goto(`/login?redirectTo=${encodeURIComponent(returnUrl)}`);
       }
     } catch (error) {
       console.error('Navigation error:', error);
+      loadingState.setError('Failed to navigate to course creation');
+    } finally {
+      loadingState.stopLoading();
     }
   }
 

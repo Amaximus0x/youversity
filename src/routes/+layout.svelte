@@ -325,7 +325,9 @@
   </div>
 {/if}
 
-<CourseGenerationProgress />
+{#if !$page.url.pathname.startsWith('/create-course')}
+  <CourseGenerationProgress />
+{/if}
 
 <FilterModal 
   show={showFilterModal}

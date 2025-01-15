@@ -12,6 +12,7 @@
   import { auth } from '$lib/firebase';
   import { saveCourseToFirebase } from '$lib/firebase';
   import { user, isAuthenticated } from '$lib/stores/auth';
+  import CourseGenerationHeader from '$lib/components/CourseGenerationHeader.svelte';
 
   let courseObjective = '';
   let courseStructure: CourseStructure | null = null;
@@ -238,6 +239,8 @@
 
 <div class="min-h-screen bg-transparent">
   <div class="container mx-auto px-4 py-8">
+    <CourseGenerationHeader />
+    
     {#if error}
       <div class="max-w-2xl mx-auto text-center">
         <div class="text-red-500 mb-4">{error}</div>
