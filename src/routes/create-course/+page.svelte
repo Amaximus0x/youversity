@@ -8,6 +8,10 @@
   import { goto } from '$app/navigation';
   import { Plus } from 'lucide-svelte';
   import { fade, fly } from 'svelte/transition';
+  import { getVideoTranscript } from '$lib/services/transcriptUtils';
+  import { auth } from '$lib/firebase';
+  import { saveCourseToFirebase } from '$lib/firebase';
+  import { user, isAuthenticated } from '$lib/stores/auth';
 
   let courseObjective = '';
   let courseStructure: CourseStructure | null = null;
@@ -17,6 +21,7 @@
   let selectedVideos: number[] = [];
   let currentModuleIndex = 0;
   let showCustomUrlInput = false;
+  let moduleTranscripts: string[] = [];
 
   function handleCustomVideoAdd(video: VideoItem, moduleIndex: number) {
     if (!moduleVideos[moduleIndex]) {
@@ -86,6 +91,11 @@
   }
 
   async function handleSaveCourse() {
+    if (!$user) {
+      error = 'Please sign in to save the course';
+      return;
+    }
+
     if (!courseStructure) return;
     
     loadingState.startLoading(courseStructure.OG_Course_Title, false);
@@ -94,6 +104,23 @@
     try {
       loading = true;
       error = null;
+      moduleTranscripts = [];
+
+      // Fetch transcripts for all selected videos
+      for (let i = 0; i < selectedVideos.length; i++) {
+        loadingState.setCurrentModule(i + 1);
+        loadingState.setStep(`Fetching transcript for Module ${i + 1}: ${courseStructure.OG_Module_Title[i]}`);
+        
+        const video = moduleVideos[i][selectedVideos[i]];
+        const transcript = await getVideoTranscript(video.videoId);
+        moduleTranscripts[i] = transcript;
+        
+        const progress = ((i + 1) / selectedVideos.length) * 80; // Leave 20% for final steps
+        loadingState.setProgress(progress);
+      }
+
+      loadingState.setStep('Generating course content and quizzes...');
+      loadingState.setProgress(85);
 
       const selectedVideosList = moduleVideos.map((videos, index) => ({
         ...videos[selectedVideos[index]],
@@ -106,14 +133,35 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           courseStructure,
-          selectedVideos: selectedVideosList
+          selectedVideos: selectedVideosList,
+          moduleTranscripts
         })
       });
 
       const data = await response.json();
       if (!data.success) throw new Error(data.error || 'Failed to create final course');
 
-      goto(`/course/${data.courseId}`);
+      loadingState.setStep('Saving your course...');
+      loadingState.setProgress(95);
+      
+      // Update loading state with the final course title
+      loadingState.startLoading(data.course.Final_Course_Title, false);
+      
+      // Save to Firebase
+      const courseId = await saveCourseToFirebase($user.uid, {
+        ...data.course,
+        isPublic: false,
+        createdBy: $user.uid,
+        createdAt: new Date(),
+        views: 0,
+        likes: 0
+      });
+
+      loadingState.setStep('Course creation complete!');
+      loadingState.setProgress(100);
+      loadingState.stopLoading(courseId);
+      
+      goto(`/course/${courseId}`);
     } catch (err: any) {
       console.error('Error saving course:', err);
       error = err.message;
