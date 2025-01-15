@@ -174,7 +174,7 @@
   }
 
   async function handleBuildCourse() {
-    loadingState.startLoading('', true);
+    loadingState.startLoading('', true, true);
     loadingState.setStep('Analyzing your course objective...');
     error = null;
     moduleVideos = [];
@@ -203,7 +203,6 @@
         selectedVideos = new Array(courseStructure.OG_Module_Title.length).fill(0);
         
         loadingState.setTotalModules(courseStructure.OG_Module_Title.length);
-        loadingState.setStep('Course structure generated successfully!');
         loadingState.setProgress(20); // Initial course structure generation is 20% of the process
       } else {
         throw new Error('Invalid course structure received');

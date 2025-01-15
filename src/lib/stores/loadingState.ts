@@ -108,12 +108,11 @@ const createLoadingStore = () => {
       
       return {
         ...state,
-        isLoading: false,
+        isLoading: !state.isCreateCourse, // Keep loading true for create course page
         currentModule: 0,
         currentStep: '',
         progress: 100,
         courseId,
-        isCreateCourse: false,
         notification: !state.isInitialBuild ? {
           show: true,
           type: 'success',
