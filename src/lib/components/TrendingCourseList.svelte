@@ -101,7 +101,7 @@
       <div class=" rounded-2xl overflow-hidden border border-[rgba(0,0,0,0.05)] {
         layout === 'grid' 
           ? 'w-full'
-          : 'min-w-[280px]'
+          : 'min-w-[280px] max-w-[280px]'
       }">
         <div class="relative h-[156px]">
           {#if course.Final_Course_Thumbnail}
@@ -131,6 +131,16 @@
         <div class="p-4 flex flex-col min-h-[156px]">
           <h3 class="font-medium text-base text-black mb-2 line-clamp-2">{course.Final_Course_Title}</h3>
           <p class="text-[#5F6368] text-sm mb-4 line-clamp-2">{course.Final_Course_Description || course.Final_Course_Objective}</p>
+
+          <span class="text-sm text-[#A3A3A3] flex items-center gap-2">
+            <img src="/icons/time-quarter.svg" alt="Duration" class="w-4 h-4" />
+            Duration: {#if course?.Final_Course_Duration}
+              {Math.floor((course.Final_Course_Duration) / 60)}h
+            {:else}
+              --
+            {/if}
+          </span>
+          
           <div class="flex items-center justify-between text-sm text-[#5F6368] mb-4">
             <div class="flex items-center gap-2">
               <Eye class="w-4 h-4" />
@@ -143,6 +153,7 @@
               <ArrowUp class="w-4 h-4 {course.likedBy?.includes($user?.uid) ? 'text-[#EE434A]' : ''}" />
               <span class="{course.likedBy?.includes($user?.uid) ? 'text-[#EE434A]' : ''}">{course.likes || 0}</span>
             </button>
+            
           </div>
           <div class="mt-auto">
             <button 

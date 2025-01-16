@@ -287,7 +287,7 @@
       {#if userCourses.length > 0}
         <div class="flex gap-4 overflow-x-auto pb-4 -mx-4 px-4 hide-scrollbar">
           {#each userCourses as course}
-            <div class="min-w-[280px] bg-white rounded-2xl overflow-hidden border border-[rgba(0,0,0,0.05)]">
+            <div class="min-w-[280px] max-w-[280px] bg-white rounded-2xl overflow-hidden border border-[rgba(0,0,0,0.05)]">
               <div class="relative h-[156px]">
                 {#if course.Final_Course_Thumbnail}
                   <img 
@@ -322,11 +322,12 @@
                     <div class="flex-1 h-2 bg-[#D9E1E3] rounded-full">
                       <div 
                         class="h-full bg-[#42C1C8] rounded-full" 
-                        style="width: {course.progress}%" 
+                        style="width: {course.progress}" 
                       />
                     </div>
-                    <span class="text-sm text-[#5F6368]">{course.progress}%</span>
-                    <span class="text-sm text-[#A3A3A3]">
+                    <!-- <span class="text-sm text-[#5F6368]">{course.progress}</span> -->
+                    <span class="text-sm text-[#A3A3A3] flex items-center gap-2">
+                      <img src="/icons/time-quarter.svg" alt="Duration" class="w-4 h-4" />
                       Duration: {#if course?.Final_Course_Duration}
                         {Math.floor((course.Final_Course_Duration) / 60)}h
                       {:else}
