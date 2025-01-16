@@ -28,6 +28,19 @@
     showShareModal = true;
   }
 
+  async function handelNavigateToCourse(courseId: string) {
+    try {
+      if ($user) {
+        await goto(`/course/${courseId}`);
+      } else {
+        const returnUrl = `/course/${courseId}`;
+        await goto(`/login?redirectTo=${encodeURIComponent(returnUrl)}`);
+      }
+    } catch (error) {
+      console.error('Error navigating to course:', error);
+    }
+  }
+
   async function handleLike(e: Event, courseId: string) {
     e.preventDefault();
     e.stopPropagation();
@@ -134,7 +147,7 @@
           <div class="mt-auto">
             <button 
               class="w-full py-2 bg-[#1E3443] hover:bg-[#2A4D61] text-white rounded-lg transition-colors duration-200 text-base font-medium"
-              on:click={() => goto(`/course/${course.id}`)}
+              on:click={(e) => handelNavigateToCourse(course.id)}
             >
               Start Course
             </button>
