@@ -3,6 +3,7 @@ import { getFirestore, collection, addDoc, query, where, getDocs, doc, getDoc, u
 import { getAuth, setPersistence, browserLocalPersistence, signInWithPopup, GoogleAuthProvider, signOut } from 'firebase/auth';
 import { getStorage } from 'firebase/storage';
 import type { CourseEnrollment, EnrollmentProgress, FinalCourseStructure, ModuleProgress, CourseRating } from './types/course';
+import { getUserProfile } from '$lib/services/profile';
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -54,10 +55,10 @@ export async function saveCourseToFirebase(userId: string, courseData: any) {
       ...courseData,
       createdAt: serverTimestamp(),
       id: courseId,
-      createdBy: userId,
+      createdBy: userId,  // Store only the user ID
       userId,
-      isPublic: true,  // Default to public
-      views: 0,         // Required for orderBy
+      isPublic: true,
+      views: 0,
       likes: 0,
       updatedAt: serverTimestamp()
     };
@@ -73,23 +74,29 @@ export async function saveCourseToFirebase(userId: string, courseData: any) {
       isCreator: true
     });
 
-    // Verify the course was saved by attempting to read it
-    let attempts = 0;
-    const maxAttempts = 3;
-    
-    while (attempts < maxAttempts) {
-      const courseDoc = await getDoc(publicCourseRef);
-      if (courseDoc.exists()) {
-        return courseId;
-      }
-      attempts++;
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second between attempts
-    }
-
-    throw new Error('Course saved but not immediately available');
+    return courseId;
   } catch (error) {
     console.error('Error saving course:', error);
     throw error;
+  }
+}
+
+// Helper function to get user profile with username
+async function enrichWithCreatorProfile(course: any) {
+  try {
+    const creatorProfile = await getUserProfile(course.createdBy);
+    return {
+      ...course,
+      creatorUsername: creatorProfile?.username || 'Unknown User',
+      creatorDisplayName: creatorProfile?.displayName || 'Unknown User'
+    };
+  } catch (error) {
+    console.error('Error fetching creator profile:', error);
+    return {
+      ...course,
+      creatorUsername: 'Unknown User',
+      creatorDisplayName: 'Unknown User'
+    };
   }
 }
 
@@ -101,11 +108,16 @@ export async function getUserCourses(userId: string) {
       where('createdBy', '==', userId)
     );
     const createdCoursesSnapshot = await getDocs(createdCoursesQuery);
-    const createdCourses = createdCoursesSnapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data(),
-      isCreator: true
-    }));
+    const createdCourses = await Promise.all(
+      createdCoursesSnapshot.docs.map(async doc => {
+        const courseData = {
+          id: doc.id,
+          ...doc.data(),
+          isCreator: true
+        };
+        return enrichWithCreatorProfile(courseData);
+      })
+    );
 
     // Get enrolled courses from user's subcollection
     const enrolledCoursesRef = collection(db, `users/${userId}/courses`);
@@ -114,18 +126,19 @@ export async function getUserCourses(userId: string) {
     // Get full course data for enrolled courses
     const enrolledCourses = await Promise.all(
       enrolledCoursesSnapshot.docs
-        .filter(doc => !doc.data().isCreator) // Only get enrolled courses, not created ones
+        .filter(doc => !doc.data().isCreator)
         .map(async (doc) => {
           const courseRef = doc.data().courseRef;
           const courseDoc = await getDoc(courseRef);
           if (courseDoc.exists()) {
-            return {
+            const courseData = {
               id: courseDoc.id,
               ...courseDoc.data(),
               isCreator: false,
               isEnrolled: true,
               enrolledAt: doc.data().createdAt?.toDate?.() || new Date()
             };
+            return enrichWithCreatorProfile(courseData);
           }
           return null;
         })
@@ -349,11 +362,17 @@ export async function getSharedCourse(courseId: string) {
         data.views = currentViews + 1;
       }
 
-      return {
+      const enrichedData = await enrichWithCreatorProfile({
         ...data,
         id: courseDoc.id,
         createdAt: data.createdAt?.toDate?.() || null
-      } as FinalCourseStructure & { id: string };
+      });
+
+      return enrichedData as FinalCourseStructure & { 
+        id: string;
+        creatorUsername: string;
+        creatorDisplayName: string;
+      };
     }
     console.log('Course not found');
     return null;

@@ -50,6 +50,8 @@ export interface FinalCourseStructure {
   Final_Module_Video_Duration: number[];
   Final_Module_Thumbnails: string[];
   Final_Course_Duration: number;
+  creatorUsername?: string;
+  creatorDisplayName?: string;
 }
 
 export interface CourseRating {

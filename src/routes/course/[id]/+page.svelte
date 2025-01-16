@@ -223,6 +223,14 @@
     <div class="grid grid-cols-12 gap-4">
       <!-- Module Content -->
       <div class="col-span-8">
+        <!-- Course Header -->
+        <div class="mb-6">
+          <h1 class="text-2xl font-semibold text-[#1E3443] mb-2">{courseDetails.Final_Course_Title}</h1>
+          {#if courseDetails.creatorUsername}
+            <p class="text-[#5F6368] mb-4">Created by: {courseDetails.creatorDisplayName || courseDetails.creatorUsername}</p>
+          {/if}
+          <p class="text-[#5F6368]">{courseDetails.Final_Course_Objective}</p>
+        </div>
         {#if currentModule >= 0}
           <div class=" rounded-2xl overflow-hidden">
             <!-- Video Player -->
