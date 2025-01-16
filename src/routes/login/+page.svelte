@@ -60,7 +60,20 @@
     try {
       const redirectTo = $page.url.searchParams.get('redirectTo') || '/create-course';
       if (isRegistering) {
-        await registerWithEmail(email, password, redirectTo);
+        try {
+          await registerWithEmail(email, password, redirectTo);
+        } catch (err: any) {
+          // If email already exists, switch to sign in mode
+          if (err?.message?.includes('auth/email-already-in-use')) {
+            isRegistering = false;
+            error = 'This email is already registered. Please sign in instead.';
+            // Clear password fields for security
+            password = '';
+            confirmPassword = '';
+            return;
+          }
+          throw err; // Re-throw other errors
+        }
       } else {
         await signInWithEmail(email, password, redirectTo);
       }

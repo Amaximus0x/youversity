@@ -12,6 +12,15 @@ service cloud.firestore {
                    'country', 'updatedAt', 'email', 'phoneNumber']);
     }
 
+    // Usernames collection for username reservation
+    match /usernames/{username} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null && 
+                   request.resource.data.userId == request.auth.uid;
+      allow delete: if request.auth != null && 
+                   get(/databases/$(database)/documents/usernames/$(username)).data.userId == request.auth.uid;
+    }
+
     // Public courses collection
     match /courses/{courseId} {
       // Allow reading for all authenticated and unauthenticated users

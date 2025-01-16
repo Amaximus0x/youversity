@@ -169,29 +169,37 @@
         </div>
 
         <div class="flex-grow grid grid-cols-1 md:grid-cols-2 gap-4">
+          {#await getUserProfile(profile.id) then userProfile}
           <div class="space-y-2">
             <div class="profile-field">
               <span class="text-gray-600 font-semibold">Name:</span>
               <span class="text-gray-800">{profile.name || 'Not provided'}</span>
+            </div>
+            <div class="profile-field">
+              <span class="text-gray-600 font-semibold">Username:</span>
+              <span class="text-gray-800">{userProfile?.username || 'Not provided'}</span>
             </div>
             
             <div class="profile-field">
               <span class="text-gray-600 font-semibold">Email:</span>
               <span class="text-gray-800">{profile.email || 'Not provided'}</span>
             </div>
+
+            <div class="profile-field">
+              <span class="text-gray-600 font-semibold">Gender:</span>
+              <span class="text-gray-800">{userProfile?.gender || 'Not provided'}</span>
+            </div>
+            
           </div>
 
           <div class="space-y-2">
-            {#await getUserProfile(profile.id) then userProfile}
+           
               <div class="profile-field">
                 <span class="text-gray-600 font-semibold">Date of Birth:</span>
                 <span class="text-gray-800">{userProfile?.dateOfBirth || 'Not provided'}</span>
               </div>
 
-              <div class="profile-field">
-                <span class="text-gray-600 font-semibold">Gender:</span>
-                <span class="text-gray-800">{userProfile?.gender || 'Not provided'}</span>
-              </div>
+            
 
               <div class="profile-field">
                 <span class="text-gray-600 font-semibold">Country:</span>
@@ -209,9 +217,9 @@
                   {userProfile?.createdAt ? new Date(userProfile.createdAt).toLocaleDateString() : 'Not available'}
                 </span>
               </div>
+            </div>
             {/await}
           </div>
-        </div>
       </div>
 
       {#if showEditModal}

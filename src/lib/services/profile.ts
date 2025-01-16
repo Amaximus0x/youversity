@@ -1,9 +1,11 @@
 import { db } from '$lib/firebase';
-import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc, serverTimestamp, deleteDoc } from 'firebase/firestore';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { app } from '$lib/firebase';
+import { generateUsername } from '$lib/utils/username';
 
 export interface UserProfile {
+  username: string;
   displayName: string;
   email: string;
   photoURL: string;
@@ -19,7 +21,12 @@ export async function createUserProfile(userId: string, initialData: Partial<Use
   try {
     const userRef = doc(db, 'users', userId);
     
-    const profile: UserProfile = {
+    // Generate a unique username
+    const username = await generateUsername(initialData.displayName || '', initialData.email || '');
+    
+    // Create the profile data with server timestamps
+    const profileData = {
+      username,
       displayName: initialData.displayName || '',
       email: initialData.email || '',
       photoURL: initialData.photoURL || '',
@@ -27,21 +34,41 @@ export async function createUserProfile(userId: string, initialData: Partial<Use
       gender: initialData.gender || '',
       country: initialData.country || '',
       phoneNumber: initialData.phoneNumber || '',
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
+    };
+
+    try {
+      // First try to reserve the username
+      const usernameRef = doc(db, 'usernames', username);
+      await setDoc(usernameRef, {
+        userId,
+        createdAt: serverTimestamp()
+      });
+
+      // If username reservation succeeds, create the user profile
+      await setDoc(userRef, profileData);
+    } catch (error) {
+      // If username reservation fails, try to clean up
+      try {
+        const usernameRef = doc(db, 'usernames', username);
+        await deleteDoc(usernameRef);
+      } catch (cleanupError) {
+        console.error('Error cleaning up username after failure:', cleanupError);
+      }
+      throw error;
+    }
+
+    return {
+      ...profileData,
       createdAt: new Date(),
       updatedAt: new Date()
-    };
-
-    // Convert dates to timestamps
-    const profileData = {
-      ...profile,
-      createdAt: profile.createdAt,
-      updatedAt: profile.updatedAt
-    };
-
-    await setDoc(userRef, profileData);
-    return profile;
+    } as UserProfile;
   } catch (error) {
     console.error('Error creating user profile:', error);
+    if (error instanceof Error) {
+      throw new Error(`Failed to create user profile: ${error.message}`);
+    }
     throw new Error('Failed to create user profile');
   }
 }
