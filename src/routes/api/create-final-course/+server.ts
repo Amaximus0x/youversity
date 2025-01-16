@@ -246,6 +246,9 @@ async function generateFinalCourse(
     const videoDurations = selectedVideos.map(video => video.length);
     const videoThumbnails = selectedVideos.map(video => video.thumbnailUrl);
 
+    // Calculate total course duration
+    const totalDuration = videoDurations.reduce((sum, duration) => sum + duration, 0);
+
     // Use first video thumbnail as course thumbnail if not provided
     let thumbnailUrl = videoThumbnails[0] || "";
 
@@ -267,7 +270,8 @@ async function generateFinalCourse(
       Final_Module_Quiz: moduleQuizzes,
       Final_Course_Quiz: finalQuiz,
       Final_Course_Conclusion: courseConclusion,
-      Final_Course_Thumbnail: thumbnailUrl
+      Final_Course_Thumbnail: thumbnailUrl,
+      Final_Course_Duration: totalDuration
     };
   } catch (error) {
     console.error('Error in generateFinalCourse:', error);

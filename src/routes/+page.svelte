@@ -326,6 +326,13 @@
                       />
                     </div>
                     <span class="text-sm text-[#5F6368]">{course.progress}%</span>
+                    <span class="text-sm text-[#A3A3A3]">
+                      Duration: {#if course?.Final_Course_Duration}
+                        {Math.floor((course.Final_Course_Duration) / 60)}h
+                      {:else}
+                        --
+                      {/if}
+                    </span>
                   </div>
                 {/if}
                 <div class="mt-auto pt-2">

@@ -49,6 +49,7 @@ export interface FinalCourseStructure {
   totalRatings?: number;
   Final_Module_Video_Duration: number[];
   Final_Module_Thumbnails: string[];
+  Final_Course_Duration: number;
 }
 
 export interface CourseRating {
