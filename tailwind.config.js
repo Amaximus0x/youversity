@@ -2,7 +2,12 @@
 export default {
   content: ['./src/**/*.{html,js,svelte,ts}'],
   theme: {
-    extend: {},
+    extend: {
+      fontFamily: {
+        sans: ['Poppins'],
+        // Removing any other font families to ensure Poppins is the only option
+      },
+    },
   },
   plugins: [],
 }

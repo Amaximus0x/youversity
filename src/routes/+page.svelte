@@ -281,7 +281,7 @@
   {#if $user}
     <div class="mb-8">
       <div class="flex items-center justify-between mb-6">
-        <h2 class="text-2xl font-medium text-[#2A4D61]">Continue Learning</h2>
+        <h4 class="text-2xl font-normal text-[#000000]">Continue Learning</h4>
       </div>
 
       {#if userCourses.length > 0}
@@ -384,7 +384,7 @@
   <!-- Trending Community Courses Section -->
   <section class="mb-12">
     <div class="flex items-center justify-between mb-6">
-      <h2 class="text-2xl font-medium text-[#2A4D61] font-poppins">Trending Courses</h2>
+      <h2 class="text-2xl font-normal text-[#000000] font-poppins">Trending Courses</h2>
       <a href="/trending" class="text-[#42C1C8] text-sm font-medium hover:underline">Show All</a>
     </div>
     <TrendingCourseList 
