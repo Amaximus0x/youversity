@@ -233,7 +233,7 @@
                     try {
                       const videoUrl = courseDetails.Final_Module_YouTube_Video_URL[currentModule];
                       const videoId = new URL(videoUrl).searchParams.get('v');
-                      return `https://www.youtube.com/embed/${videoId}?enablejsapi=0&origin=${window.location.origin}`;
+                      return `https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1&enablejsapi=0&origin=${window.location.origin}`;
                     } catch (error) {
                       console.error('Error parsing YouTube URL:', error);
                       return '';
@@ -254,7 +254,9 @@
               <!-- Module Navigation -->
               <div class="flex items-center justify-between mb-8">
                 <div class="flex items-center gap-2">
-                  <span class="text-base text-[#A3A3A3]">01:</span>
+                  <span class="text-base text-[#A3A3A3]">
+                    {(currentModule + 1).toString().padStart(2, '0')}:
+                  </span>
                   <h4 class="text-[18px] font-medium text-[#1E3443]">
                     {courseDetails.Final_Module_Title[currentModule] || 'Loading module...'}
                   </h4>
@@ -483,7 +485,7 @@
                   <div class="flex-1 min-w-0 p-2">
                     <div class="flex flex-col gap-4">
                       <div class="flex items-start gap-2">
-                        <span class="text-[#A3A3A3] text-sm whitespace-nowrap">0{index + 1}:</span>
+                        <span class="text-[#A3A3A3] text-sm whitespace-nowrap">{(index + 1).toString().padStart(2, '0')}:</span>
                         <h4 class="text-base font-medium text-[#1E3443] leading-[21px] line-clamp-2">{title}</h4>
                       </div>
                       <span class="text-sm text-[#A3A3A3]">{index === 0 ? '45' : index === 1 ? '30' : '33'} min</span>
@@ -491,7 +493,18 @@
                   </div>
                   <div class="w-[120px] h-[78px] rounded-lg overflow-hidden flex-shrink-0">
                     <img
-                      src={courseDetails.Final_Course_Thumbnail || '/images/course-placeholder.png'}
+                      src={(() => {
+                        try {
+                          const videoUrl = courseDetails?.Final_Module_YouTube_Video_URL?.[index];
+                          const videoId = new URL(videoUrl).searchParams.get('v');
+                          return videoId 
+                            ? `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`
+                            : 'courseDetails.Final_Course_Thumbnail';
+                        } catch (error) {
+                          console.error('Error parsing YouTube URL:', error);
+                          return '/images/course-placeholder.png';
+                        }
+                      })()}
                       alt={title}
                       class="w-full h-full object-cover"
                     />
