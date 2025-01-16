@@ -23,6 +23,8 @@
   import CourseList from '$lib/components/CourseList.svelte';
   import Skeleton from '$lib/components/Skeleton.svelte';
   import TrendingCourseList from '$lib/components/TrendingCourseList.svelte';
+  import LoadingOverlay from '$lib/components/LoadingOverlay.svelte';
+  import CourseCreationOverlay from '$lib/components/CourseCreationOverlay.svelte';
 
   let learningObjective = '';
   let userCourses: (FinalCourseStructure & { id: string })[] = [];
@@ -34,6 +36,8 @@
   let publicCourses: (FinalCourseStructure & { id: string })[] = [];
   let isInputFocused = false;
   let trendingCoursesLoading = true;
+  let showLoadingOverlay = false;
+  let showCreationOverlay = false;
 
   // Update filteredCourses when userCourses changes
   $: {
@@ -109,11 +113,14 @@
     }
 
     try {
-      loadingState.startLoading('', true);
-      loadingState.setStep('Preparing your course...');
-      
       if ($user) {
-        // For authenticated users, go directly to create-course with the objective
+        // Show creation overlay first
+        showCreationOverlay = true;
+
+        // Wait for 3 seconds
+        await new Promise(resolve => setTimeout(resolve, 3000));
+        
+        // Navigate to create-course page
         await goto(`/create-course?objective=${encodeURIComponent(learningObjective)}`);
       } else {
         // For unauthenticated users, redirect to login with return URL
@@ -122,9 +129,8 @@
       }
     } catch (error) {
       console.error('Navigation error:', error);
-      loadingState.setError('Failed to navigate to course creation');
     } finally {
-      loadingState.stopLoading();
+      showCreationOverlay = false;
     }
   }
 
@@ -215,6 +221,10 @@
     display: none;  /* Chrome, Safari and Opera */
   }
 </style>
+
+<LoadingOverlay show={showLoadingOverlay} />
+
+<CourseCreationOverlay show={showCreationOverlay} />
 
 <div class="container mx-auto px-4 py-6 pb-20 sm:pb-6 sm:py-8 max-w-7xl">
   <!-- Create Course Section -->

@@ -66,12 +66,12 @@
       moduleVideos[moduleIndex] = data.videos;
       moduleVideos = [...moduleVideos]; // Trigger reactivity
       
-      const progress = ((moduleIndex + 1) / courseStructure.OG_Module_Title.length) * 100;
-      loadingState.setProgress(progress);
+      // Calculate progress: 20% for structure + 80% for modules
+      // Each module takes an equal share of the remaining 80%
+      const moduleProgress = (moduleIndex + 1) / courseStructure.OG_Module_Title.length;
+      const totalProgress = 20 + (moduleProgress * 80);
+      loadingState.setProgress(totalProgress);
 
-      if (moduleIndex === courseStructure.OG_Module_Title.length - 1) {
-        loadingState.stopLoading();
-      }
     } catch (err: any) {
       console.error(`Error in module ${moduleIndex + 1}:`, err);
       error = err.message;
@@ -203,7 +203,8 @@
         selectedVideos = new Array(courseStructure.OG_Module_Title.length).fill(0);
         
         loadingState.setTotalModules(courseStructure.OG_Module_Title.length);
-        loadingState.setProgress(20); // Initial course structure generation is 20% of the process
+        loadingState.setStep('Course structure generated successfully!');
+        loadingState.setProgress(20); // Initial course structure generation is exactly 20%
       } else {
         throw new Error('Invalid course structure received');
       }
@@ -222,6 +223,11 @@
     const urlObjective = $page.url.searchParams.get('objective');
     if (urlObjective) {
       courseObjective = decodeURIComponent(urlObjective);
+      
+      // Start loading state for course generation
+      loadingState.startLoading('', true, true);
+      loadingState.setStep('Analyzing your course objective...');
+      
       await handleBuildCourse();
       
       // Fetch videos for all modules
