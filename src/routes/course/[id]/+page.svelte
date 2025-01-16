@@ -488,23 +488,18 @@
                         <span class="text-[#A3A3A3] text-sm whitespace-nowrap">{(index + 1).toString().padStart(2, '0')}:</span>
                         <h4 class="text-base font-medium text-[#1E3443] leading-[21px] line-clamp-2">{title}</h4>
                       </div>
-                      <span class="text-sm text-[#A3A3A3]">{index === 0 ? '45' : index === 1 ? '30' : '33'} min</span>
+                      <span class="text-sm text-[#A3A3A3]">
+                        {#if courseDetails?.Final_Module_Video_Duration?.[index]}
+                          {Math.floor(courseDetails.Final_Module_Video_Duration[index])} min {Math.round((courseDetails.Final_Module_Video_Duration[index] % 1) * 60)} sec
+                        {:else}
+                          -- min
+                        {/if}
+                      </span>
                     </div>
                   </div>
                   <div class="w-[120px] h-[78px] rounded-lg overflow-hidden flex-shrink-0">
                     <img
-                      src={(() => {
-                        try {
-                          const videoUrl = courseDetails?.Final_Module_YouTube_Video_URL?.[index];
-                          const videoId = new URL(videoUrl).searchParams.get('v');
-                          return videoId 
-                            ? `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`
-                            : 'courseDetails.Final_Course_Thumbnail';
-                        } catch (error) {
-                          console.error('Error parsing YouTube URL:', error);
-                          return '/images/course-placeholder.png';
-                        }
-                      })()}
+                      src={courseDetails?.Final_Module_Thumbnails?.[index] || '/images/course-placeholder.png'}
                       alt={title}
                       class="w-full h-full object-cover"
                     />

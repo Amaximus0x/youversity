@@ -243,15 +243,11 @@ async function generateFinalCourse(
 
     // Get video URLs
     const videoUrls = selectedVideos.map(video => video.videoUrl);
+    const videoDurations = selectedVideos.map(video => video.length);
+    const videoThumbnails = selectedVideos.map(video => video.thumbnailUrl);
 
-    // Extract thumbnail URL from the first video
-    let thumbnailUrl = '';
-    if (selectedVideos[0]?.videoUrl) {
-      const videoId = new URL(selectedVideos[0].videoUrl).searchParams.get('v');
-      if (videoId) {
-        thumbnailUrl = `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
-      }
-    }
+    // Use first video thumbnail as course thumbnail if not provided
+    let thumbnailUrl = videoThumbnails[0] || "";
 
     // Create a note about missing transcripts if no quizzes were generated
     let courseConclusion = conclusion.Final_Course_Conclusion;
@@ -266,6 +262,8 @@ async function generateFinalCourse(
       Final_Module_Title: moduleDetails.map(module => module.Final_Module_Title),
       Final_Module_Objective: moduleDetails.map(module => module.Final_Module_Objective),
       Final_Module_YouTube_Video_URL: videoUrls,
+      Final_Module_Video_Duration: videoDurations,
+      Final_Module_Thumbnails: videoThumbnails,
       Final_Module_Quiz: moduleQuizzes,
       Final_Course_Quiz: finalQuiz,
       Final_Course_Conclusion: courseConclusion,
