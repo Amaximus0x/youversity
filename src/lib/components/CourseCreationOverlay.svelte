@@ -1,4 +1,3 @@
-# New File
 <script lang="ts">
   import { fade } from 'svelte/transition';
   export let show = false;

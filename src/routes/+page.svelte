@@ -83,6 +83,9 @@
 
   onMount(async () => {
     try {
+      // Clear any existing loading state
+      loadingState.clearState();
+      
       console.log('Fetching trending courses...');
       // Get courses sorted by views/likes
       publicCourses = await getPublicCourses();
@@ -99,11 +102,6 @@
     }
   });
 
-  const trendingCourses = [
-    { id: 1, title: 'Blockchain Fundamentals', author: 'Crypto Expert', image: '/placeholder.svg', likes: 1200, dislikes: 50, views: 15000 },
-    { id: 2, title: 'AI and Machine Learning', author: 'Data Scientist Pro', image: '/placeholder.svg', likes: 980, dislikes: 30, views: 12000 },
-    { id: 3, title: 'Full Stack Web Development', author: 'Code Ninja', image: '/placeholder.svg', likes: 850, dislikes: 20, views: 10000 },
-  ];
 
   async function handleCreateCourse(e: Event) {
     e.preventDefault();

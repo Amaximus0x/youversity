@@ -239,6 +239,11 @@
     } else {
       goto('/');
     }
+
+    // Cleanup function to clear loading state when component is destroyed
+    return () => {
+      loadingState.clearState();
+    };
   });
 </script>
 
