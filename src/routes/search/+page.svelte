@@ -58,7 +58,7 @@
   });
 </script>
 
-<div class="max-w-[1440px] ">
+<div class="max-w-[1440px] p-4">
   <div class="mb-8">
     <h1 class="text-2xl font-bold text-[#2A4D61] mb-4">
       Search Results for "{searchQuery}"

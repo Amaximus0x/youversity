@@ -202,7 +202,7 @@
         <!-- Header -->
         <header class="fixed top-0 left-64 right-0 h-[72px] border-b border-[rgba(0,0,0,0.05)] z-50">
           <div class="flex justify-between items-center gap-8 w-full h-full px-4">
-            <div class="flex-1 max-w-[611px] mx-auto">
+            <div class="flex-1 max-w-[611px] mx-auto ml-initial">
               <form on:submit={handleSearch} class="w-full flex items-center bg-white border-[1.5px] {
                 isSearchFocused ? 'border-[#EE434A]' : 'border-[rgba(0,0,0,0.05)]'
               } rounded-2xl h-12 transition-all duration-300 ease-in-out">
