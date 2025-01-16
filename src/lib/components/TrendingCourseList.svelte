@@ -85,7 +85,7 @@
     </div>
   {:else}
     {#each courses as course}
-      <div class="bg-white rounded-2xl overflow-hidden {
+      <div class=" rounded-2xl overflow-hidden border border-[rgba(0,0,0,0.05)] {
         layout === 'grid' 
           ? 'w-full'
           : 'min-w-[280px]'
