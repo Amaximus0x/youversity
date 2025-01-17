@@ -114,16 +114,16 @@
   <div class="min-h-screen bg-gradient-to-b from-[#FFF2F3] via-white to-[#EDFEFF]">
     {#if !$page.data.hideNav}
       <!-- Sidebar - hidden on mobile -->
-      <aside class="fixed top-0 left-0 bottom-0 w-64 border-r border-[rgba(0,0,0,0.05)] z-40 hidden lg:flex lg:flex-col">
+      <aside class="w-[262px] py-4 fixed top-0 left-0 bottom-0 border-r border-[rgba(0,0,0,0.05)] z-40 hidden lg:flex lg:flex-col">
         <!-- Logo section -->
-        <div class="flex items-center h-[72px] px-4 pt-4">
-          <a href="/" class="flex items-center gap-1">
+        <div class="w-[230px]  flex flex-col items-start justify-center px-4">
+          <a href="/" class="flex items-center gap-[7px] mt-6">
             <img 
               src="/favicon.png" 
               alt="Youversity Logo" 
-              class="w-10 h-10 object-contain"
+              class="w-[45px] h-[48px] object-contain"
             />
-            <span class="text-xl font-medium translate-y-[1px]">YouVersity</span>
+            <span class="text-[21px] font-medium text-black">YouVersity</span>
           </a>
         </div>
 
@@ -132,23 +132,26 @@
           {#each sidebarItems as item}
             <a 
               href={item.href} 
-              class="flex items-center mx-4 px-4 h-[44px] transition-colors rounded-lg {
+              class="group flex items-center mx-4 mb-4 px-4 h-[40px] transition-all rounded-lg {
                 $page.url.pathname === item.href 
-                  ? 'text-[#EE434A]' 
-                  : 'text-[#5F6368] hover:bg-[#F8F9FA]'
+                  ? 'text-brand-red font-medium' 
+                  : 'text-[#494848] hover:text-brand-red'
               }"
             >
               <img 
                 src={item.icon} 
                 alt={item.label}
-                style={$page.url.pathname === item.href ? 'filter: invert(45%) sepia(95%) saturate(1648%) hue-rotate(325deg) brightness(97%) contrast(91%);' : ''}
-                class="w-5 h-5 mr-3 {
+                style={$page.url.pathname === item.href 
+                  ? 'filter: invert(45%) sepia(95%) saturate(1648%) hue-rotate(325deg) brightness(97%) contrast(91%);'
+                  : ''
+                }
+                class="w-6 h-6 mr-4 transition-all {
                   $page.url.pathname === item.href
-                    ? 'opacity-100'
-                    : 'opacity-60'
+                    ? ''
+                    : 'opacity-60 group-hover:opacity-100 group-hover:[filter:invert(45%)_sepia(95%)_saturate(1648%)_hue-rotate(325deg)_brightness(97%)_contrast(91%)]'
                 }" 
               />
-              <span class="text-[15px] font-normal">{item.label}</span>
+              <span class="text-[15px]">{item.label}</span>
             </a>
           {/each}
         </nav>
@@ -157,24 +160,24 @@
         <div class="px-7 pb-6">
           <div class="relative mt-[15px] flex flex-col items-start p-6 pb-4 gap-4 w-[198px] border border-[rgba(0,0,0,0.05)] rounded-2xl">
             <div class="flex flex-col items-center w-full gap-2">
-              <div class="absolute -top-5 left-1/2 transform -translate-x-1/2 w-[52px] h-[52px] bg-white rounded-full flex items-center justify-center">
+              <div class="absolute -top-5 left-1/2 transform -translate-x-1/2 w-[40px] h-[40px] bg-brand-red rounded-full flex items-center justify-center">
                 <img 
                   src="/icons/help-circle.svg" 
                   alt="Help"
-                  class="w-[42px] h-[42px]" 
+                  class="w-8 h-8 text-white" 
                 />
               </div>
-              <h3 class="text-[15px] font-medium text-[#202124] mt-1">Help Center</h3>
+              <h3 class="text-[15px] font-medium text-black mt-1">Help Center</h3>
             </div>
             <div class="flex flex-col items-center w-full">
-              <p class="text-[13px] leading-relaxed text-gray-400 text-center">
+              <p class="text-[13px] leading-[20px] text-[#A3A3A3] text-center">
                 Having Trouble carrying out<br />
                 a task?<br />
                 Please contact us
               </p>
               <a 
                 href="/help"
-                class="mt-4 w-full py-2 px-4 text-[#EE434A] text-[12px] font-medium border border-[#EE434A] rounded-lg hover:bg-[#FFF2F3] transition-colors text-center"
+                class="mt-4 w-full py-2 px-4 text-brand-red text-[12px] font-medium border border-brand-red rounded-lg hover:bg-[#FFF2F3] transition-colors text-center"
               >
                 Go to help center
               </a>
