@@ -117,7 +117,7 @@
       <aside class="w-[262px] py-4 fixed top-0 left-0 bottom-0 border-r border-[rgba(0,0,0,0.05)] z-40 hidden lg:flex lg:flex-col">
         <!-- Logo section -->
         <div class="w-[230px]  flex flex-col items-start justify-center px-4">
-          <a href="/" class="flex items-center gap-[7px] mt-6">
+          <a href="/" class="flex items-center gap-[7px] mt-2">
             <img 
               src="/favicon.png" 
               alt="Youversity Logo" 
@@ -203,8 +203,8 @@
       <!-- Main Content with Navigation -->
       <main class="lg:pl-64 min-h-screen">
         <!-- Header -->
-        <header class="fixed top-0 left-64 right-0 h-[72px] border-b border-[rgba(0,0,0,0.05)] z-50">
-          <div class="flex justify-between items-center gap-8 w-full h-full px-4">
+        <header class="fixed top-0 left-64 w-[1178px] h-24 px-4 pr-8 py-6 border-b border-[rgba(0,0,0,0.05)] bg-[#FFFFFF1A] z-50">
+          <div class="flex justify-between items-center gap-8 w-full h-full">
             <div class="flex-1 max-w-[611px] mx-auto ml-0">
               <form on:submit={handleSearch} class="w-full flex items-center bg-white border-[1.5px] {
                 isSearchFocused ? 'border-[#EE434A]' : 'border-[rgba(0,0,0,0.05)]'
