@@ -224,17 +224,17 @@
 
 <CourseCreationOverlay show={showCreationOverlay} />
 
-<div class="container mx-auto px-4 py-6 pb-20 sm:pb-6 sm:py-8 max-w-7xl">
+<div class="container mx-auto max-w-7xl">
   <!-- Create Course Section -->
-  <div class="relative overflow-hidden rounded-lg p-8 sm:p-0 mb-6 sm:mb-12">    
+  <div class="relative overflow-hidden rounded-lg p-4 lg:p-8 mb-8 lg:mb-12">    
     <div class="max-w-2xl">
-      <h1 class="text-4xl font-medium mb-2">
-        Hi {$user?.displayName?.split(' ')[0] || ''} 👋
+      <h1 class="text-4xl lg:text-5xl font-normal mb-2">
+        Hi {$user?.displayName?.split(' ')[0] || 'there'} 👋
       </h1>
-      <h2 class="text-4xl font-medium mb-6">
-        What would you like to <span class="text-[#EE434A]">Learn</span>?
+      <h2 class="text-4xl lg:text-5xl font-normal mb-6">
+        What would you like to <span class="text-brand-red">Learn</span>?
       </h2>
-      <p class="text-[#494848] text-lg mb-8">
+      <p class="text-light-text-secondary dark:text-dark-text-secondary text-lg lg:text-xl mb-8">
         Enter your learning objectives below we'll help you create a comprehensive course.
       </p>
 
@@ -244,7 +244,7 @@
       >
         <button
           type="submit"
-          class="absolute right-0 z-10 px-6 h-[52px] bg-[#EE434A] text-white rounded-2xl hover:bg-[#D63B42] transition-colors duration-200 flex items-center gap-2 text-base whitespace-nowrap"
+          class="absolute right-0 z-10 px-6 h-[52px] bg-brand-red text-white rounded-2xl hover:bg-[#D63B42] transition-colors duration-200 flex items-center gap-2 text-base whitespace-nowrap"
         >
           Create Course
           <img 
@@ -271,7 +271,7 @@
             placeholder="Enter what you want to learn..."
             on:focus={() => isInputFocused = true}
             on:blur={() => isInputFocused = false}
-            class="w-full pl-12 pr-32 h-[52px] rounded-2xl border-[1.5px] border-[rgba(0,0,0,0.05)] focus:outline-none focus:border-[#EE434A] text-base bg-white transition-colors duration-300 ease-in-out"
+            class="w-full pl-12 pr-32 h-[52px] rounded-2xl border-[1.5px] border-light-border dark:border-dark-border focus:outline-none focus:border-brand-red bg-light-bg-primary dark:bg-dark-bg-primary text-light-text-secondary dark:text-dark-text-secondary transition-colors duration-300 ease-in-out"
           />
         </div>
       </form>
@@ -281,13 +281,13 @@
   {#if $user}
     <div class="mb-8">
       <div class="flex items-center justify-between mb-6">
-        <h4 class="text-2xl font-normal text-[#000000]">Continue Learning</h4>
+        <h4 class="text-2xl font-normal text-light-text-secondary dark:text-white">Continue Learning</h4>
       </div>
 
       {#if userCourses.length > 0}
         <div class="flex gap-4 overflow-x-auto pb-4 -mx-4 px-4 hide-scrollbar">
           {#each userCourses as course}
-            <div class="min-w-[280px] max-w-[280px] bg-white rounded-2xl overflow-hidden border border-[rgba(0,0,0,0.05)]">
+            <div class="min-w-[280px] max-w-[280px] bg-light-bg-primary dark:bg-dark-bg-primary rounded-2xl overflow-hidden border border-light-border dark:border-dark-border">
               <div class="relative h-[156px]">
                 {#if course.Final_Course_Thumbnail}
                   <img 
@@ -349,16 +349,16 @@
           {/each}
         </div>
       {:else}
-        <div class="bg-transparent border border-[rgba(0,0,0,0.05)] rounded-2xl p-8 h-[372px] relative overflow-hidden">
+        <div class="bg-transparent border border-light-border dark:border-dark-border rounded-2xl p-8 h-[372px] relative overflow-hidden">
           <div class="flex items-start justify-between relative h-full">
             <div class="max-w-[400px] pt-4 z-10">
-              <h3 class="text-[32px] leading-tight mb-6">
-                You haven't <span class="text-[#EE434A]">enrolled</span> in<br />
+              <h3 class="text-3xl lg:text-4xl leading-tight mb-6">
+                You haven't <span class="text-brand-red">enrolled</span> in<br />
                 a course yet.
               </h3>
               <a 
                 href="/search"
-                class="inline-flex items-center px-6 py-3 bg-[#EE434A] text-white rounded-lg hover:bg-[#D63B42] transition-colors duration-200"
+                class="inline-flex items-center px-6 py-3 bg-brand-red text-white rounded-lg hover:bg-[#D63B42] transition-colors duration-200"
               >
                 Explore Course
                 <img 
@@ -368,7 +368,7 @@
                 />
               </a>
             </div>
-            <div class="absolute bottom-[-32px] right-[-32px]">
+            <div class="absolute bottom-[-32px] right-[-32px] hidden md:block">
               <img 
                 src="/images/Search-engines-pana.svg" 
                 alt="No courses" 
@@ -384,7 +384,7 @@
   <!-- Trending Community Courses Section -->
   <section class="mb-12">
     <div class="flex items-center justify-between mb-6">
-      <h2 class="text-2xl font-normal text-[#000000] font-poppins">Trending Courses</h2>
+      <h2 class="text-2xl font-normal text-light-text-secondary dark:text-white">Trending Courses</h2>
       <a href="/trending" class="text-[#42C1C8] text-sm font-medium hover:underline">Show All</a>
     </div>
     <TrendingCourseList 

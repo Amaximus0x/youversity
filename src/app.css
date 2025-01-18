@@ -8,4 +8,30 @@
   html {
     font-family: 'Poppins';
   }
+
+  body {
+    @apply bg-light-bg-primary text-light-text-secondary dark:bg-dark-bg-primary dark:text-dark-text-secondary transition-colors;
+  }
+
+  /* Theme transition utilities */
+  .theme-transition {
+    @apply transition-colors duration-200;
+  }
+}
+
+/* Custom scrollbar for light/dark themes */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-light-bg-secondary dark:bg-dark-bg-secondary;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-light-border dark:bg-dark-border rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-brand-red;
 }
