@@ -1,20 +1,41 @@
 <script lang="ts">
   import { fade } from 'svelte/transition';
+  import type { SearchFilter } from '$lib/services/search';
 
   export let show = false;
   export let onClose: () => void;
+  export let currentFilter: SearchFilter = 'relevance';
+  export let onFilterChange: (filters: { ratings: number[], sortByLatest: boolean }) => void;
 
   let selectedRatings: number[] = [];
   let sortByLatest = false;
 
   function handleFilter() {
-    // TODO: Implement filter logic
+    // Pass all selected filters to parent
+    onFilterChange({
+      ratings: selectedRatings,
+      sortByLatest
+    });
     onClose();
   }
 
   function clearAll() {
     selectedRatings = [];
     sortByLatest = false;
+    onFilterChange({
+      ratings: [],
+      sortByLatest: false
+    });
+    onClose();
+  }
+
+  $: {
+    // Update internal state when currentFilter changes
+    if (currentFilter === 'latest') {
+      sortByLatest = true;
+    } else if (currentFilter === 'rating') {
+      selectedRatings = [5, 4, 3, 2, 1];
+    }
   }
 </script>
 
@@ -41,17 +62,6 @@
 
       <!-- Content -->
       <div class="px-6 py-4">
-        <!-- Sort by -->
-        <div class="mb-6">
-          <div class="flex items-center gap-2">
-            <span class="text-base">Sort by:</span>
-            <div class="inline-flex items-center gap-2 px-3 py-1.5 bg-white border border-[#EE434A] rounded-lg">
-              <span class="text-[#EE434A] text-base">Relevance</span>
-              <img src="/icons/checkmark-square-active.svg" alt="Selected" class="w-4 h-4" />
-            </div>
-          </div>
-        </div>
-
         <!-- Ratings -->
         <div class="mb-6">
           <h3 class="text-xs font-medium uppercase text-[#5F6368] mb-3">RATINGS</h3>

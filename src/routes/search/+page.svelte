@@ -2,29 +2,30 @@
   import { page } from '$app/stores';
   import { searchCourses, type SearchFilter } from '$lib/services/search';
   import type { FinalCourseStructure } from '$lib/types/course';
-  import { onMount } from 'svelte';
+  import { onMount, onDestroy } from 'svelte';
   import { goto } from '$app/navigation';
-  import { ArrowUpDown, Star, Clock } from 'lucide-svelte';
   import TrendingCourseList from '$lib/components/TrendingCourseList.svelte';
+  import FilterModal from '$lib/components/FilterModal.svelte';
 
   let searchQuery = '';
   let currentFilter: SearchFilter = 'relevance';
   let searchResults: (FinalCourseStructure & { id: string })[] = [];
   let loading = false;
   let error: string | null = null;
+  let showFilterModal = false;
+
+  // Active filters
+  let activeFilters = {
+    ratings: [] as number[],
+    sortByLatest: false
+  };
 
   // Update search query from URL parameters
   $: {
     const urlParams = new URLSearchParams($page.url.search);
     const q = urlParams.get('q');
-    const filter = urlParams.get('filter') as SearchFilter;
-    
     if (q && q !== searchQuery) {
       searchQuery = q;
-      performSearch();
-    }
-    if (filter && filter !== currentFilter) {
-      currentFilter = filter;
       performSearch();
     }
   }
@@ -35,7 +36,24 @@
     try {
       loading = true;
       error = null;
-      searchResults = await searchCourses(searchQuery, currentFilter);
+      let results = await searchCourses(searchQuery);
+
+      // Apply filters
+      if (activeFilters.ratings.length > 0) {
+        results = results.filter(course => 
+          activeFilters.ratings.includes(Math.round(course.averageRating || 0))
+        );
+      }
+
+      if (activeFilters.sortByLatest) {
+        results.sort((a, b) => {
+          const dateA = new Date(a.createdAt?.seconds ? a.createdAt.seconds * 1000 : a.createdAt || 0);
+          const dateB = new Date(b.createdAt?.seconds ? b.createdAt.seconds * 1000 : b.createdAt || 0);
+          return dateA.getTime() - dateB.getTime();
+        });
+      }
+
+      searchResults = results;
     } catch (err) {
       console.error('Error searching courses:', err);
       error = 'Failed to search courses. Please try again.';
@@ -44,17 +62,29 @@
     }
   }
 
-  function updateFilter(filter: SearchFilter) {
-    const urlParams = new URLSearchParams($page.url.search);
-    urlParams.set('filter', filter);
-    goto(`?${urlParams.toString()}`, { replaceState: true });
-    currentFilter = filter;
+  function handleFilterChange(event: CustomEvent<{ ratings: number[], sortByLatest: boolean }>) {
+    activeFilters = event.detail;
+    performSearch();
+  }
+
+  function removeFilter(type: 'rating' | 'date') {
+    if (type === 'rating') {
+      activeFilters.ratings = [];
+    } else {
+      activeFilters.sortByLatest = false;
+    }
+    performSearch();
   }
 
   onMount(() => {
     if (searchQuery) {
       performSearch();
     }
+    window.addEventListener('filterchange', handleFilterChange as EventListener);
+  });
+
+  onDestroy(() => {
+    window.removeEventListener('filterchange', handleFilterChange as EventListener);
   });
 </script>
 
@@ -63,33 +93,6 @@
     <h1 class="text-2xl font-bold text-[#2A4D61] mb-4">
       Search Results for "{searchQuery}"
     </h1>
-    
-    <!-- Filter buttons -->
-    <div class="flex gap-4 mb-6">
-      <button
-        class="flex items-center gap-2 px-4 py-2 rounded-lg transition-colors {currentFilter === 'relevance' ? 'bg-blue-100 text-blue-700' : 'hover:bg-gray-100'}"
-        on:click={() => updateFilter('relevance')}
-      >
-        <ArrowUpDown class="w-4 h-4" />
-        <span>Relevance</span>
-      </button>
-      
-      <button
-        class="flex items-center gap-2 px-4 py-2 rounded-lg transition-colors {currentFilter === 'rating' ? 'bg-blue-100 text-blue-700' : 'hover:bg-gray-100'}"
-        on:click={() => updateFilter('rating')}
-      >
-        <Star class="w-4 h-4" />
-        <span>Rating</span>
-      </button>
-      
-      <button
-        class="flex items-center gap-2 px-4 py-2 rounded-lg transition-colors {currentFilter === 'latest' ? 'bg-blue-100 text-blue-700' : 'hover:bg-gray-100'}"
-        on:click={() => updateFilter('latest')}
-      >
-        <Clock class="w-4 h-4" />
-        <span>Latest</span>
-      </button>
-    </div>
   </div>
 
   <TrendingCourseList 
@@ -98,4 +101,11 @@
     {loading}
     {error}
   />
-</div> 
+</div>
+
+<FilterModal 
+  show={showFilterModal}
+  {currentFilter}
+  onFilterChange={handleFilterChange}
+  onClose={() => showFilterModal = false}
+/> 

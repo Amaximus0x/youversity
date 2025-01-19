@@ -23,9 +23,16 @@
   let isSearchPage = false;
   let isMounted = false;
   let showFilterModal = false;
+  let currentFilter = 'relevance';
+  let activeFilterCount = 0;
   
   onMount(() => {
     isMounted = true;
+    window.addEventListener('filterchange', (event: Event) => {
+      const customEvent = event as CustomEvent<{ ratings: number[], sortByLatest: boolean }>;
+      activeFilterCount = (customEvent.detail.ratings.length > 0 ? 1 : 0) + 
+                         (customEvent.detail.sortByLatest ? 1 : 0);
+    });
   });
   
   // Update isSearchPage only after component is mounted
@@ -82,6 +89,17 @@
     if (searchQuery.trim()) {
       goto(`/search?q=${encodeURIComponent(searchQuery)}&filter=relevance`);
     }
+  }
+
+  // Create a custom event dispatcher for filter changes
+  function handleFilterChange(filters: { ratings: number[], sortByLatest: boolean }) {
+    const event = new CustomEvent('filterchange', { 
+      detail: filters,
+      bubbles: true,
+      composed: true
+    });
+    window.dispatchEvent(event);
+    showFilterModal = false;
   }
 
   onMount(() => {
@@ -230,27 +248,35 @@
                   on:blur={() => isSearchFocused = false}
                   class="flex-1 pl-2 pr-1 bg-transparent border-none focus:outline-none text-base text-[#A3A3A3] font-normal"
                 />
-                <div class="flex items-center pl-2 border-l border-[rgba(0,0,0,0.05)]">
-                  <div class="relative w-[106px] h-[36px]">
+                <div class="flex items-center pl-2 border-[rgba(0,0,0,0.05)]">
+                  <div class="relative w-[94px] h-[32px]">
                     {#if isMounted && isSearchPage}
                       <div class="absolute inset-0 transition-colors duration-300 ease-in-out" 
                            in:fade={{ duration: 200 }} 
                            out:fade={{ duration: 200 }}>
                         <button
                           type="button"
+                          class="h-8 px-2 py-3.5 bg-white rounded-[10px] border border-black/5 justify-start items-center gap-2 inline-flex"
                           on:click={() => showFilterModal = true}
-                          class="flex items-center gap-2 px-2 py-[5px] border-[1.5px] border-[rgba(0,0,0,0.05)] rounded-2xl bg-white hover:bg-[#FFF2F3] transition-colors"
                         >
                           <img 
                             src="/icons/filter-icon.svg" 
                             alt="Filter"
                             class="w-6 h-6" 
                           />
-                          <span class="text-base font-normal text-black">Filter</span>
+                          <span class="text-black text-base font-normal font-['Poppins'] leading-normal">Filter</span>
+                          {#if activeFilterCount > 0}
+                            <div class="px-2 py-0.5 bg-[#eb434a] rounded-[40px] justify-start items-center gap-2 flex">
+                              <div class="text-center text-white text-[10px] font-semibold font-['Poppins'] leading-none">
+                                {activeFilterCount}
+                              </div>
+                            </div>
+                          {/if}
                         </button>
                       </div>
                     {:else}
                       <div class="absolute inset-0 transition-colors duration-300 ease-in-out">
+                      <div class="w-[80px] h-[35px]">
                         <button
                           type="submit"
                           class="flex items-center gap-2 px-2 py-[5px] border-[1.5px] border-[rgba(0,0,0,0.05)] rounded-2xl bg-white hover:bg-[#FFF2F3] transition-colors {
@@ -259,6 +285,7 @@
                         >
                           <span class="text-base font-normal">Search</span>
                         </button>
+                        </div>
                       </div>
                     {/if}
                   </div>
@@ -337,6 +364,8 @@
 
 <FilterModal 
   show={showFilterModal}
+  {currentFilter}
+  onFilterChange={handleFilterChange}
   onClose={() => showFilterModal = false}
 />
 
