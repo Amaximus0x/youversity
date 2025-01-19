@@ -292,7 +292,7 @@
       {#if userCourses.length > 0}
         <div class="flex gap-4 overflow-x-auto pb-4 -mx-4 px-4 hide-scrollbar">
           {#each userCourses as course}
-            <div class="min-w-[280px] max-w-[280px] bg-light-bg-primary dark:bg-dark-bg-primary rounded-2xl overflow-hidden border border-light-border dark:border-dark-border">
+            <div class="min-w-[280px] max-w-[325px] max-h-[390px] bg-light-bg-primary dark:bg-dark-bg-primary rounded-2xl overflow-hidden border border-light-border dark:border-dark-border">
               <div class="relative h-[156px]">
                 {#if course.Final_Course_Thumbnail}
                   <img 
@@ -354,32 +354,30 @@
           {/each}
         </div>
       {:else}
-        <div class="bg-transparent border border-light-border dark:border-dark-border rounded-2xl p-8 h-[372px] relative overflow-hidden">
-          <div class="flex items-start justify-between relative h-full">
-            <div class="max-w-[400px] pt-4 z-10">
-              <h3 class="text-3xl lg:text-4xl leading-tight mb-6">
-                You haven't <span class="text-brand-red">enrolled</span> in<br />
-                a course yet.
-              </h3>
-              <a 
-                href="/search"
-                class="inline-flex items-center px-6 py-3 bg-brand-red text-white rounded-lg hover:bg-[#D63B42] transition-colors duration-200"
-              >
-                Explore Course
+        <div class="h-[372px] relative rounded-2xl border border-light-border dark:border-dark-border overflow-hidden">
+          <div class="w-[406px] h-[200px] left-[56px] top-[86px] absolute flex-col justify-start items-start gap-10 inline-flex">
+            <div class="self-stretch">
+              <span class="text-light-text-primary dark:text-white text-4xl font-normal font-['Poppins'] leading-[53px]">You haven't </span>
+              <span class="text-brand-red text-4xl font-normal font-['Poppins'] leading-[53px]">enrolled</span>
+              <span class="text-light-text-primary dark:text-white text-4xl font-normal font-['Poppins'] leading-[53px]"> in a course yet.</span>
+            </div>
+            <div class="h-[54px] px-4 py-2 bg-brand-red hover:bg-[#D63B42] rounded-2xl justify-center items-center gap-2 inline-flex transition-colors duration-200">
+              <div class="text-white text-base font-normal font-['Poppins'] leading-normal">Explore Course</div>
+              <div class="w-6 h-6 relative origin-top-left">
                 <img 
                   src="/icons/arrow-right-io.svg" 
                   alt="arrow" 
-                  class="ml-2 w-6 h-6"
+                  class="w-full h-full" 
                 />
-              </a>
+              </div>
             </div>
-            <div class="absolute bottom-[-32px] right-[-32px] hidden md:block">
-              <img 
-                src="/images/Search-engines-pana.svg" 
-                alt="No courses" 
-                class="w-[688px] h-auto"
-              />
-            </div>
+          </div>
+          <div class="absolute hidden right-[0px] md:block">
+            <img 
+              src="/images/Search-engines-pana.svg" 
+              alt="No courses" 
+              class="w-[870px] h-auto"
+            />
           </div>
         </div>
       {/if}

@@ -272,7 +272,13 @@
               </div>
               
               {#if $user}
-                <div class="w-12 h-12 rounded-full bg-light-bg-primary dark:bg-dark-bg-primary border border-light-border dark:border-dark-border overflow-hidden">
+                <div 
+                  class="w-12 h-12 rounded-full bg-light-bg-primary dark:bg-dark-bg-primary border border-light-border dark:border-dark-border overflow-hidden cursor-pointer hover:opacity-90 transition-opacity"
+                  on:click={() => goto('/profile')}
+                  on:keydown={(e) => e.key === 'Enter' && goto('/profile')}
+                  role="button"
+                  tabindex="0"
+                >
                   <img 
                     src={$user.photoURL || ''} 
                     alt={$user.displayName || 'User'} 

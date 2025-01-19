@@ -224,13 +224,13 @@
       <!-- Module Content -->
       <div class="col-span-8">
         <!-- Course Header -->
-        <div class="mb-6">
+        <!-- <div class="mb-6">
           <h1 class="text-2xl font-semibold text-[#1E3443] mb-2">{courseDetails.Final_Course_Title}</h1>
           {#if courseDetails.creatorUsername}
             <p class="text-[#5F6368] mb-4">Created by: {courseDetails.creatorDisplayName || courseDetails.creatorUsername}</p>
           {/if}
           <p class="text-[#5F6368]">{courseDetails.Final_Course_Objective}</p>
-        </div>
+        </div> -->
         {#if currentModule >= 0}
           <div class=" rounded-2xl overflow-hidden">
             <!-- Video Player -->
@@ -265,6 +265,8 @@
                   <span class="text-base text-[#A3A3A3]">
                     {(currentModule + 1).toString().padStart(2, '0')}:
                   </span>
+
+                  
                   <h4 class="text-[18px] font-medium text-[#1E3443]">
                     {courseDetails.Final_Module_Title[currentModule] || 'Loading module...'}
                   </h4>
@@ -286,6 +288,31 @@
                     <span class="text-base text-[#1E3443]">Next</span>
                     <img src="/icons/next.svg" alt="Next" class="w-4 h-4" />
                   </button>
+                </div>
+              </div>
+
+              <!-- Creator Profile -->
+              <div class="h-12 justify-start items-center gap-3 inline-flex mb-6">
+                <img 
+                  class="w-12 h-12 relative rounded-full" 
+                  src={courseDetails.creatorPhotoURL || '/images/default-profile-placeholder.png'} 
+                  alt={courseDetails.creatorDisplayName || courseDetails.creatorUsername}
+                />
+                <div class="flex-col justify-start items-start inline-flex">
+                  <div>
+                    <span class="text-black text-base font-semibold font-['Poppins'] leading-normal">Creator:</span>
+                    <span class="text-[#494848] text-sm font-normal font-['Poppins'] leading-snug ml-1">
+                      <!-- {courseDetails.creatorDisplayName || courseDetails.creatorUsername} -->
+                      {courseDetails.creatorUsername}
+                    </span>
+                  </div>
+                  <div class="self-stretch text-[#a2a2a2] text-xs font-normal font-['Poppins'] leading-tight">
+                    {new Date(courseDetails.createdAt?.toDate?.() || courseDetails.createdAt || Date.now()).toLocaleDateString('en-US', {
+                      month: 'long',
+                      day: 'numeric',
+                      year: 'numeric'
+                    })}
+                  </div>
                 </div>
               </div>
 
