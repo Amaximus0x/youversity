@@ -20,7 +20,7 @@
 
   function getSkeletonWidth(index: number): string {
     if (layout === 'grid') return 'w-full';
-    return index === 3 ? 'min-w-[70px]' : 'min-w-[280px]';
+    return index === 3 ? 'max-w-[325px] max-h-[400px]' : 'max-w-[325px] max-h-[400px]';
   }
 
   function handleShare(courseId: string) {
@@ -100,8 +100,8 @@
     {#each courses as course}
       <div class=" rounded-2xl overflow-hidden border border-[rgba(0,0,0,0.05)] {
         layout === 'grid' 
-          ? 'w-full'
-          : 'min-w-[280px] max-w-[280px]'
+          ? 'max-w-[325px] max-h-[400px]'
+          : 'max-w-[325px] max-h-[400px]'
       }">
         <div class="relative h-[156px]">
           {#if course.Final_Course_Thumbnail}
