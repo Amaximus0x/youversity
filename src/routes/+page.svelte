@@ -226,12 +226,12 @@
 
 <div class="container mx-auto max-w-7xl">
   <!-- Create Course Section -->
-  <div class="relative overflow-hidden rounded-lg p-4 lg:p-8 mb-8 lg:mb-12">    
-    <div class="max-w-2xl">
+  <div class="relative overflow-hidden rounded-lg  mb-8 lg:mb-12">    
+    <div >
       <h1 class="text-4xl lg:text-5xl font-normal mb-2">
         Hi {$user?.displayName?.split(' ')[0] || 'there'} 👋
       </h1>
-      <h2 class="text-4xl lg:text-5xl font-normal mb-6">
+      <h2 class="text-4xl lg:text-5xl font-normal mb-4">
         What would you like to <span class="text-brand-red">Learn</span>?
       </h2>
       <p class="text-light-text-secondary dark:text-dark-text-secondary text-lg lg:text-xl mb-8">
@@ -280,10 +280,15 @@
 
   {#if $user}
     <div class="mb-8">
-      <div class="flex items-center justify-between mb-6">
+      <div class="flex items-center justify-between mb-4">
         <h4 class="text-2xl font-normal text-light-text-secondary dark:text-white">Continue Learning</h4>
+        {#if userCourses.length > 0}
+          <a href="/trending" class="text-[#42C1C8] text-sm font-medium hover:underline">Show All</a>
+        {/if}
       </div>
-
+      
+      <div class="h-[1px] bg-light-border dark:bg-dark-border mb-6"></div>
+      
       {#if userCourses.length > 0}
         <div class="flex gap-4 overflow-x-auto pb-4 -mx-4 px-4 hide-scrollbar">
           {#each userCourses as course}
@@ -383,10 +388,11 @@
 
   <!-- Trending Community Courses Section -->
   <section class="mb-12">
-    <div class="flex items-center justify-between mb-6">
+    <div class="flex items-center justify-between mb-4">
       <h2 class="text-2xl font-normal text-light-text-secondary dark:text-white">Trending Courses</h2>
       <a href="/trending" class="text-[#42C1C8] text-sm font-medium hover:underline">Show All</a>
     </div>
+    <div class="h-[1px] bg-light-border dark:bg-dark-border mb-6"></div>
     <TrendingCourseList 
       courses={publicCourses}
       loading={trendingCoursesLoading}

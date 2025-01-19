@@ -153,7 +153,7 @@
                     : 'opacity-60 group-hover:opacity-100 group-hover:[filter:invert(45%)_sepia(95%)_saturate(1648%)_hue-rotate(325deg)_brightness(97%)_contrast(91%)]'
                 }" 
               />
-              <span class="text-base">{item.label}</span>
+              <span class="text-light-text-primary dark:text-dark-text-primary">{item.label}</span>
             </a>
           {/each}
         </nav>
@@ -285,7 +285,7 @@
         </header>
 
         <!-- Page Content -->
-        <div class="pt-24 p-4 lg:p-8">
+        <div class="pt-32 px-4 lg:px-8">
           <slot />
         </div>
 

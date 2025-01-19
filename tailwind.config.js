@@ -10,6 +10,8 @@ export default {
       colors: {
         'brand-red': '#EE434A',
         'brand-turquoise': '#42C1C8',
+        'light-text-primary': '#000000',
+        'dark-text-primary': '#FFFFFF',
         'light-text-secondary': '#494848',
         'dark-text-secondary': '#A3A3A3',
         'light-bg-primary': '#FFFFFF',
