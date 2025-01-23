@@ -11,7 +11,8 @@ const config = {
 			? nodeAdapter({
 					out: 'build',
 					precompress: false,
-					envPrefix: ''
+					envPrefix: '',
+					polyfill: true
 				})
 			: vercelAdapter({
 					runtime: 'nodejs20.x'
