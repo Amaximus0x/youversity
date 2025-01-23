@@ -85,7 +85,7 @@ async function fetchTranscriptFromYoutube(videoId: string) {
         (track.languageCode === "en" && !track.kind) ||
         (track.languageCode === "en" && track.kind === "asr") ||
         track.vssId?.includes("a.en") ||
-        track.vssId?.includes("en")
+        track.vssId?.includes("en"),
     );
 
     if (!captionTrack?.baseUrl) {
@@ -183,7 +183,7 @@ export async function GET({ url }) {
         headers: {
           "Content-Type": "application/json",
         },
-      }
+      },
     );
   }
 }
