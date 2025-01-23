@@ -3,6 +3,10 @@ import { getAuth } from 'firebase-admin/auth';
 import { adminApp } from '$lib/server/firebase-admin';
 
 export const handle: Handle = async ({ event, resolve }) => {
+  // Handle health checks
+  if (event.url.pathname === '/health') {
+    return new Response('OK', { status: 200 });
+  }
   // Handle authentication
   try {
     const token = event.cookies.get('firebase-token');
