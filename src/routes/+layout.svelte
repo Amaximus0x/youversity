@@ -134,7 +134,7 @@
   <div class="min-h-screen bg-gradient-light dark:bg-gradient-dark transition-colors">
     {#if !$page.data.hideNav}
       <!-- Sidebar - hidden on mobile -->
-      <aside class="w-[262px] py-4 fixed top-0 left-0 bottom-0 border-r border-light-border dark:border-dark-border  z-40 hidden lg:flex lg:flex-col transition-colors">
+      <aside class="w-[262px] py-4 fixed top-0 left-0 bottom-0 border-r border-light-border dark:border-dark-border z-40 hidden lg:flex lg:flex-col transition-colors">
         <!-- Logo section -->
         <div class="w-[230px] flex flex-col items-start justify-center px-4">
           <a href="/" class="flex items-center gap-[7px] mt-2">
@@ -221,7 +221,7 @@
       </aside>
 
       <!-- Main Content with Navigation -->
-      <main class="lg:pl-64 min-h-screen">
+      <main class="lg:pl-64 min-h-screen bg-gradient-light dark:bg-gradient-dark">
         <!-- Header -->
         <header class="fixed top-0 right-0 left-0 lg:left-64 h-24 px-4 lg:pr-8 py-6 border-b border-light-border dark:border-dark-border bg-light-bg-primary/10 dark:bg-dark-bg-primary/10 backdrop-blur-[30px] z-50">
           <div class="flex justify-between items-center gap-8 w-full h-full max-w-7xl mx-auto">
@@ -318,7 +318,7 @@
         </header>
 
         <!-- Page Content -->
-        <div class="pt-32 px-4 lg:px-8">
+        <div class="pt-32 px-4 lg:px-8 pb-20">
           <slot />
         </div>
 
@@ -351,7 +351,7 @@
       </main>
     {:else}
       <!-- Content without Navigation -->
-      <main class="w-full">
+      <main class="w-full min-h-screen bg-gradient-light dark:bg-gradient-dark">
         <slot />
       </main>
     {/if}
