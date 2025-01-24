@@ -1,4 +1,5 @@
-<script>
+<script lang="ts">
+  export {};
   export let startSlower = false;
 </script>
 

@@ -23,7 +23,7 @@
   let isSearchPage = false;
   let isMounted = false;
   let showFilterModal = false;
-  let currentFilter = 'relevance';
+  let currentFilter: 'relevance' | 'latest' = 'relevance';
   let activeFilterCount = 0;
   
   onMount(() => {
@@ -33,10 +33,19 @@
       activeFilterCount = (customEvent.detail.ratings.length > 0 ? 1 : 0) + 
                          (customEvent.detail.sortByLatest ? 1 : 0);
     });
+
+    // Update isSearchPage when mounted and when $page is defined
+    if ($page?.url?.pathname) {
+      isSearchPage = $page.url.pathname === '/search';
+    }
+    
+    // Subscribe to page changes
+    return () => {
+      window.removeEventListener('filterchange', () => {});
+    };
   });
-  
-  // Update isSearchPage only after component is mounted
-  $: if (isMounted) {
+
+  $: if (isMounted && $page?.url?.pathname) {
     isSearchPage = $page.url.pathname === '/search';
   }
 
@@ -71,7 +80,7 @@
     if ($user) {
       await signOutUser();
     } else {
-      const redirectTo = $page.url.pathname;
+      const redirectTo = $page?.url?.pathname || '/';
       goto(`/login?redirectTo=${encodeURIComponent(redirectTo)}`);
     }
   }
@@ -132,7 +141,7 @@
   </div>
 {:else}
   <div class="min-h-screen bg-gradient-light dark:bg-gradient-dark transition-colors">
-    {#if !$page.data.hideNav}
+    {#if !($page?.data?.hideNav)}
       <!-- Sidebar - hidden on mobile -->
       <aside class="w-[262px] py-4 fixed top-0 left-0 bottom-0 border-r border-light-border dark:border-dark-border z-40 hidden lg:flex lg:flex-col transition-colors">
         <!-- Logo section -->
@@ -153,7 +162,7 @@
             <a 
               href={item.href} 
               class="group flex items-center mx-4 mb-4 px-4 py-2 rounded-lg transition-all {
-                $page.url.pathname === item.href 
+                $page?.url?.pathname === item.href 
                   ? 'text-brand-red font-semibold' 
                   : 'text-light-text-secondary dark:text-dark-text-secondary hover:text-brand-red'
               }"
@@ -161,12 +170,12 @@
               <img 
                 src={item.icon} 
                 alt={item.label}
-                style={$page.url.pathname === item.href 
+                style={$page?.url?.pathname === item.href 
                   ? 'filter: invert(45%) sepia(95%) saturate(1648%) hue-rotate(325deg) brightness(97%) contrast(91%);'
                   : ''
                 }
                 class="w-6 h-6 mr-4 transition-all {
-                  $page.url.pathname === item.href
+                  $page?.url?.pathname === item.href
                     ? ''
                     : 'opacity-60 group-hover:opacity-100 group-hover:[filter:invert(45%)_sepia(95%)_saturate(1648%)_hue-rotate(325deg)_brightness(97%)_contrast(91%)]'
                 }" 
@@ -323,31 +332,44 @@
         </div>
 
         <!-- Mobile Bottom Navigation -->
-        <nav class="fixed bottom-0 left-0 right-0 h-16 border-t border-light-border dark:border-dark-border bg-light-bg-primary dark:bg-dark-bg-primary z-50 lg:hidden">
-          <div class="flex justify-around items-center h-16">
-            {#each mobileNavItems as item}
-              <a 
-                href={item.href}
-                class="flex flex-col items-center justify-center flex-1 h-full text-xs py-1
-                  {$page.url.pathname === item.href 
-                    ? 'text-[#EE434A]' 
-                    : 'text-[#2A4D61]'}"
-              >
-                <img 
-                  src={item.icon}
-                  alt={item.label}
-                  style={$page.url.pathname === item.href ? 'filter: invert(45%) sepia(95%) saturate(1648%) hue-rotate(325deg) brightness(97%) contrast(91%);' : ''}
-                  class="w-6 h-6 mb-1 {
-                    $page.url.pathname === item.href
-                      ? 'opacity-100'
-                      : 'opacity-60'
-                  }" 
-                />
-                <span>{item.label}</span>
-              </a>
-            {/each}
+        <div class="fixed bottom-0 left-0 right-0 z-50 lg:hidden flex flex-col">
+          <nav class="h-[80px] border-t border-light-border dark:border-dark-border bg-light-bg-primary dark:bg-dark-bg-primary">
+            <div class="flex justify-between items-center h-full px-8">
+              {#each mobileNavItems as item}
+                <a 
+                  href={item.href}
+                  class="flex flex-col items-center justify-center"
+                >
+                  <img 
+                    src={item.icon}
+                    alt={item.label}
+                    style={$page?.url?.pathname === item.href ? 'filter: invert(45%) sepia(95%) saturate(1648%) hue-rotate(325deg) brightness(97%) contrast(91%);' : ''}
+                    class="w-5 h-5 mb-1 {
+                      $page?.url?.pathname === item.href
+                        ? 'opacity-100'
+                        : 'opacity-60'
+                    }" 
+                  />
+                  <span class="text-[10px] {
+                    $page?.url?.pathname === item.href 
+                      ? 'text-brand-black font-medium' 
+                      : 'text-[#667085]'
+                  }">
+                    {item.label}
+                  </span>
+                </a>
+              {/each}
+            </div>
+          </nav>
+          
+          <!-- youversity.io tag -->
+          <div class="flex items-center justify-center w-full h-[45px] py-[6px] pb-[10px] bg-white/10 backdrop-blur-[35px]">
+            <div class="flex items-center gap-2">
+              <div class="w-[3px] h-[3px] rounded-full bg-[#667085]"></div>
+              <span class="text-[10px] text-[#667085]">youversity.io</span>
+            </div>
           </div>
-        </nav>
+        </div>
       </main>
     {:else}
       <!-- Content without Navigation -->
@@ -358,7 +380,7 @@
   </div>
 {/if}
 
-{#if !$page.url.pathname.startsWith('/create-course')}
+{#if $page?.url?.pathname && !$page.url.pathname.startsWith('/create-course')}
   <CourseGenerationProgress />
 {/if}
 

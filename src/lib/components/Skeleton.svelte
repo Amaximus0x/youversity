@@ -1,4 +1,5 @@
 <script lang="ts">
+  export {};
   export let width = "100%";
   export let height = "20px";
   export let borderRadius = "4px";

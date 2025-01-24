@@ -1,4 +1,5 @@
 <script lang="ts">
+  export {};
   import { loadingState } from '$lib/stores/loadingState';
   import { goto } from '$app/navigation';
   import { onMount } from 'svelte';
