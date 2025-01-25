@@ -79,6 +79,38 @@
     text-decoration-skip-ink: none;
     @apply text-white;
   }
+
+  /* 
+    .h2 - Used for large headings like page titles
+    Example: <h1 class="h2">Login</h1>
+    
+    Properties:
+    - 36px Poppins font
+    - Medium (500) weight
+    - 44px line height
+    - Left aligned
+    - Proper text underline positioning
+  */
+  .h2 {
+    font-family: 'Poppins';
+    font-size: 36px;
+    font-weight: 500;
+    line-height: 44px;
+    text-align: left;
+    text-underline-position: from-font;
+    text-decoration-skip-ink: none;
+  }
+
+  .semibold {
+    font-weight: 500;
+    font-family: 'Poppins';
+    font-size: 14px;
+    line-height: 21px;
+    text-align: left;
+    text-underline-position: from-font;
+    text-decoration-skip-ink: none;
+    letter-spacing: -0.01em;
+  }
 }
 
 /* Custom scrollbar for light/dark themes */
