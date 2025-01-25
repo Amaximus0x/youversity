@@ -29,7 +29,7 @@
         in:fade={{ duration: 300 }}
       >
         <div class="w-full max-w-[477px] flex flex-col items-start gap-6">
-          <h2 class="font-poppins text-[32px] lg:text-[48px] leading-[1.2] lg:leading-[53px] font-normal tracking-[-0.96px] text-left break-words">
+          <h2 class="font-poppins text-[32px] lg:text-[48px] leading-[1.4] lg:leading-[1.2] font-normal tracking-[-0.96px] text-left whitespace-pre-line">
             {#each currentSlide.title.parts as part}
               <span class={part.highlighted ? 'text-brand-red' : 'text-black'}>{part.text}</span>
             {/each}

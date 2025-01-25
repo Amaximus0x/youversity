@@ -1,4 +1,4 @@
-import { GoogleAuthProvider, signInWithPopup, signOut, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
+import { GoogleAuthProvider, signInWithPopup, signOut, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail, updateProfile } from 'firebase/auth';
 import { auth, db } from '$lib/firebase';
 import { goto } from '$app/navigation';
 import { createUserProfile, getUserProfile } from './profile';
@@ -33,65 +33,30 @@ export const signInWithGoogle = async (callbackUrl?: string) => {
   }
 };
 
-export const registerWithEmail = async (email: string, password: string, callbackUrl?: string) => {
-  try {
-    // Try to clean up any existing data for this email if it exists
-    try {
-      // Check if there's an existing profile with this email
-      const existingProfiles = await getUserProfileByEmail(email);
-      
-      // If found, clean up the old data
-      if (existingProfiles) {
-        const usernameRef = doc(db, 'usernames', existingProfiles.username);
-        await deleteDoc(usernameRef);
-        
-        const userRef = doc(db, 'users', existingProfiles.userId);
-        await deleteDoc(userRef);
-      }
-    } catch (cleanupError) {
-      console.error('Error during cleanup:', cleanupError);
-      // Continue with registration even if cleanup fails
-    }
+interface UserData {
+  firstName: string;
+  lastName: string;
+}
 
-    // Proceed with new user registration
-    const result = await createUserWithEmailAndPassword(auth, email, password);
-    
-    try {
-      // Create user profile for email registration
-      await createUserProfile(result.user.uid, {
-        displayName: '',
-        email: result.user.email || '',
-        photoURL: '',
-        createdAt: new Date(),
-        updatedAt: new Date()
-      });
-    } catch (profileError) {
-      // If profile creation fails, delete the auth user to maintain consistency
-      try {
-        await result.user.delete();
-      } catch (deleteError) {
-        console.error('Error deleting auth user after profile creation failed:', deleteError);
-      }
-      throw profileError;
-    }
-    
-    if (callbackUrl) {
-      window.location.href = callbackUrl;
-    }
-    return result.user;
-  } catch (error) {
-    console.error('Error registering with email:', error);
-    // Add more specific error handling
-    if (error instanceof Error) {
-      if (error.message.includes('auth/email-already-in-use')) {
-        throw new Error('This email is already registered. Please try signing in instead.');
-      }
-      // Pass through the original error message for other cases
-      throw error;
-    }
-    throw new Error('Registration failed. Please try again.');
+export async function registerWithEmail(
+  email: string, 
+  password: string, 
+  redirectTo: string,
+  userData: UserData
+) {
+  const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+  
+  // Update the user profile with additional data
+  await updateProfile(userCredential.user, {
+    displayName: `${userData.firstName} ${userData.lastName}`
+  });
+
+  // You might want to store additional user data in Firestore here
+  
+  if (redirectTo) {
+    goto(redirectTo);
   }
-};
+}
 
 // Helper function to find a user profile by email
 async function getUserProfileByEmail(email: string): Promise<(UserProfile & { userId: string }) | null> {

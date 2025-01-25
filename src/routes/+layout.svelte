@@ -146,13 +146,13 @@
       <aside class="w-[262px] py-4 fixed top-0 left-0 bottom-0 border-r border-light-border dark:border-dark-border z-40 hidden lg:flex lg:flex-col transition-colors">
         <!-- Logo section -->
         <div class="w-[230px] flex flex-col items-start justify-center px-4">
-          <a href="/" class="flex items-center gap-[7px] mt-2">
+          <a href="/" class="flex items-center mt-2">
             <img 
-              src="/favicon.png" 
+              src="/YV.png" 
               alt="Youversity Logo" 
               class="w-[45px] h-[48px] object-contain"
             />
-            <span class="text-[21px] font-medium text-light-text-secondary dark:text-white transition-colors">YouVersity</span>
+            <img src="/Youversity.svg" alt="Youversity" class="h-[26px] pt-[7px]" />
           </a>
         </div>
 
@@ -161,11 +161,7 @@
           {#each sidebarItems as item}
             <a 
               href={item.href} 
-              class="group flex items-center mx-4 mb-4 px-4 py-2 rounded-lg transition-all {
-                $page?.url?.pathname === item.href 
-                  ? 'text-brand-red font-semibold' 
-                  : 'text-light-text-secondary dark:text-dark-text-secondary hover:text-brand-red'
-              }"
+              class="group flex items-center mx-4 mb-4 px-4 py-2 rounded-lg transition-all"
             >
               <img 
                 src={item.icon} 
@@ -180,7 +176,11 @@
                     : 'opacity-60 group-hover:opacity-100 group-hover:[filter:invert(45%)_sepia(95%)_saturate(1648%)_hue-rotate(325deg)_brightness(97%)_contrast(91%)]'
                 }" 
               />
-              <span class="text-light-text-primary dark:text-dark-text-primary">{item.label}</span>
+              <span class="{
+                $page?.url?.pathname === item.href
+                  ? 'text-light-text-primary dark:text-dark-text-primary font-semibold'
+                  : 'text-light-text-secondary dark:text-dark-text-secondary hover:text-light-text-secondary dark:hover:text-dark-text-secondary hover:font-semibold'
+              } transition-all">{item.label}</span>
             </a>
           {/each}
         </nav>
@@ -255,48 +255,31 @@
                   bind:value={searchQuery}
                   on:focus={() => isSearchFocused = true}
                   on:blur={() => isSearchFocused = false}
-                  class="flex-1 pl-2 pr-1 bg-transparent border-none focus:outline-none text-base text-[#A3A3A3] font-normal"
+                  class="flex-1 pl-2 pr-1 bg-transparent border-none focus:outline-none text-base font-normal text-light-text-primary dark:text-dark-text-primary placeholder:text-light-text-secondary dark:placeholder:text-dark-text-secondary"
                 />
                 <div class="flex items-center pl-2 border-[rgba(0,0,0,0.05)]">
                   <div class="relative w-[94px] h-[32px]">
-                    {#if isMounted && isSearchPage}
-                      <div class="absolute inset-0 transition-colors duration-300 ease-in-out" 
-                           in:fade={{ duration: 200 }} 
-                           out:fade={{ duration: 200 }}>
-                        <button
-                          type="button"
-                          class="h-8 px-2 py-3.5 bg-white rounded-[10px] border border-black/5 justify-start items-center gap-2 inline-flex"
-                          on:click={() => showFilterModal = true}
-                        >
-                          <img 
-                            src="/icons/filter-icon.svg" 
-                            alt="Filter"
-                            class="w-6 h-6" 
-                          />
-                          <span class="text-black text-base font-normal font-['Poppins'] leading-normal">Filter</span>
-                          {#if activeFilterCount > 0}
-                            <div class="px-2 py-0.5 bg-[#eb434a] rounded-[40px] justify-start items-center gap-2 flex">
-                              <div class="text-center text-white text-[10px] font-semibold font-['Poppins'] leading-none">
-                                {activeFilterCount}
-                              </div>
+                    <div class="absolute inset-0 transition-colors duration-300 ease-in-out">
+                      <button
+                        type="button"
+                        class="h-8 px-2 py-3.5 bg-white rounded-[10px] border border-black/5 justify-start items-center gap-2 inline-flex"
+                        on:click={() => showFilterModal = true}
+                      >
+                        <img 
+                          src="/icons/filter-icon.svg" 
+                          alt="Filter"
+                          class="w-6 h-6" 
+                        />
+                        <span class="text-black text-base font-normal font-['Poppins'] leading-normal">Filter</span>
+                        {#if activeFilterCount > 0}
+                          <div class="px-2 py-0.5 bg-[#eb434a] rounded-[40px] justify-start items-center gap-2 flex">
+                            <div class="text-center text-white text-[10px] font-semibold font-['Poppins'] leading-none">
+                              {activeFilterCount}
                             </div>
-                          {/if}
-                        </button>
-                      </div>
-                    {:else}
-                      <div class="absolute inset-0 transition-colors duration-300 ease-in-out">
-                      <div class="w-[80px] h-[35px]">
-                        <button
-                          type="submit"
-                          class="flex items-center gap-2 px-2 py-[5px] border-[1.5px] border-[rgba(0,0,0,0.05)] rounded-2xl bg-white hover:bg-[#FFF2F3] transition-colors {
-                            isSearchFocused ? 'border-[#EE434A] text-[#EE434A]' : ''
-                          }"
-                        >
-                          <span class="text-base font-normal">Search</span>
-                        </button>
-                        </div>
-                      </div>
-                    {/if}
+                          </div>
+                        {/if}
+                      </button>
+                    </div>
                   </div>
                 </div>
               </form>

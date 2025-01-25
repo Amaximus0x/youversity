@@ -16,10 +16,10 @@ const slides: OnboardingSlide[] = [
     title: {
       parts: [
         { text: 'Transform ', highlighted: true },
-        { text: 'Your ', highlighted: false },
+        { text: 'Your\n', highlighted: false },
         { text: 'YouTube ', highlighted: false },
         { text: 'Time ', highlighted: true },
-        { text: 'into ', highlighted: false },
+        { text: 'into\n', highlighted: false },
         { text: 'Learning', highlighted: true }
       ]
     },
@@ -30,10 +30,10 @@ const slides: OnboardingSlide[] = [
     title: {
       parts: [
         { text: 'AI-Powered ', highlighted: true },
-        { text: 'Course ', highlighted: false },
+        { text: 'Course\n', highlighted: false },
         { text: 'Creation ', highlighted: true },
-        { text: 'in ', highlighted: false },
-        { text: '\nSeconds', highlighted: false }
+        { text: 'in\n', highlighted: false },
+        { text: 'Seconds', highlighted: false }
       ]
     },
     description: 'Pick a topic, and our AI finds the best YouTube videos, organizes them into a structured course, and adds progress tracking. Learn at your own pace, anytime, anywhere.',
@@ -42,7 +42,7 @@ const slides: OnboardingSlide[] = [
   {
     title: {
       parts: [
-        { text: 'Create & Share ', highlighted: true },
+        { text: 'Create & Share\n', highlighted: true },
         { text: 'Your Own Courses', highlighted: false }
       ]
     },
@@ -52,9 +52,9 @@ const slides: OnboardingSlide[] = [
   {
     title: {
       parts: [
-        { text: 'Discover, ', highlighted: false },
-        { text: 'Collaborate, ', highlighted: true },
-        { text: 'and ', highlighted: false },
+        { text: 'Discover,\n', highlighted: false },
+        { text: 'Collaborate,\n', highlighted: true },
+        { text: 'and\n', highlighted: false },
         { text: 'Grow ', highlighted: true },
         { text: 'Together', highlighted: false }
       ]

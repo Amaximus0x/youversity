@@ -228,10 +228,10 @@
   <!-- Create Course Section -->
   <div class="relative overflow-hidden rounded-lg  mb-8 lg:mb-12">    
     <div >
-      <h1 class="text-4xl lg:text-5xl font-normal mb-2">
+      <h1 class="text-4xl lg:text-5xl font-normal text-light-text-primary dark:text-dark-text-primary mb-2">
         Hi {$user?.displayName?.split(' ')[0] || 'there'} 👋
       </h1>
-      <h2 class="text-4xl lg:text-5xl font-normal mb-4">
+      <h2 class="text-4xl lg:text-5xl font-normal text-light-text-primary dark:text-dark-text-primary mb-4">
         What would you like to <span class="text-brand-red">Learn</span>?
       </h2>
       <p class="text-light-text-secondary dark:text-dark-text-secondary text-lg lg:text-xl mb-8">
@@ -240,7 +240,7 @@
 
       <form 
         on:submit={handleCreateCourse} 
-        class="relative flex-1 max-w-3xl"
+        class="relative flex-1 max-w-3xl "
       >
         <button
           type="submit"
@@ -272,133 +272,136 @@
             placeholder="Enter what you want to learn..."
             on:focus={() => isInputFocused = true}
             on:blur={() => isInputFocused = false}
-            class="w-full pl-12 pr-32 h-[52px] rounded-2xl border-[1.5px] border-light-border dark:border-dark-border focus:outline-none focus:border-brand-red bg-light-bg-primary dark:bg-dark-bg-primary text-light-text-secondary dark:text-dark-text-secondary transition-colors duration-300 ease-in-out"
+            class="w-full pl-12 pr-32 h-[52px] rounded-2xl border-[1.5px] border-light-border dark:border-dark-border focus:outline-none focus:border-brand-red bg-light-bg-primary dark:bg-dark-bg-primary text-light-text-primary dark:text-dark-text-primary placeholder:text-light-text-secondary dark:placeholder:text-dark-text-secondary transition-colors duration-300 ease-in-out"
           />
         </div>
       </form>
     </div>
   </div>
 
-  {#if $user}
-    <div class="mb-8">
-      <div class="flex items-center justify-between mb-4">
-        <h4 class="text-xl font-normal text-light-text-secondary dark:text-white">Continue Learning</h4>
-        {#if userCourses.length > 0}
-          <div class="flex items-center gap-2">
-            <a href="/courses" class="text-[#42C1C8] text-base font-normal hover:underline">Show All</a>
-            <img src="/icons/arrow-right.svg" alt="arrow-right.svg" class="w-6 h-6">
-          </div>
-        {/if}
-      </div>
-      
-      <div class="h-[1px] bg-light-border dark:bg-dark-border mb-6"></div>
-      
-      {#if userCourses.length > 0}
-        <div class="flex gap-4 overflow-x-auto pb-4 -mx-4 px-4 hide-scrollbar">
-          {#each userCourses as course}
-            <div class="p-2">
-              <div 
-                class="min-w-[325px] max-w-[325px] max-h-[390px] bg-white/5 backdrop-blur-sm dark:bg-black/5 rounded-2xl overflow-hidden border border-light-border dark:border-dark-border cursor-pointer transition-transform hover:scale-[1.02] hover:shadow-lg"
-                on:click={() => goto(`/course/${course.id}`)}
-                on:keydown={(e) => e.key === 'Enter' && goto(`/course/${course.id}`)}
-                role="button"
-                tabindex="0"
-              >
-                <div class="relative h-[156px]">
-                  {#if course.Final_Course_Thumbnail}
-                    <img 
-                      src={course.Final_Course_Thumbnail}
-                      alt={course.Final_Course_Title}
-                      class="w-full h-full object-cover"
-                    />
-                  {:else}
-                    <img 
-                      src="https://placehold.co/280x156/lightgray/darkgray.png" 
-                      alt={course.Final_Course_Title} 
-                      class="w-full h-full object-cover" 
-                    />
-                  {/if}
-                  <div class="absolute inset-0 bg-black/30" />
-                  <button 
-                    class="absolute top-3 right-3 w-8 h-8 bg-black/20 rounded-full flex items-center justify-center backdrop-blur-[2px] hover:bg-white/30 transition-colors"
-                    on:click|stopPropagation={(e) => {
-                      e.preventDefault();
-                      selectedCourseId = course.id;
-                      showShareModal = true;
-                    }}
-                  >
-                    <img src="/icons/share-icon.svg" alt="Share" class="w-5 h-5" />
-                  </button>
-                </div>
-                <div class="p-4 flex flex-col min-h-[156px]">
-                  <h4 class="h4-medium text-black dark:text-white mb-2 line-clamp-2">{course.Final_Course_Title}</h4>
-                  <p class="text-[#5F6368] text-sm mb-4 line-clamp-2">{course.Final_Course_Description || course.Final_Course_Objective}</p>
-                  {#if typeof course.progress === 'number'}
-                    <div class="flex items-center gap-2 mb-4">
-                      <div class="flex-1 h-2 bg-[#D9E1E3] rounded-full">
-                        <div 
-                          class="h-full bg-[#42C1C8] rounded-full" 
-                          style="width: {course.progress}%" 
-                        />
-                      </div>
-                      <span class="text-sm text-[#A3A3A3] flex items-center gap-2">
-                        <img src="/icons/time-quarter.svg" alt="Duration" class="w-4 h-4" />
-                        Duration: {#if course?.Final_Course_Duration}
-                          {Math.floor((course.Final_Course_Duration) / 60)}h
-                        {:else}
-                          --
-                        {/if}
-                      </span>
-                    </div>
-                  {/if}
-                  <div class="mt-auto pt-2">
-                    <button 
-                      class="w-full py-2 bg-[#EE434A] hover:bg-[#D63B42] text-white rounded-lg transition-colors duration-200 text-base font-medium"
-                      on:click|stopPropagation={() => goto(`/course/${course.id}`)}
-                    >
-                      {typeof course.progress === 'number' ? 'Continue' : 'Start Learning'}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          {/each}
-        </div>
-      {:else}
-        <div class="h-[372px] relative rounded-2xl border border-light-border dark:border-dark-border overflow-hidden">
-          <div class="w-[406px] h-[200px] left-[56px] top-[86px] absolute flex-col justify-start items-start gap-10 inline-flex">
-            <div class="self-stretch">
-              <span class="text-light-text-primary dark:text-white text-4xl font-normal font-['Poppins'] leading-[53px]">You haven't </span>
-              <span class="text-brand-red text-4xl font-normal font-['Poppins'] leading-[53px]">enrolled</span>
-              <span class="text-light-text-primary dark:text-white text-4xl font-normal font-['Poppins'] leading-[53px]"> in a course yet.</span>
-            </div>
-            <div class="h-[54px] px-4 py-2 bg-brand-red hover:bg-[#D63B42] rounded-2xl justify-center items-center gap-2 inline-flex transition-colors duration-200">
-              <div class="text-white text-base font-normal font-['Poppins'] leading-normal">Explore Course</div>
-              <div class="w-6 h-6 relative origin-top-left">
-                <img 
-                  src="/icons/arrow-right-io.svg" 
-                  alt="arrow" 
-                  class="w-full h-full" 
-                />
-              </div>
-            </div>
-          </div>
-          <div class="absolute hidden right-[0px] md:block">
-            <img 
-              src="/images/Search-engines-pana.svg" 
-              alt="No courses" 
-              class="w-[870px] h-auto"
-            />
-          </div>
+  <div class="mb-8">
+    <div class="flex items-center justify-between mb-4">
+      <h4 class="text-xl font-normal text-light-text-primary dark:text-dark-text-primary">Continue Learning</h4>
+      {#if $user && userCourses.length > 0}
+        <div class="flex items-center gap-2">
+          <a href="/courses" class="text-[#42C1C8] text-base font-normal hover:underline">Show All</a>
+          <img src="/icons/arrow-right.svg" alt="arrow-right.svg" class="w-6 h-6">
         </div>
       {/if}
     </div>
-  {/if}
+    
+    <div class="h-[1px] bg-light-border dark:bg-dark-border mb-6"></div>
+    
+    {#if $user && userCourses.length > 0}
+      <div class="flex gap-4 overflow-x-auto pb-4 -mx-4 px-4 hide-scrollbar">
+        {#each userCourses as course}
+          <div class="p-2">
+            <div 
+              class="min-w-[325px] max-w-[325px] max-h-[390px] bg-white/5 backdrop-blur-sm dark:bg-black/5 rounded-2xl overflow-hidden border border-light-border dark:border-dark-border cursor-pointer transition-transform hover:scale-[1.02] hover:shadow-lg"
+              on:click={() => goto(`/course/${course.id}`)}
+              on:keydown={(e) => e.key === 'Enter' && goto(`/course/${course.id}`)}
+              role="button"
+              tabindex="0"
+            >
+              <div class="relative h-[156px]">
+                {#if course.Final_Course_Thumbnail}
+                  <img 
+                    src={course.Final_Course_Thumbnail}
+                    alt={course.Final_Course_Title}
+                    class="w-full h-full object-cover"
+                  />
+                {:else}
+                  <img 
+                    src="https://placehold.co/280x156/lightgray/darkgray.png" 
+                    alt={course.Final_Course_Title} 
+                    class="w-full h-full object-cover" 
+                  />
+                {/if}
+                <div class="absolute inset-0 bg-black/30" />
+                <button 
+                  class="absolute top-3 right-3 w-8 h-8 bg-black/20 rounded-full flex items-center justify-center backdrop-blur-[2px] hover:bg-white/30 transition-colors"
+                  on:click|stopPropagation={(e) => {
+                    e.preventDefault();
+                    selectedCourseId = course.id;
+                    showShareModal = true;
+                  }}
+                >
+                  <img src="/icons/share-icon.svg" alt="Share" class="w-5 h-5" />
+                </button>
+              </div>
+              <div class="p-4 flex flex-col min-h-[156px]">
+                <h4 class="h4-medium text-black dark:text-white mb-2 line-clamp-2">{course.Final_Course_Title}</h4>
+                <p class="text-[#5F6368] text-sm mb-4 line-clamp-2">{course.Final_Course_Description || course.Final_Course_Objective}</p>
+                {#if typeof course.progress === 'number'}
+                  <div class="flex items-center gap-2 mb-4">
+                    <div class="flex-1 h-2 bg-[#D9E1E3] rounded-full">
+                      <div 
+                        class="h-full bg-[#42C1C8] rounded-full" 
+                        style="width: {course.progress}%" 
+                      />
+                    </div>
+                    <span class="text-sm text-[#A3A3A3] flex items-center gap-2">
+                      <img src="/icons/time-quarter.svg" alt="Duration" class="w-4 h-4" />
+                      Duration: {#if course?.Final_Course_Duration}
+                        {Math.floor((course.Final_Course_Duration) / 60)}h
+                      {:else}
+                        --
+                      {/if}
+                    </span>
+                  </div>
+                {/if}
+                <div class="mt-auto pt-2">
+                  <button 
+                    class="w-full py-2 bg-[#EE434A] hover:bg-[#D63B42] text-white rounded-lg transition-colors duration-200 text-base font-medium"
+                    on:click|stopPropagation={() => goto(`/course/${course.id}`)}
+                  >
+                    {typeof course.progress === 'number' ? 'Continue' : 'Start Learning'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        {/each}
+      </div>
+    {:else}
+      <div class="h-[372px] relative rounded-2xl border border-light-border dark:border-dark-border overflow-hidden">
+        <div class="w-[406px] h-[200px] left-[56px] top-[86px] absolute flex-col justify-start items-start gap-10 inline-flex">
+          <div class="self-stretch">
+            <span class="text-light-text-primary dark:text-white text-4xl font-normal font-['Poppins'] leading-[53px]">You haven't </span>
+            <span class="text-brand-red text-4xl font-normal font-['Poppins'] leading-[53px]">enrolled</span>
+            <span class="text-light-text-primary dark:text-white text-4xl font-normal font-['Poppins'] leading-[53px]"> in a course yet.</span>
+          </div>
+          <div class="h-[54px] px-4 py-2 bg-brand-red hover:bg-[#D63B42] rounded-2xl justify-center items-center gap-2 inline-flex transition-colors duration-200 cursor-pointer"
+               on:click={() => goto('/trending')}
+               on:keydown={(e) => e.key === 'Enter' && goto('/trending')}
+               role="button"
+               tabindex="0"
+          >
+            <div class="text-white text-base font-normal font-['Poppins'] leading-normal">Explore Course</div>
+            <div class="w-6 h-6 relative origin-top-left">
+              <img 
+                src="/icons/arrow-right-io.svg" 
+                alt="arrow" 
+                class="w-full h-full" 
+              />
+            </div>
+          </div>
+        </div>
+        <div class="absolute hidden right-[0px] md:block">
+          <img 
+            src="/images/Search-engines-pana.svg" 
+            alt="No courses" 
+            class="w-[870px] h-auto"
+          />
+        </div>
+      </div>
+    {/if}
+  </div>
 
   <!-- Trending Community Courses Section -->
   <section class="mb-12">
     <div class="flex items-center justify-between mb-4">
-      <h4 class="text-xl font-normal text-light-text-secondary dark:text-white">Trending Courses</h4>
+      <h4 class="text-xl font-normal text-light-text-primary dark:text-dark-text-primary">Trending Courses</h4>
       <div class="flex items-center gap-2">
         <a href="/trending" class="text-[#42C1C8] text-base font-normal hover:underline">Show All</a>
         <img src="/icons/arrow-right.svg" alt="arrow-right.svg" class="w-6 h-6">

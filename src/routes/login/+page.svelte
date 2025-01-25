@@ -7,11 +7,13 @@
   let successMessage: string | null = null;
   let isRegistering = false;
   let isResettingPassword = false;
+  let firstName = '';
+  let lastName = '';
   let email = '';
   let password = '';
-  let confirmPassword = '';
   let showPassword = false;
   let passwordInput: HTMLInputElement;
+  let termsAccepted = false;
 
   function getReadableErrorMessage(err: any): string {
     if (!(err instanceof Error)) return 'Authentication failed';
@@ -56,14 +58,20 @@
   }
 
   async function handleEmailAuth() {
-    if (!email || !password) {
-      error = 'Please fill in all fields';
-      return;
-    }
-
-    if (isRegistering && password !== confirmPassword) {
-      error = 'Passwords do not match';
-      return;
+    if (isRegistering) {
+      if (!firstName || !lastName || !email || !password) {
+        error = 'Please fill in all fields';
+        return;
+      }
+      if (!termsAccepted) {
+        error = 'Please accept the terms and policy';
+        return;
+      }
+    } else {
+      if (!email || !password) {
+        error = 'Please fill in all fields';
+        return;
+      }
     }
 
     error = null;
@@ -71,13 +79,12 @@
       const redirectTo = $page.url.searchParams.get('redirectTo') || '/create-course';
       if (isRegistering) {
         try {
-          await registerWithEmail(email, password, redirectTo);
+          await registerWithEmail(email, password, redirectTo, { firstName, lastName });
         } catch (err: any) {
           if (err?.message?.includes('auth/email-already-in-use')) {
             isRegistering = false;
             error = 'This email is already registered. Please sign in instead.';
             password = '';
-            confirmPassword = '';
             return;
           }
           throw err;
@@ -218,11 +225,13 @@
                   <input
                     type="text"
                     placeholder="First name"
+                    bind:value={firstName}
                     class="form-input"
                   />
                   <input
                     type="text"
                     placeholder="Last name"
+                    bind:value={lastName}
                     class="form-input"
                   />
                 </div>
@@ -271,6 +280,7 @@
                   type="checkbox"
                   id="terms"
                   class="custom-checkbox"
+                  bind:checked={termsAccepted}
                 />
                 <label for="terms" class="text-base">
                   I agree to the <a href="/terms" class="text-brand-red hover:underline">terms & policy</a>
