@@ -287,7 +287,7 @@
 
             <div class="flex items-center gap-8">
               <div class="relative w-12 h-12 flex items-center justify-center border border-light-border dark:border-dark-border rounded-full">
-                <ThemeToggle />
+                <img src="/icons/notification-block-02.svg" alt="Notification" class="w-6 h-6" />
               </div>
               
               {#if $user}
