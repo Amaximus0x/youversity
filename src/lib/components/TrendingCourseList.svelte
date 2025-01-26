@@ -104,7 +104,7 @@
     {#each courses as course}
       <div class="p-2">
         <div 
-          class="w-[325px] h-[356px] bg-transparent backdrop-blur-sm rounded-[14px] border border-black/5 flex-col justify-start items-start inline-flex overflow-hidden cursor-pointer transition-transform hover:scale-[1.02] hover:shadow-lg"
+          class="w-[325px] h-[359px] bg-transparent backdrop-blur-sm rounded-[14px] border border-black/5 flex-col justify-start items-start inline-flex overflow-hidden cursor-pointer transition-transform hover:scale-[1.02] hover:shadow-lg"
           on:click={() => handelNavigateToCourse(course.id)}
           on:keydown={(e) => e.key === 'Enter' && handelNavigateToCourse(course.id)}
           role="button"
@@ -137,8 +137,8 @@
           </div>
 
           <div class="self-stretch h-52 p-4 flex-col justify-start items-start gap-4 flex bg-transparent">
-            <div class="self-stretch h-[123px] flex-col justify-start items-start gap-4 flex">
-              <div class="self-stretch h-[87px] flex-col justify-start items-start flex">
+            <div class="self-stretch h-[123px] flex-col justify-start items-start gap-2 flex">
+              <div class="self-stretch h-[100px] flex-col justify-start items-start gap-2 flex">
                 <h3 class="self-stretch h-[55px] text-black dark:text-white text-xl font-medium font-['Poppins'] leading-7 line-clamp-2">{course.Final_Course_Title}</h3>
                 <p class="self-stretch text-[#a2a2a2] text-sm font-normal font-['Poppins'] leading-snug line-clamp-2">{course.Final_Course_Objective}</p>
               </div>
@@ -167,7 +167,7 @@
             </div>
             
             <button 
-              class="self-stretch px-4 py-2 bg-[#2a4d61] rounded-lg justify-center items-center gap-2 inline-flex hover:bg-[#1E3443] transition-colors duration-200"
+              class="self-stretch h-[48px] px-4 bg-[#2a4d61] rounded-lg justify-center items-center gap-2 inline-flex hover:bg-[#1E3443] transition-colors duration-200"
               on:click|stopPropagation={() => handelNavigateToCourse(course.id)}
             >
               <span class="text-white text-sm font-medium font-['Poppins']">View Course</span>

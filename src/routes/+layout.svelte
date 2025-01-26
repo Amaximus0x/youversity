@@ -149,7 +149,7 @@
           <div class=" w-[160px] h-[48.4px]  relative">
             <a href="/">
             <img 
-              src="/youversity-logo.svg" 
+              src="/youversity-logo-large.svg" 
               alt="Youversity Logo" 
               class="left-0 top-0 absolute"
             />
@@ -239,7 +239,7 @@
             <div class=" w-[125.33px] h-[38px] relative">
               <a href="/">
               <img 
-                src="/youversity-logo.svg" 
+                src="/youversity-logo-small.svg" 
                 alt="Youversity Logo" 
                 class="left-0 top-0 absolute"
               />

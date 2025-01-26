@@ -119,8 +119,8 @@
           </div>
           <div class="self-stretch h-56 p-4 flex-col justify-start items-start gap-6 flex">
             <div class="self-stretch h-[131px] flex-col justify-start items-start gap-4 flex">
-              <div class="self-stretch h-[95px] flex-col justify-start items-start gap-2 flex">
-                <div class="self-stretch h-[55px] text-black dark:text-white text-base font-semibold font-['Poppins'] leading-normal line-clamp-2">{course.Final_Course_Title}</div>
+              <div class="self-stretch h-[100px] flex-col justify-start items-start gap-2 flex">
+                <h3 class="self-stretch text-black dark:text-white text-xl font-medium font-['Poppins'] leading-7 line-clamp-2">{course.Final_Course_Title}</h3>
                 <div class="self-stretch text-[#a2a2a2] text-sm font-normal font-['Poppins'] leading-snug line-clamp-2">{course.Final_Course_Objective}</div>
               </div>
               {#if typeof course.progress === 'number'}
