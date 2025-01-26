@@ -143,21 +143,22 @@
   <div class="min-h-screen bg-gradient-light dark:bg-gradient-dark transition-colors">
     {#if !($page?.data?.hideNav)}
       <!-- Sidebar - hidden on mobile -->
-      <aside class="w-[262px] py-4 fixed top-0 left-0 bottom-0 border-r border-light-border dark:border-dark-border z-40 hidden lg:flex lg:flex-col transition-colors">
+      <aside class="w-[262px] fixed top-0 left-0 bottom-0 border-r border-light-border dark:border-dark-border z-40 hidden lg:flex lg:flex-col transition-colors">
         <!-- Logo section -->
-        <div class="w-[230px] flex flex-col items-start justify-center px-4">
-          <a href="/" class="flex items-center mt-2">
+        <div class="w-[230px] px-[16px] pb-[24px] pt-[24px] flex flex-col items-start justify-center px-4">
+          <div class=" w-[160px] h-[48.4px]  relative">
+            <a href="/">
             <img 
-              src="/YV.png" 
+              src="/youversity-logo.svg" 
               alt="Youversity Logo" 
-              class="w-[45px] h-[48px] object-contain"
+              class="left-0 top-0 absolute"
             />
-            <img src="/Youversity.svg" alt="Youversity" class="h-[26px] pt-[7px]" />
-          </a>
+            </a>
+          </div>
         </div>
 
         <!-- Navigation section -->
-        <nav class="py-6 flex-1">
+        <nav class="py-[16px] flex-1">
           {#each sidebarItems as item}
             <a 
               href={item.href} 
@@ -232,8 +233,48 @@
       <!-- Main Content with Navigation -->
       <main class="lg:pl-64 min-h-screen bg-gradient-light dark:bg-gradient-dark">
         <!-- Header -->
-        <header class="fixed top-0 right-0 left-0 lg:left-64 h-24 px-4 lg:pr-8 py-6 border-b border-light-border dark:border-dark-border bg-light-bg-primary/10 dark:bg-dark-bg-primary/10 backdrop-blur-[30px] z-50">
-          <div class="flex justify-between items-center gap-8 w-full h-full max-w-7xl mx-auto">
+        <header class="fixed top-0 right-0 left-0 lg:left-64 h-24 lg:h-24 px-5 lg:px-8 py-6 border-b border-light-border dark:border-dark-border bg-light-bg-primary/10 dark:bg-dark-bg-primary/10 backdrop-blur-[30px] z-50">
+          <!-- Mobile Header -->
+          <div class="h-10 justify-between items-center inline-flex lg:hidden w-full">
+            <div class=" w-[125.33px] h-[38px] relative">
+              <a href="/">
+              <img 
+                src="/youversity-logo.svg" 
+                alt="Youversity Logo" 
+                class="left-0 top-0 absolute"
+              />
+              </a>
+            </div>
+            <div class="justify-start items-start gap-4 flex">
+              <button 
+                class="p-2 rounded-[100px] border border-black/5 justify-start items-center gap-2.5 flex"
+                on:click={() => goto('/search')}
+              >
+                <img src="/icons/search-01.svg" alt="Search" class="w-6 h-6" />
+              </button>
+              <div class="p-2 rounded-[100px] border border-black/5 justify-start items-center gap-2.5 flex">
+                <img src="/icons/notification-block-02.svg" alt="Notification" class="w-6 h-6" />
+              </div>
+              {#if $user}
+                <div 
+                  class="h-10 bg-white rounded-[100px] justify-center items-center flex overflow-hidden cursor-pointer"
+                  on:click={() => goto('/profile')}
+                  on:keydown={(e) => e.key === 'Enter' && goto('/profile')}
+                  role="button"
+                  tabindex="0"
+                >
+                  <img 
+                    src={$user.photoURL || ''} 
+                    alt={$user.displayName || 'User'} 
+                    class="w-[40px] h-[40px] object-cover"
+                  />
+                </div>
+              {/if}
+            </div>
+          </div>
+
+          <!-- Desktop Header -->
+          <div class="hidden lg:flex justify-between items-center gap-8 w-full h-full max-w-7xl mx-auto">
             <div class="flex-1 max-w-[611px] mx-auto ml-0">
               <form on:submit={handleSearch} class="w-full flex items-center bg-light-bg-primary dark:bg-dark-bg-primary border-[1.5px] {
                 isSearchFocused ? 'border-brand-red' : 'border-light-border dark:border-dark-border'
@@ -316,27 +357,27 @@
 
         <!-- Mobile Bottom Navigation -->
         <div class="fixed bottom-0 left-0 right-0 z-50 lg:hidden flex flex-col">
-          <nav class="h-[80px] border-t border-light-border dark:border-dark-border bg-light-bg-primary dark:bg-dark-bg-primary">
-            <div class="flex justify-between items-center h-full px-8">
+          <nav class="h-20 bg-white border-t border-black/5">
+            <div class="flex justify-between items-center h-full">
               {#each mobileNavItems as item}
                 <a 
                   href={item.href}
-                  class="flex flex-col items-center justify-center"
+                  class="grow shrink basis-0 pt-2 pb-6 flex-col justify-center items-center gap-1 inline-flex"
                 >
                   <img 
                     src={item.icon}
                     alt={item.label}
                     style={$page?.url?.pathname === item.href ? 'filter: invert(45%) sepia(95%) saturate(1648%) hue-rotate(325deg) brightness(97%) contrast(91%);' : ''}
-                    class="w-5 h-5 mb-1 {
+                    class="w-6 h-6 {
                       $page?.url?.pathname === item.href
                         ? 'opacity-100'
                         : 'opacity-60'
                     }" 
                   />
-                  <span class="text-[10px] {
+                  <span class="text-center text-xs font-['Poppins'] leading-tight {
                     $page?.url?.pathname === item.href 
-                      ? 'text-brand-black font-medium' 
-                      : 'text-[#667085]'
+                      ? 'text-black font-medium' 
+                      : 'text-[#494848] font-normal'
                   }">
                     {item.label}
                   </span>
