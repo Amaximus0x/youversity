@@ -233,7 +233,7 @@
         Hi {$user?.displayName?.split(' ')[0] || 'there'} 👋
       </h1>
       <h2 class="text-4xl lg:text-5xl font-normal text-light-text-primary dark:text-dark-text-primary mb-4">
-        What would you like to <span class="text-brand-red">Learn</span>?
+        What would you like to <span class="text-brand-red">Learn?</span>
       </h2>
       <p class="text-light-text-secondary dark:text-dark-text-secondary text-lg lg:text-xl mb-8">
         Enter your learning objectives below we'll help you create a comprehensive course.

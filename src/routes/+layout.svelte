@@ -187,10 +187,10 @@
         </nav>
 
         <!-- Help Center Section -->
-        <div class="px-4 pb-8">
+        <div class="h-[508px] px-4 pb-8 justify-start items-end gap-2.5 inline-flex">
           <div class="relative mt-[15px] flex flex-col items-start p-6 pb-4 gap-4 border border-light-border dark:border-dark-border rounded-2xl">
             <div class="flex flex-col items-center w-full gap-2">
-              <div class="absolute -top-5 left-1/2 transform -translate-x-1/2 w-[40px] h-[40px] bg-brand-red rounded-full flex items-center justify-center">
+              <div class="absolute -top-5 left-1/2 transform -translate-x-1/2 w-[40px] h-[40px] bg-white rounded-full flex items-center justify-center">
                 <img 
                   src="/icons/help-circle.svg" 
                   alt="Help"
