@@ -6,13 +6,6 @@
   import Skeleton from '$lib/components/Skeleton.svelte';
   import ThemeToggle from '$lib/components/ThemeToggle.svelte';
   import { theme } from '$lib/stores/theme';
-  import { 
-    Search,
-    Bell,
-    PlusCircle,
-    User,
-    Plus
-  } from 'lucide-svelte';
   import '../app.css';
   import { goto } from '$app/navigation';
   import NoInternet from '$lib/components/NoInternet.svelte';

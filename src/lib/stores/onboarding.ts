@@ -53,7 +53,7 @@ const slides: OnboardingSlide[] = [
     title: {
       parts: [
         { text: 'Discover,\n', highlighted: false },
-        { text: 'Collaborate,\n', highlighted: true },
+        { text: 'Collaborate, ', highlighted: true },
         { text: 'and\n', highlighted: false },
         { text: 'Grow ', highlighted: true },
         { text: 'Together', highlighted: false }

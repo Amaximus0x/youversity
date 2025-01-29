@@ -1,4 +1,5 @@
 <script lang="ts">
+  import Button from '$lib/components/Button.svelte';
   import { signInWithGoogle, signInWithEmail, registerWithEmail, resetPassword } from '$lib/services/auth';
   import { page } from '$app/stores';
   import OnboardingCarousel from '$lib/components/OnboardingCarousel.svelte';
@@ -135,7 +136,7 @@
   }
   
   .form-label {
-    @apply block text-xl font-medium text-black mb-4;
+    @apply block text-base font-medium text-black mb-2;
   }
 
   .custom-checkbox {
@@ -157,206 +158,324 @@
   }
 </style>
 
-<div class="min-h-screen bg-gradient-to-b from-[#FFF2F3] to-[#EDFEFF] flex">
+<div class="margin-safe-left flex justify-center items-start h-screen">
   <!-- Left Side - Login Form -->
-  <div class="w-full md:w-1/2 p-6 flex flex-col">
-    <!-- Logo -->
-    <div class="flex items-center mb-12">
-      <img src="/YV.png" alt="YV Logo" class="w-[45px] h-[48px]" />
-      <img src="/Youversity.svg" alt="Youversity" class="h-[26px] pt-[7px]" />
+  <div class="w-full flex flex-col items-start relative">
+    <!-- Logo section -->
+    <div class="w-[230px] px-5 xl:px-8 py-6 fixed top-0 left-0 z-10">
+      <div class="w-[160px] h-[48.4px] relative">
+        <a href="/">
+          <img 
+            src="/youversity-logo-large.svg" 
+            alt="Youversity Logo" 
+            class="left-0 top-0 absolute lg:block hidden"
+          />
+          <img 
+            src="/youversity-logo-small.svg" 
+            alt="Youversity Logo" 
+            class="left-0 top-0 absolute lg:hidden block"
+          />
+        </a>
+      </div>
     </div>
 
-    <!-- Form Container -->
-    <div class="flex-1 flex items-start justify-center">
-      <div class="w-full max-w-[460px] mx-auto">
-        <h1 class="text-[36px] font-medium text-black mb-2">
-          {isRegistering ? 'Get Started Now' : 'Login'}
-        </h1>
-        <p class="text-[#A3A3A3] text-base mb-8">
-          {isRegistering ? '' : 'Welcome back!'}
-        </p>
-
-        {#if error}
-          <div class="bg-red-100 text-red-700 p-4 rounded-lg mb-6">
-            {error}
-          </div>
-        {/if}
-
-        {#if successMessage}
-          <div class="bg-green-100 text-green-700 p-4 rounded-lg mb-6">
-            {successMessage}
-          </div>
-        {/if}
-
-        {#if isResettingPassword}
-          <form on:submit|preventDefault={handlePasswordReset} class="space-y-6">
-            <div>
-              <label for="email" class="form-label">Email address</label>
-              <input
-                type="email"
-                id="email"
-                bind:value={email}
-                class="form-input"
-                placeholder="Enter email address"
-              />
+    <!-- Left Side - Form Container -->
+    <div class="w-full flex items-center justify-center lg:w-[52%]">
+      <div class="w-[390px] lg:w-[415px] mx-auto xl:px-4 pt-[120px]">
+        {#if isRegistering}
+          <!-- Sign Up Form -->
+          <div class="flex-col justify-start items-start gap-8 inline-flex w-full">
+            <div class="self-stretch h-[76px] lg:h-auto flex-col justify-start items-start gap-2 flex">
+              <!-- Back Button - Mobile Only -->
+              <button 
+                on:click={() => window.history.back()} 
+                class="lg:hidden w-6 h-6"
+              >
+                <img 
+                  src="/icons/arrow-left.svg" 
+                  alt="Go back" 
+                  class="w-6 h-6"
+                />
+              </button>
+              <div class="self-stretch text-black text-4xl font-medium font-['Poppins'] leading-[44px]">Get Started Now</div>
             </div>
 
-            <button
-              type="submit"
-              class="w-full bg-brand-red hover:bg-[#D63B42] text-white py-3 rounded-lg transition-colors"
-            >
-              Send Reset Link
-            </button>
+            <div class="self-stretch flex-col justify-start items-start gap-8 flex">
+              <form on:submit|preventDefault={handleEmailAuth} class="self-stretch flex-col justify-start items-center gap-8 flex">
+                <div class="self-stretch flex-col justify-start items-start gap-6 flex">
+                  <div class="self-stretch flex-col justify-start items-start gap-5 flex">
+                    <!-- Name Fields -->
+                    <div class="self-stretch flex-col justify-start items-start gap-1 flex">
+                      <div class="justify-start items-start gap-2.5 inline-flex">
+                        <div class="semibody-medium">Name</div>
+                      </div>
+                      <div class="self-stretch justify-start items-start gap-2 inline-flex">
+                        <input
+                          type="text"
+                          placeholder="First name"
+                          bind:value={firstName}
+                          class="grow shrink basis-0 form-input"
+                        />
+                        <input
+                          type="text"
+                          placeholder="Last name"
+                          bind:value={lastName}
+                          class="grow shrink basis-0 form-input"
+                        />
+                      </div>
+                    </div>
 
-            <button
-              type="button"
-              on:click={() => switchMode('signin')}
-              class="w-full text-center text-brand-red hover:underline"
-            >
-              Back to Login
-            </button>
-          </form>
-        {:else}
-          <form on:submit|preventDefault={handleEmailAuth} class="space-y-6">
-            {#if isRegistering}
-              <div>
-                <label class="form-label">Name</label>
-                <div class="grid grid-cols-2 gap-4">
-                  <input
-                    type="text"
-                    placeholder="First name"
-                    bind:value={firstName}
-                    class="form-input"
-                  />
-                  <input
-                    type="text"
-                    placeholder="Last name"
-                    bind:value={lastName}
-                    class="form-input"
-                  />
+                    <!-- Email Field -->
+                    <div class="self-stretch flex-col justify-start items-start gap-1 flex">
+                      <div class="justify-start items-start gap-2.5 inline-flex">
+                        <div class="semibody-medium">Email address</div>
+                      </div>
+                      <input
+                        type="email"
+                        bind:value={email}
+                        placeholder="Enter email address"
+                        class="self-stretch form-input"
+                      />
+                    </div>
+
+                    <!-- Password Field -->
+                    <div class="self-stretch flex-col justify-start items-start gap-1 flex">
+                      <div class="justify-start items-start gap-2.5 inline-flex">
+                        <div class="semibody-medium">Password</div>
+                      </div>
+                      <div class="self-stretch h-12 pl-4 pr-2 py-2 form-input flex justify-between items-center">
+                        <input
+                          bind:this={passwordInput}
+                          type="password"
+                          bind:value={password}
+                          placeholder="Enter password"
+                          class="grow border-none focus:outline-none"
+                        />
+                        <button
+                          type="button"
+                          class="w-6 h-6"
+                          on:click={togglePasswordVisibility}
+                        >
+                          <img 
+                            src={showPassword ? "/icons/view-off-slash.svg" : "/icons/view.svg"} 
+                            alt={showPassword ? "Hide password" : "Show password"}
+                            class="w-6 h-6"
+                          />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Terms Checkbox -->
+                  <div class="justify-start items-center gap-1 inline-flex">
+                    <input
+                      type="checkbox"
+                      id="terms"
+                      bind:checked={termsAccepted}
+                      class="w-6 h-6 hidden"
+                    />
+                    <label for="terms" class="flex items-center gap-1 cursor-pointer">
+                      <div class="w-6 h-6 relative">
+                        <img 
+                          src={termsAccepted ? "/icons/checkmark-square-active.svg" : "/icons/checkmark-square-inactive.svg"}
+                          alt="Terms checkbox"
+                          class="w-6 h-6"
+                        />
+                      </div>
+                      <span class="semi-body">
+                        I agree to the <a href="/terms" class="text-[#eb434a] underline">terms & policy</a>
+                      </span>
+                    </label>
+                  </div>
+                </div>
+
+                <!-- Main sign up/sign in buttons -->
+                <Button type="submit" variant="primary" fullWidth textClass="text-body">
+                  {isRegistering ? 'Sign up' : 'Sign in'}
+                </Button>
+              </form>
+
+              <!-- Social Sign Up -->
+              <div class="self-stretch flex-col justify-start items-center gap-8 flex">
+                <div class="h-10 justify-center items-center gap-4 inline-flex w-full">
+                  <div 
+                    role="button"
+                    tabindex="0"
+                    on:click={handleSignIn}
+                    on:keydown={(e) => e.key === 'Enter' && handleSignIn()}
+                    class="grow shrink basis-0 px-4 py-2 rounded-[10px] border border-black/5 flex-col justify-center items-center gap-2.5 inline-flex overflow-hidden hover:bg-light-bg-secondary dark:hover:bg-dark-bg-secondary transition-colors"
+                  >
+                    <div class="justify-start items-center gap-2.5 inline-flex w-full">
+                      <div class="w-6 h-6 relative overflow-hidden flex-shrink-0">
+                        <img src="/google-icon.svg" alt="Google" class="w-full h-full" />
+                      </div>
+                      <div class="text-black text-xs font-medium font-['Poppins'] whitespace-nowrap">
+                        Sign {isRegistering ? 'up' : 'in'} with Google
+                      </div>
+                    </div>
+                  </div>
+                  <div 
+                    role="button"
+                    tabindex="0"
+                    on:keydown={(e) => e.key === 'Enter' && null}
+                    class="grow shrink basis-0 px-4 py-2 rounded-[10px] border border-black/5 flex-col justify-center items-center gap-2.5 inline-flex overflow-hidden hover:bg-light-bg-secondary dark:hover:bg-dark-bg-secondary transition-colors"
+                  >
+                    <div class="justify-center items-center gap-2.5 inline-flex w-full">
+                      <div class="w-6 h-6 relative overflow-hidden flex-shrink-0">
+                        <img src="/apple-icon.svg" alt="Apple" class="w-full h-full" />
+                      </div>
+                      <div class="text-black text-xs font-medium font-['Poppins'] whitespace-nowrap">
+                        Sign {isRegistering ? 'up' : 'in'} with Apple
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="self-stretch text-center">
+                  <span class="semi-body">Already have account? </span>
+                  <button
+                    type="button"
+                    on:click={() => switchMode('signin')}
+                    class="text-[#eb434a] semi-body underline leading-snug"
+                  >
+                    Login
+                  </button>
                 </div>
               </div>
-            {/if}
-
-            <div>
-              <label for="email" class="form-label">Email address</label>
-              <input
-                type="email"
-                id="email"
-                bind:value={email}
-                class="form-input"
-                placeholder="Enter email address"
-              />
             </div>
-
-            <div class="relative">
-              <label for="password" class="form-label">Password</label>
-              <div class="relative">
-                <input
-                  bind:this={passwordInput}
-                  type="password"
-                  id="password"
-                  bind:value={password}
-                  class="form-input pr-12"
-                  placeholder="Enter password"
+          </div>
+        {:else}
+          <!-- Login Form -->
+          <div class="flex-col justify-start items-start gap-[50px] lg:gap-8 inline-flex w-full">
+            <div class="self-stretch h-[116px] lg:h-[84px] flex-col justify-start items-start gap-4 flex">
+              <!-- Back Button - Mobile Only -->
+              <button 
+                on:click={() => window.history.back()} 
+                class="lg:hidden w-6 h-6 mb-2"
+              >
+                <img 
+                  src="/icons/arrow-left.svg" 
+                  alt="Go back" 
+                  class="w-6 h-6"
                 />
-                <button
-                  type="button"
-                  class="absolute right-6 top-1/2 -translate-y-1/2"
-                  on:click={togglePasswordVisibility}
-                >
-                  <img 
-                    src={showPassword ? "/icons/view-off-slash.svg" : "/icons/view-off-slash.svg"} 
-                    alt={showPassword ? "Hide password" : "Show password"}
-                    class="w-5 h-5 opacity-50"
-                  />
-                </button>
+              </button>
+              <div class="self-stretch h2">Login</div>
+              <div class="self-stretch text-Grey body">Welcome back!</div>
+            </div>
+
+            <div class="self-stretch flex-col justify-start items-start gap-8 flex">
+              <form on:submit|preventDefault={handleEmailAuth} class="self-stretch flex-col justify-start items-center gap-8 flex">
+                <div class="self-stretch flex-col justify-start items-start gap-5 flex">
+                  <!-- Email Field -->
+                  <div class="self-stretch flex-col justify-start items-start gap-1 flex">
+                    <div class="justify-start items-start gap-2.5 inline-flex">
+                      <div class="text-black semibody-medium">Email address</div>
+                    </div>
+                    <input
+                      type="email"
+                      bind:value={email}
+                      placeholder="Enter email address"
+                      class="self-stretch form-input"
+                    />
+                  </div>
+
+                  <!-- Password Field -->
+                  <div class="self-stretch flex-col justify-start items-start gap-1 flex">
+                    <div class="justify-start items-start gap-2.5 inline-flex">
+                      <div class="semibody-medium">Password</div>
+                    </div>
+                    <div class="self-stretch flex-col justify-start items-start gap-4 flex">
+                      <div class="self-stretch form-input flex justify-between items-center">
+                        <input
+                          bind:this={passwordInput}
+                          type="password"
+                          bind:value={password}
+                          placeholder="Enter password"
+                          class="grow bg-transparent border-none focus:outline-none"
+                        />
+                        <button
+                          type="button"
+                          class="w-6 h-6"
+                          on:click={togglePasswordVisibility}
+                        >
+                          <img 
+                            src={showPassword ? "/icons/view-off-slash.svg" : "/icons/view.svg"} 
+                            alt={showPassword ? "Hide password" : "Show password"}
+                            class="w-6 h-6"
+                          />
+                        </button>
+                      </div>
+                      <button
+                        type="button"
+                        on:click={() => switchMode('reset')}
+                        class="px-6 text-[#eb434a] semi-body underline leading-snug"
+                      >
+                        Forgot password?
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Main sign up/sign in buttons -->
+                <Button type="submit" variant="primary" fullWidth textClass="body">
+                  {isRegistering ? 'Sign up' : 'Sign in'}
+                </Button>
+              </form>
+
+              <!-- Social Login -->
+              <div class="self-stretch flex-col justify-start items-center gap-8 flex">
+                <div class="h-10 justify-center items-center gap-4 inline-flex w-full">
+                  <div 
+                    role="button"
+                    tabindex="0"
+                    on:click={handleSignIn}
+                    on:keydown={(e) => e.key === 'Enter' && handleSignIn()}
+                    class="grow shrink basis-0 px-4 py-2 rounded-[10px] border border-black/5 flex-col justify-center items-center gap-2.5 inline-flex overflow-hidden hover:bg-light-bg-secondary dark:hover:bg-dark-bg-secondary transition-colors"
+                  >
+                    <div class="justify-start items-center gap-2.5 inline-flex w-full">
+                      <div class="w-6 h-6 relative overflow-hidden flex-shrink-0">
+                        <img src="/google-icon.svg" alt="Google" class="w-full h-full" />
+                      </div>
+                      <div class="text-black text-xs font-medium font-['Poppins'] whitespace-nowrap">
+                        Sign {isRegistering ? 'up' : 'in'} with Google
+                      </div>
+                    </div>
+                  </div>
+                  <div 
+                    role="button"
+                    tabindex="0"
+                    on:keydown={(e) => e.key === 'Enter' && null}
+                    class="grow shrink basis-0 px-4 py-2 rounded-[10px] border border-black/5 flex-col justify-center items-center gap-2.5 inline-flex overflow-hidden hover:bg-light-bg-secondary dark:hover:bg-dark-bg-secondary transition-colors"
+                  >
+                    <div class="justify-center items-center gap-2.5 inline-flex w-full">
+                      <div class="w-6 h-6 relative overflow-hidden flex-shrink-0">
+                        <img src="/apple-icon.svg" alt="Apple" class="w-full h-full" />
+                      </div>
+                      <div class="text-black text-xs font-medium font-['Poppins'] whitespace-nowrap">
+                        Sign {isRegistering ? 'up' : 'in'} with Apple
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="self-stretch text-center">
+                  <span class="text-black semi-body">Don't have an account? </span>
+                  <button
+                    type="button"
+                    on:click={() => switchMode('register')}
+                    class="text-[#eb434a] semi-body underline leading-snug"
+                  >
+                    Sign up
+                  </button>
+                </div>
               </div>
             </div>
-
-            {#if isRegistering}
-              <div class="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  id="terms"
-                  class="custom-checkbox"
-                  bind:checked={termsAccepted}
-                />
-                <label for="terms" class="text-base">
-                  I agree to the <a href="/terms" class="text-brand-red hover:underline">terms & policy</a>
-                </label>
-              </div>
-            {/if}
-
-            {#if !isRegistering}
-              <div class="flex justify-start pl-6">
-                <button
-                  type="button"
-                  on:click={() => switchMode('reset')}
-                  class="text-brand-red text-base underline underline-offset-4 hover:text-[#D63B42] transition-colors"
-                >
-                  Forgot password?
-                </button>
-              </div>
-            {/if}
-
-            <button
-              type="submit"
-              class="w-full bg-brand-red hover:bg-[#D63B42] text-white py-4 rounded-[16px] transition-colors"
-            >
-              <span class="font-poppins text-base font-normal leading-6 tracking-[-0.16px]">
-                {isRegistering ? 'Sign up' : 'Sign in'}
-              </span>
-            </button>
-
-            <div class="flex items-center justify-center gap-3 my-6">
-              <div class="h-[2px] bg-[#E5E7EB] flex-1"></div>
-              <span class="text-base text-[#A3A3A3]">Or</span>
-              <div class="h-[2px] bg-[#E5E7EB] flex-1"></div>
-            </div>
-
-            <div class="flex gap-4">
-              <button
-                type="button"
-                on:click={handleSignIn}
-                class="flex-1 flex items-center justify-center gap-2 py-4 border border-[#E5E7EB] rounded-[12px] hover:bg-white/50 transition-colors"
-              >
-                <img src="/google-icon.svg" alt="Google" class="w-5 h-5" />
-                <span class="text-[#A3A3A3] text-base">Sign in with Google</span>
-              </button>
-              <button
-                type="button"
-                class="flex-1 flex items-center justify-center gap-2 py-4 border border-[#E5E7EB] rounded-[12px] hover:bg-white/50 transition-colors"
-              >
-                <img src="/apple-icon.svg" alt="Apple" class="w-5 h-5" />
-                <span class="text-[#A3A3A3] text-base">Sign in with Apple</span>
-              </button>
-            </div>
-
-            <div class="text-center">
-              <span class="text-[#A3A3A3] text-base">
-                {isRegistering ? 'Already have an account?' : "Don't have an account?"}
-              </span>
-              <button
-                type="button"
-                on:click={() => switchMode(isRegistering ? 'signin' : 'register')}
-                class="text-brand-red hover:underline ml-1 text-base"
-              >
-                {isRegistering ? 'Sign in' : 'Sign up'}
-              </button>
-            </div>
-          </form>
+          </div>
         {/if}
       </div>
     </div>
+
+    <!-- Right Side - Content -->
+    <div class="hidden lg:flex w-[48%] fixed right-0 top-0 bottom-0 flex-col justify-center items-center bg-black/5 rounded-[64px_0_0_64px]">
+      <OnboardingCarousel />
+    </div>
   </div>
-
-  <!-- Right Side - Content -->
-  <div class="hidden md:flex w-1/2 fixed right-0 top-0 bottom-0 flex-col justify-center items-center px-[79px] py-[75px] bg-black/5 rounded-[64px_0_0_64px]">
-    <OnboardingCarousel />
-  </div>
-
-  <!-- Spacer div to maintain layout -->
-  <div class="hidden md:block w-1/2"></div>
-
-</div> 
+</div>

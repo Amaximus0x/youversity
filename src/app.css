@@ -9,26 +9,6 @@
     font-family: 'Poppins';
   }
 
-  body {
-    @apply bg-light-bg-primary text-light-text-secondary dark:bg-dark-bg-primary dark:text-dark-text-secondary transition-colors;
-  }
-
-  /* Regular h4 */
-  h4 {
-    font-family: 'Poppins';
-    font-size: 20px;
-    font-weight: 400;
-    line-height: 28px;
-    letter-spacing: -0.01em;
-    text-align: left;
-    text-underline-position: from-font;
-    text-decoration-skip-ink: none;
-  }
-
-  /* Theme transition utilities */
-  .theme-transition {
-    @apply transition-colors duration-200;
-  }
 }
 
 @layer components {
@@ -118,7 +98,7 @@
   width: 8px;
 }
 
-::-webkit-scrollbar-track {
+/* ::-webkit-scrollbar-track {
   @apply bg-light-bg-secondary dark:bg-dark-bg-secondary;
 }
 
@@ -128,4 +108,4 @@
 
 ::-webkit-scrollbar-thumb:hover {
   @apply bg-brand-red;
-}
+} */
