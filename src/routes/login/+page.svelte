@@ -131,8 +131,16 @@
 
 <style>
   .form-input {
-    @apply w-full px-6 py-4 rounded-[16px] border-none focus:outline-none text-[#A3A3A3] text-base bg-white;
+    @apply w-full px-6 py-4 rounded-[16px] border-none focus:outline-none text-[#A3A3A3] text-base bg-white transition-all duration-200;
     box-shadow: 0px 1px 2px 0px rgba(0, 0, 0, 0.05);
+  }
+  /*  focus state */
+  .form-input:focus {
+    @apply ring-2 ring-brand-red text-black;
+  }
+
+  .form-input:focus::placeholder {
+    @apply text-black pl-2;
   }
   
   .form-label {
@@ -155,6 +163,27 @@
 
   .custom-checkbox:checked + label::before {
     background-image: url('/icons/checkmark-square-active.svg');
+  }
+
+  /* Add styles for the password input container */
+  .password-input-container {
+    @apply self-stretch form-input flex justify-between items-center transition-all duration-200;
+  }
+
+  .password-input-container:focus-within {
+    @apply ring-2 ring-brand-red;
+  }
+
+  .password-input-container input {
+    @apply text-[#A3A3A3] bg-transparent;
+  }
+
+  .password-input-container input:focus {
+    @apply text-black;
+  }
+
+  .password-input-container input:focus::placeholder {
+    @apply text-black;
   }
 </style>
 
@@ -181,7 +210,7 @@
 
     <!-- Left Side - Form Container -->
     <div class="w-full flex items-center justify-center lg:w-[52%]">
-      <div class="w-[390px] lg:w-[415px] mx-auto xl:px-4 pt-[120px]">
+      <div class="w-[390px] lg:w-[415px] mx-auto xl:px-4 pt-[146px] xl:pt-[151px]">
         {#if isRegistering}
           <!-- Sign Up Form -->
           <div class="flex-col justify-start items-start gap-8 inline-flex w-full">
@@ -243,7 +272,7 @@
                       <div class="justify-start items-start gap-2.5 inline-flex">
                         <div class="semibody-medium">Password</div>
                       </div>
-                      <div class="self-stretch h-12 pl-4 pr-2 py-2 form-input flex justify-between items-center">
+                      <div class="password-input-container">
                         <input
                           bind:this={passwordInput}
                           type="password"
@@ -384,7 +413,7 @@
                       <div class="semibody-medium">Password</div>
                     </div>
                     <div class="self-stretch flex-col justify-start items-start gap-4 flex">
-                      <div class="self-stretch form-input flex justify-between items-center">
+                      <div class="password-input-container">
                         <input
                           bind:this={passwordInput}
                           type="password"
