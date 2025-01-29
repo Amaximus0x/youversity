@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
-  import { fade, fly } from 'svelte/transition';
+  import { fade, fly, slide } from 'svelte/transition';
   import { onboarding } from '$lib/stores/onboarding';
   import { linear } from 'svelte/easing';
 
@@ -11,7 +11,7 @@
     // Auto-advance slides every 5 seconds
     carouselInterval = setInterval(() => {
       onboarding.nextSlide();
-    }, 5000);
+    }, 2000);
   });
 
   onDestroy(() => {
@@ -34,55 +34,31 @@
 
   function getTransition(index: number, isOut = false) {
     const duration = 300;
-    const delay = 1600; // 1600ms delay for all slides as per Figma
-    
-    // First slide transitions
-    if (index === 0) {
-      return {
-        x: isOut ? -500 : 0,
-        y: 0,
-        duration,
-        delay,
-        easing: linear
-      };
-    }
-    
-    // Second slide transitions
-    if (index === 1) {
-      return {
-        x: isOut ? -500 : 500, // Push Left animation
-        y: 0,
-        duration,
-        delay,
-        easing: linear
-      };
-    }
-    
-    // Third slide transitions
-    if (index === 2) {
-      return {
-        x: 0,
-        y: isOut ? 500 : -500, // Push Top animation
-        duration,
-        delay,
-        easing: linear
-      };
-    }
-    
-    // Fourth slide transitions (index 3)
-    if (index === 3) {
-      return {
-        x: 0,
-        y: isOut ? -500 : 500, // Push Bottom animation
-        duration,
-        delay,
-        easing: linear
-      };
-    }
+    const delay = 1600;
 
-    // Default transition
+    const transitions = {
+      0: { // First slide
+        in: { opacity: 0, x: 0, y: 0 },
+        out: { x: -900, y: 0 }
+      },
+      1: { // Second slide
+        in: { x: 900, y: 0 },
+        out: { x: -900, y: 0 }
+      },
+      2: { // Third slide
+        in: { x: -900, y: 0 },
+        out: { x: 900, y: 0 }
+      },
+      3: { // Fourth slide
+        in: { y: -900, x: 0 },
+        out: { opacity: 0, x: 0, y: 0 }
+      }
+    } as const;
+
+    const transition = transitions[index]?.[isOut ? 'out' : 'in'] || { opacity: 0 };
+
     return {
-      fade: true,
+      ...transition,
       duration,
       delay,
       easing: linear
@@ -90,13 +66,13 @@
   }
 </script>
 
-<div class="w-full h-full flex flex-col items-center justify-center overflow-hidden">
-  <div class="w-full max-w-[522px] flex flex-col items-center">
+<div class="w-full h-full flex flex-col items-center justify-center overflow-hidden relative">
+  <div class="w-full max-w-[522px] flex flex-col items-center h-[755px] relative">
     {#key $onboarding.currentSlide}
       <div 
-        class="flex-col justify-start items-center inline-flex w-full {slideHeight}"
-        out:fly={getTransition(previousSlide, true)}
-        in:fly={getTransition($onboarding.currentSlide)}
+        class="flex-col justify-start items-center inline-flex w-full absolute top-0 left-0 right-0 {slideHeight}"
+        out:fly|local={getTransition(previousSlide, true)}
+        in:fly|local={getTransition($onboarding.currentSlide)}
       >
         <!-- Text Content -->
         <div class="flex-col justify-start items-start gap-6 px-5 flex w-full">

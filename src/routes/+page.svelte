@@ -225,17 +225,17 @@
 
 <CourseCreationOverlay show={showCreationOverlay} />
 
-<div class="container mx-auto max-w-7xl">
+<div class="container mx-auto max-w-7xl sm:px-0 lg:px-2">
   <!-- Create Course Section -->
   <div class="relative overflow-hidden rounded-lg  mb-8 lg:mb-12">    
     <div >
-      <h1 class="text-4xl lg:text-5xl font-normal text-light-text-primary dark:text-dark-text-primary mb-2">
-        Hi {$user?.displayName?.split(' ')[0] || 'there'} 👋
+      <h1 class="text-2xl lg:text-h1 font-normal text-light-text-primary dark:text-dark-text-primary mb-2">
+        Hi {$user?.displayName?.split(' ')[0] || 'there'} 👋 <br> What would you like to <span class="text-brand-red">Learn?</span>
       </h1>
-      <h2 class="text-4xl lg:text-5xl font-normal text-light-text-primary dark:text-dark-text-primary mb-4">
+      <!-- <h2 class="text-2xl lg:text-h1 text-light-text-primary dark:text-dark-text-primary mb-4">
         What would you like to <span class="text-brand-red">Learn?</span>
-      </h2>
-      <p class="text-light-text-secondary dark:text-dark-text-secondary text-lg lg:text-xl mb-8">
+      </h2> -->
+      <p class="text-light-text-secondary dark:text-dark-text-secondary semibody-medium lg:h4 mb-8">
         Enter your learning objectives below we'll help you create a comprehensive course.
       </p>
 

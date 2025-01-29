@@ -133,10 +133,10 @@
     <NoInternet />
   </div>
 {:else}
-  <div class="min-h-screen bg-gradient-light dark:bg-gradient-dark transition-colors">
+  <div class=" min-h-screen bg-gradient-light dark:bg-gradient-dark transition-colors">
     {#if !($page?.data?.hideNav)}
       <!-- Sidebar - hidden on mobile -->
-      <aside class="w-[262px] fixed top-0 left-0 bottom-0 border-r border-light-border dark:border-dark-border z-40 hidden lg:flex lg:flex-col transition-colors">
+      <aside class="px-4 w-[262px] fixed top-0 left-0 bottom-0 border-r border-light-border dark:border-dark-border z-40 hidden lg:flex lg:flex-col transition-colors">
         <!-- Logo section -->
         <div class="w-[230px] px-[16px] pb-[24px] pt-[24px] flex flex-col items-start justify-center px-4">
           <div class=" w-[160px] h-[48.4px]  relative">
@@ -226,7 +226,7 @@
       <!-- Main Content with Navigation -->
       <main class="lg:pl-64 min-h-screen bg-gradient-light dark:bg-gradient-dark">
         <!-- Header -->
-        <header class="fixed top-0 right-0 left-0 lg:left-64 h-24 lg:h-24 px-5 lg:px-8 py-6 border-b border-light-border dark:border-dark-border bg-light-bg-primary/10 dark:bg-dark-bg-primary/10 backdrop-blur-[30px] z-50">
+        <header class="fixed top-0 right-0 left-0 lg:left-64 lg:h-24 px-5 lg:px-4 py-6 md:ml-1.5 md:border-b  border-light-border dark:border-dark-border bg-light-bg-primary/10 dark:bg-dark-bg-primary/10 backdrop-blur-[30px] z-50 ">
           <!-- Mobile Header -->
           <div class="h-10 justify-between items-center inline-flex lg:hidden w-full">
             <div class=" w-[125.33px] h-[38px] relative">
@@ -344,7 +344,7 @@
         </header>
 
         <!-- Page Content -->
-        <div class="pt-32 px-4 lg:px-8 pb-20">
+        <div class="pt-24 px-5 lg:pt-32 lg:px-4 pb-20">
           <slot />
         </div>
 

@@ -78,7 +78,7 @@ export default {
         "GreenHover": "#1E3443",
       },
       fontSize: {
-        h1: [
+        'h1': [
           '48px', // Font size
           {
             lineHeight: '53px', // Line height
@@ -88,7 +88,7 @@ export default {
           },
         ],
 
-        h2: [
+        'h2': [
           '36px', // Font size
           {
             lineHeight: '44px', // Line height
@@ -98,7 +98,7 @@ export default {
           },
         ],
 
-        h4: [
+        'h4': [
           '20px', // Font size
           {
             lineHeight: '28px', // Line height
