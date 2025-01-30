@@ -49,37 +49,44 @@
 {:else if error}
   <div class="col-span-full text-center py-8 text-red-500">{error}</div>
 {:else if courses.length === 0}
-  <div class="h-[372px] relative rounded-2xl border border-light-border dark:border-dark-border overflow-hidden">
-    <div class="w-[406px] h-[200px] left-[56px] top-[86px] absolute flex-col justify-start items-start gap-10 inline-flex">
-      <div class="self-stretch">
-        <span class="text-light-text-primary dark:text-white text-4xl font-normal font-['Poppins'] leading-[53px]">You haven't </span>
-        <span class="text-brand-red text-4xl font-normal font-['Poppins'] leading-[53px]">enrolled</span>
-        <span class="text-light-text-primary dark:text-white text-4xl font-normal font-['Poppins'] leading-[53px]"> in a course yet.</span>
-      </div>
-      <div class="h-[54px] px-4 py-2 bg-brand-red hover:bg-[#D63B42] rounded-2xl justify-center items-center gap-2 inline-flex transition-colors duration-200 cursor-pointer"
-           on:click={() => goto('/trending')}
-           on:keydown={(e) => e.key === 'Enter' && goto('/trending')}
-           role="button"
-           tabindex="0"
-      >
-        <div class="text-white text-base font-normal font-['Poppins'] leading-normal">Explore Course</div>
-        <div class="w-6 h-6 relative origin-top-left">
-          <img 
-            src="/icons/arrow-right-io.svg" 
-            alt="arrow" 
-            class="w-full h-full" 
-          />
-        </div>
-      </div>
+<!-- No Courses Container -->
+<div class="h-[372px] relative rounded-2xl border border-light-border dark:border-dark-border overflow-hidden">
+  <!-- Text & button content -->
+  <div class="p-4 lg:p-8 relative z-10 max-w-full">
+    <div class="self-stretch mb-4 lg:mb-10">
+      <h1 class="text-18-28 lg:text-36-53 text-light-text-primary dark:text-dark-text-primary">
+        You haven't <span class="text-brand-red">enrolled</span> in <br> a course yet.
+      </h1>
     </div>
-    <div class="absolute hidden right-[0px] md:block">
-      <img 
-        src="/images/Search-engines-pana.svg" 
-        alt="No courses" 
-        class="w-[870px] h-auto"
-      />
+    <!-- Explore Course Button -->
+    <div 
+      class="lg:h-[54px] pl-4 pr-2 py-2 lg:px-4 bg-brand-red hover:bg-[#D63B42] rounded-2xl justify-center items-center gap-2 inline-flex transition-colors duration-200 cursor-pointer"
+      on:click={() => goto('/trending')}
+      on:keydown={(e) => e.key === 'Enter' && goto('/trending')}
+      role="button"
+      tabindex="0"
+    >
+      <div class="text-semi-body lg:text-body text-white">Explore Course</div>
+      <div class="w-6 h-6 relative origin-top-left">
+        <img src="/icons/arrow-right-io.svg" alt="arrow" class="w-full h-full" />
+      </div>
     </div>
   </div>
+
+  <!-- Image Section -->
+  <div class="absolute bottom-0 right-0 max-w-[90%] md:max-w-[50%] lg:max-w-[68%] h-auto flex items-end justify-end transform scale-110 origin-bottom-right">
+    <img 
+      src="/images/Search-engines-pana-sm.svg" 
+      alt="No courses" 
+      class="w-full h-auto block lg:hidden object-contain"
+    />
+    <img 
+      src="/images/Search-engines-pana.svg" 
+      alt="No courses" 
+      class="w-full h-auto hidden lg:block object-contain"
+    />
+  </div>
+</div>
 {:else}
   <div class="flex gap-4 overflow-x-auto pb-4 -mx-4 px-4 hide-scrollbar">
     {#each courses as course}

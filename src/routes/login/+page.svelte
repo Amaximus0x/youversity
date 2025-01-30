@@ -131,7 +131,7 @@
 
 <style>
   .form-input {
-    @apply w-full px-6 py-4 rounded-[16px] border-none focus:outline-none text-[#A3A3A3] text-base bg-white transition-all duration-200;
+    @apply w-full px-6 py-4 rounded-[16px] border-none focus:outline-none text-black text-base bg-white transition-all duration-200;
     box-shadow: 0px 1px 2px 0px rgba(0, 0, 0, 0.05);
   }
   /*  focus state */
@@ -175,7 +175,7 @@
   }
 
   .password-input-container input {
-    @apply text-[#A3A3A3] bg-transparent;
+    @apply text-black bg-transparent;
   }
 
   .password-input-container input:focus {
@@ -210,7 +210,7 @@
 
     <!-- Left Side - Form Container -->
     <div class="w-full flex items-center justify-center lg:w-[52%]">
-      <div class="w-[390px] lg:w-[415px] mx-auto xl:px-4 pt-[146px] xl:pt-[151px]">
+      <div class="w-[390px] lg:w-[415px] mx-auto xl:px-4 pt-[146px] md:pt-[100px] xl:pt-[151px]">
         {#if isRegistering}
           <!-- Sign Up Form -->
           <div class="flex-col justify-start items-start gap-8 inline-flex w-full">

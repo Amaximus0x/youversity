@@ -7,14 +7,14 @@ export default {
 			center: true,
 			padding: "2rem",
 			screens: {
-				"2xl": "1400px"
+				// "2xl": "1400px"
 			}
 		},
 
     extend: {
       screens: {
         'sm': '430px',
-        '2xl': '1440px',
+        // '2xl': '1440px',
       },
 
       margin: {
@@ -97,6 +97,16 @@ export default {
             textAlign: 'left', // Text alignment
           },
         ],
+        
+        '36-53': [
+          '36px', // Font size
+          {
+            lineHeight: '53px', // Line height
+            fontWeight: '400', // Font weight
+            fontFamily: 'Poppins', // Font family
+            textAlign: 'left', // Text alignment
+          },
+        ],
 
         'h4': [
           '20px', // Font size
@@ -122,7 +132,19 @@ export default {
             textDecorationSkipInk: 'none', // Decoration skip-ink
           },
         ],
-
+        '18-28': [
+          '18px', // Font size
+          {
+            lineHeight: '28px', // Line height
+            fontWeight: '400', // Font weight
+            letterSpacing: '-0.01em',
+            fontFamily: 'Poppins', // Font family
+            textAlign: 'left', // Text alignment
+            textUnderlinePosition: 'from-font', // Underline position
+            textDecorationSkipInk: 'none', // Decoration skip-ink
+          },
+        ],
+        
         'body-semibold': [
           '16px', // Font size
           {

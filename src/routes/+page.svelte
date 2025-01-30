@@ -225,30 +225,30 @@
 
 <CourseCreationOverlay show={showCreationOverlay} />
 
-<div class="container mx-auto max-w-7xl sm:px-0 lg:px-2">
+<div class="container mx-auto max-w-auto sm:px-0 lg:pl-0">
   <!-- Create Course Section -->
-  <div class="relative overflow-hidden rounded-lg  mb-8 lg:mb-12">    
+  <div class="relative overflow-hidden rounded-lg  mb-8 lg:mb-12">  
     <div >
-      <h1 class="text-2xl lg:text-h1 font-normal text-light-text-primary dark:text-dark-text-primary mb-2">
-        Hi {$user?.displayName?.split(' ')[0] || 'there'} 👋 <br> What would you like to <span class="text-brand-red">Learn?</span>
-      </h1>
-      <!-- <h2 class="text-2xl lg:text-h1 text-light-text-primary dark:text-dark-text-primary mb-4">
-        What would you like to <span class="text-brand-red">Learn?</span>
-      </h2> -->
-      <p class="text-light-text-secondary dark:text-dark-text-secondary semibody-medium lg:h4 mb-8">
-        Enter your learning objectives below we'll help you create a comprehensive course.
-      </p>
+      <div class="flex flex-col gap-2">
+        <h1 class="text-2xl lg:text-h1 font-normal text-light-text-primary dark:text-dark-text-primary mb-2">
+          Hi {$user?.displayName?.split(' ')[0] || 'there'} 👋 <br> What would you like to <span class="text-brand-red">Learn?</span>
+        </h1>
+      
+      <p class="text-light-text-secondary dark:text-dark-text-secondary text-semibody lg:text-h4 mb-8">
+          Enter your learning objectives below we'll help you create a comprehensive course.
+        </p>
+      </div>
 
       <form 
         on:submit={handleCreateCourse} 
-        class="relative flex-1 max-w-3xl "
+        class="relative flex-1 max-w-auto h-[54px] lg:max-w-[812px] "
       >
         <button
           type="submit"
-          class="absolute right-0 z-10 sm:px-6 sm:h-[52px] sm:bg-brand-red sm:text-white sm:rounded-2xl sm:hover:bg-[#D63B42] sm:transition-colors sm:duration-200 sm:flex sm:items-center sm:gap-2 sm:text-base sm:whitespace-nowrap
+          class="absolute right-0 z-10 sm:px-4 sm:h-[52px] sm:bg-brand-red sm:text-white sm:rounded-2xl sm:hover:bg-[#D63B42] sm:transition-colors sm:duration-200 sm:flex sm:items-center sm:gap-2 sm:text-base sm:whitespace-nowrap
           max-sm:w-[56px] max-sm:h-[52px] max-sm:rounded-2xl max-sm:bg-brand-red max-sm:flex max-sm:items-center max-sm:justify-center max-sm:p-4 max-sm:gap-2"
         >
-          <span class="max-sm:hidden">Create Course</span>
+          <span class="hidden lg:block">Create Course</span>
           <img 
             src="/icons/arrow-right-io.svg" 
             alt="Create"
@@ -257,8 +257,8 @@
         </button>
         <div class="relative w-full">
           <div 
-            class="absolute left-4 top-1/2 -translate-y-1/2 transition-all duration-300 ease-in-out {
-              isInputFocused ? 'opacity-0 translate-x-[-10px]' : 'opacity-60'
+            class="absolute left-4 top-1/2 -translate-y-1/2 transition-all duration-200 ease-in-out {
+              isInputFocused ? 'opacity-0 translate-x-[0px]' : 'opacity-60'
             }"
           >
             <img 
@@ -273,19 +273,20 @@
             placeholder="Enter what you want to learn..."
             on:focus={() => isInputFocused = true}
             on:blur={() => isInputFocused = false}
-            class="w-full pl-12 pr-32 h-[52px] rounded-2xl border-[1.5px] border-light-border dark:border-dark-border focus:outline-none focus:border-brand-red bg-light-bg-primary dark:bg-dark-bg-primary text-light-text-primary dark:text-dark-text-primary placeholder:text-light-text-secondary dark:placeholder:text-dark-text-secondary transition-colors duration-300 ease-in-out"
+            class="w-full text-body pl-12 pr-32 h-[52px] rounded-2xl border-[1.5px] border-light-border dark:border-dark-border focus:pl-4 focus:outline-none focus:border-brand-red bg-light-bg-primary dark:bg-dark-bg-primary text-light-text-primary dark:text-dark-text-primary placeholder:text-light-text-tertiary dark:placeholder:text-dark-text-tertiary transition-colors duration-300 ease-in-out"
           />
         </div>
       </form>
     </div>
   </div>
 
+  <!-- Continue Learning Section -->
   <div class="mb-8">
     <div class="flex items-center justify-between mb-4">
-      <h4 class="text-xl font-normal text-light-text-primary dark:text-dark-text-primary">Continue Learning</h4>
+      <h4 class="text-h4-medium lg:text-h4 text-light-text-primary dark:text-dark-text-primary">Continue Learning</h4>
       {#if $user && userCourses.length > 0}
         <div class="flex items-center gap-2">
-          <a href="/courses" class="text-[#42C1C8] text-base font-normal hover:underline">Show All</a>
+          <a href="/courses" class="text-[#42C1C8] text-body hover:underline">Show All</a>
           <img src="/icons/arrow-right.svg" alt="arrow-right.svg" class="w-6 h-6">
         </div>
       {/if}
@@ -301,11 +302,11 @@
   </div>
 
   <!-- Trending Community Courses Section -->
-  <section class="mb-12">
+  <section class="mb-6">
     <div class="flex items-center justify-between mb-4">
-      <h4 class="text-xl font-normal text-light-text-primary dark:text-dark-text-primary">Trending Courses</h4>
+      <h4 class="text-h4-medium lg:text-h4 text-light-text-primary dark:text-dark-text-primary">Trending Courses</h4>
       <div class="flex items-center gap-2">
-        <a href="/trending" class="text-[#42C1C8] text-base font-normal hover:underline">Show All</a>
+        <a href="/trending" class="text-[#42C1C8] text-body hover:underline">Show All</a>
         <img src="/icons/arrow-right.svg" alt="arrow-right.svg" class="w-6 h-6">
       </div>
     </div>

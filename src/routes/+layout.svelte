@@ -133,12 +133,12 @@
     <NoInternet />
   </div>
 {:else}
-  <div class=" min-h-screen bg-gradient-light dark:bg-gradient-dark transition-colors">
+  <div class="w-full min-h-screen bg-gradient-light dark:bg-gradient-dark transition-colors">
     {#if !($page?.data?.hideNav)}
       <!-- Sidebar - hidden on mobile -->
-      <aside class="px-4 w-[262px] fixed top-0 left-0 bottom-0 border-r border-light-border dark:border-dark-border z-40 hidden lg:flex lg:flex-col transition-colors">
+      <aside class="px-2.5 w-[262px] fixed top-0 left-0 bottom-0 border-r border-light-border dark:border-dark-border z-40 hidden lg:flex lg:flex-col transition-colors">
         <!-- Logo section -->
-        <div class="w-[230px] px-[16px] pb-[24px] pt-[24px] flex flex-col items-start justify-center px-4">
+        <div class="w-[230px] pb-[24px] pt-[24px] flex flex-col items-start justify-center px-4">
           <div class=" w-[160px] h-[48.4px]  relative">
             <a href="/">
             <img 
@@ -155,7 +155,7 @@
           {#each sidebarItems as item}
             <a 
               href={item.href} 
-              class="group flex items-center mx-4 mb-4 px-4 py-2 rounded-lg transition-all"
+              class="group flex items-center mx-2 mb-4 px-2 py-2 rounded-lg transition-all"
             >
               <img 
                 src={item.icon} 
@@ -180,27 +180,26 @@
         </nav>
 
         <!-- Help Center Section -->
-        <div class="h-[508px] px-4 pb-8 justify-start items-end gap-2.5 inline-flex">
+        <div class="h-[508px] pl-3 pb-8 justify-start items-end gap-4 inline-flex">
           <div class="relative mt-[15px] flex flex-col items-start p-6 pb-4 gap-4 border border-light-border dark:border-dark-border rounded-2xl">
             <div class="flex flex-col items-center w-full gap-2">
               <div class="absolute -top-5 left-1/2 transform -translate-x-1/2 w-[40px] h-[40px] bg-white rounded-full flex items-center justify-center">
                 <img 
                   src="/icons/help-circle.svg" 
                   alt="Help"
-                  class="w-8 h-8 text-white" 
+                  class="w-10 h-10 text-white" 
                 />
               </div>
-              <h3 class="text-base font-semibold text-light-text-secondary dark:text-white mt-1">Help Center</h3>
+              <h3 class="text-body-semibold text-light-text-secondary dark:text-white mt-1">Help Center</h3>
             </div>
             <div class="flex flex-col items-center w-full">
-              <p class="text-xs leading-tight text-dark-text-secondary text-center">
+              <p class="text-mini-body text-light-text-tertiary dark:text-dark-text-tertiary text-center">
                 Having Trouble carrying out<br />
-                a task?<br />
-                Please contact us
+                a task? Please contact us
               </p>
               <a 
                 href="/help"
-                class="mt-4 w-full py-2 px-4 text-brand-red text-xs font-medium border border-brand-red rounded-lg hover:bg-[#FFF2F3] dark:hover:bg-dark-bg-secondary transition-colors text-center"
+                class="mt-4 w-full py-2 px-4 text-mini-body text-light-text-primary dark:text-dark-text-primary border border-brand-red rounded-lg hover:bg-[#FFF2F3] dark:hover:bg-dark-bg-secondary transition-colors text-center"
               >
                 Go to help center
               </a>
@@ -208,7 +207,7 @@
           </div>
         </div>
 
-        <div class="border-t border-light-border dark:border-dark-border">
+        <!-- <div class="border-t border-light-border dark:border-dark-border">
           <button 
             on:click={handleAuth}
             class="flex items-center w-full px-8 h-[44px] text-light-text-secondary dark:text-dark-text-secondary hover:bg-light-bg-secondary dark:hover:bg-dark-bg-secondary transition-colors"
@@ -220,13 +219,13 @@
             />
             <span class="text-[15px] font-normal">{$user ? 'Sign Out' : 'Sign In'}</span>
           </button>
-        </div>
+        </div> -->
       </aside>
 
       <!-- Main Content with Navigation -->
       <main class="lg:pl-64 min-h-screen bg-gradient-light dark:bg-gradient-dark">
         <!-- Header -->
-        <header class="fixed top-0 right-0 left-0 lg:left-64 lg:h-24 px-5 lg:px-4 py-6 md:ml-1.5 md:border-b  border-light-border dark:border-dark-border bg-light-bg-primary/10 dark:bg-dark-bg-primary/10 backdrop-blur-[30px] z-50 ">
+        <header class="fixed top-0 right-0 left-0 lg:left-64 lg:h-24 px-5 lg:px-4 py-6 lg:ml-1.5 lg:border-b border-light-border dark:border-dark-border bg-light-bg-primary/5 dark:bg-dark-bg-primary/5 !backdrop-blur-[30px] z-50">
           <!-- Mobile Header -->
           <div class="h-10 justify-between items-center inline-flex lg:hidden w-full">
             <div class=" w-[125.33px] h-[38px] relative">
@@ -267,14 +266,15 @@
           </div>
 
           <!-- Desktop Header -->
-          <div class="hidden lg:flex justify-between items-center gap-8 w-full h-full max-w-7xl mx-auto">
+          <div class="hidden lg:flex justify-between items-center gap-8 w-full h-full max-w-auto mx-auto">
+            <!-- search bar -->
             <div class="flex-1 max-w-[611px] mx-auto ml-0">
               <form on:submit={handleSearch} class="w-full flex items-center bg-light-bg-primary dark:bg-dark-bg-primary border-[1.5px] {
                 isSearchFocused ? 'border-brand-red' : 'border-light-border dark:border-dark-border'
               } rounded-2xl h-12 transition-all duration-300 ease-in-out">
                 <div 
                   class="transition-all duration-200 ease-in-out ml-4 {
-                    isSearchFocused ? 'opacity-0 translate-x-[-10px]' : 'opacity-60'
+                    isSearchFocused ? 'hidden' : 'opacity-60'
                   }"
                 >
                   <img 
@@ -289,7 +289,7 @@
                   bind:value={searchQuery}
                   on:focus={() => isSearchFocused = true}
                   on:blur={() => isSearchFocused = false}
-                  class="flex-1 pl-2 pr-1 bg-transparent border-none focus:outline-none text-base font-normal text-light-text-primary dark:text-dark-text-primary placeholder:text-light-text-secondary dark:placeholder:text-dark-text-secondary"
+                  class="flex-1 pl-2 pr-1 bg-transparent border-none focus:pl-4 focus:outline-none text-body text-light-text-primary dark:text-dark-text-primary placeholder:text-light-text-secondary dark:placeholder:text-dark-text-secondary"
                 />
                 <div class="flex items-center pl-2 border-[rgba(0,0,0,0.05)]">
                   <div class="relative w-[94px] h-[32px]">
@@ -344,7 +344,8 @@
         </header>
 
         <!-- Page Content -->
-        <div class="pt-24 px-5 lg:pt-32 lg:px-4 pb-20">
+        <div class="pt-24 px-5 pb-20 lg:pt-28 lg:pl-6 lg:pr-8 lg:pb-8">
+         <!-- <div > -->
           <slot />
         </div>
 
@@ -367,7 +368,7 @@
                         : 'opacity-60'
                     }" 
                   />
-                  <span class="text-center text-xs font-['Poppins'] leading-tight {
+                  <span class="text-center text-mini-body leading-tight {
                     $page?.url?.pathname === item.href 
                       ? 'text-black font-medium' 
                       : 'text-[#494848] font-normal'
@@ -382,8 +383,10 @@
           <!-- youversity.io tag -->
           <div class="flex items-center justify-center w-full h-[45px] py-[6px] pb-[10px] bg-white/10 backdrop-blur-[35px]">
             <div class="flex items-center gap-2">
-              <div class="w-[3px] h-[3px] rounded-full bg-[#667085]"></div>
-              <span class="text-[10px] text-[#667085]">youversity.io</span>
+              
+                <img src="/icons/square-lock.svg" alt="Location" class="w-3 h-3 text-[#667085]" />
+              
+              <span class="text-[10px] text-[#667085] font-['Poppins'] font-normal leading-4 tracking-[-0.01em] text-center underline-position-from-font decoration-skip-ink-none">youversity.io</span>
             </div>
           </div>
         </div>
@@ -413,8 +416,8 @@
     @apply antialiased;
   }
 
-  /* Add backdrop blur to fixed elements while keeping background transparent */
-  :global(.fixed) {
+  /* Remove or modify this part that's affecting all fixed elements */
+  /* :global(.fixed) {
     @apply backdrop-blur-[2px];
-  }
+  } */
 </style>
