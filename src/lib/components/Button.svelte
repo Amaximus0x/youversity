@@ -8,9 +8,9 @@
   export let onClick: (() => void) | undefined = undefined;
 
   const variantStyles = {
-    primary: 'bg-brand-red hover:opacity-90 text-white',
-    secondary: 'bg-white border border-light-border dark:border-dark-border hover:bg-light-bg-secondary dark:hover:bg-dark-bg-secondary text-light-text-primary dark:text-dark-text-primary',
-    outline: 'bg-transparent border border-brand-red text-brand-red hover:bg-light-bg-secondary dark:hover:bg-dark-bg-secondary'
+    primary: 'bg-brand-red hover:bg-ButtonHover text-white',
+    secondary: 'bg-white border border-light-border dark:border-dark-border text-light-text-primary dark:text-dark-text-primary',
+    outline: 'bg-transparent border border-brand-red text-brand-red '
   };
 </script>
 

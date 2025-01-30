@@ -226,7 +226,7 @@
                   class="w-6 h-6"
                 />
               </button>
-              <div class="self-stretch text-black text-4xl font-medium font-['Poppins'] leading-[44px]">Get Started Now</div>
+              <div class="self-stretch text-black text-h2">Get Started Now</div>
             </div>
 
             <div class="self-stretch flex-col justify-start items-start gap-8 flex">
@@ -236,7 +236,7 @@
                     <!-- Name Fields -->
                     <div class="self-stretch flex-col justify-start items-start gap-1 flex">
                       <div class="justify-start items-start gap-2.5 inline-flex">
-                        <div class="semibody-medium">Name</div>
+                        <div class="text-black text-semibody-medium">Name</div>
                       </div>
                       <div class="self-stretch justify-start items-start gap-2 inline-flex">
                         <input
@@ -257,7 +257,7 @@
                     <!-- Email Field -->
                     <div class="self-stretch flex-col justify-start items-start gap-1 flex">
                       <div class="justify-start items-start gap-2.5 inline-flex">
-                        <div class="semibody-medium">Email address</div>
+                        <div class="text-black text-semibody-medium">Email address</div>
                       </div>
                       <input
                         type="email"
@@ -270,7 +270,7 @@
                     <!-- Password Field -->
                     <div class="self-stretch flex-col justify-start items-start gap-1 flex">
                       <div class="justify-start items-start gap-2.5 inline-flex">
-                        <div class="semibody-medium">Password</div>
+                        <div class="text-black text-semibody-medium">Password</div>
                       </div>
                       <div class="password-input-container">
                         <input
@@ -311,7 +311,7 @@
                           class="w-6 h-6"
                         />
                       </div>
-                      <span class="semi-body">
+                      <span class="text-black text-semi-body">
                         I agree to the <a href="/terms" class="text-[#eb434a] underline">terms & policy</a>
                       </span>
                     </label>
@@ -332,13 +332,13 @@
                     tabindex="0"
                     on:click={handleSignIn}
                     on:keydown={(e) => e.key === 'Enter' && handleSignIn()}
-                    class="grow shrink basis-0 px-4 py-2 rounded-[10px] border border-black/5 flex-col justify-center items-center gap-2.5 inline-flex overflow-hidden hover:bg-light-bg-secondary dark:hover:bg-dark-bg-secondary transition-colors"
+                    class="grow shrink basis-0 px-4 py-2 rounded-[10px] border border-black/5 flex-col justify-center items-center gap-2.5 inline-flex overflow-hidden  transition-colors"
                   >
                     <div class="justify-start items-center gap-2.5 inline-flex w-full">
                       <div class="w-6 h-6 relative overflow-hidden flex-shrink-0">
                         <img src="/google-icon.svg" alt="Google" class="w-full h-full" />
                       </div>
-                      <div class="text-black text-xs font-medium font-['Poppins'] whitespace-nowrap">
+                      <div class="text-black text-sm-button whitespace-nowrap">
                         Sign {isRegistering ? 'up' : 'in'} with Google
                       </div>
                     </div>
@@ -347,24 +347,24 @@
                     role="button"
                     tabindex="0"
                     on:keydown={(e) => e.key === 'Enter' && null}
-                    class="grow shrink basis-0 px-4 py-2 rounded-[10px] border border-black/5 flex-col justify-center items-center gap-2.5 inline-flex overflow-hidden hover:bg-light-bg-secondary dark:hover:bg-dark-bg-secondary transition-colors"
+                    class="grow shrink basis-0 px-4 py-2 rounded-[10px] border border-black/5 flex-col justify-center items-center gap-2.5 inline-flex overflow-hidden transition-colors"
                   >
                     <div class="justify-center items-center gap-2.5 inline-flex w-full">
                       <div class="w-6 h-6 relative overflow-hidden flex-shrink-0">
                         <img src="/apple-icon.svg" alt="Apple" class="w-full h-full" />
                       </div>
-                      <div class="text-black text-xs font-medium font-['Poppins'] whitespace-nowrap">
+                      <div class="text-black text-sm-button whitespace-nowrap">
                         Sign {isRegistering ? 'up' : 'in'} with Apple
                       </div>
                     </div>
                   </div>
                 </div>
                 <div class="self-stretch text-center">
-                  <span class="semi-body">Already have account? </span>
+                  <span class="text-black text-semi-body">Already have account? </span>
                   <button
                     type="button"
                     on:click={() => switchMode('signin')}
-                    class="text-[#eb434a] semi-body underline leading-snug"
+                    class="text-[#eb434a] text-semi-body underline leading-snug"
                   >
                     Login
                   </button>
@@ -387,8 +387,8 @@
                   class="w-6 h-6"
                 />
               </button>
-              <div class="self-stretch h2">Login</div>
-              <div class="self-stretch text-Grey body">Welcome back!</div>
+              <div class="self-stretch text-black text-h2">Login</div>
+              <div class="self-stretch text-Grey text-body">Welcome back!</div>
             </div>
 
             <div class="self-stretch flex-col justify-start items-start gap-8 flex">
@@ -397,7 +397,7 @@
                   <!-- Email Field -->
                   <div class="self-stretch flex-col justify-start items-start gap-1 flex">
                     <div class="justify-start items-start gap-2.5 inline-flex">
-                      <div class="text-black semibody-medium">Email address</div>
+                      <div class="text-black text-semibody-medium">Email address</div>
                     </div>
                     <input
                       type="email"
@@ -410,7 +410,7 @@
                   <!-- Password Field -->
                   <div class="self-stretch flex-col justify-start items-start gap-1 flex">
                     <div class="justify-start items-start gap-2.5 inline-flex">
-                      <div class="semibody-medium">Password</div>
+                      <div class="text-black text-semibody-medium">Password</div>
                     </div>
                     <div class="self-stretch flex-col justify-start items-start gap-4 flex">
                       <div class="password-input-container">
@@ -436,7 +436,7 @@
                       <button
                         type="button"
                         on:click={() => switchMode('reset')}
-                        class="px-6 text-[#eb434a] semi-body underline leading-snug"
+                        class="px-6 text-[#eb434a] text-semi-body underline leading-snug"
                       >
                         Forgot password?
                       </button>
@@ -445,7 +445,7 @@
                 </div>
 
                 <!-- Main sign up/sign in buttons -->
-                <Button type="submit" variant="primary" fullWidth textClass="body">
+                <Button type="submit" variant="primary" fullWidth textClass="text-body">
                   {isRegistering ? 'Sign up' : 'Sign in'}
                 </Button>
               </form>
@@ -458,13 +458,13 @@
                     tabindex="0"
                     on:click={handleSignIn}
                     on:keydown={(e) => e.key === 'Enter' && handleSignIn()}
-                    class="grow shrink basis-0 px-4 py-2 rounded-[10px] border border-black/5 flex-col justify-center items-center gap-2.5 inline-flex overflow-hidden hover:bg-light-bg-secondary dark:hover:bg-dark-bg-secondary transition-colors"
+                    class="grow shrink basis-0 px-4 py-2 rounded-[10px] border border-black/5 flex-col justify-center items-center gap-2.5 inline-flex overflow-hidde transition-colors"
                   >
                     <div class="justify-start items-center gap-2.5 inline-flex w-full">
                       <div class="w-6 h-6 relative overflow-hidden flex-shrink-0">
                         <img src="/google-icon.svg" alt="Google" class="w-full h-full" />
                       </div>
-                      <div class="text-black text-xs font-medium font-['Poppins'] whitespace-nowrap">
+                      <div class="text-black text-sm-button whitespace-nowrap">
                         Sign {isRegistering ? 'up' : 'in'} with Google
                       </div>
                     </div>
@@ -473,24 +473,24 @@
                     role="button"
                     tabindex="0"
                     on:keydown={(e) => e.key === 'Enter' && null}
-                    class="grow shrink basis-0 px-4 py-2 rounded-[10px] border border-black/5 flex-col justify-center items-center gap-2.5 inline-flex overflow-hidden hover:bg-light-bg-secondary dark:hover:bg-dark-bg-secondary transition-colors"
+                    class="grow shrink basis-0 px-4 py-2 rounded-[10px] border border-black/5 flex-col justify-center items-center gap-2.5 inline-flex overflow-hidden transition-colors"
                   >
                     <div class="justify-center items-center gap-2.5 inline-flex w-full">
                       <div class="w-6 h-6 relative overflow-hidden flex-shrink-0">
                         <img src="/apple-icon.svg" alt="Apple" class="w-full h-full" />
                       </div>
-                      <div class="text-black text-xs font-medium font-['Poppins'] whitespace-nowrap">
+                      <div class="text-black text-sm-button whitespace-nowrap">
                         Sign {isRegistering ? 'up' : 'in'} with Apple
                       </div>
                     </div>
                   </div>
                 </div>
                 <div class="self-stretch text-center">
-                  <span class="text-black semi-body">Don't have an account? </span>
+                  <span class="text-black text-semi-body">Don't have an account? </span>
                   <button
                     type="button"
                     on:click={() => switchMode('register')}
-                    class="text-[#eb434a] semi-body underline leading-snug"
+                    class="text-[#eb434a] text-semi-body underline leading-snug"
                   >
                     Sign up
                   </button>

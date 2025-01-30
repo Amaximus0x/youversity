@@ -76,6 +76,8 @@ export default {
         "TransparentGreen 2": "#41C1CB",
         "blackTransparent": "#000000",
         "GreenHover": "#1E3443",
+        "ButtonHover": "#C3373C",
+
       },
       fontSize: {
         'h1': [
