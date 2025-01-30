@@ -187,9 +187,9 @@
   }
 </style>
 
-<div class="margin-safe-left flex justify-center items-start h-screen">
+<div class=" flex justify-center items-start h-screen">
   <!-- Left Side - Login Form -->
-  <div class="w-full flex flex-col items-start relative">
+  <div class="margin-safe-left w-full flex flex-col items-start relative">
     <!-- Logo section -->
     <div class="w-[230px] px-5 xl:px-8 py-6 fixed top-0 left-0 z-10">
       <div class="w-[160px] h-[48.4px] relative">
@@ -503,7 +503,7 @@
     </div>
 
     <!-- Right Side - Content -->
-    <div class="hidden lg:flex w-[48%] fixed right-0 top-0 bottom-0 flex-col justify-center items-center bg-black/5 rounded-[64px_0_0_64px]">
+    <div class="hidden lg:flex w-[48%] fixed right-0 top-0 bottom-0 flex-col justify-center items-center p-8 lg:p-0 bg-black/5 rounded-[64px_0_0_64px]">
       <OnboardingCarousel />
     </div>
   </div>
