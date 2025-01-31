@@ -225,6 +225,8 @@
       <!-- Main Content with Navigation -->
       <main class="lg:pl-64 min-h-screen bg-gradient-light dark:bg-gradient-dark">
         <!-- Header -->
+        <!-- <header class="fixed top-0 right-0 left-0 lg:left-64 lg:h-24 px-5 lg:px-4 py-6 lg:ml-1.5 lg:border-b border-light-border dark:border-dark-border {$page.url.pathname.startsWith('/course/') ? 'bg-light-bg-primary dark:bg-dark-bg-primary' : 'bg-light-bg-primary/5 dark:bg-dark-bg-primary/5 !backdrop-blur-[30px]'} z-50"> -->
+
         <header class="fixed top-0 right-0 left-0 lg:left-64 lg:h-24 px-5 lg:px-4 py-6 lg:ml-1.5 lg:border-b border-light-border dark:border-dark-border bg-light-bg-primary/5 dark:bg-dark-bg-primary/5 !backdrop-blur-[30px] z-50">
           <!-- Mobile Header -->
           <div class="h-10 justify-between items-center inline-flex lg:hidden w-full">

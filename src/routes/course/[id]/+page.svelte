@@ -210,88 +210,100 @@
   }
 </script>
 
-<!-- Course Header -->
-<div class="max-w-[1440px] mx-auto px-4 py-4">
+<style>
+  .video-container {
+    aspect-ratio: 16 / 9;
+  }
+
+  @media (max-width: 1023px) {
+    .mobile-scroll-container {
+      height: calc(100vh - var(--header-height));
+      overflow-y: auto;
+      padding-bottom: 100px; /* Add padding for bottom navigation */
+    }
+
+    /* Add padding to prevent content from scrolling under the header */
+    .mobile-scroll-container:before {
+      content: '';
+      display: block;
+      height: var(--header-height);
+    }
+
+    /* Hide scrollbar but keep functionality */
+    .mobile-scroll-container {
+      -ms-overflow-style: none;  /* IE and Edge */
+      scrollbar-width: none;  /* Firefox */
+    }
+    
+    .mobile-scroll-container::-webkit-scrollbar {
+      display: none;  /* Chrome, Safari and Opera */
+    }
+  }
+</style>
+
+<div class="w-full min-h-screen">
   {#if loading}
     <div class="flex justify-center items-center min-h-screen">
       <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
     </div>
   {:else if error}
     <div class="text-red-500 text-center p-4">{error}</div>
-  {:else if courseDetails && courseDetails.Final_Module_Title && courseDetails.Final_Module_Title.length > 0}
-    <!-- Course Content Grid -->
-    <div class="grid grid-cols-12 gap-4">
-      <!-- Module Content -->
-      <div class="col-span-8">
-        <!-- Course Header -->
-        <!-- <div class="mb-6">
-          <h1 class="text-2xl font-semibold text-[#1E3443] mb-2">{courseDetails.Final_Course_Title}</h1>
-          {#if courseDetails.creatorUsername}
-            <p class="text-[#5F6368] mb-4">Created by: {courseDetails.creatorDisplayName || courseDetails.creatorUsername}</p>
-          {/if}
-          <p class="text-[#5F6368]">{courseDetails.Final_Course_Objective}</p>
-        </div> -->
-        {#if currentModule >= 0}
-          <div class=" rounded-2xl overflow-hidden">
-            <!-- Video Player -->
-            <div class="relative pt-[56.25%] rounded-2xl overflow-hidden bg-white">
-              {#if courseDetails?.Final_Module_YouTube_Video_URL?.[currentModule]}
-                <iframe
-                  src={(() => {
-                    try {
-                      const videoUrl = courseDetails.Final_Module_YouTube_Video_URL[currentModule];
-                      const videoId = new URL(videoUrl).searchParams.get('v');
-                      return `https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1&enablejsapi=0&origin=${window.location.origin}`;
-                    } catch (error) {
-                      console.error('Error parsing YouTube URL:', error);
-                      return '';
-                    }
-                  })()}
-                  title={courseDetails?.Final_Module_Title?.[currentModule] || 'Course Video'}
-                  frameborder="0"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowfullscreen
-                  loading="lazy"
-                  class="absolute inset-0 w-full h-full rounded-2xl"
-                ></iframe>
-              {/if}
+  {:else if courseDetails}
+    <div class=" lg:container lg:mx-auto lg:px-4 lg:py-8">
+      <div class="lg:grid lg:grid-cols-12 lg:gap-8">
+        <div class="lg:col-span-8">
+          <div class="relative w-full lg:rounded-2xl overflow-hidden">
+            <!-- h-[94px] for mobile view video player and header space -->
+            <div class="fixed lg:relative top-[94px] lg:top-0 left-0 right-0 z-30 bg-black">
+              <div class="video-container w-full">
+                {#if courseDetails?.Final_Module_YouTube_Video_URL?.[currentModule]}
+                  <iframe
+                    title={courseDetails.Final_Module_Title[currentModule]}
+                    class="absolute inset-0 w-full h-full"
+                    src={(() => {
+                      try {
+                        const videoUrl = courseDetails.Final_Module_YouTube_Video_URL[currentModule];
+                        const videoId = videoUrl.match(/(?:https?:\/\/)?(?:www\.)?youtu\.?be(?:\.com)?\/?.*(?:watch|embed)?(?:.*v=|v\/|\/)([\w-_]+)/i)?.[1];
+                        return `https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1&enablejsapi=0&origin=${window.location.origin}`;
+                      } catch (error) {
+                        console.error('Error parsing YouTube URL:', error);
+                        return '';
+                      }
+                    })()}
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowfullscreen
+                    loading="lazy"
+                  ></iframe>
+                {:else}
+                  <div class="w-full h-full flex items-center justify-center bg-gray-100">
+                    <span class="text-gray-500">No video available</span>
+                  </div>
+                {/if}
+              </div>
             </div>
+            <!-- <div class="fixed h-[calc(56.25vw+5.5rem)] lg:hidden"></div> -->
+          </div>
 
-            <!-- Course Details -->
-            <div class="mt-4">
-              <!-- Module Navigation -->
-              <div class="flex items-center justify-between mb-8">
-                <div class="flex items-center gap-2">
-                  <span class="text-base text-[#A3A3A3]">
-                    {(currentModule + 1).toString().padStart(2, '0')}:
-                  </span>
-
-                  
-                  <h4 class="text-[18px] font-medium text-[#1E3443]">
-                    {courseDetails.Final_Module_Title[currentModule] || 'Loading module...'}
-                  </h4>
-                </div>
-                <div class="flex items-center gap-2">
-                  <button 
-                    class="px-4 py-2 bg-[#F5F5F5] rounded-lg hover:bg-[#EBEBEB] transition-colors disabled:opacity-50 flex items-center gap-2"
-                    disabled={currentModule === 0}
-                    on:click={() => currentModule = Math.max(0, currentModule - 1)}
-                  >
-                    <img src="/icons/prev.svg" alt="Previous" class="w-4 h-4" />
-                    <span class="text-base text-[#1E3443]">Prev</span>
-                  </button>
-                  <button 
-                    class="px-4 py-2 bg-[#F5F5F5] rounded-lg hover:bg-[#EBEBEB] transition-colors disabled:opacity-50 flex items-center gap-2"
-                    disabled={currentModule === (courseDetails?.Final_Module_Title?.length ?? 1) - 1}
-                    on:click={() => currentModule = Math.min((courseDetails?.Final_Module_Title?.length ?? 1) - 1, currentModule + 1)}
-                  >
-                    <span class="text-base text-[#1E3443]">Next</span>
-                    <img src="/icons/next.svg" alt="Next" class="w-4 h-4" />
-                  </button>
-                </div>
+          <!-- <div class="fixed top-[calc(94px+56.25vw)] bottom-0 left-0 right-0 overflow-y-auto lg:static"> -->
+            <!-- <div class="px-4 lg:px-0 lg:pt-8"> -->
+              <div class="mobile-scroll-container pt-28 lg:static">
+                <div class="px-4 lg:px-0 pt-[calc(56.25vw+94px)] lg:pt-8">
+              <h1 class="text-h4-medium lg:text-h2 text-light-text-primary dark:text-dark-text-primary mb-4">
+                {courseDetails.Final_Course_Title}
+              </h1>
+              
+              <div class="flex items-center gap-4 mb-6">
+                <h2 class="text-18-28 text-light-text-primary dark:text-dark-text-primary">
+                  Module {currentModule + 1}: {courseDetails?.Final_Module_Title?.[currentModule] || 'Untitled Module'}
+                </h2>
               </div>
 
-              <!-- Creator Profile -->
+              <div class="prose dark:prose-invert max-w-none mb-8">
+                <p class="text-body text-light-text-secondary dark:text-dark-text-secondary">
+                  {courseDetails?.Final_Module_Description?.[currentModule] || courseDetails?.Final_Module_Objective?.[currentModule] || 'No description available'}
+                </p>
+              </div>
+
               <div class="h-12 justify-start items-center gap-3 inline-flex mb-6">
                 <img 
                   class="w-12 h-12 relative rounded-full" 
@@ -302,7 +314,6 @@
                   <div>
                     <span class="text-black text-base font-semibold font-['Poppins'] leading-normal">Creator:</span>
                     <span class="text-[#494848] text-sm font-normal font-['Poppins'] leading-snug ml-1">
-                      <!-- {courseDetails.creatorDisplayName || courseDetails.creatorUsername} -->
                       {courseDetails.creatorUsername}
                     </span>
                   </div>
@@ -316,20 +327,14 @@
                 </div>
               </div>
 
-              {#if courseDetails?.Final_Course_Title}
-                <h1 class="text-[32px] font-medium text-[#1E3443] mb-6">{courseDetails.Final_Course_Title}</h1>
-              {/if}
-              
               <div class="space-y-6">
-                 <!-- Module Objectives -->
-                 {#if courseDetails?.Final_Module_Objective?.[currentModule]}
-                   <div>
-                     <h3 class="text-xl font-medium text-[#1E3443] mb-4">Module Objectives</h3>
-                     <p class="text-base text-[#494848]">{courseDetails.Final_Module_Objective[currentModule]}</p>
-                   </div>
-                 {/if}
+                {#if courseDetails?.Final_Module_Objective?.[currentModule]}
+                  <div>
+                    <h3 class="text-xl font-medium text-[#1E3443] mb-4">Module Objectives</h3>
+                    <p class="text-base text-[#494848]">{courseDetails.Final_Module_Objective[currentModule]}</p>
+                  </div>
+                {/if}
 
-                <!-- Course Introduction -->
                 {#if courseDetails?.Final_Course_Introduction}
                   <div>
                     <h3 class="text-xl font-medium text-[#1E3443] mb-4">Course Introduction</h3>
@@ -337,9 +342,6 @@
                   </div>
                 {/if}
 
-               
-
-                <!-- Course Conclusion -->
                 {#if courseDetails?.Final_Course_Conclusion}
                   <div>
                     <h3 class="text-xl font-medium text-[#1E3443] mb-4">Course Conclusion</h3>
@@ -347,7 +349,6 @@
                   </div>
                 {/if}
 
-                <!-- Quiz Buttons -->
                 <div class="flex flex-col gap-4">
                   <button
                     class="h-[37px] px-6 bg-[#1E3443] text-white rounded-2xl hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed font-medium flex items-center justify-center w-full"
@@ -356,7 +357,6 @@
                       try {
                         resetQuizState();
                         
-                        // Load previous scores if available
                         if (isCreator && moduleProgress?.[currentModule]?.quizAttempts > 0) {
                           const moduleData = moduleProgress[currentModule];
                           const date = moduleData.lastAttemptDate instanceof Date 
@@ -379,7 +379,6 @@
                           }];
                         }
 
-                        // Get the module quiz
                         const moduleQuiz = courseDetails.Final_Module_Quiz[currentModule];
                         if (moduleQuiz) {
                           currentQuiz = moduleQuiz;
@@ -404,7 +403,6 @@
                         resetQuizState();
                         currentModule = -1;
                         
-                        // Load previous scores for final quiz if available
                         if (isCreator && moduleProgress?.[currentModule]?.quizAttempts > 0) {
                           const moduleData = moduleProgress[currentModule];
                           const date = moduleData.lastAttemptDate instanceof Date 
@@ -427,7 +425,6 @@
                           }];
                         }
 
-                        // Get the final course quiz
                         if (courseDetails?.Final_Course_Quiz) {
                           currentQuiz = courseDetails.Final_Course_Quiz;
                           showQuiz = true;
@@ -446,108 +443,119 @@
               </div>
             </div>
           </div>
-        {/if}
-      </div>
+        </div>
 
-      <!-- Right Side Content -->
-      <div class="col-span-4 space-y-8">
-        <!-- Progress Section -->
-        {#if showProgress && $user && (isCreator || isEnrolled)}
-          <div class=" w-[362px] h-[94px] rounded-2xl border border-black/[0.05] p-4">
-            <!-- Progress Header -->
-            <div class="pb-2 border-b border-black/[0.05]">
-              <h3 class="text-base font-medium text-black">Your Progress</h3>
-            </div>
+        <div class="hidden lg:block lg:col-span-4 space-y-8">
+          {#if showProgress && $user && (isCreator || isEnrolled)}
 
-            <!-- Progress Bar and Count -->
-            <div class="flex items-center gap-4 pt-2">
-              <div class="flex-1 h-3 bg-black/[0.05] rounded-[2000px] overflow-hidden">
-                <div 
-                  class="h-full bg-[#42C1C8] rounded-[200000px] transition-all duration-300"
-                  style="width: {isCreator 
-                    ? (moduleProgress.filter(m => m?.completed).length / courseDetails.Final_Module_Title.length * 100)
-                    : ((enrollmentProgress?.completedModules?.length || 0) / courseDetails.Final_Module_Title.length * 100)}%"
-                />
+            <div class=" w-[362px] h-[94px] rounded-2xl border border-black/[0.05] p-4">
+              <div class="pb-2 border-b border-black/[0.05]">
+                <h3 class="text-base font-medium text-black">Your Progress</h3>
               </div>
-              <span class="text-base text-black">
-                {isCreator 
-                  ? moduleProgress.filter(m => m?.completed).length
-                  : enrollmentProgress?.completedModules?.length || 0}/{courseDetails.Final_Module_Title.length}
-              </span>
-            </div>
-          </div>
-        {/if}
 
-        <!-- Course Modules -->
-        <div class="w-[362px] border border-[rgba(0,0,0,0.05)] rounded-2xl">
-          <div class="p-4 border-b border-black/[0.05]">
-            <h3 class="text-base font-medium text-black">Course Modules</h3>
-          </div>
-          <!-- 
-          {#each courseDetails.Final_Module_Title as title, index}
-          <div class="w-[362px] h-[94px] border border-[rgba(0,0,0,0.05)] rounded-2xl p-2 m-2  hover:bg-black/[0.02] transition-colors">
-              <button
-                class="w-full flex items-start gap-4}"
-                on:click={() => currentModule = index}
-              >
-                <div class="flex-1 min-w-0 p-2">
-                  <div class="flex flex-col gap-4">
-                    <div class="flex items-start gap-2">
-                      <span class="text-[#A3A3A3] text-sm whitespace-nowrap">0{index + 1}:</span>
-                      <h4 class="text-base font-medium text-[#1E3443] leading-[21px] line-clamp-2">{title}</h4>
-                    </div>
-                     Module Duration will come from the database
-                    <span class="text-sm text-[#A3A3A3]">{index === 0 ? '45' : index === 1 ? '30' : '33'} min</span>
-                  </div>
-                </div>
-                <div class="w-[fit] h-[78px] rounded-lg overflow-hidden flex-shrink-0">
-                  <img
-                    src={courseDetails.Final_Course_Thumbnail || '/images/course-placeholder.png'}
-                    alt={title}
-                    class="w-full h-full object-cover"
+              <div class="flex items-center gap-4 pt-2">
+                <div class="flex-1 h-3 bg-black/[0.05] rounded-[2000px] overflow-hidden">
+                  <div 
+                    class="h-full bg-[#42C1C8] rounded-[200000px] transition-all duration-300"
+                    style="width: {isCreator 
+                      ? (moduleProgress.filter(m => m?.completed).length / courseDetails.Final_Module_Title.length * 100)
+                      : ((enrollmentProgress?.completedModules?.length || 0) / courseDetails.Final_Module_Title.length * 100)}%"
                   />
                 </div>
-              </button>
-            </div>
-            -->
-          <div class="max-h-[400px] overflow-y-auto">
-            {#each courseDetails.Final_Module_Title as title, index}
-              <div class="w-[362px] h-[94px] border border-[rgba(0,0,0,0.05)] rounded-2xl p-2 m-2 hover:bg-black/[0.02] transition-colors">
-                <button
-                  class="w-full flex items-start gap-4"
-                  on:click={() => currentModule = index}
-                >
-                  <div class="flex-1 min-w-0 p-2">
-                    <div class="flex flex-col gap-4">
-                      <div class="flex items-start gap-2">
-                        <span class="text-[#A3A3A3] text-sm whitespace-nowrap">{(index + 1).toString().padStart(2, '0')}:</span>
-                        <h4 class="text-base font-medium text-[#1E3443] leading-[21px] line-clamp-2">{title}</h4>
-                      </div>
-                      <span class="text-sm text-[#A3A3A3]">
-                        {#if courseDetails?.Final_Module_Video_Duration?.[index]}
-                          {Math.floor(courseDetails.Final_Module_Video_Duration[index])} min {Math.round((courseDetails.Final_Module_Video_Duration[index] % 1) * 60)} sec
-                        {:else}
-                          -- min
-                        {/if}
-                      </span>
-                    </div>
-                  </div>
-                  <div class="w-[120px] h-[78px] rounded-lg overflow-hidden flex-shrink-0">
-                    <img
-                      src={courseDetails?.Final_Module_Thumbnails?.[index] || '/images/course-placeholder.png'}
-                      alt={title}
-                      class="w-full h-full object-cover"
-                    />
-                  </div>
-                </button>
+                <span class="text-base text-black">
+                  {isCreator 
+                    ? moduleProgress.filter(m => m?.completed).length
+                    : enrollmentProgress?.completedModules?.length || 0}/{courseDetails.Final_Module_Title.length}
+                </span>
               </div>
-            {/each}
+            </div>
+          {/if}
+
+          <div class="w-[362px] border border-[rgba(0,0,0,0.05)] rounded-2xl">
+            <div class="p-4 border-b border-black/[0.05]">
+              <h3 class="text-base font-medium text-black">Course Modules</h3>
+            </div>
+            <div class="max-h-[400px] overflow-y-auto">
+              {#each courseDetails.Final_Module_Title as title, index}
+                <div class="w-[362px] h-[94px] border border-[rgba(0,0,0,0.05)] rounded-2xl p-2 m-2 hover:bg-black/[0.02] transition-colors">
+                  <button
+                    class="w-full flex items-start gap-4"
+                    on:click={() => currentModule = index}
+                  >
+                    <div class="flex-1 min-w-0 p-2">
+                      <div class="flex flex-col gap-4">
+                        <div class="flex items-start gap-2">
+                          <span class="text-[#A3A3A3] text-sm whitespace-nowrap">{(index + 1).toString().padStart(2, '0')}:</span>
+                          <h4 class="text-base font-medium text-[#1E3443] leading-[21px] line-clamp-2">{title}</h4>
+                        </div>
+                        <span class="text-sm text-[#A3A3A3]">
+                          {#if courseDetails?.Final_Module_Video_Duration?.[index]}
+                            {Math.floor(courseDetails.Final_Module_Video_Duration[index])} min {Math.round((courseDetails.Final_Module_Video_Duration[index] % 1) * 60)} sec
+                          {:else}
+                            -- min
+                          {/if}
+                        </span>
+                      </div>
+                    </div>
+                    <div class="w-[120px] h-[78px] rounded-lg overflow-hidden flex-shrink-0">
+                      <img
+                        src={courseDetails?.Final_Module_Thumbnails?.[index] || '/images/course-placeholder.png'}
+                        alt={title}
+                        class="w-full h-full object-cover"
+                      />
+                    </div>
+                  </button>
+                </div>
+              {/each}
+            </div>
+          </div>
+        </div>
+
+        <div class="lg:hidden px-4 py-6">
+          <div class="w-full border border-light-border dark:border-dark-border rounded-2xl">
+            <div class="p-4 border-b border-light-border dark:border-dark-border">
+              <h3 class="text-body-semibold text-light-text-primary dark:text-dark-text-primary">
+                Course Modules
+              </h3>
+            </div>
+            <div class="max-h-[400px] overflow-y-auto">
+              {#each courseDetails.Final_Module_Title as title, index}
+                <div class="w-[362px] h-[94px] border border-[rgba(0,0,0,0.05)] rounded-2xl p-2 m-2 hover:bg-black/[0.02] transition-colors">
+                  <button
+                    class="w-full flex items-start gap-4"
+                    on:click={() => currentModule = index}
+                  >
+                    <div class="flex-1 min-w-0 p-2">
+                      <div class="flex flex-col gap-4">
+                        <div class="flex items-start gap-2">
+                          <span class="text-[#A3A3A3] text-sm whitespace-nowrap">{(index + 1).toString().padStart(2, '0')}:</span>
+                          <h4 class="text-base font-medium text-[#1E3443] leading-[21px] line-clamp-2">{title}</h4>
+                        </div>
+                        <span class="text-sm text-[#A3A3A3]">
+                          {#if courseDetails?.Final_Module_Video_Duration?.[index]}
+                            {Math.floor(courseDetails.Final_Module_Video_Duration[index])} min {Math.round((courseDetails.Final_Module_Video_Duration[index] % 1) * 60)} sec
+                          {:else}
+                            -- min
+                          {/if}
+                        </span>
+                      </div>
+                    </div>
+                    <div class="w-[120px] h-[78px] rounded-lg overflow-hidden flex-shrink-0">
+                      <img
+                        src={courseDetails?.Final_Module_Thumbnails?.[index] || '/images/course-placeholder.png'}
+                        alt={title}
+                        class="w-full h-full object-cover"
+                      />
+                    </div>
+                  </button>
+                </div>
+              {/each}
+            </div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Course Reviews -->
     {#if courseDetails.isPublic}
       <div class="mt-12">
         <CourseRatings courseId={$page.params.id} />
@@ -556,11 +564,9 @@
   {/if}
 </div>
 
-<!-- Quiz Modal -->
 {#if showQuiz && currentQuiz}
   <div class="fixed inset-0 bg-black/30 flex items-center justify-center p-4 z-50">
     <div class="bg-white rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto relative">
-      <!-- Quiz Header -->
       <div class="flex justify-between items-center mb-6">
         <h3 class="text-xl font-semibold text-[#2A4D61]">Quiz</h3>
         {#if !quizSubmitted}
@@ -571,7 +577,6 @@
         {/if}
       </div>
 
-      <!-- Previous Scores -->
       {#if previousScores.length > 0}
         <div class="mb-6 bg-gray-50 p-4 rounded-lg">
           <h4 class="font-medium mb-2">Previous Attempts</h4>
@@ -601,7 +606,6 @@
         </div>
       {/if}
       
-      <!-- Quiz Questions -->
       <div class="space-y-6">
         {#each currentQuiz.quiz as question, index}
           <div class="mb-6">
@@ -634,7 +638,6 @@
           </div>
         {/each}
 
-        <!-- Quiz Controls -->
         <div class="flex justify-end gap-4 mt-6">
           {#if !quizSubmitted}
             <button
@@ -668,7 +671,6 @@
           </button>
         </div>
 
-        <!-- Quiz Results -->
         {#if quizSubmitted}
           <div class="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
             <p class="text-lg font-semibold text-[#2A4D61]">Your Score: {quizScore}%</p>
@@ -682,7 +684,6 @@
         {/if}
       </div>
 
-      <!-- Result Animation -->
       {#if showResultAnimation}
         <div class="fixed inset-0 flex items-center justify-center pointer-events-none">
           <div class="transform scale-150 transition-transform duration-500 {quizScore >= 70 ? 'text-green-500' : 'text-red-500'}">
@@ -697,20 +698,3 @@
     </div>
   </div>
 {/if} 
-
-<style>
-  .animate-bounce {
-    animation: bounce 1s infinite;
-  }
-
-  @keyframes bounce {
-    0%, 100% {
-      transform: translateY(-25%);
-      animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
-    }
-    50% {
-      transform: translateY(0);
-      animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
-    }
-  }
-</style> 

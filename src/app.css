@@ -109,3 +109,15 @@
 ::-webkit-scrollbar-thumb:hover {
   @apply bg-brand-red;
 } */
+
+:root {
+  --header-height: 64px;
+  --player-height: 56.25vw; /* 16:9 aspect ratio */
+}
+
+@screen lg {
+  :root {
+    --header-height: 96px;
+    --player-height: auto;
+  }
+}
