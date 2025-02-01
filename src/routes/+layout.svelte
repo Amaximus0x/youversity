@@ -227,7 +227,7 @@
         <!-- Header -->
         <!-- <header class="fixed top-0 right-0 left-0 lg:left-64 lg:h-24 px-5 lg:px-4 py-6 lg:ml-1.5 lg:border-b border-light-border dark:border-dark-border {$page.url.pathname.startsWith('/course/') ? 'bg-light-bg-primary dark:bg-dark-bg-primary' : 'bg-light-bg-primary/5 dark:bg-dark-bg-primary/5 !backdrop-blur-[30px]'} z-50"> -->
 
-        <header class="fixed top-0 right-0 left-0 lg:left-64 lg:h-24 px-5 lg:px-4 py-6 lg:ml-1.5 lg:border-b border-light-border dark:border-dark-border bg-light-bg-primary/5 dark:bg-dark-bg-primary/5 !backdrop-blur-[30px] z-50">
+        <header class="fixed top-0 right-0 left-0 lg:left-64 lg:h-24 px-5 lg:px-4 pt-6 pb-4 lg:ml-1.5 lg:border-b border-light-border dark:border-dark-border bg-light-bg-primary/5 dark:bg-dark-bg-primary/5 !backdrop-blur-[30px] z-50">
           <!-- Mobile Header -->
           <div class="h-10 justify-between items-center inline-flex lg:hidden w-full">
             <div class=" w-[125.33px] h-[38px] relative">
@@ -346,7 +346,7 @@
         </header>
 
         <!-- Page Content -->
-        <div class="pt-24 px-5 pb-20 lg:pt-28 lg:pl-6 lg:pr-8 lg:pb-8">
+        <div class="pt-20 px-5 pb-20 lg:pt-28 lg:pl-6 lg:pr-8 lg:pb-8">
          <!-- <div > -->
           <slot />
         </div>

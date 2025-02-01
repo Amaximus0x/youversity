@@ -5,7 +5,7 @@ export default {
   theme: {
     container: {
 			center: true,
-			padding: "2rem",
+			padding: "0rem",
 			screens: {
 				// "2xl": "1400px"
 			}
@@ -35,11 +35,11 @@ export default {
         },
         // Light theme colors
         'light': {
-          'bg': {
-            'primary': '#FFFFFF',
-            'secondary': '#FFF2F3',
-            'tertiary': '#EDFEFF'
-          },
+          // 'bg': {
+          //   'primary': '#FFFFFF',
+          //   'secondary': '#FFF2F3',
+          //   'tertiary': '#EDFEFF'
+          // },
           'text': {
             'primary': '#000000',
             'secondary': '#494848',
@@ -49,11 +49,11 @@ export default {
         },
         // Dark theme colors
         'dark': {
-          'bg': {
-            'primary': '#1E3443',
-            'secondary': '#2A4D61',
-            'tertiary': '#000000'
-          },
+          // 'bg': {
+          //   'primary': '#1E3443',
+          //   'secondary': '#2A4D61',
+          //   'tertiary': '#000000'
+          // },
           'text': {
             'primary': '#FFFFFF',
             'secondary': '#E8EAED',
@@ -94,6 +94,15 @@ export default {
           '36px', // Font size
           {
             lineHeight: '44px', // Line height
+            fontWeight: '500', // Font weight
+            fontFamily: 'Poppins', // Font family
+            textAlign: 'left', // Text alignment
+          },
+        ],
+        'h2-mobile': [
+          '26px', // Font size
+          {
+            lineHeight: '36px', // Line height
             fontWeight: '500', // Font weight
             fontFamily: 'Poppins', // Font family
             textAlign: 'left', // Text alignment

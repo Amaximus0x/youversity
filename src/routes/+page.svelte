@@ -225,7 +225,7 @@
 
 <CourseCreationOverlay show={showCreationOverlay} />
 
-<div class="container mx-auto max-w-auto sm:px-0 lg:pl-0">
+<div class="mx-auto max-w-auto sm:px-0 lg:pl-0">
   <!-- Create Course Section -->
   <div class="relative overflow-hidden rounded-lg  mb-8 lg:mb-12">  
     <div >
