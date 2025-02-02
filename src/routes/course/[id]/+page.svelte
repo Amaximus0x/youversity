@@ -41,6 +41,8 @@
   } | null = null;
   let hasLiked = false;
   let liking = false;
+  let showFloatingButton = false;
+  let contentStartElement: HTMLElement;
 
   onMount(async () => {
     try {
@@ -205,6 +207,23 @@
     }
     return num.toString();
   }
+
+  // Add this function to handle scroll
+  function handleScroll() {
+    if (contentStartElement) {
+      const contentStartPosition = contentStartElement.offsetTop;
+      const scrollPosition = window.scrollY + window.innerHeight;
+      showFloatingButton = scrollPosition > contentStartPosition;
+    }
+  }
+
+  onMount(() => {
+    // Add scroll event listener
+    window.addEventListener('scroll', handleScroll);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
+  });
 </script>
 
 <!-- Main Container -->
@@ -268,7 +287,7 @@
           </div>
 
           <!-- Course Info Section -->
-          <div class="mt-[calc(56.25vw+24px)] lg:mt-8 px-4 lg:px-0">
+          <div class="mt-[calc(56.25vw+24px)] lg:mt-8" bind:this={contentStartElement}>
             <!-- Course Module Title -->
             <div class="mb-4">
               <h4 class="text-h4-medium text-Black">
@@ -707,47 +726,29 @@
   {/if}
 </div>
 
-<!-- Floating Action Buttons -->
+<!-- Update the Floating Action Button -->
 {#if !isEnrolled && !isCreator}
-  <div class="fixed bottom-[80px] left-0 right-0 px-4 z-50 lg:hidden">
-    <div class="container mx-auto max-w-[430px] flex flex-col gap-4">
+  <div 
+    class="fixed bottom-0 left-0 right-0 pb-36 pt-4 z-[100] lg:hidden transition-opacity duration-300"
+    class:opacity-0={!showFloatingButton}
+    class:pointer-events-none={!showFloatingButton}
+  >
+    <div class="container mx-auto pl-5">
       <!-- Enroll button -->
       <button
-        class="w-full flex items-center justify-center gap-2 h-[52px] bg-Green text-white rounded-[100px] hover:bg-GreenHover transition-colors shadow-lg disabled:opacity-50"
+        class="px-4 py-2 flex items-center justify-center gap-4 bg-Green text-white rounded-2xl transition-opacity disabled:opacity-50 text-semibody-medium shadow-lg"
         on:click={handleEnroll}
         disabled={enrolling}
       >
         {#if enrolling}
-          <span class="text-semibody-medium">Enrolling...</span>
+          <span>Enrolling...</span>
         {:else}
-          <span class="text-semibody-medium">Enroll</span>
+          <span>Enroll</span>
           <img
             src="/icons/arrow-right-white.svg"
             alt="Enroll"
             class="w-6 h-6"
           />
-        {/if}
-      </button>
-
-      <!-- Bookmark button -->
-      <button
-        class="w-full flex items-center justify-center gap-2 h-[52px] bg-white border border-Green text-Green rounded-[100px] hover:bg-Green/5 transition-colors disabled:opacity-50"
-        on:click={handleBookmark}
-        disabled={bookmarking}
-      >
-        {#if bookmarking}
-          <span class="text-semibody-medium">Processing...</span>
-        {:else}
-          <img
-            src={isBookmarked
-              ? "/icons/bookmark-filled.svg"
-              : "/icons/bookmark.svg"}
-            alt="Bookmark"
-            class="w-6 h-6"
-          />
-          <span class="text-semibody-medium">
-            {isBookmarked ? "Bookmarked" : "Bookmark Course"}
-          </span>
         {/if}
       </button>
     </div>
