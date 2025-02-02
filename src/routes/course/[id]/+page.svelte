@@ -219,9 +219,9 @@
 
   onMount(() => {
     // Add scroll event listener
-    window.addEventListener('scroll', handleScroll);
+    window.addEventListener("scroll", handleScroll);
     return () => {
-      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener("scroll", handleScroll);
     };
   });
 </script>
@@ -287,7 +287,10 @@
           </div>
 
           <!-- Course Info Section -->
-          <div class="mt-[calc(56.25vw+24px)] lg:mt-8" bind:this={contentStartElement}>
+          <div
+            class="mt-[calc(56.25vw+24px)] lg:mt-8"
+            bind:this={contentStartElement}
+          >
             <!-- Course Module Title -->
             <div class="mb-4">
               <h4 class="text-h4-medium text-Black">
@@ -481,14 +484,15 @@
               <!-- Course Progress and Modules for mobile -->
               {#if showProgress && $user && (isCreator || isEnrolled)}
                 <div
-                  class="mt-6 rounded-2xl border border-light-border dark:border-dark-border p-4"
+                  class="mt-6 rounded-2xl border border-light-border dark:border-dark-border"
                 >
                   <h3
-                    class="text-body-semibold text-light-text-primary dark:text-dark-text-primary mb-4"
+                    class="text-body-semibold border-b border-light-border dark:border-dark-border p-2 text-light-text-primary dark:text-dark-text-primary mb-4"
                   >
                     Your Progress
                   </h3>
-                  <div class="flex items-center gap-4">
+
+                  <div class="flex items-center gap-4 px-2 pb-2">
                     <div
                       class="flex-1 h-3 bg-black/[0.05] rounded-[2000px] overflow-hidden"
                     >
@@ -505,7 +509,7 @@
                       />
                     </div>
                     <span
-                      class="text-base text-light-text-primary dark:text-dark-text-primary"
+                      class="text-body text-light-text-primary dark:text-dark-text-primary"
                     >
                       {isCreator
                         ? moduleProgress.filter((m) => m?.completed).length
@@ -518,9 +522,88 @@
 
               <!-- Course Modules for mobile -->
               <div
-                class="mt-6 border border-light-border dark:border-dark-border rounded-2xl overflow-hidden"
+                class="mt-6 border border-light-border dark:border-dark-border rounded-3xl overflow-hidden"
               >
-                <!-- ... modules list code ... -->
+                <div>
+                  <h3
+                    class="text-body-semibold text-Black p-2 border-b border-light-border dark:border-dark-border bg-BackgroundRed"
+                  >
+                    Course Module
+                  </h3>
+                </div>
+
+                <div class="p-2 space-y-2.5">
+                  <!-- Course Modules List -->
+                  {#if courseDetails?.Final_Module_Title?.length > 0}
+                    {#each courseDetails.Final_Module_Title as title, index}
+                      <div
+                        class="p-2 rounded-2xl border border-light-border hover:bg-Black/5 dark:hover:bg-Black/5 transition-colors duration-200"
+                        class:bg-[rgba(65,193,203,0.1)]={$currentModuleStore ===
+                          index}
+                      >
+                        <button
+                          class="w-full flex items-start gap-4"
+                          on:click={() => {
+                            $currentModuleStore = index;
+                            if (typeof currentModule !== "undefined") {
+                              currentModule = index;
+                            }
+                          }}
+                        >
+                          <!-- Module Info -->
+                          <div class="flex-1 min-w-0 text-left">
+                            <p class="text-semibody-medium text-Black mb-2 inline-block">
+                              <span class="text-semibody-medium text-Black2">
+                                {(index + 1).toString().padStart(2, "0")}:
+                              </span>
+                              
+                                {title}
+                            
+                            </p>
+                            <p class="text-mini-body text-light-text-tertiary">
+                              {courseDetails?.Final_Module_Video_Duration?.[
+                                index
+                              ] || "0"} min
+                            </p>
+                          </div>
+
+                          <!-- Thumbnail Container -->
+                          <div class="relative w-[30%] max-w-[139px] aspect-video flex-shrink-0 rounded-lg overflow-hidden bg-black/5">
+                            {#if courseDetails?.Final_Module_Thumbnails?.[index]}
+                              <img
+                                src={courseDetails.Final_Module_Thumbnails[
+                                  index
+                                ]}
+                                alt="Video Thumbnail"
+                                class="absolute inset-0 w-full h-full object-cover"
+                              />
+                            {:else}
+                              <div class="absolute inset-0 flex items-center justify-center bg-black/5">
+                                <img
+                                  src="/icons/youtube.svg"
+                                  alt="Video"
+                                  class="w-8 h-8"
+                                />
+                              </div>
+                            {/if}
+                            <!-- Play Button Overlay -->
+                            <div class="absolute inset-0 flex items-center justify-center bg-black/20">
+                              <img
+                                src="/icons/youtube-icon.svg"
+                                alt="Play"
+                                class="w-8 h-8"
+                              />
+                            </div>
+                          </div>
+                        </button>
+                      </div>
+                    {/each}
+                  {:else}
+                    <div class="p-4 text-center text-light-text-tertiary">
+                      No modules available
+                    </div>
+                  {/if}
+                </div>
               </div>
 
               <!-- Reviews Section for mobile -->
@@ -589,137 +672,129 @@
         </div>
 
         <!-- Right Column - Progress and Modules -->
-        <div class="w-full lg:col-span-4">
-          <!-- Course Modules Section -->
-          <div
-            class="border border-light-border dark:border-dark-border rounded-2xl overflow-hidden"
-          >
+        <div class="hidden lg:block w-full lg:col-span-4">
+          <!-- Progress Section -->
+          {#if showProgress && $user && (isCreator || isEnrolled)}
             <div
-              class="p-4 border-b border-light-border dark:border-dark-border"
+              class="mt-6 rounded-2xl border border-light-border dark:border-dark-border"
             >
               <h3
-                class="text-body-semibold text-light-text-primary dark:text-dark-text-primary"
+                class="text-body-semibold border-b border-light-border dark:border-dark-border p-2 text-light-text-primary dark:text-dark-text-primary mb-4"
               >
-                Course Modules
+                Your Progress
               </h3>
-            </div>
-            <div
-              class="w-full divide-y divide-light-border dark:divide-dark-border"
-            >
-              <!-- Course Progress Section -->
-              {#if showProgress && $user && (isCreator || isEnrolled)}
-                <div
-                  class="mt-6 p-6 bg-white rounded-2xl border border-light-border"
-                >
-                  <h3 class="text-h4-medium text-Black mb-6">Your Progress</h3>
-                  <div class="flex items-center gap-4">
-                    <div
-                      class="flex-1 h-2 bg-Black/[0.05] rounded-[2000px] overflow-hidden"
-                    >
-                      <div
-                        class="h-full bg-brand-turquoise rounded-[200000px] transition-all duration-300"
-                        style="width: {isCreator
-                          ? (moduleProgress.filter((m) => m?.completed).length /
-                              courseDetails.Final_Module_Title.length) *
-                            100
-                          : ((enrollmentProgress?.completedModules?.length ||
-                              0) /
-                              courseDetails.Final_Module_Title.length) *
-                            100}%"
-                      />
-                    </div>
-                    <span class="text-h4-medium text-Black">
-                      {isCreator
-                        ? moduleProgress.filter((m) => m?.completed).length
-                        : enrollmentProgress?.completedModules?.length ||
-                          0}/{courseDetails.Final_Module_Title.length}
-                    </span>
-                  </div>
-                </div>
-              {/if}
 
-              <!-- Course Modules Section -->
-              <div class="mt-6">
-                <h3 class="text-h4-medium text-Black mb-6">Course Module</h3>
-                <div class="space-y-4">
+              <div class="flex items-center gap-4 px-2 pb-2">
+                <div
+                  class="flex-1 h-3 bg-black/[0.05] rounded-[2000px] overflow-hidden"
+                >
+                  <div
+                    class="h-full bg-brand-turquoise rounded-[200000px] transition-all duration-300"
+                    style="width: {isCreator
+                      ? (moduleProgress.filter((m) => m?.completed).length /
+                          courseDetails.Final_Module_Title.length) *
+                        100
+                      : ((enrollmentProgress?.completedModules?.length || 0) /
+                          courseDetails.Final_Module_Title.length) *
+                        100}%"
+                  />
+                </div>
+                <span
+                  class="text-body text-light-text-primary dark:text-dark-text-primary"
+                >
+                  {isCreator
+                    ? moduleProgress.filter((m) => m?.completed).length
+                    : enrollmentProgress?.completedModules?.length ||
+                      0}/{courseDetails.Final_Module_Title.length}
+                </span>
+              </div>
+            </div>
+          {/if}
+          <!-- Course Modules Section -->
+
+          <div
+                class="mt-6 border border-light-border dark:border-dark-border rounded-3xl overflow-hidden"
+              >
+                <div>
+                  <h3
+                    class="text-body-semibold text-Black p-2 border-b border-light-border dark:border-dark-border bg-BackgroundRed"
+                  >
+                    Course Module
+                  </h3>
+                </div>
+
+                <div class="p-2 space-y-2.5">
                   <!-- Course Modules List -->
-                  <div class="space-y-4">
-                    {#if courseDetails?.Final_Module_Title?.length > 0}
-                      {#each courseDetails.Final_Module_Title as title, index}
-                        <div
-                          class="p-4 bg-white rounded-2xl border border-light-border transition-colors duration-200"
-                          class:bg-[rgba(65,193,203,0.1)]={$currentModuleStore ===
-                            index}
+                  {#if courseDetails?.Final_Module_Title?.length > 0}
+                    {#each courseDetails.Final_Module_Title as title, index}
+                      <div
+                        class="p-2 rounded-2xl border border-light-border hover:bg-Black/5 dark:hover:bg-Black/5 transition-colors duration-200"
+                        class:bg-[rgba(65,193,203,0.1)]={$currentModuleStore ===
+                          index}
+                      >
+                        <button
+                          class="w-full flex items-center gap-4"
+                          on:click={() => {
+                            $currentModuleStore = index;
+                            if (typeof currentModule !== "undefined") {
+                              currentModule = index;
+                            }
+                          }}
                         >
-                          <button
-                            class="w-full flex items-center gap-4"
-                            on:click={() => {
-                              $currentModuleStore = index;
-                              if (typeof currentModule !== "undefined") {
-                                currentModule = index;
-                              }
-                            }}
-                          >
-                            <!-- Thumbnail Container -->
-                            <div
-                              class="relative flex-shrink-0 w-[180px] h-[100px] rounded-lg overflow-hidden bg-black/5"
-                            >
-                              {#if courseDetails?.Final_Module_Thumbnails?.[index]}
+                          <!-- Module Info -->
+                          <div class="flex-1 min-w-0 text-left inline-block">
+                            <p class="text-semibody-medium text-Black mb-2">
+                              <span class="text-semibody-medium text-Black2">
+                                {(index + 1).toString().padStart(2, "0")}:
+                              </span>
+                              {title}
+                            </p>
+                            <p class="text-mini-body text-light-text-tertiary">
+                              {courseDetails?.Final_Module_Video_Duration?.[
+                                index
+                              ] || "0"} min
+                            </p>
+                          </div>
+
+                          <!-- Thumbnail Container -->
+                          <div class="relative w-[30%] max-w-[139px] aspect-video flex-shrink-0 rounded-lg overflow-hidden bg-black/5">
+                            {#if courseDetails?.Final_Module_Thumbnails?.[index]}
+                              <img
+                                src={courseDetails.Final_Module_Thumbnails[
+                                  index
+                                ]}
+                                alt="Video Thumbnail"
+                                class="absolute inset-0 w-full h-full object-cover"
+                              />
+                            {:else}
+                              <div class="absolute inset-0 flex items-center justify-center bg-black/5">
                                 <img
-                                  src={courseDetails.Final_Module_Thumbnails[
-                                    index
-                                  ]}
-                                  alt="Video Thumbnail"
-                                  class="w-full h-full object-cover"
-                                />
-                              {:else}
-                                <div
-                                  class="w-full h-full flex items-center justify-center bg-black/5"
-                                >
-                                  <img
-                                    src="/icons/youtube.svg"
-                                    alt="Video"
-                                    class="w-8 h-8"
-                                  />
-                                </div>
-                              {/if}
-                              <!-- Play Button Overlay -->
-                              <div
-                                class="absolute inset-0 flex items-center justify-center bg-black/20"
-                              >
-                                <img
-                                  src="/icons/play.svg"
-                                  alt="Play"
+                                  src="/icons/youtube.svg"
+                                  alt="Video"
                                   class="w-8 h-8"
                                 />
                               </div>
+                            {/if}
+                            <!-- Play Button Overlay -->
+                            <div class="absolute inset-0 flex items-center justify-center bg-black/20">
+                              <img
+                                src="/icons/youtube-icon.svg"
+                                alt="Play"
+                                class="w-8 h-8"
+                              />
                             </div>
-
-                            <div class="flex-1 text-left">
-                              <p class="text-h4-medium text-Black mb-2">
-                                {(index + 1).toString().padStart(2, "0")}: {title}
-                              </p>
-                              <p
-                                class="text-mini-body text-light-text-tertiary"
-                              >
-                                {courseDetails?.Final_Module_Video_Duration?.[
-                                  index
-                                ] || "0"} min
-                              </p>
-                            </div>
-                          </button>
-                        </div>
-                      {/each}
-                    {:else}
-                      <div class="p-4 text-center text-light-text-tertiary">
-                        No modules available
+                          </div>
+                        </button>
                       </div>
-                    {/if}
-                  </div>
+                    {/each}
+                  {:else}
+                    <div class="p-4 text-center text-light-text-tertiary">
+                      No modules available
+                    </div>
+                  {/if}
                 </div>
               </div>
-            </div>
-          </div>
+
         </div>
       </div>
     </div>
@@ -728,7 +803,7 @@
 
 <!-- Update the Floating Action Button -->
 {#if !isEnrolled && !isCreator}
-  <div 
+  <div
     class="fixed bottom-0 left-0 right-0 pb-36 pt-4 z-[100] lg:hidden transition-opacity duration-300"
     class:opacity-0={!showFloatingButton}
     class:pointer-events-none={!showFloatingButton}

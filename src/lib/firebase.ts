@@ -168,25 +168,40 @@ export async function getUserCourses(userId: string) {
 
 export async function getUserCourse(userId: string, courseId: string) {
   try {
+    // First try to get from public courses
     const courseRef = doc(db, 'courses', courseId);
-    const courseSnap = await getDoc(courseRef);
+    const courseDoc = await getDoc(courseRef);
     
-    if (!courseSnap.exists()) {
+    if (!courseDoc.exists()) {
       throw new Error('Course not found');
     }
 
-    const courseData = courseSnap.data();
-    if (courseData.userId !== userId) {
-      throw new Error('Unauthorized access to course');
-    }
+    const courseData = courseDoc.data();
+    
+    // Check if user is creator or enrolled
+    if (courseData.createdBy === userId) {
+      // User is creator
+      return {
+        id: courseId,
+        ...courseData
+      };
+    } else {
+      // Check if user is enrolled
+      const enrollmentRef = doc(db, 'enrollments', `${userId}_${courseId}`);
+      const enrollmentDoc = await getDoc(enrollmentRef);
+      
+      if (!enrollmentDoc.exists()) {
+        throw new Error('Unauthorized access to course');
+      }
 
-    return {
-      id: courseSnap.id,
-      ...courseData
-    };
+      return {
+        id: courseId,
+        ...courseData
+      };
+    }
   } catch (error) {
     console.error('Error fetching course:', error);
-    throw new Error('Failed to fetch course');
+    throw error;
   }
 }
 
