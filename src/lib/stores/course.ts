@@ -1,7 +1,16 @@
 import { writable, type Writable } from 'svelte/store';
 
-// Create a writable store for the current module index
-export const currentModuleStore: Writable<number> = writable(0);
+function createCurrentModuleStore() {
+  const { subscribe, set, update } = writable(0);
+
+  return {
+    subscribe,
+    set: (value: number) => set(value),
+    reset: () => set(0),
+  };
+}
+
+export const currentModuleStore = createCurrentModuleStore();
 
 // Course progress store
 export const courseProgressStore: Writable<{

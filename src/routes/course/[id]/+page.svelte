@@ -1,6 +1,6 @@
 <script lang="ts">
   import { page } from "$app/stores";
-  import { onMount } from "svelte";
+  import { onMount, onDestroy } from "svelte";
   import { user } from "$lib/stores/auth";
   import { goto } from "$app/navigation";
   import { currentModuleStore } from "$lib/stores/course";
@@ -62,18 +62,12 @@
 
           // Check enrollment status
           try {
-            const enrollmentStatus = await getEnrollmentStatus(
-              $user.uid,
-              $page.params.id,
-            );
+            const enrollmentStatus = await getEnrollmentStatus($user.uid, $page.params.id);
             isEnrolled = enrollmentStatus?.isEnrolled || false;
             showProgress = isEnrolled;
 
             if (isEnrolled) {
-              enrollmentProgress = await getEnrollmentProgress(
-                $user.uid,
-                $page.params.id,
-              );
+              enrollmentProgress = await getEnrollmentProgress($user.uid, $page.params.id);
             }
           } catch (enrollError) {
             console.error("Error checking enrollment:", enrollError);
@@ -224,6 +218,16 @@
       window.removeEventListener("scroll", handleScroll);
     };
   });
+
+  // Add cleanup on component destroy
+  onDestroy(() => {
+    // Reset currentModuleStore to 0 when leaving the page
+    currentModuleStore.set(0);
+  });
+
+  // Update the module card styling
+  $: activeModuleClass = (index: number) => 
+    $currentModuleStore === index ? "bg-[rgba(66,193,200,0.1)]" : "";
 </script>
 
 <!-- Main Container -->
@@ -237,7 +241,7 @@
   {:else if error}
     <div class="text-brand-red text-center p-4">{error}</div>
   {:else if courseDetails}
-    <div class="w-full lg:container lg:mx-auto lg:py-8">
+    <div class="w-full lg:container lg:mx-auto lg:pb-8">
       <!-- Two Column Layout -->
       <div class="w-full lg:grid lg:grid-cols-12 lg:gap-8">
         <!-- Left Column - Video and Course Info -->
@@ -388,11 +392,12 @@
 
               <!-- Bookmark Button -->
               {#if !isCreator}
-                <div class="lg:hidden">
+                <div class="block lg:hidden">
                   <button
                     class="flex p-2 items-center justify-center rounded-2xl bg-Black/5 hover:bg-Black/5 transition-colors disabled:opacity-50"
                     on:click={handleBookmark}
                     disabled={bookmarking}
+
                     aria-label={isBookmarked
                       ? "Remove bookmark"
                       : "Add bookmark"}
@@ -417,28 +422,30 @@
 
             <!-- Module Content -->
             <div class="mt-6">
-              <!-- Course Objectives - Show only for first module -->
-              {#if $currentModuleStore === 0}
-                <div class="mt-6">
-                  <h3 class="text-h4-medium text-Black mb-4">
-                    Course Objective
-                  </h3>
-                  <p
-                    class="text-body text-light-text-secondary dark:text-dark-text-secondary"
-                  >
-                    {courseDetails?.Final_Course_Objective}
+              <!-- Course Title -->
+              <div class="mt-6 ">
+                <p class="text-h2-mobile lg:text-h2 text-Black">
+
+
+                  {courseDetails?.Final_Course_Title}
+                </p>
+              </div>
+              <!-- Course Introduction - Show for first module when not enrolled or is creator -->
+              {#if $currentModuleStore === 0 && (!isEnrolled || isCreator)}
+                <div class="mt-6 ">
+                  <h3 class="text-h4-medium text-Black mb-4">Course Introduction</h3>
+                  <p class="text-body text-light-text-secondary">
+                    {courseDetails?.Final_Course_Introduction}
                   </p>
                 </div>
               {/if}
 
-              <!-- Course Introduction - Show only for first module when not enrolled -->
-              {#if $currentModuleStore === 0 && !isEnrolled}
+              <!-- Course Objectives - Show for first module when not enrolled or is creator -->
+              {#if $currentModuleStore === 0 && (!isEnrolled || isCreator)}
                 <div class="mt-6">
-                  <h3 class="text-h4-medium text-Black mb-4">
-                    Course Introduction
-                  </h3>
-                  <p class="text-body text-light-text-secondary">
-                    {courseDetails?.Final_Course_Introduction}
+                  <h3 class="text-h4-medium text-Black mb-4">Course Objective</h3>
+                  <p class="text-body text-light-text-secondary dark:text-dark-text-secondary">
+                    {courseDetails?.Final_Course_Objective}
                   </p>
                 </div>
               {/if}
@@ -446,20 +453,15 @@
               <!-- Module Objective - Show for all modules -->
               <div class="mt-6">
                 <h3 class="text-h4-medium text-Black mb-4">Module Objective</h3>
-                <p
-                  class="text-body text-light-text-secondary dark:text-dark-text-secondary"
-                >
-                  {courseDetails?.Final_Module_Objective[$currentModuleStore] ||
-                    "Loading module..."}
+                <p class="text-body text-light-text-secondary dark:text-dark-text-secondary">
+                  {courseDetails?.Final_Module_Objective[$currentModuleStore] || "Loading module..."}
                 </p>
               </div>
 
               <!-- Course Conclusion - Show only for last module when completed -->
               {#if $currentModuleStore === courseDetails.Final_Module_Title.length - 1 && hasCompletedAllModules()}
                 <div class="mt-6 p-6 bg-[#F5F5F5] rounded-2xl">
-                  <h3 class="text-h4-medium text-Black mb-4">
-                    Course Conclusion
-                  </h3>
+                  <h3 class="text-h4-medium text-Black mb-4">Course Conclusion</h3>
                   <p class="text-body text-light-text-secondary">
                     {courseDetails?.Final_Course_Conclusion}
                   </p>
@@ -537,14 +539,12 @@
                   {#if courseDetails?.Final_Module_Title?.length > 0}
                     {#each courseDetails.Final_Module_Title as title, index}
                       <div
-                        class="p-2 rounded-2xl border border-light-border hover:bg-Black/5 dark:hover:bg-Black/5 transition-colors duration-200"
-                        class:bg-[rgba(65,193,203,0.1)]={$currentModuleStore ===
-                          index}
+                        class="p-2 rounded-2xl border border-light-border hover:bg-Black/5 dark:hover:bg-Black/5 transition-colors duration-200 {activeModuleClass(index)}"
                       >
                         <button
                           class="w-full flex items-start gap-4"
                           on:click={() => {
-                            $currentModuleStore = index;
+                            currentModuleStore.set(index);
                             if (typeof currentModule !== "undefined") {
                               currentModule = index;
                             }
@@ -642,7 +642,7 @@
                   {#if bookmarking}
                     <span>Processing...</span>
                   {:else}
-                    <span>Bookmark Course</span>
+                    <span>{isBookmarked ? "Remove Bookmark" : "Bookmark Course"}</span>
                   {/if}
                 </button>
               </div>
@@ -650,20 +650,7 @@
               <!-- Reviews Section -->
               {#if courseDetails.isPublic}
                 <div class="w-full mt-6">
-                  <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-h4-medium">Course Reviews</h3>
-                    <a
-                      href="#"
-                      class="text-brand-turquoise text-semibody-medium flex items-center gap-1"
-                    >
-                      Read all
-                      <img
-                        src="/icons/arrow-right.svg"
-                        alt="Read all"
-                        class="w-5 h-5"
-                      />
-                    </a>
-                  </div>
+                
                   <CourseRatings courseId={$page.params.id} />
                 </div>
               {/if}
@@ -676,7 +663,7 @@
           <!-- Progress Section -->
           {#if showProgress && $user && (isCreator || isEnrolled)}
             <div
-              class="mt-6 rounded-2xl border border-light-border dark:border-dark-border"
+              class="mb-4 rounded-2xl border border-light-border dark:border-dark-border"
             >
               <h3
                 class="text-body-semibold border-b border-light-border dark:border-dark-border p-2 text-light-text-primary dark:text-dark-text-primary mb-4"
@@ -713,7 +700,7 @@
           <!-- Course Modules Section -->
 
           <div
-                class="mt-6 border border-light-border dark:border-dark-border rounded-3xl overflow-hidden"
+                class=" border border-light-border dark:border-dark-border rounded-3xl overflow-hidden"
               >
                 <div>
                   <h3
@@ -728,14 +715,12 @@
                   {#if courseDetails?.Final_Module_Title?.length > 0}
                     {#each courseDetails.Final_Module_Title as title, index}
                       <div
-                        class="p-2 rounded-2xl border border-light-border hover:bg-Black/5 dark:hover:bg-Black/5 transition-colors duration-200"
-                        class:bg-[rgba(65,193,203,0.1)]={$currentModuleStore ===
-                          index}
+                        class="p-2 rounded-2xl border border-light-border hover:bg-Black/5 dark:hover:bg-Black/5 transition-colors duration-200 {activeModuleClass(index)}"
                       >
                         <button
                           class="w-full flex items-center gap-4"
                           on:click={() => {
-                            $currentModuleStore = index;
+                            currentModuleStore.set(index);
                             if (typeof currentModule !== "undefined") {
                               currentModule = index;
                             }

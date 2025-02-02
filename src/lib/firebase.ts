@@ -620,42 +620,29 @@ export async function bookmarkCourse(userId: string, courseId: string) {
 
 export async function enrollInCourse(userId: string, courseId: string) {
   try {
-    // Get course reference
-    const courseRef = doc(db, 'courses', courseId);
-    const courseDoc = await getDoc(courseRef);
-    
-    if (!courseDoc.exists()) {
-      throw new Error('Course not found');
-    }
-
     // Create enrollment document
-    const enrollmentId = `${userId}_${courseId}`;
-    const enrollmentRef = doc(db, 'enrollments', enrollmentId);
-    
-    // Initialize enrollment data
-    const enrollmentData = {
+    const enrollmentRef = doc(db, 'enrollments', `${userId}_${courseId}`);
+    await setDoc(enrollmentRef, {
       userId,
       courseId,
-      courseRef,
       enrolledAt: serverTimestamp(),
       lastAccessedAt: serverTimestamp(),
       completedModules: [],
       moduleProgress: [],
-      isCompleted: false
-    };
-
-    // Save enrollment
-    await setDoc(enrollmentRef, enrollmentData);
-
-    // Add to user's courses collection
-    const userCourseRef = doc(db, `users/${userId}/courses/${courseId}`);
-    await setDoc(userCourseRef, {
-      courseRef,
-      createdAt: serverTimestamp(),
-      isCreator: false
+      quizResults: {
+        moduleQuizzes: {}
+      }
     });
 
-    return enrollmentData;
+    // Add course to user's courses collection
+    const userCourseRef = doc(db, `users/${userId}/courses/${courseId}`);
+    await setDoc(userCourseRef, {
+      courseRef: doc(db, 'courses', courseId),
+      createdAt: serverTimestamp(),
+      isEnrolled: true
+    });
+
+    return true;
   } catch (error) {
     console.error('Error enrolling in course:', error);
     throw error;
@@ -664,12 +651,17 @@ export async function enrollInCourse(userId: string, courseId: string) {
 
 export async function getEnrollmentStatus(userId: string, courseId: string) {
   try {
-    const userCourseRef = doc(db, `users/${userId}/courses/${courseId}`);
-    const userCourseDoc = await getDoc(userCourseRef);
-    return userCourseDoc.exists() && userCourseDoc.data().isEnrolled;
+    // Check enrollment document
+    const enrollmentRef = doc(db, 'enrollments', `${userId}_${courseId}`);
+    const enrollmentDoc = await getDoc(enrollmentRef);
+    
+    return {
+      isEnrolled: enrollmentDoc.exists(),
+      enrollmentData: enrollmentDoc.exists() ? enrollmentDoc.data() : null
+    };
   } catch (error) {
     console.error('Error checking enrollment status:', error);
-    return false;
+    throw error;
   }
 }
 
