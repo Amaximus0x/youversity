@@ -178,27 +178,31 @@ export async function getUserCourse(userId: string, courseId: string) {
 
     const courseData = courseDoc.data();
     
-    // Check if user is creator or enrolled
-    if (courseData.createdBy === userId) {
-      // User is creator
-      return {
-        id: courseId,
-        ...courseData
-      };
-    } else {
-      // Check if user is enrolled
-      const enrollmentRef = doc(db, 'enrollments', `${userId}_${courseId}`);
-      const enrollmentDoc = await getDoc(enrollmentRef);
-      
-      if (!enrollmentDoc.exists()) {
-        throw new Error('Unauthorized access to course');
-      }
+    // Check if user is creator
+    const isCreator = courseData.createdBy === userId;
+    
+    // Check if user is enrolled
+    const enrollmentRef = doc(db, 'enrollments', `${userId}_${courseId}`);
+    const enrollmentDoc = await getDoc(enrollmentRef);
+    
+    // Also check user's courses collection for enrollment
+    const userCourseRef = doc(db, `users/${userId}/courses/${courseId}`);
+    const userCourseDoc = await getDoc(userCourseRef);
+    
+    const isEnrolled = enrollmentDoc.exists() || (userCourseDoc.exists() && userCourseDoc.data().isEnrolled);
 
-      return {
-        id: courseId,
-        ...courseData
-      };
+    // If not creator or enrolled, check if course is public
+    if (!isCreator && !isEnrolled && !courseData.isPublic) {
+      throw new Error('Unauthorized access to course');
     }
+
+    return {
+      id: courseId,
+      ...courseData,
+      isCreator,
+      isEnrolled,
+      enrollmentData: enrollmentDoc.exists() ? enrollmentDoc.data() : null
+    };
   } catch (error) {
     console.error('Error fetching course:', error);
     throw error;
@@ -651,12 +655,17 @@ export async function enrollInCourse(userId: string, courseId: string) {
 
 export async function getEnrollmentStatus(userId: string, courseId: string) {
   try {
-    // Check enrollment document
+    // Check both enrollment document and user's courses collection
     const enrollmentRef = doc(db, 'enrollments', `${userId}_${courseId}`);
     const enrollmentDoc = await getDoc(enrollmentRef);
     
+    const userCourseRef = doc(db, `users/${userId}/courses/${courseId}`);
+    const userCourseDoc = await getDoc(userCourseRef);
+    
+    const isEnrolled = enrollmentDoc.exists() || (userCourseDoc.exists() && userCourseDoc.data().isEnrolled);
+    
     return {
-      isEnrolled: enrollmentDoc.exists(),
+      isEnrolled,
       enrollmentData: enrollmentDoc.exists() ? enrollmentDoc.data() : null
     };
   } catch (error) {
