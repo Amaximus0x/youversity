@@ -490,44 +490,57 @@ export async function toggleCoursePrivacy(courseId: string, newIsPublic: boolean
   }
 }
 
-export async function likeCourse(courseId: string, userId: string) {
+export async function likeCourse(userId: string, courseId: string) {
   try {
+    // Get course reference
     const courseRef = doc(db, 'courses', courseId);
     const courseDoc = await getDoc(courseRef);
     
     if (!courseDoc.exists()) {
       throw new Error('Course not found');
     }
-    
-    const data = courseDoc.data();
-    
-    // Check if the course is public
-    if (!data.isPublic) {
-      throw new Error('Cannot like a private course');
-    }
-    
-    const likes = data.likes || 0;
-    const likedBy = data.likedBy || [];
-    
-    // Toggle like
-    if (likedBy.includes(userId)) {
+
+    // Check if user has already liked
+    const userLikeRef = doc(db, `users/${userId}/likes/${courseId}`);
+    const likeDoc = await getDoc(userLikeRef);
+
+    // Get current likes count
+    const currentLikes = courseDoc.data().likes || 0;
+
+    if (likeDoc.exists()) {
+      // Remove like
+      await deleteDoc(userLikeRef);
       await updateDoc(courseRef, {
-        ...data,  // Preserve all existing fields
-        likes: likes - 1,
-        likedBy: likedBy.filter((id: string) => id !== userId)
+        likes: currentLikes - 1
       });
-      return { likes: likes - 1, likedBy: likedBy.filter((id: string) => id !== userId) };
+      console.log('Like removed');
+      return false;
     } else {
-      await updateDoc(courseRef, {
-        ...data,  // Preserve all existing fields
-        likes: likes + 1,
-        likedBy: [...likedBy, userId]
+      // Add like
+      await setDoc(userLikeRef, {
+        courseRef,
+        createdAt: serverTimestamp()
       });
-      return { likes: likes + 1, likedBy: [...likedBy, userId] };
+      await updateDoc(courseRef, {
+        likes: currentLikes + 1
+      });
+      console.log('Like added');
+      return true;
     }
   } catch (error) {
     console.error('Error liking course:', error);
     throw new Error('Failed to like course');
+  }
+}
+
+export async function hasLikedCourse(userId: string, courseId: string): Promise<boolean> {
+  try {
+    const userLikeRef = doc(db, `users/${userId}/likes/${courseId}`);
+    const likeDoc = await getDoc(userLikeRef);
+    return likeDoc.exists();
+  } catch (error) {
+    console.error('Error checking like status:', error);
+    return false;
   }
 }
 
@@ -569,54 +582,45 @@ export async function bookmarkCourse(userId: string, courseId: string) {
 
 export async function enrollInCourse(userId: string, courseId: string) {
   try {
-    // Get course data first
+    // Get course reference
     const courseRef = doc(db, 'courses', courseId);
     const courseDoc = await getDoc(courseRef);
     
     if (!courseDoc.exists()) {
       throw new Error('Course not found');
     }
-    
-    // Check if already enrolled
-    const userCourseRef = doc(db, `users/${userId}/courses/${courseId}`);
-    const userCourseDoc = await getDoc(userCourseRef);
-    
-    if (userCourseDoc.exists()) {
-      throw new Error('Already enrolled in this course');
-    }
 
-    const now = new Date();
+    // Create enrollment document
+    const enrollmentId = `${userId}_${courseId}`;
+    const enrollmentRef = doc(db, 'enrollments', enrollmentId);
     
-    // Create enrollment with initial progress
+    // Initialize enrollment data
     const enrollmentData = {
-      courseRef: courseRef,
-      createdAt: now,
-      isEnrolled: true,
-      progress: {
-        moduleProgress: [],
-        lastAccessedModule: 0,
-        completedModules: [],
-        quizResults: {
-          moduleQuizzes: {}
-        },
-        startDate: now,
-        lastAccessDate: now
-      }
+      userId,
+      courseId,
+      courseRef,
+      enrolledAt: serverTimestamp(),
+      lastAccessedAt: serverTimestamp(),
+      completedModules: [],
+      moduleProgress: [],
+      isCompleted: false
     };
 
-    // Add to user's courses subcollection with progress data
-    await setDoc(userCourseRef, enrollmentData);
+    // Save enrollment
+    await setDoc(enrollmentRef, enrollmentData);
 
-    return {
-      ...courseDoc.data(),
-      id: courseId,
-      isEnrolled: true,
-      enrolledAt: now,
-      progress: enrollmentData.progress
-    };
+    // Add to user's courses collection
+    const userCourseRef = doc(db, `users/${userId}/courses/${courseId}`);
+    await setDoc(userCourseRef, {
+      courseRef,
+      createdAt: serverTimestamp(),
+      isCreator: false
+    });
+
+    return enrollmentData;
   } catch (error) {
     console.error('Error enrolling in course:', error);
-    throw new Error('Failed to enroll in course');
+    throw error;
   }
 }
 
@@ -827,13 +831,12 @@ export async function isBookmarked(userId: string, courseId: string): Promise<bo
 export async function submitCourseRating(
   userId: string,
   courseId: string,
-  rating: number,
   review: string,
   userDisplayName: string,
   userPhotoURL?: string
 ) {
   try {
-    console.log('Submitting rating:', { userId, courseId, rating, review });
+    console.log('Submitting review:', { userId, courseId, review });
     const courseRef = doc(db, 'courses', courseId);
     const courseDoc = await getDoc(courseRef);
     
@@ -842,57 +845,40 @@ export async function submitCourseRating(
     }
 
     if (!courseDoc.data().isPublic) {
-      throw new Error('Cannot rate a private course');
+      throw new Error('Cannot review a private course');
     }
 
     const ratingRef = doc(db, `courses/${courseId}/ratings/${userId}`);
     const ratingDoc = await getDoc(ratingRef);
     const now = Timestamp.fromDate(new Date());
 
-    const ratingData: CourseRating = {
+    // Create review data object without undefined values
+    const reviewData = {
       userId,
       courseId,
-      rating,
       review,
       userDisplayName,
-      userPhotoURL,
       createdAt: now,
-      updatedAt: now
+      updatedAt: now,
+      ...(userPhotoURL ? { userPhotoURL } : {}) // Only include if not undefined
     };
 
-    console.log('Rating data to save:', ratingData);
+    console.log('Review data to save:', reviewData);
 
     if (ratingDoc.exists()) {
-      console.log('Updating existing rating');
+      console.log('Updating existing review');
       await updateDoc(ratingRef, {
-        ...ratingData,
+        ...reviewData,
         createdAt: ratingDoc.data().createdAt // Keep original creation date
       });
     } else {
-      console.log('Creating new rating');
-      await setDoc(ratingRef, ratingData);
+      console.log('Creating new review');
+      await setDoc(ratingRef, reviewData);
     }
 
-    // Update course average rating
-    const ratingsQuery = collection(db, `courses/${courseId}/ratings`);
-    const ratingsSnapshot = await getDocs(ratingsQuery);
-    let totalRating = 0;
-    ratingsSnapshot.forEach(doc => {
-      const rating = Number(doc.data().rating);
-      console.log('Individual rating:', rating);
-      totalRating += rating;
-    });
-    const averageRating = totalRating / ratingsSnapshot.size;
-    console.log('New average rating:', averageRating, 'Total ratings:', ratingsSnapshot.size);
-
-    await updateDoc(courseRef, {
-      averageRating,
-      totalRatings: ratingsSnapshot.size
-    });
-
-    return ratingData;
+    return reviewData;
   } catch (error) {
-    console.error('Error submitting course rating:', error);
+    console.error('Error submitting course review:', error);
     throw error;
   }
 }
@@ -935,6 +921,39 @@ export async function getUserCourseRating(userId: string, courseId: string) {
     return null;
   } catch (error) {
     console.error('Error getting user course rating:', error);
+    throw error;
+  }
+}
+
+// Add these functions for bookmark handling
+export async function toggleBookmark(userId: string, courseId: string) {
+  try {
+    const courseRef = doc(db, 'courses', courseId);
+    const courseDoc = await getDoc(courseRef);
+    
+    if (!courseDoc.exists()) {
+      throw new Error('Course not found');
+    }
+
+    const userBookmarkRef = doc(db, `users/${userId}/bookmarks/${courseId}`);
+    const bookmarkDoc = await getDoc(userBookmarkRef);
+
+    if (bookmarkDoc.exists()) {
+      // Remove bookmark
+      await deleteDoc(userBookmarkRef);
+      console.log('Bookmark removed');
+      return false; // Return false to indicate bookmark was removed
+    } else {
+      // Add bookmark
+      await setDoc(userBookmarkRef, {
+        courseRef,
+        createdAt: serverTimestamp()
+      });
+      console.log('Bookmark added');
+      return true; // Return true to indicate bookmark was added
+    }
+  } catch (error) {
+    console.error('Error toggling bookmark:', error);
     throw error;
   }
 }

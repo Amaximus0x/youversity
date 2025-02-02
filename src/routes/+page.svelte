@@ -306,7 +306,7 @@
     <div class="flex items-center justify-between mb-4">
       <h4 class="text-h4-medium lg:text-h4 text-light-text-primary dark:text-dark-text-primary">Trending Courses</h4>
       <div class="flex items-center gap-2">
-        <a href="/trending" class="text-[#42C1C8] text-body hover:underline">Show All</a>
+        <a href="/trending" class="text-brand-turquoise text-body hover:underline">Show All</a>
         <img src="/icons/arrow-right.svg" alt="arrow-right.svg" class="w-6 h-6">
       </div>
     </div>

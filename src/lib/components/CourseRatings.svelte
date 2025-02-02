@@ -52,7 +52,6 @@
       await submitCourseRating(
         $user.uid,
         courseId,
-        userRating,
         userReview,
         $user.displayName || 'Anonymous',
         $user.photoURL || undefined
@@ -62,8 +61,8 @@
       ratings = await getCourseRatings(courseId);
       showReviewForm = false;
     } catch (err) {
-      console.error('Error submitting rating:', err);
-      error = err instanceof Error ? err.message : 'Failed to submit rating';
+      console.error('Error submitting review:', err);
+      error = err instanceof Error ? err.message : 'Failed to submit review';
     } finally {
       submitting = false;
     }
@@ -110,12 +109,12 @@
     }
   }
 </script>
-
-<div class="bg-transparent rounded-2xl border border-[rgba(0,0,0,0.05)] p-6">
+<!-- Course Reviews Section -->
+<div class="bg-transparent rounded-2xl border border-light-border dark:border-dark-border p-6">
   <div class="flex items-center justify-between mb-6">
-    <h2 class="text-2xl font-medium">Course Reviews</h2>
+    <h2 class="text-h3-mobile text-light-text-primary dark:text-dark-text-primary">Course Reviews</h2>
     <button 
-      class="text-[#42C1C8] text-base hover:opacity-70 transition-opacity flex items-center gap-1"
+      class="text-brand-turquoise text-body hover:underline transition-opacity flex items-center gap-1"
     >
       Read all
       <img src="/icons/arrow-right.svg" alt="arrow" class="w-5 h-5" />
@@ -125,31 +124,16 @@
   <div class="flex items-center gap-8 mb-8">
     <!-- Total Reviews -->
     <div>
-      <h3 class="text-[#A3A3A3] text-base mb-1">Total Reviews</h3>
-      <p class="text-[32px] font-medium">{ratings.length}</p>
+      <h3 class="text-light-text-tertiary text-mini-body ">Total Reviews</h3>
+      <p class="text-[32px] font-medium text-light-text-primary dark:text-dark-text-primary">
+        {(ratings.length)}
+      </p>
     </div>
 
-    <!-- Average Ratings -->
-    <div class="border-l border-[rgba(0,0,0,0.05)] pl-8">
-      <h3 class="text-[#A3A3A3] text-base mb-1">Average Ratings</h3>
-      <div class="flex items-center gap-2">
-        <p class="text-[32px] font-medium">{averageRating.toFixed(1)}</p>
-        <div class="flex items-center gap-1">
-          {#each Array(5) as _, i}
-            <img 
-              src="/icons/star.svg"
-              alt="star"
-              class="w-4 h-4"
-              style={i >= averageRating ? 'opacity: 0.2;' : ''}
-            />
-          {/each}
-        </div>
-      </div>
-    </div>
 
     <!-- Add Review Button -->
     <button 
-      class="ml-auto px-4 py-2 bg-black/[0.05] text-[#1E3443] text-base rounded-lg hover:bg-black/[0.08] transition-colors"
+      class="ml-auto px-4 py-2 bg-black/[0.05] text-Green text-semibody-medium rounded-lg hover:bg-black/[0.08] transition-colors"
       on:click={() => {
         if ($user) {
           showReviewForm = true;
@@ -170,18 +154,18 @@
       {/each}
     </div>
   {:else if ratings.length === 0}
-    <p class="text-[#A3A3A3] text-center py-8">No reviews yet. Be the first to review this course!</p>
+    <p class="text-light-text-tertiary text-center py-8">No reviews yet. Be the first to review this course!</p>
   {:else}
     <div class="space-y-8">
       {#each ratings as rating}
-        <div class="pb-8 border-b border-[rgba(0,0,0,0.05)] last:border-b-0">
+        <div class="pb-8 border-b border-light-border dark:border-dark-border last:border-b-0">
           <div class="flex items-start justify-between mb-4">
             <div class="flex items-center gap-3">
               {#if rating.userPhotoURL}
                 <img 
                   src={rating.userPhotoURL} 
                   alt={rating.userDisplayName}
-                  class="w-12 h-12 rounded-full"
+                  class="w-12 h-12 rounded-full object-cover"
                 />
               {:else}
                 <div class="w-12 h-12 rounded-full bg-[#F5F5F5] flex items-center justify-center">
@@ -191,22 +175,18 @@
                 </div>
               {/if}
               <div>
-                <p class="text-base font-medium">{rating.userDisplayName}</p>
-                <p class="text-[#A3A3A3] text-base">{formatDate(rating.createdAt)}</p>
+                <p class="text-body font-medium text-light-text-primary dark:text-dark-text-primary">
+                  {rating.userDisplayName}
+                </p>
+                <p class="text-light-text-tertiary text-body">
+                  {formatDate(rating.createdAt)}
+                </p>
               </div>
             </div>
-            <div class="flex gap-1">
-              {#each Array(5) as _, i}
-                <img 
-                  src="/icons/star.svg"
-                  alt="star"
-                  class="w-4 h-4"
-                  style={i >= rating.rating ? 'opacity: 0.2;' : ''}
-                />
-              {/each}
-            </div>
           </div>
-          <p class="text-base text-[#494848]">{rating.review}</p>
+          <p class="text-body text-light-text-secondary dark:text-dark-text-secondary">
+            {rating.review}
+          </p>
         </div>
       {/each}
     </div>
@@ -238,26 +218,6 @@
       <!-- Content -->
       <form on:submit|preventDefault={handleSubmitRating} class="px-6 py-4">
         <div class="mb-6">
-          <label class="block text-[#5F6368] text-sm mb-2">Rating</label>
-          <div class="flex gap-2">
-            {#each Array(5) as _, i}
-              <button
-                type="button"
-                class="focus:outline-none"
-                on:click={() => userRating = i + 1}
-              >
-                <img 
-                  src="/icons/star.svg"
-                  alt="star"
-                  class="w-6 h-6"
-                  style={i >= userRating ? 'opacity: 0.2;' : ''}
-                />
-              </button>
-            {/each}
-          </div>
-        </div>
-
-        <div class="mb-6">
           <label class="block text-[#5F6368] text-sm mb-2">Review</label>
           <textarea
             bind:value={userReview}
@@ -284,7 +244,7 @@
           <button
             type="submit"
             class="px-6 py-2 bg-[#42C1C8] text-white rounded-lg hover:opacity-70 transition-opacity disabled:opacity-50"
-            disabled={submitting || !userRating}
+            disabled={submitting}
           >
             {submitting ? 'Submitting...' : 'Submit Review'}
           </button>

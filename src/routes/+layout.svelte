@@ -263,6 +263,12 @@
                     class="w-[40px] h-[40px] object-cover"
                   />
                 </div>
+                {:else}
+                <div class="w-12 h-12 rounded-full bg-[#F5F5F5] flex items-center justify-center">
+                  <span class="text-[#2A4D61] font-medium">
+                    {($user?.email[0].toUpperCase()) || 'U'}
+                  </span>
+                </div>
               {/if}
             </div>
           </div>
@@ -340,6 +346,13 @@
                     class="w-full h-full object-cover"
                   />
                 </div>
+                {:else}
+                <div class="w-12 h-12 rounded-full bg-[#F5F5F5] flex items-center justify-center">
+                  <span class="text-[#2A4D61] font-medium">
+                    {($user?.username[0].toUpperCase()) || ''}
+                  </span>
+                </div>
+
               {/if}
             </div>
           </div>

@@ -69,10 +69,11 @@ export default {
         "Green": "#2A4D61",
         "TransparentBlack": "#000000 0.05",
         "White": "#FFFFFF",
-        "TransparentGreen": "#41C1CB",
+        "TransparentGreen": "rgba(65,193,203,0.1)",
         "Grey": "#A3A3A3",
         "TransparentWhite 1": "#FFFFFF",
         "Grey2": "#EBEBEB",
+
         "TransparentGreen 2": "#41C1CB",
         "blackTransparent": "#000000",
         "GreenHover": "#1E3443",
@@ -103,6 +104,15 @@ export default {
           '26px', // Font size
           {
             lineHeight: '36px', // Line height
+            fontWeight: '500', // Font weight
+            fontFamily: 'Poppins', // Font family
+            textAlign: 'left', // Text alignment
+          },
+        ],
+        'h3-mobile': [
+          '24px', // Font size
+          {
+            lineHeight: '28px', // Line height
             fontWeight: '500', // Font weight
             fontFamily: 'Poppins', // Font family
             textAlign: 'left', // Text alignment
