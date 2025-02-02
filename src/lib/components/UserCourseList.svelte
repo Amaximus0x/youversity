@@ -68,7 +68,7 @@
     >
       <div class="text-semi-body lg:text-body text-white">Explore Course</div>
       <div class="w-6 h-6 relative origin-top-left">
-        <img src="/icons/arrow-right-io.svg" alt="arrow" class="w-full h-full" />
+        <img src="/icons/arrow-right-white.svg" alt="arrow" class="w-full h-full" />
       </div>
     </div>
   </div>

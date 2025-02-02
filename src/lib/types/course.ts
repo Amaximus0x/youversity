@@ -45,7 +45,6 @@ export interface FinalCourseStructure {
   createdAt: Date;
   likes?: number;
   views?: number;
-  averageRating?: number;
   totalRatings?: number;
   Final_Module_Video_Duration: number[];
   Final_Module_Thumbnails: string[];

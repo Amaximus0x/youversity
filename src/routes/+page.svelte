@@ -250,10 +250,11 @@
         >
           <span class="hidden lg:block">Create Course</span>
           <img 
-            src="/icons/arrow-right-io.svg" 
+            src="/icons/arrow-right-white.svg" 
             alt="Create"
             class="w-5 h-5" 
           />
+
         </button>
         <div class="relative w-full">
           <div 

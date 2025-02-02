@@ -342,40 +342,62 @@ export async function getCourseProgress(userId: string, courseId: string) {
   }
 }
 
-export async function getSharedCourse(courseId: string) {
+export async function getSharedCourse(courseId: string): Promise<FinalCourseStructure> {
   try {
-    console.log('Fetching shared course:', courseId);
+    console.log('Getting shared course:', courseId);
     const courseRef = doc(db, 'courses', courseId);
     const courseDoc = await getDoc(courseRef);
-    console.log('Course exists:', courseDoc.exists());
     
-    if (courseDoc.exists()) {
-      const data = courseDoc.data();
-      console.log('Course data:', data);
-
-      // Increment views if it's a public course
-      if (data.isPublic) {
-        const currentViews = data.views || 0;
-        await updateDoc(courseRef, {
-          views: currentViews + 1
-        });
-        data.views = currentViews + 1;
-      }
-
-      const enrichedData = await enrichWithCreatorProfile({
-        ...data,
-        id: courseDoc.id,
-        createdAt: data.createdAt?.toDate?.() || null
-      });
-
-      return enrichedData as FinalCourseStructure & { 
-        id: string;
-        creatorUsername: string;
-        creatorDisplayName: string;
-      };
+    if (!courseDoc.exists()) {
+      throw new Error('Course not found');
     }
-    console.log('Course not found');
-    return null;
+
+    const courseData = courseDoc.data();
+    
+    // Check if course is public
+    if (!courseData.isPublic) {
+      throw new Error('This course is not public');
+    }
+
+    // Increment view count
+    try {
+      await updateDoc(courseRef, {
+        views: (courseData.views || 0) + 1
+      });
+    } catch (error) {
+      console.error('Error updating view count:', error);
+      // Don't throw error for view count update failure
+    }
+
+    // Ensure all required fields are present with proper types
+    const enrichedCourseData: FinalCourseStructure = {
+      id: courseId,
+      Final_Course_Title: courseData.Final_Course_Title || '',
+      Final_Course_Objective: courseData.Final_Course_Objective || '',
+      Final_Course_Introduction: courseData.Final_Course_Introduction || '',
+      Final_Module_Title: courseData.Final_Module_Title || [],
+      Final_Module_Objective: courseData.Final_Module_Objective || [],
+      Final_Module_YouTube_Video_URL: courseData.Final_Module_YouTube_Video_URL || [],
+      Final_Module_Quiz: courseData.Final_Module_Quiz || [],
+      Final_Course_Quiz: courseData.Final_Course_Quiz || { quiz: [] },
+      Final_Course_Conclusion: courseData.Final_Course_Conclusion || '',
+      YouTube_Playlist_URL: courseData.YouTube_Playlist_URL || '',
+      Final_Course_Thumbnail: courseData.Final_Course_Thumbnail || '',
+      isPublic: courseData.isPublic || false,
+      createdBy: courseData.createdBy || '',
+      createdAt: courseData.createdAt?.toDate() || new Date(),
+      likes: courseData.likes || 0,
+      views: (courseData.views || 0) + 1,
+      totalRatings: courseData.totalRatings || 0,
+      Final_Module_Video_Duration: courseData.Final_Module_Video_Duration || [],
+      Final_Module_Thumbnails: courseData.Final_Module_Thumbnails || [],
+      Final_Course_Duration: courseData.Final_Course_Duration || 0,
+      creatorUsername: courseData.creatorUsername,
+      creatorDisplayName: courseData.creatorDisplayName
+    };
+
+    console.log('Enriched course data:', enrichedCourseData);
+    return enrichedCourseData;
   } catch (error) {
     console.error('Error getting shared course:', error);
     throw error;
@@ -492,7 +514,7 @@ export async function toggleCoursePrivacy(courseId: string, newIsPublic: boolean
 
 export async function likeCourse(userId: string, courseId: string) {
   try {
-    // Get course reference
+    // Get course reference and data
     const courseRef = doc(db, 'courses', courseId);
     const courseDoc = await getDoc(courseRef);
     
@@ -508,27 +530,28 @@ export async function likeCourse(userId: string, courseId: string) {
     const currentLikes = courseDoc.data().likes || 0;
 
     if (likeDoc.exists()) {
-      // Remove like
-      await deleteDoc(userLikeRef);
+      // Remove like - first update course to avoid permission issues
       await updateDoc(courseRef, {
-        likes: currentLikes - 1
+        likes: Math.max(0, currentLikes - 1) // Ensure likes don't go below 0
       });
-      console.log('Like removed');
+      await deleteDoc(userLikeRef);
       return false;
     } else {
-      // Add like
+      // Add like - first create the like document
       await setDoc(userLikeRef, {
-        courseRef,
+        courseId,
         createdAt: serverTimestamp()
       });
       await updateDoc(courseRef, {
         likes: currentLikes + 1
       });
-      console.log('Like added');
       return true;
     }
   } catch (error) {
     console.error('Error liking course:', error);
+    if (error instanceof Error) {
+      throw new Error(error.message);
+    }
     throw new Error('Failed to like course');
   }
 }
