@@ -272,25 +272,33 @@
             <!-- Course Module Title -->
             <div class="mb-4">
               <h4 class="text-h4-medium text-Black">
-                <span class="text-h4-medium text-Black2">{(($currentModuleStore + 1).toString().padStart(2, '0'))}</span>: {courseDetails.Final_Module_Title[$currentModuleStore] || "Loading module..."}
+                <span class="text-h4-medium text-Black2"
+                  >{($currentModuleStore + 1).toString().padStart(2, "0")}</span
+                >: {courseDetails.Final_Module_Title[$currentModuleStore] ||
+                  "Loading module..."}
               </h4>
             </div>
-
 
             <!-- Stats Section -->
             <div class="flex items-center gap-4">
               <!-- Upvotes -->
-              <button 
+              <button
                 class="flex items-center gap-2 bg-Black/5 px-2 py-2 rounded-2xl hover:opacity-80 transition-opacity disabled:opacity-50"
                 on:click={handleLike}
                 disabled={liking}
               >
-                <img 
-                  src={hasLiked ? "/icons/upvote-filled.svg" : "/icons/upvote.svg"}
-                  alt="Upvotes" 
+                <img
+                  src={hasLiked
+                    ? "/icons/upvote-filled.svg"
+                    : "/icons/upvote.svg"}
+                  alt="Upvotes"
                   class="w-5 h-5"
                 />
-                <span class="{hasLiked ? 'text-semibody-medium text-Black' : 'text-semibody text-Black2 hover:text-Black'}">
+                <span
+                  class={hasLiked
+                    ? "text-semibody-medium text-Black"
+                    : "text-semibody text-Black2 hover:text-Black"}
+                >
                   {formatNumber(courseDetails?.likes || 0)} Upvotes
                 </span>
               </button>
@@ -336,8 +344,8 @@
                   >
                     <span
                       class="text-body-semibold text-light-text-primary dark:text-dark-text-primary"
-
-                      >Creator:</span>
+                      >Creator:</span
+                    >
                     {creatorProfile?.username ||
                       creatorProfile?.displayName ||
                       "Unknown Creator"}
@@ -358,94 +366,96 @@
 
               <!-- Bookmark Button -->
               {#if !isCreator}
-                <button
-                  class="flex p-2 items-center justify-center rounded-2xl bg-Black/5 hover:bg-Black/5 transition-colors disabled:opacity-50"
-                  on:click={handleBookmark}
-                  disabled={bookmarking}
-                  aria-label={isBookmarked ? "Remove bookmark" : "Add bookmark"}
-                >
-                  {#if bookmarking}
-                    <div
-                      class="w-6 h-6 border-2 border-Green border-t-transparent rounded-full animate-spin"
-                    ></div>
-                  {:else}
-                    <img
-                      src={isBookmarked
-                        ? "/icons/bookmark-filled.svg"
-                        : "/icons/bookmark.svg"}
-                      alt="Bookmark"
-                      class="w-6 h-6"
-                    />
-                  {/if}
-                </button>
+                <div class="lg:hidden">
+                  <button
+                    class="flex p-2 items-center justify-center rounded-2xl bg-Black/5 hover:bg-Black/5 transition-colors disabled:opacity-50"
+                    on:click={handleBookmark}
+                    disabled={bookmarking}
+                    aria-label={isBookmarked
+                      ? "Remove bookmark"
+                      : "Add bookmark"}
+                  >
+                    {#if bookmarking}
+                      <div
+                        class="w-6 h-6 border-2 border-Green border-t-transparent rounded-full animate-spin"
+                      ></div>
+                    {:else}
+                      <img
+                        src={isBookmarked
+                          ? "/icons/bookmark-filled.svg"
+                          : "/icons/bookmark.svg"}
+                        alt="Bookmark"
+                        class="w-6 h-6"
+                      />
+                    {/if}
+                  </button>
+                </div>
               {/if}
             </div>
 
-            <!-- Course Title-->
-            <div class="mt-4">
-              <p
-                class="text-h2-mobile lg:text-h2 text-light-text-primary dark:text-dark-text-primary"
-              >
-                {courseDetails?.Final_Course_Title}
-              </p>
-            </div>
-            
-            <!-- Course Objectives -->
+            <!-- Module Content -->
             <div class="mt-6">
-              <h3 class="text-h4-medium text-Black mb-4">Course Objective</h3>
-              <p
-              class="text-body text-light-text-secondary dark:text-dark-text-secondary"
-              >
-              {courseDetails?.Final_Course_Objective}
-            </p>
-          </div>
-          
-          <!-- Course Introduction -->
-          <div class="mt-6">
-            <h3 class="text-h4-medium text-Black mb-4">Course Introduction</h3>
-            <p
-
-              class="text-body text-light-text-secondary dark:text-dark-text-secondary"
-            >
-              {courseDetails?.Final_Course_Introduction}
-            </p>
-          </div>
-
-            <!-- Course Conclusion -->
-            {#if hasCompletedAllModules()}
-              <div
-                class="mt-6 p-6 bg-BackgoundBlue rounded-2xl border border-light-border dark:border-dark-border"
-              >
-                <h3
-                  class="text-h4-medium text-light-text-primary dark:text-dark-text-primary mb-4"
-                >
-                  Course Conclusion
-                </h3>
-                <div class="space-y-4">
+              <!-- Course Objectives - Show only for first module -->
+              {#if $currentModuleStore === 0}
+                <div class="mt-6">
+                  <h3 class="text-h4-medium text-Black mb-4">
+                    Course Objective
+                  </h3>
                   <p
                     class="text-body text-light-text-secondary dark:text-dark-text-secondary"
                   >
-                    {courseDetails.Final_Course_Conclusion ||
-                      "Congratulations on completing all modules!"}
+                    {courseDetails?.Final_Course_Objective}
                   </p>
+                </div>
+              {/if}
 
+              <!-- Course Introduction - Show only for first module when not enrolled -->
+              {#if $currentModuleStore === 0 && !isEnrolled}
+                <div class="mt-6">
+                  <h3 class="text-h4-medium text-Black mb-4">
+                    Course Introduction
+                  </h3>
+                  <p class="text-body text-light-text-secondary">
+                    {courseDetails?.Final_Course_Introduction}
+                  </p>
+                </div>
+              {/if}
+
+              <!-- Module Objective - Show for all modules -->
+              <div class="mt-6">
+                <h3 class="text-h4-medium text-Black mb-4">Module Objective</h3>
+                <p
+                  class="text-body text-light-text-secondary dark:text-dark-text-secondary"
+                >
+                  {courseDetails?.Final_Module_Objective[$currentModuleStore] ||
+                    "Loading module..."}
+                </p>
+              </div>
+
+              <!-- Course Conclusion - Show only for last module when completed -->
+              {#if $currentModuleStore === courseDetails.Final_Module_Title.length - 1 && hasCompletedAllModules()}
+                <div class="mt-6 p-6 bg-[#F5F5F5] rounded-2xl">
+                  <h3 class="text-h4-medium text-Black mb-4">
+                    Course Conclusion
+                  </h3>
+                  <p class="text-body text-light-text-secondary">
+                    {courseDetails?.Final_Course_Conclusion}
+                  </p>
                   <div class="flex items-center gap-4 mt-4">
                     <div class="flex items-center gap-2">
                       <img
                         src="/icons/check-circle.svg"
                         alt="Completed"
-                        class="w-5 h-5 text-brand-turquoise"
+                        class="w-5 h-5"
                       />
-                      <span
-                        class="text-semibody-medium text-light-text-primary"
-                      >
+                      <span class="text-semibody-medium text-Black">
                         All {courseDetails.Final_Module_Title.length} modules completed
                       </span>
                     </div>
                   </div>
                 </div>
-              </div>
-            {/if}
+              {/if}
+            </div>
 
             <!-- Move Reviews Section after Course Conclusion for mobile -->
             <div class="lg:hidden">
@@ -504,8 +514,54 @@
 
             <!-- Desktop Reviews Section -->
             <div class="hidden lg:block">
+              <!-- Desktop Action Buttons -->
+              <div class="mt-6 flex flex-col gap-3">
+                {#if !isEnrolled && !isCreator}
+                  <!-- Enroll button -->
+                  <button
+                    class="w-full px-4 py-2 flex items-center justify-center text-semibody-medium bg-Green text-white rounded-2xl hover:bg-GreenHover transition-opacity"
+                    on:click={handleEnroll}
+                    disabled={enrolling}
+                  >
+                    {#if enrolling}
+                      <span>Enrolling...</span>
+                    {:else}
+                      <span>Enroll</span>
+                    {/if}
+                  </button>
+                {/if}
+
+                <!-- Bookmark button -->
+                <button
+                  class="w-full px-4 py-2 text-semibody-medium flex items-center justify-center bg-Black/5 text-Green rounded-2xl hover:bg-Black/5 transition-colors"
+                  on:click={handleBookmark}
+                  disabled={bookmarking}
+                >
+                  {#if bookmarking}
+                    <span>Processing...</span>
+                  {:else}
+                    <span>Bookmark Course</span>
+                  {/if}
+                </button>
+              </div>
+
+              <!-- Reviews Section -->
               {#if courseDetails.isPublic}
                 <div class="w-full mt-6">
+                  <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-h4-medium">Course Reviews</h3>
+                    <a
+                      href="#"
+                      class="text-brand-turquoise text-semibody-medium flex items-center gap-1"
+                    >
+                      Read all
+                      <img
+                        src="/icons/arrow-right.svg"
+                        alt="Read all"
+                        class="w-5 h-5"
+                      />
+                    </a>
+                  </div>
                   <CourseRatings courseId={$page.params.id} />
                 </div>
               {/if}
@@ -571,44 +627,65 @@
                   <div class="space-y-4">
                     {#if courseDetails?.Final_Module_Title?.length > 0}
                       {#each courseDetails.Final_Module_Title as title, index}
-                        <div 
+                        <div
                           class="p-4 bg-white rounded-2xl border border-light-border transition-colors duration-200"
-                          class:bg-[rgba(65,193,203,0.1)]={$currentModuleStore === index}
+                          class:bg-[rgba(65,193,203,0.1)]={$currentModuleStore ===
+                            index}
                         >
                           <button
                             class="w-full flex items-center gap-4"
                             on:click={() => {
                               $currentModuleStore = index;
-                              if (typeof currentModule !== 'undefined') {
+                              if (typeof currentModule !== "undefined") {
                                 currentModule = index;
                               }
                             }}
                           >
                             <!-- Thumbnail Container -->
-                            <div class="relative flex-shrink-0 w-[180px] h-[100px] rounded-lg overflow-hidden bg-black/5">
+                            <div
+                              class="relative flex-shrink-0 w-[180px] h-[100px] rounded-lg overflow-hidden bg-black/5"
+                            >
                               {#if courseDetails?.Final_Module_Thumbnails?.[index]}
-                                <img 
-                                  src={courseDetails.Final_Module_Thumbnails[index]}
+                                <img
+                                  src={courseDetails.Final_Module_Thumbnails[
+                                    index
+                                  ]}
                                   alt="Video Thumbnail"
                                   class="w-full h-full object-cover"
                                 />
                               {:else}
-                                <div class="w-full h-full flex items-center justify-center bg-black/5">
-                                  <img src="/icons/youtube.svg" alt="Video" class="w-8 h-8" />
+                                <div
+                                  class="w-full h-full flex items-center justify-center bg-black/5"
+                                >
+                                  <img
+                                    src="/icons/youtube.svg"
+                                    alt="Video"
+                                    class="w-8 h-8"
+                                  />
                                 </div>
                               {/if}
                               <!-- Play Button Overlay -->
-                              <div class="absolute inset-0 flex items-center justify-center bg-black/20">
-                                <img src="/icons/play.svg" alt="Play" class="w-8 h-8" />
+                              <div
+                                class="absolute inset-0 flex items-center justify-center bg-black/20"
+                              >
+                                <img
+                                  src="/icons/play.svg"
+                                  alt="Play"
+                                  class="w-8 h-8"
+                                />
                               </div>
                             </div>
 
                             <div class="flex-1 text-left">
                               <p class="text-h4-medium text-Black mb-2">
-                                {(index + 1).toString().padStart(2, '0')}: {title}
+                                {(index + 1).toString().padStart(2, "0")}: {title}
                               </p>
-                              <p class="text-mini-body text-light-text-tertiary">
-                                {courseDetails?.Final_Module_Video_Duration?.[index] || '0'} min
+                              <p
+                                class="text-mini-body text-light-text-tertiary"
+                              >
+                                {courseDetails?.Final_Module_Video_Duration?.[
+                                  index
+                                ] || "0"} min
                               </p>
                             </div>
                           </button>
