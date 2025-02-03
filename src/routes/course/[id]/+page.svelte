@@ -20,8 +20,9 @@
     toggleBookmark,
     isBookmarked as checkBookmarkStatus,
     hasLikedCourse,
+    removeCourse,
   } from "$lib/firebase";
-  import { browser } from '$app/environment';
+  import { browser } from "$app/environment";
 
   // Initialize states with null to indicate not loaded yet
   let courseDetails: any = null;
@@ -47,10 +48,15 @@
   // Add this at the top of your script
   let currentPath = $page.url.pathname;
 
+  // Add state for remove operation
+  let removing = false;
+
   // Load saved state from localStorage
   function loadSavedState() {
     if (browser) {
-      const savedState = localStorage.getItem(`course_${$page.params.id}_state`);
+      const savedState = localStorage.getItem(
+        `course_${$page.params.id}_state`,
+      );
       if (savedState) {
         const state = JSON.parse(savedState);
         // Only load states that can change
@@ -70,11 +76,11 @@
         showProgress,
         isBookmarked,
         hasLiked,
-        ...updates
+        ...updates,
       };
       localStorage.setItem(
         `course_${$page.params.id}_state`,
-        JSON.stringify(currentState)
+        JSON.stringify(currentState),
       );
     }
   }
@@ -93,17 +99,18 @@
         // Get course data first
         const courseData = await getUserCourse($user.uid, $page.params.id);
         courseDetails = courseData;
-        console.log('User Course Details', courseDetails);
+        console.log("User Course Details", courseDetails);
 
         // Set creator status once (won't change)
         isCreator = Boolean(courseData.isCreator);
 
         // Get current server states
-        const [enrollmentStatus, bookmarkStatus, likeStatus] = await Promise.all([
-          getEnrollmentStatus($user.uid, $page.params.id),
-          checkBookmarkStatus($user.uid, $page.params.id),
-          hasLikedCourse($user.uid, $page.params.id)
-        ]);
+        const [enrollmentStatus, bookmarkStatus, likeStatus] =
+          await Promise.all([
+            getEnrollmentStatus($user.uid, $page.params.id),
+            checkBookmarkStatus($user.uid, $page.params.id),
+            hasLikedCourse($user.uid, $page.params.id),
+          ]);
 
         // Set states from server
         isEnrolled = enrollmentStatus.isEnrolled;
@@ -118,7 +125,10 @@
         if (enrollmentStatus.enrollmentData) {
           enrollmentProgress = enrollmentStatus.enrollmentData;
         } else if (isEnrolled) {
-          enrollmentProgress = await getEnrollmentProgress($user.uid, $page.params.id);
+          enrollmentProgress = await getEnrollmentProgress(
+            $user.uid,
+            $page.params.id,
+          );
         }
 
         // Fetch creator profile
@@ -134,7 +144,7 @@
         saveState();
       } else {
         courseDetails = await getSharedCourse($page.params.id);
-        console.log('Shared Course Details', courseDetails);
+        console.log("Shared Course Details", courseDetails);
         isCreator = false;
         isEnrolled = false;
         showProgress = false;
@@ -169,24 +179,24 @@
     try {
       enrolling = true;
       await enrollInCourse($user.uid, $page.params.id);
-      
+
       // Update states and save to localStorage
       const newState = {
         isEnrolled: true,
         showProgress: true,
         isBookmarked,
-        hasLiked
+        hasLiked,
       };
-      
+
       // Update local states
       isEnrolled = true;
       showProgress = true;
-      
+
       // Save to localStorage
       if (browser) {
         localStorage.setItem(
           `course_${$page.params.id}_state`,
-          JSON.stringify(newState)
+          JSON.stringify(newState),
         );
       }
 
@@ -195,7 +205,9 @@
         userId: $user.uid,
         courseId: $page.params.id,
         completedModules: [],
-        moduleProgress: Array(courseDetails?.Final_Module_Title.length).fill(null),
+        moduleProgress: Array(courseDetails?.Final_Module_Title.length).fill(
+          null,
+        ),
         isCompleted: false,
         enrolledAt: new Date(),
         lastAccessedAt: new Date(),
@@ -241,7 +253,8 @@
 
       // Update local likes count
       if (courseDetails) {
-        courseDetails.likes = (courseDetails.likes || 0) + (newLikeState ? 1 : -1);
+        courseDetails.likes =
+          (courseDetails.likes || 0) + (newLikeState ? 1 : -1);
       }
     } catch (error) {
       console.error("Error liking course:", error);
@@ -289,8 +302,23 @@
   });
 
   // Update the module card styling
-  $: activeModuleClass = (index: number) => 
+  $: activeModuleClass = (index: number) =>
     $currentModuleStore === index ? "bg-[rgba(66,193,200,0.1)]" : "";
+
+  // Handle course removal
+  async function handleRemoveCourse() {
+    if (!$user) return;
+
+    try {
+      removing = true;
+      await removeCourse($user.uid, $page.params.id);
+      goto('/'); // Navigate to home page instead of /courses
+    } catch (error) {
+      console.error('Error removing course:', error);
+    } finally {
+      removing = false;
+    }
+  }
 </script>
 
 <!-- Main Container -->
@@ -460,7 +488,6 @@
                     class="flex p-2 items-center justify-center rounded-2xl bg-Black/5 hover:bg-Black/5 transition-colors disabled:opacity-50"
                     on:click={handleBookmark}
                     disabled={bookmarking}
-
                     aria-label={isBookmarked
                       ? "Remove bookmark"
                       : "Add bookmark"}
@@ -486,17 +513,17 @@
             <!-- Module Content -->
             <div class="mt-6">
               <!-- Course Title -->
-              <div class="mt-6 ">
+              <div class="mt-6">
                 <p class="text-h2-mobile lg:text-h2 text-Black">
-
-
                   {courseDetails?.Final_Course_Title}
                 </p>
               </div>
               <!-- Course Introduction - Show for first module when not enrolled or is creator -->
               {#if $currentModuleStore === 0 && (!isEnrolled || isCreator)}
-                <div class="mt-6 ">
-                  <h3 class="text-h4-medium text-Black mb-4">Course Introduction</h3>
+                <div class="mt-6">
+                  <h3 class="text-h4-medium text-Black mb-4">
+                    Course Introduction
+                  </h3>
                   <p class="text-body text-light-text-secondary">
                     {courseDetails?.Final_Course_Introduction}
                   </p>
@@ -506,8 +533,12 @@
               <!-- Course Objectives - Show for first module when not enrolled or is creator -->
               {#if $currentModuleStore === 0 && (!isEnrolled || isCreator)}
                 <div class="mt-6">
-                  <h3 class="text-h4-medium text-Black mb-4">Course Objective</h3>
-                  <p class="text-body text-light-text-secondary dark:text-dark-text-secondary">
+                  <h3 class="text-h4-medium text-Black mb-4">
+                    Course Objective
+                  </h3>
+                  <p
+                    class="text-body text-light-text-secondary dark:text-dark-text-secondary"
+                  >
                     {courseDetails?.Final_Course_Objective}
                   </p>
                 </div>
@@ -516,15 +547,20 @@
               <!-- Module Objective - Show for all modules -->
               <div class="mt-6">
                 <h3 class="text-h4-medium text-Black mb-4">Module Objective</h3>
-                <p class="text-body text-light-text-secondary dark:text-dark-text-secondary">
-                  {courseDetails?.Final_Module_Objective[$currentModuleStore] || "Loading module..."}
+                <p
+                  class="text-body text-light-text-secondary dark:text-dark-text-secondary"
+                >
+                  {courseDetails?.Final_Module_Objective[$currentModuleStore] ||
+                    "Loading module..."}
                 </p>
               </div>
 
               <!-- Course Conclusion - Show only for last module when completed -->
               {#if $currentModuleStore === courseDetails.Final_Module_Title.length - 1 && hasCompletedAllModules()}
-                <div class="mt-6 ">
-                  <h3 class="text-h4-medium text-Black mb-4">Course Conclusion</h3>
+                <div class="mt-6">
+                  <h3 class="text-h4-medium text-Black mb-4">
+                    Course Conclusion
+                  </h3>
                   <p class="text-body text-light-text-secondary">
                     {courseDetails?.Final_Course_Conclusion}
                   </p>
@@ -603,7 +639,9 @@
                     {#if courseDetails?.Final_Module_Title?.length > 0}
                       {#each courseDetails.Final_Module_Title as title, index}
                         <div
-                          class="p-2 rounded-2xl border border-light-border hover:bg-Black/5 dark:hover:bg-Black/5 transition-colors duration-200 {activeModuleClass(index)}"
+                          class="p-2 rounded-2xl border border-light-border hover:bg-Black/5 dark:hover:bg-Black/5 transition-colors duration-200 {activeModuleClass(
+                            index,
+                          )}"
                         >
                           <button
                             class="w-full flex items-start gap-4"
@@ -616,15 +654,18 @@
                           >
                             <!-- Module Info -->
                             <div class="flex-1 min-w-0 text-left">
-                              <p class="text-semibody-medium text-Black mb-2 inline-block">
+                              <p
+                                class="text-semibody-medium text-Black mb-2 inline-block"
+                              >
                                 <span class="text-semibody-medium text-Black2">
                                   {(index + 1).toString().padStart(2, "0")}:
                                 </span>
-                                
-                                  {title}
-                              
+
+                                {title}
                               </p>
-                              <p class="text-mini-body text-light-text-tertiary">
+                              <p
+                                class="text-mini-body text-light-text-tertiary"
+                              >
                                 {courseDetails?.Final_Module_Video_Duration?.[
                                   index
                                 ] || "0"} min
@@ -632,7 +673,9 @@
                             </div>
 
                             <!-- Thumbnail Container -->
-                            <div class="relative w-[30%] max-w-[139px] aspect-video flex-shrink-0 rounded-lg overflow-hidden bg-black/5">
+                            <div
+                              class="relative w-[30%] max-w-[139px] aspect-video flex-shrink-0 rounded-lg overflow-hidden bg-black/5"
+                            >
                               {#if courseDetails?.Final_Module_Thumbnails?.[index]}
                                 <img
                                   src={courseDetails.Final_Module_Thumbnails[
@@ -642,7 +685,9 @@
                                   class="absolute inset-0 w-full h-full object-cover"
                                 />
                               {:else}
-                                <div class="absolute inset-0 flex items-center justify-center bg-black/5">
+                                <div
+                                  class="absolute inset-0 flex items-center justify-center bg-black/5"
+                                >
                                   <img
                                     src="/icons/youtube.svg"
                                     alt="Video"
@@ -651,7 +696,9 @@
                                 </div>
                               {/if}
                               <!-- Play Button Overlay -->
-                              <div class="absolute inset-0 flex items-center justify-center bg-black/20">
+                              <div
+                                class="absolute inset-0 flex items-center justify-center bg-black/20"
+                              >
                                 <img
                                   src="/icons/youtube-icon.svg"
                                   alt="Play"
@@ -671,19 +718,16 @@
 
                   <!-- YouTube Playlist Button - Mobile -->
                   {#if courseDetails?.YouTube_Playlist_URL}
-                    <div class=" px-2">
+                    <div class=" mt-2">
                       <a
                         href={courseDetails.YouTube_Playlist_URL}
                         target="_blank"
                         rel="noopener noreferrer"
                         class="w-full px-4 py-2 flex items-center justify-center gap-2 bg-[#FF0000] hover:bg-[#CC0000] text-white rounded-2xl transition-colors"
                       >
-                        <img
-                          src="/icons/youtube-icon.svg"
-                          alt="YouTube"
-                          class="w-5 h-5"
-                        />
-                        <span class="text-semibody-medium">View Playlist on Youtube</span>
+                        <span class="text-semibody"
+                          >View Playlist on Youtube</span
+                        >
                       </a>
                     </div>
                   {/if}
@@ -726,7 +770,11 @@
                   {#if bookmarking}
                     <span>Processing...</span>
                   {:else}
-                    <span>{isBookmarked ? "Remove Bookmark" : "Bookmark Course"}</span>
+                    <span
+                      >{isBookmarked
+                        ? "Remove Bookmark"
+                        : "Bookmark Course"}</span
+                    >
                   {/if}
                 </button>
               </div>
@@ -734,8 +782,31 @@
               <!-- Reviews Section -->
               {#if courseDetails.isPublic}
                 <div class="w-full mt-6">
-                
                   <CourseRatings courseId={$page.params.id} />
+                </div>
+              {/if}
+
+              <!-- Remove Course Button - Desktop -->
+              {#if (isEnrolled || isCreator) && $user}
+                <div class="mt-6 col-span-2">
+                  <button
+                    class=" px-4 py-2 flex items-center justify-center gap-2 border border-[#FF0000] hover:bg-[#FF0000]/5 text-[#FF0000] rounded-lg transition-colors disabled:opacity-50"
+                    on:click={handleRemoveCourse}
+                    disabled={removing}
+                  >
+                    {#if removing}
+                      <span class="text-semibody-medium"
+                        >Removing Course...</span
+                      >
+                    {:else}
+                      <span class="text-semibody">Remove Course</span>
+                      <img
+                        src="/icons/delete.svg"
+                        alt="Remove"
+                        class="w-6 h-6"
+                      />
+                    {/if}
+                  </button>
                 </div>
               {/if}
             </div>
@@ -800,7 +871,9 @@
                 {#if courseDetails?.Final_Module_Title?.length > 0}
                   {#each courseDetails.Final_Module_Title as title, index}
                     <div
-                      class="p-2 rounded-2xl border border-light-border hover:bg-Black/5 dark:hover:bg-Black/5 transition-colors duration-200 {activeModuleClass(index)}"
+                      class="p-2 rounded-2xl border border-light-border hover:bg-Black/5 dark:hover:bg-Black/5 transition-colors duration-200 {activeModuleClass(
+                        index,
+                      )}"
                     >
                       <button
                         class="w-full flex items-center gap-4"
@@ -827,17 +900,19 @@
                         </div>
 
                         <!-- Thumbnail Container -->
-                        <div class="relative w-[30%] max-w-[139px] aspect-video flex-shrink-0 rounded-lg overflow-hidden bg-black/5">
+                        <div
+                          class="relative w-[30%] max-w-[139px] aspect-video flex-shrink-0 rounded-lg overflow-hidden bg-black/5"
+                        >
                           {#if courseDetails?.Final_Module_Thumbnails?.[index]}
                             <img
-                              src={courseDetails.Final_Module_Thumbnails[
-                                index
-                              ]}
+                              src={courseDetails.Final_Module_Thumbnails[index]}
                               alt="Video Thumbnail"
                               class="absolute inset-0 w-full h-full object-cover"
                             />
                           {:else}
-                            <div class="absolute inset-0 flex items-center justify-center bg-black/5">
+                            <div
+                              class="absolute inset-0 flex items-center justify-center bg-black/5"
+                            >
                               <img
                                 src="/icons/youtube.svg"
                                 alt="Video"
@@ -846,7 +921,9 @@
                             </div>
                           {/if}
                           <!-- Play Button Overlay -->
-                          <div class="absolute inset-0 flex items-center justify-center bg-black/20">
+                          <div
+                            class="absolute inset-0 flex items-center justify-center bg-black/20"
+                          >
                             <img
                               src="/icons/youtube-icon.svg"
                               alt="Play"
@@ -911,6 +988,25 @@
         {/if}
       </button>
     </div>
+  </div>
+{/if}
+
+<!-- Move the mobile version to a conditional render -->
+<!-- Remove Course Button - Mobile -->
+{#if (isEnrolled || isCreator) && $user}
+  <div class="lg:hidden mt-6 pb-20">
+    <button
+      class="w-full px-4 py-2 flex items-center justify-center gap-2 border border-[#FF0000] hover:bg-[#FF0000]/5 text-[#FF0000] rounded-2xl transition-colors disabled:opacity-50"
+      on:click={handleRemoveCourse}
+      disabled={removing}
+    >
+      {#if removing}
+        <span class="text-semibody-medium">Removing Course...</span>
+      {:else}
+        <span class="text-semibody">Remove Course</span>
+        <img src="/icons/delete.svg" alt="Remove" class="w-6 h-6" />
+      {/if}
+    </button>
   </div>
 {/if}
 

@@ -1067,3 +1067,25 @@ function getPlaylistIdFromUrl(url: string): string | null {
   const playlistMatch = url.match(/[&?]list=([^&]+)/i);
   return playlistMatch ? playlistMatch[1] : null;
 }
+
+export async function removeCourse(userId: string, courseId: string) {
+  try {
+    // Remove from user's courses collection
+    const userCourseRef = doc(db, `users/${userId}/courses/${courseId}`);
+    await deleteDoc(userCourseRef);
+
+    // Remove from enrollments if exists
+    const enrollmentRef = doc(db, 'enrollments', `${userId}_${courseId}`);
+    try {
+      await deleteDoc(enrollmentRef);
+    } catch (error) {
+      console.error('Error removing enrollment:', error);
+      // Continue even if enrollment removal fails
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Error removing course:', error);
+    throw new Error('Failed to remove course');
+  }
+}
