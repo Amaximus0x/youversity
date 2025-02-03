@@ -804,8 +804,18 @@ export async function getEnrollmentProgress(userId: string, courseId: string) {
     const userCourseRef = doc(db, `users/${userId}/courses/${courseId}`);
     const userCourseDoc = await getDoc(userCourseRef);
     
+    // Return default progress object if not enrolled
     if (!userCourseDoc.exists()) {
-      throw new Error('Not enrolled in this course');
+      return {
+        moduleProgress: [],
+        lastAccessedModule: 0,
+        completedModules: [],
+        quizResults: {
+          moduleQuizzes: {}
+        },
+        startDate: new Date(),
+        lastAccessDate: new Date()
+      };
     }
     
     const data = userCourseDoc.data();
@@ -821,7 +831,17 @@ export async function getEnrollmentProgress(userId: string, courseId: string) {
     };
   } catch (error) {
     console.error('Error getting enrollment progress:', error);
-    throw error;
+    // Return default progress object instead of throwing error
+    return {
+      moduleProgress: [],
+      lastAccessedModule: 0,
+      completedModules: [],
+      quizResults: {
+        moduleQuizzes: {}
+      },
+      startDate: new Date(),
+      lastAccessDate: new Date()
+    };
   }
 }
 

@@ -723,7 +723,7 @@
                         href={courseDetails.YouTube_Playlist_URL}
                         target="_blank"
                         rel="noopener noreferrer"
-                        class="w-full px-4 py-2 flex items-center justify-center gap-2 bg-[#FF0000] hover:bg-[#CC0000] text-white rounded-2xl transition-colors"
+                        class="w-full px-4 py-2 flex items-center justify-center gap-2 bg-brand-red hover:bg-ButtonHover text-white rounded-2xl transition-colors"
                       >
                         <span class="text-semibody"
                           >View Playlist on Youtube</span
@@ -948,7 +948,7 @@
                     href={courseDetails.YouTube_Playlist_URL}
                     target="_blank"
                     rel="noopener noreferrer"
-                    class="w-full px-4 py-2 flex items-center justify-center gap-2 bg-[#FF0000] hover:bg-[#CC0000] text-white rounded-2xl transition-colors"
+                    class="w-full px-4 py-2 flex items-center justify-center gap-2  bg-brand-red hover:bg-ButtonHover text-white rounded-2xl transition-colors"
                   >
                     <span class="text-semibody">View Playlist on Youtube</span>
                   </a>
