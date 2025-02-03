@@ -20,7 +20,7 @@
     toggleBookmark,
     isBookmarked as checkBookmarkStatus,
     hasLikedCourse,
-    removeCourse,
+    removeEnrollment,
   } from "$lib/firebase";
   import { browser } from "$app/environment";
 
@@ -305,16 +305,37 @@
   $: activeModuleClass = (index: number) =>
     $currentModuleStore === index ? "bg-[rgba(66,193,200,0.1)]" : "";
 
-  // Handle course removal
-  async function handleRemoveCourse() {
+  // Handle enrollment removal
+  async function handleRemoveCourseEnrollment() {
     if (!$user) return;
 
     try {
       removing = true;
-      await removeCourse($user.uid, $page.params.id);
-      goto('/'); // Navigate to home page instead of /courses
+      await removeEnrollment($user.uid, $page.params.id);
+      
+      // Reset local states
+      isEnrolled = false;
+      showProgress = false;
+      enrollmentProgress = null;
+      
+      // Clear local storage state
+      if (browser) {
+        localStorage.removeItem(`course_${$page.params.id}_state`);
+      }
+
+      // Update course details to remove enrollment-specific data
+      courseDetails = {
+        ...courseDetails,
+        isEnrolled: false,
+        progress: null
+      };
+
+      // Show success message (optional)
+      // You can add a toast notification here if you have one
+      
     } catch (error) {
-      console.error('Error removing course:', error);
+      console.error('Error removing course enrollment:', error);
+      // Optionally show error message to user
     } finally {
       removing = false;
     }
@@ -787,11 +808,11 @@
               {/if}
 
               <!-- Remove Course Button - Desktop -->
-              {#if (isEnrolled || isCreator) && $user}
+              {#if isEnrolled && !isCreator && $user}
                 <div class="mt-6 col-span-2">
                   <button
-                    class=" px-4 py-2 flex items-center justify-center gap-2 border border-[#FF0000] hover:bg-[#FF0000]/5 text-[#FF0000] rounded-lg transition-colors disabled:opacity-50"
-                    on:click={handleRemoveCourse}
+                    class="px-4 py-2 flex items-center justify-center gap-2 border border-[#FF0000] hover:bg-[#FF0000]/5 text-[#FF0000] rounded-lg transition-colors disabled:opacity-50"
+                    on:click={handleRemoveCourseEnrollment}
                     disabled={removing}
                   >
                     {#if removing}
@@ -993,11 +1014,11 @@
 
 <!-- Move the mobile version to a conditional render -->
 <!-- Remove Course Button - Mobile -->
-{#if (isEnrolled || isCreator) && $user}
+{#if isEnrolled && !isCreator && $user}
   <div class="lg:hidden mt-6 pb-20">
     <button
       class="w-full px-4 py-2 flex items-center justify-center gap-2 border border-[#FF0000] hover:bg-[#FF0000]/5 text-[#FF0000] rounded-2xl transition-colors disabled:opacity-50"
-      on:click={handleRemoveCourse}
+      on:click={handleRemoveCourseEnrollment}
       disabled={removing}
     >
       {#if removing}

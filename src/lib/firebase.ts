@@ -1095,24 +1095,23 @@ function getPlaylistIdFromUrl(url: string): string | null {
   return playlistMatch ? playlistMatch[1] : null;
 }
 
-export async function removeCourse(userId: string, courseId: string) {
+export async function removeEnrollment(userId: string, courseId: string) {
   try {
-    // Remove from user's courses collection
+    // Remove from user's courses collection (enrollment)
     const userCourseRef = doc(db, `users/${userId}/courses/${courseId}`);
     await deleteDoc(userCourseRef);
 
-    // Remove from enrollments if exists
-    const enrollmentRef = doc(db, 'enrollments', `${userId}_${courseId}`);
+    // Remove enrollment progress
+    const enrollmentRef = doc(db, `enrollments/${userId}_${courseId}`);
     try {
       await deleteDoc(enrollmentRef);
     } catch (error) {
-      console.error('Error removing enrollment:', error);
-      // Continue even if enrollment removal fails
+      console.error('Error removing enrollment progress:', error);
     }
 
     return true;
   } catch (error) {
-    console.error('Error removing course:', error);
-    throw new Error('Failed to remove course');
+    console.error('Error removing enrollment:', error);
+    throw new Error('Failed to remove course enrollment');
   }
 }
