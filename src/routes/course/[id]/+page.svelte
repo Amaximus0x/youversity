@@ -322,7 +322,7 @@
 </script>
 
 <!-- Main Container -->
-<div class="w-full min-h-screen pt-0 overflow-x-hidden">
+<div class="w-full min-h-screen pt-0 pb-24 overflow-x-hidden">
   {#if loading}
     <div class="flex justify-center items-center min-h-screen">
       <div

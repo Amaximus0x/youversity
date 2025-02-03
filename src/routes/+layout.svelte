@@ -45,7 +45,7 @@
   // Sidebar items configuration
   const sidebarItems = [
     { icon: '/icons/home.svg', label: 'Home', href: '/', isActive: true },
-    { icon: '/icons/fire-02.svg', label: 'Trending', href: '#trending-courses', isActive: false },
+    { icon: '/icons/fire-02.svg', label: 'Trending', href: '/trending', isActive: false },
     { icon: '/icons/video-replay.svg', label: 'My Courses', href: '/my-courses', isActive: false },
     { icon: '/icons/bookmark-03.svg', label: 'Bookmarks', href: '/bookmarks', isActive: false },
     { icon: '/icons/settings-02.svg', label: 'Settings', href: '/settings', isActive: false },
@@ -54,7 +54,7 @@
   // Mobile navigation items (simplified version of sidebar items)
   const mobileNavItems = [
     { icon: '/icons/home.svg', label: 'Home', href: '/' },
-    { icon: '/icons/fire-02.svg', label: 'Trending', href: '#trending-courses' },
+    { icon: '/icons/fire-02.svg', label: 'Trending', href: '/trending' },
     { icon: '/icons/video-replay.svg', label: 'My Courses', href: '/my-courses' },
     { icon: '/icons/bookmark-03.svg', label: 'Bookmarks', href: '/bookmarks' },
     { icon: '/icons/settings-02.svg', label: 'Settings', href: '/settings' },
@@ -359,7 +359,7 @@
         </header>
 
         <!-- Page Content -->
-        <div class="pt-20 px-5 pb-20 lg:pt-28 lg:pl-6 lg:pr-8 lg:pb-8">
+        <div class="pt-20 px-5 pb-24 lg:pt-28 lg:pl-6 lg:pr-8 lg:pb-8">
          <!-- <div > -->
           <slot />
         </div>
