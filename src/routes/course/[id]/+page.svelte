@@ -226,15 +226,19 @@
       return;
     }
 
+    // Immediately update UI
+    const newBookmarkState = !isBookmarked;
+    isBookmarked = newBookmarkState;
+    
     try {
-      bookmarking = true;
-      const newBookmarkState = await toggleBookmark($user.uid, $page.params.id);
-      isBookmarked = newBookmarkState;
+      // Update in background
+      await toggleBookmark($user.uid, $page.params.id);
       saveState({ isBookmarked: newBookmarkState });
     } catch (error) {
+      // Revert on error
       console.error("Error bookmarking course:", error);
-    } finally {
-      bookmarking = false;
+      isBookmarked = !newBookmarkState;
+      saveState({ isBookmarked: !newBookmarkState });
     }
   }
 
@@ -506,26 +510,15 @@
               {#if !isCreator}
                 <div class="block lg:hidden">
                   <button
-                    class="flex p-2 items-center justify-center rounded-2xl bg-Black/5 hover:bg-Black/5 transition-colors disabled:opacity-50"
+                    class="w-full px-4 py-2 text-semibody-medium flex items-center justify-center gap-2 bg-Black/5 text-Green rounded-2xl hover:bg-Black/5 transition-colors"
                     on:click={handleBookmark}
-                    disabled={bookmarking}
-                    aria-label={isBookmarked
-                      ? "Remove bookmark"
-                      : "Add bookmark"}
                   >
-                    {#if bookmarking}
-                      <div
-                        class="w-6 h-6 border-2 border-Green border-t-transparent rounded-full animate-spin"
-                      ></div>
-                    {:else}
-                      <img
-                        src={isBookmarked
-                          ? "/icons/bookmark-filled.svg"
-                          : "/icons/bookmark.svg"}
-                        alt="Bookmark"
-                        class="w-6 h-6"
-                      />
-                    {/if}
+                    <img 
+                      src={isBookmarked ? "/icons/bookmark-filled.svg" : "/icons/bookmark.svg"} 
+                      alt="Bookmark" 
+                      class="w-5 h-5"
+                    />
+                    <span>{isBookmarked ? "Bookmarked" : "Bookmark Course"}</span>
                   </button>
                 </div>
               {/if}
@@ -784,19 +777,11 @@
 
                 <!-- Bookmark button -->
                 <button
-                  class="w-full px-4 py-2 text-semibody-medium flex items-center justify-center bg-Black/5 text-Green rounded-2xl hover:bg-Black/5 transition-colors"
+                  class="w-full px-4 py-2 text-semibody-medium flex items-center justify-center gap-2 bg-Black/5 text-Green rounded-2xl hover:bg-Black/5 transition-colors"
                   on:click={handleBookmark}
-                  disabled={bookmarking}
                 >
-                  {#if bookmarking}
-                    <span>Processing...</span>
-                  {:else}
-                    <span
-                      >{isBookmarked
-                        ? "Remove Bookmark"
-                        : "Bookmark Course"}</span
-                    >
-                  {/if}
+                 
+                  <span>{isBookmarked ? "Bookmarked" : "Bookmark Course"}</span>
                 </button>
               </div>
 
