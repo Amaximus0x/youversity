@@ -178,10 +178,10 @@ export async function getUserCourses(userId: string) {
 }
 
 // Helper function to generate playlist URL from video URLs
-function generatePlaylistUrl(videoUrls: string[]): string {
+function generatePlaylistUrl(videoUrls: string[], courseTitle: string = ''): string {
   if (!videoUrls?.length) return '';
   
-  // Try to extract playlist ID from any video URL
+  // Try to extract playlist ID from any video URL first
   for (const url of videoUrls) {
     const playlistId = getPlaylistIdFromUrl(url);
     if (playlistId) {
@@ -189,15 +189,16 @@ function generatePlaylistUrl(videoUrls: string[]): string {
     }
   }
 
-  // If no playlist ID found, create a custom playlist URL with video IDs
+  // If no playlist ID found, create a new playlist URL
   const videoIds = videoUrls.map(url => {
     const match = url.match(/(?:https?:\/\/)?(?:www\.)?youtu\.?be(?:\.com)?\/?.*(?:watch|embed)?(?:.*v=|v\/|\/)([\w-_]+)/i);
     return match ? match[1] : null;
   }).filter(Boolean);
 
   if (videoIds.length) {
-    // Create a playlist URL with the first video and additional videos as playlist
-    return `https://www.youtube.com/watch?v=${videoIds[0]}&list=${videoIds.join(',')}`;
+    // Create a playlist URL that will work with YouTube's playlist feature
+    const encodedTitle = encodeURIComponent(courseTitle);
+    return `https://youtube.com/watch_videos?video_ids=${videoIds.join(',')}&title=${encodedTitle}`;
   }
 
   return '';
@@ -216,7 +217,10 @@ export async function getUserCourse(userId: string, courseId: string) {
     
     // Generate playlist URL if missing but has video URLs
     if (!courseData.YouTube_Playlist_URL && courseData.Final_Module_YouTube_Video_URL?.length > 0) {
-      courseData.YouTube_Playlist_URL = generatePlaylistUrl(courseData.Final_Module_YouTube_Video_URL);
+      courseData.YouTube_Playlist_URL = generatePlaylistUrl(
+        courseData.Final_Module_YouTube_Video_URL,
+        courseData.Final_Course_Title
+      );
       
       // Optionally update the document with the generated URL
       try {
@@ -431,7 +435,10 @@ export async function getSharedCourse(courseId: string): Promise<FinalCourseStru
 
     // Generate playlist URL if missing but has video URLs
     if (!courseData.YouTube_Playlist_URL && courseData.Final_Module_YouTube_Video_URL?.length > 0) {
-      courseData.YouTube_Playlist_URL = generatePlaylistUrl(courseData.Final_Module_YouTube_Video_URL);
+      courseData.YouTube_Playlist_URL = generatePlaylistUrl(
+        courseData.Final_Module_YouTube_Video_URL,
+        courseData.Final_Course_Title
+      );
       
       // Optionally update the document with the generated URL
       try {
