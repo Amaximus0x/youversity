@@ -760,20 +760,27 @@
             <div class="hidden lg:block">
               <!-- Desktop Action Buttons -->
               <div class="mt-6 flex flex-col gap-3">
-                {#if !isEnrolled && !isCreator}
-                  <!-- Enroll button -->
-                  <button
-                    class="w-full px-4 py-2 flex items-center justify-center text-semibody-medium bg-Green text-white rounded-2xl hover:bg-GreenHover transition-opacity"
-                    on:click={handleEnroll}
-                    disabled={enrolling}
-                  >
-                    {#if enrolling}
-                      <span>Enrolling...</span>
-                    {:else}
-                      <span>Enroll</span>
-                    {/if}
-                  </button>
-                {/if}
+                <!-- Enroll/Start button -->
+                <button
+                  class="w-full px-4 py-2 flex items-center justify-center text-semibody-medium rounded-2xl transition-colors {
+                    isEnrolled 
+                      ? 'bg-brand-red hover:bg-ButtonHover text-white' 
+                      : 'bg-Green hover:bg-GreenHover text-white'
+                  }"
+                  on:click={isEnrolled ? () => goto(`/course/${$page.params.id}/learn`) : handleEnroll}
+                  disabled={enrolling}
+                >
+                  {#if enrolling}
+                    <span>Enrolling...</span>
+                  {:else}
+                    <span>{isEnrolled ? 'Start Course' : 'Enroll'}</span>
+                    <img
+                      src="/icons/arrow-right-white.svg"
+                      alt={isEnrolled ? 'Start' : 'Enroll'}
+                      class="w-6 h-6 ml-2"
+                    />
+                  {/if}
+                </button>
 
                 <!-- Bookmark button -->
                 <button
@@ -976,19 +983,22 @@
     class:pointer-events-none={!showFloatingButton}
   >
     <div class="container mx-auto pl-5">
-      <!-- Enroll button -->
       <button
-        class="px-4 py-2 flex items-center justify-center gap-4 bg-Green text-white rounded-2xl transition-opacity disabled:opacity-50 text-semibody-medium shadow-lg"
-        on:click={handleEnroll}
+        class="px-4 py-2 flex items-center justify-center gap-4 text-white rounded-2xl transition-opacity disabled:opacity-50 text-semibody-medium shadow-lg {
+          isEnrolled 
+            ? 'bg-brand-red' 
+            : 'bg-Green'
+        }"
+        on:click={isEnrolled ? () => goto(`/course/${$page.params.id}/learn`) : handleEnroll}
         disabled={enrolling}
       >
         {#if enrolling}
           <span>Enrolling...</span>
         {:else}
-          <span>Enroll</span>
+          <span>{isEnrolled ? 'Start Course' : 'Enroll'}</span>
           <img
             src="/icons/arrow-right-white.svg"
-            alt="Enroll"
+            alt={isEnrolled ? 'Start' : 'Enroll'}
             class="w-6 h-6"
           />
         {/if}
