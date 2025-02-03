@@ -27,11 +27,11 @@
   let courseDetails: any = null;
   let loading = true;
   let error: string | null = null;
-  let isCreator: boolean | null = null;
-  let isEnrolled: boolean | null = null;
-  let showProgress: boolean | null = null;
-  let isBookmarked: boolean | null = null;
-  let hasLiked: boolean | null = null;
+  let isCreator = false; // This won't change after initial set
+  let isEnrolled = false;
+  let showProgress = false;
+  let isBookmarked = false;
+  let hasLiked = false;
 
   // Other state variables
   let moduleProgress: { completed?: boolean }[] = [];
@@ -44,18 +44,20 @@
   let showFloatingButton = false;
   let contentStartElement: HTMLElement;
 
+  // Add this at the top of your script
+  let currentPath = $page.url.pathname;
+
   // Load saved state from localStorage
   function loadSavedState() {
     if (browser) {
       const savedState = localStorage.getItem(`course_${$page.params.id}_state`);
       if (savedState) {
         const state = JSON.parse(savedState);
-        // Only set states if they're not already set from server
-        if (isCreator === null) isCreator = state.isCreator;
-        if (isEnrolled === null) isEnrolled = state.isEnrolled;
-        if (showProgress === null) showProgress = state.showProgress;
-        if (isBookmarked === null) isBookmarked = state.isBookmarked;
-        if (hasLiked === null) hasLiked = state.hasLiked;
+        // Only load states that can change
+        isEnrolled = state.isEnrolled ?? false;
+        showProgress = state.showProgress ?? false;
+        isBookmarked = state.isBookmarked ?? false;
+        hasLiked = state.hasLiked ?? false;
       }
     }
   }
@@ -64,12 +66,11 @@
   function saveState(updates = {}) {
     if (browser) {
       const currentState = {
-        isCreator,
         isEnrolled,
         showProgress,
         isBookmarked,
         hasLiked,
-        ...updates // Allow updating specific states
+        ...updates
       };
       localStorage.setItem(
         `course_${$page.params.id}_state`,
@@ -82,7 +83,7 @@
   loadSavedState();
 
   // Watch for state changes and save them
-  $: if (isCreator !== null && isEnrolled !== null && showProgress !== null) {
+  $: if (isEnrolled !== null && showProgress !== null) {
     saveState();
   }
 
@@ -92,46 +93,30 @@
         // Get course data first
         const courseData = await getUserCourse($user.uid, $page.params.id);
         courseDetails = courseData;
+        console.log('User Course Details', courseDetails);
 
-        // Set server states
-        const serverStates = {
-          isCreator: Boolean(courseData.isCreator),
-          isEnrolled: Boolean(courseData.isEnrolled),
-          showProgress: Boolean(courseData.isEnrolled || courseData.isCreator)
-        };
+        // Set creator status once (won't change)
+        isCreator = Boolean(courseData.isCreator);
 
-        // Get bookmark and like status
-        try {
-          const [bookmarkStatus, likeStatus] = await Promise.all([
-            checkBookmarkStatus($user.uid, $page.params.id),
-            hasLikedCourse($user.uid, $page.params.id)
-          ]);
-          
-          serverStates.isBookmarked = bookmarkStatus;
-          serverStates.hasLiked = likeStatus;
-        } catch (statusError) {
-          console.error("Error checking status:", statusError);
-        }
+        // Get current server states
+        const [enrollmentStatus, bookmarkStatus, likeStatus] = await Promise.all([
+          getEnrollmentStatus($user.uid, $page.params.id),
+          checkBookmarkStatus($user.uid, $page.params.id),
+          hasLikedCourse($user.uid, $page.params.id)
+        ]);
 
-        // Now load saved state, but only if server states aren't set
-        if (!localStorage.getItem(`course_${$page.params.id}_state`)) {
-          // If no saved state, use server states
-          isCreator = serverStates.isCreator;
-          isEnrolled = serverStates.isEnrolled;
-          showProgress = serverStates.showProgress;
-          isBookmarked = serverStates.isBookmarked;
-          hasLiked = serverStates.hasLiked;
-          
-          // Save initial server state
-          saveState();
-        } else {
-          // Load saved state
-          loadSavedState();
-        }
+        // Set states from server
+        isEnrolled = enrollmentStatus.isEnrolled;
+        showProgress = isEnrolled || isCreator;
+        isBookmarked = bookmarkStatus;
+        hasLiked = likeStatus;
+
+        // Save initial state
+        saveState();
 
         // Get enrollment progress if needed
-        if (courseData.enrollmentData) {
-          enrollmentProgress = courseData.enrollmentData;
+        if (enrollmentStatus.enrollmentData) {
+          enrollmentProgress = enrollmentStatus.enrollmentData;
         } else if (isEnrolled) {
           enrollmentProgress = await getEnrollmentProgress($user.uid, $page.params.id);
         }
@@ -149,6 +134,7 @@
         saveState();
       } else {
         courseDetails = await getSharedCourse($page.params.id);
+        console.log('Shared Course Details', courseDetails);
         isCreator = false;
         isEnrolled = false;
         showProgress = false;
@@ -183,11 +169,26 @@
     try {
       enrolling = true;
       await enrollInCourse($user.uid, $page.params.id);
-
-      // Update local state and save
+      
+      // Update states and save to localStorage
+      const newState = {
+        isEnrolled: true,
+        showProgress: true,
+        isBookmarked,
+        hasLiked
+      };
+      
+      // Update local states
       isEnrolled = true;
       showProgress = true;
-      saveState({ isEnrolled: true, showProgress: true });
+      
+      // Save to localStorage
+      if (browser) {
+        localStorage.setItem(
+          `course_${$page.params.id}_state`,
+          JSON.stringify(newState)
+        );
+      }
 
       // Initialize enrollment progress
       enrollmentProgress = {
@@ -274,17 +275,17 @@
     };
   });
 
-  // Clean up when leaving the page
+  // Update onDestroy
   onDestroy(() => {
-    if (browser) {
+    // Only cleanup if we're navigating away from the course page
+    if (browser && $page.url.pathname !== currentPath) {
       localStorage.removeItem(`course_${$page.params.id}_state`);
+      courseDetails = null;
+      isEnrolled = false;
+      showProgress = false;
+      enrollmentProgress = null;
+      currentModuleStore.reset();
     }
-    courseDetails = null;
-    isCreator = null;
-    isEnrolled = null;
-    showProgress = null;
-    enrollmentProgress = null;
-    currentModuleStore.reset();
   });
 
   // Update the module card styling
@@ -522,7 +523,7 @@
 
               <!-- Course Conclusion - Show only for last module when completed -->
               {#if $currentModuleStore === courseDetails.Final_Module_Title.length - 1 && hasCompletedAllModules()}
-                <div class="mt-6 p-6 bg-[#F5F5F5] rounded-2xl">
+                <div class="mt-6 ">
                   <h3 class="text-h4-medium text-Black mb-4">Course Conclusion</h3>
                   <p class="text-body text-light-text-secondary">
                     {courseDetails?.Final_Course_Conclusion}
@@ -596,73 +597,94 @@
                   </h3>
                 </div>
 
-                <div class="p-2 space-y-2.5">
+                <div class="p-2">
                   <!-- Course Modules List -->
-                  {#if courseDetails?.Final_Module_Title?.length > 0}
-                    {#each courseDetails.Final_Module_Title as title, index}
-                      <div
-                        class="p-2 rounded-2xl border border-light-border hover:bg-Black/5 dark:hover:bg-Black/5 transition-colors duration-200 {activeModuleClass(index)}"
-                      >
-                        <button
-                          class="w-full flex items-start gap-4"
-                          on:click={() => {
-                            currentModuleStore.set(index);
-                            if (typeof currentModule !== "undefined") {
-                              currentModule = index;
-                            }
-                          }}
+                  <div class="space-y-2.5">
+                    {#if courseDetails?.Final_Module_Title?.length > 0}
+                      {#each courseDetails.Final_Module_Title as title, index}
+                        <div
+                          class="p-2 rounded-2xl border border-light-border hover:bg-Black/5 dark:hover:bg-Black/5 transition-colors duration-200 {activeModuleClass(index)}"
                         >
-                          <!-- Module Info -->
-                          <div class="flex-1 min-w-0 text-left">
-                            <p class="text-semibody-medium text-Black mb-2 inline-block">
-                              <span class="text-semibody-medium text-Black2">
-                                {(index + 1).toString().padStart(2, "0")}:
-                              </span>
+                          <button
+                            class="w-full flex items-start gap-4"
+                            on:click={() => {
+                              currentModuleStore.set(index);
+                              if (typeof currentModule !== "undefined") {
+                                currentModule = index;
+                              }
+                            }}
+                          >
+                            <!-- Module Info -->
+                            <div class="flex-1 min-w-0 text-left">
+                              <p class="text-semibody-medium text-Black mb-2 inline-block">
+                                <span class="text-semibody-medium text-Black2">
+                                  {(index + 1).toString().padStart(2, "0")}:
+                                </span>
+                                
+                                  {title}
                               
-                                {title}
-                            
-                            </p>
-                            <p class="text-mini-body text-light-text-tertiary">
-                              {courseDetails?.Final_Module_Video_Duration?.[
-                                index
-                              ] || "0"} min
-                            </p>
-                          </div>
-
-                          <!-- Thumbnail Container -->
-                          <div class="relative w-[30%] max-w-[139px] aspect-video flex-shrink-0 rounded-lg overflow-hidden bg-black/5">
-                            {#if courseDetails?.Final_Module_Thumbnails?.[index]}
-                              <img
-                                src={courseDetails.Final_Module_Thumbnails[
+                              </p>
+                              <p class="text-mini-body text-light-text-tertiary">
+                                {courseDetails?.Final_Module_Video_Duration?.[
                                   index
-                                ]}
-                                alt="Video Thumbnail"
-                                class="absolute inset-0 w-full h-full object-cover"
-                              />
-                            {:else}
-                              <div class="absolute inset-0 flex items-center justify-center bg-black/5">
+                                ] || "0"} min
+                              </p>
+                            </div>
+
+                            <!-- Thumbnail Container -->
+                            <div class="relative w-[30%] max-w-[139px] aspect-video flex-shrink-0 rounded-lg overflow-hidden bg-black/5">
+                              {#if courseDetails?.Final_Module_Thumbnails?.[index]}
                                 <img
-                                  src="/icons/youtube.svg"
-                                  alt="Video"
+                                  src={courseDetails.Final_Module_Thumbnails[
+                                    index
+                                  ]}
+                                  alt="Video Thumbnail"
+                                  class="absolute inset-0 w-full h-full object-cover"
+                                />
+                              {:else}
+                                <div class="absolute inset-0 flex items-center justify-center bg-black/5">
+                                  <img
+                                    src="/icons/youtube.svg"
+                                    alt="Video"
+                                    class="w-8 h-8"
+                                  />
+                                </div>
+                              {/if}
+                              <!-- Play Button Overlay -->
+                              <div class="absolute inset-0 flex items-center justify-center bg-black/20">
+                                <img
+                                  src="/icons/youtube-icon.svg"
+                                  alt="Play"
                                   class="w-8 h-8"
                                 />
                               </div>
-                            {/if}
-                            <!-- Play Button Overlay -->
-                            <div class="absolute inset-0 flex items-center justify-center bg-black/20">
-                              <img
-                                src="/icons/youtube-icon.svg"
-                                alt="Play"
-                                class="w-8 h-8"
-                              />
                             </div>
-                          </div>
-                        </button>
+                          </button>
+                        </div>
+                      {/each}
+                    {:else}
+                      <div class="p-4 text-center text-light-text-tertiary">
+                        No modules available
                       </div>
-                    {/each}
-                  {:else}
-                    <div class="p-4 text-center text-light-text-tertiary">
-                      No modules available
+                    {/if}
+                  </div>
+
+                  <!-- YouTube Playlist Button - Mobile -->
+                  {#if courseDetails?.YouTube_Playlist_URL}
+                    <div class=" px-2">
+                      <a
+                        href={courseDetails.YouTube_Playlist_URL}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="w-full px-4 py-2 flex items-center justify-center gap-2 bg-[#FF0000] hover:bg-[#CC0000] text-white rounded-2xl transition-colors"
+                      >
+                        <img
+                          src="/icons/youtube-icon.svg"
+                          alt="YouTube"
+                          class="w-5 h-5"
+                        />
+                        <span class="text-semibody-medium">View Playlist on Youtube</span>
+                      </a>
                     </div>
                   {/if}
                 </div>
@@ -762,86 +784,101 @@
           <!-- Course Modules Section -->
 
           <div
-                class=" border border-light-border dark:border-dark-border rounded-3xl overflow-hidden"
+            class="border border-light-border dark:border-dark-border rounded-3xl overflow-hidden"
+          >
+            <div>
+              <h3
+                class="text-body-semibold text-Black p-2 border-b border-light-border dark:border-dark-border bg-BackgroundRed"
               >
-                <div>
-                  <h3
-                    class="text-body-semibold text-Black p-2 border-b border-light-border dark:border-dark-border bg-BackgroundRed"
-                  >
-                    Course Module
-                  </h3>
-                </div>
+                Course Module
+              </h3>
+            </div>
 
-                <div class="p-2 space-y-2.5">
-                  <!-- Course Modules List -->
-                  {#if courseDetails?.Final_Module_Title?.length > 0}
-                    {#each courseDetails.Final_Module_Title as title, index}
-                      <div
-                        class="p-2 rounded-2xl border border-light-border hover:bg-Black/5 dark:hover:bg-Black/5 transition-colors duration-200 {activeModuleClass(index)}"
+            <div class="p-2">
+              <!-- Course Modules List -->
+              <div class="space-y-2.5">
+                {#if courseDetails?.Final_Module_Title?.length > 0}
+                  {#each courseDetails.Final_Module_Title as title, index}
+                    <div
+                      class="p-2 rounded-2xl border border-light-border hover:bg-Black/5 dark:hover:bg-Black/5 transition-colors duration-200 {activeModuleClass(index)}"
+                    >
+                      <button
+                        class="w-full flex items-center gap-4"
+                        on:click={() => {
+                          currentModuleStore.set(index);
+                          if (typeof currentModule !== "undefined") {
+                            currentModule = index;
+                          }
+                        }}
                       >
-                        <button
-                          class="w-full flex items-center gap-4"
-                          on:click={() => {
-                            currentModuleStore.set(index);
-                            if (typeof currentModule !== "undefined") {
-                              currentModule = index;
-                            }
-                          }}
-                        >
-                          <!-- Module Info -->
-                          <div class="flex-1 min-w-0 text-left inline-block">
-                            <p class="text-semibody-medium text-Black mb-2">
-                              <span class="text-semibody-medium text-Black2">
-                                {(index + 1).toString().padStart(2, "0")}:
-                              </span>
-                              {title}
-                            </p>
-                            <p class="text-mini-body text-light-text-tertiary">
-                              {courseDetails?.Final_Module_Video_Duration?.[
-                                index
-                              ] || "0"} min
-                            </p>
-                          </div>
+                        <!-- Module Info -->
+                        <div class="flex-1 min-w-0 text-left inline-block">
+                          <p class="text-semibody-medium text-Black mb-2">
+                            <span class="text-semibody-medium text-Black2">
+                              {(index + 1).toString().padStart(2, "0")}:
+                            </span>
+                            {title}
+                          </p>
+                          <p class="text-mini-body text-light-text-tertiary">
+                            {courseDetails?.Final_Module_Video_Duration?.[
+                              index
+                            ] || "0"} min
+                          </p>
+                        </div>
 
-                          <!-- Thumbnail Container -->
-                          <div class="relative w-[30%] max-w-[139px] aspect-video flex-shrink-0 rounded-lg overflow-hidden bg-black/5">
-                            {#if courseDetails?.Final_Module_Thumbnails?.[index]}
+                        <!-- Thumbnail Container -->
+                        <div class="relative w-[30%] max-w-[139px] aspect-video flex-shrink-0 rounded-lg overflow-hidden bg-black/5">
+                          {#if courseDetails?.Final_Module_Thumbnails?.[index]}
+                            <img
+                              src={courseDetails.Final_Module_Thumbnails[
+                                index
+                              ]}
+                              alt="Video Thumbnail"
+                              class="absolute inset-0 w-full h-full object-cover"
+                            />
+                          {:else}
+                            <div class="absolute inset-0 flex items-center justify-center bg-black/5">
                               <img
-                                src={courseDetails.Final_Module_Thumbnails[
-                                  index
-                                ]}
-                                alt="Video Thumbnail"
-                                class="absolute inset-0 w-full h-full object-cover"
-                              />
-                            {:else}
-                              <div class="absolute inset-0 flex items-center justify-center bg-black/5">
-                                <img
-                                  src="/icons/youtube.svg"
-                                  alt="Video"
-                                  class="w-8 h-8"
-                                />
-                              </div>
-                            {/if}
-                            <!-- Play Button Overlay -->
-                            <div class="absolute inset-0 flex items-center justify-center bg-black/20">
-                              <img
-                                src="/icons/youtube-icon.svg"
-                                alt="Play"
+                                src="/icons/youtube.svg"
+                                alt="Video"
                                 class="w-8 h-8"
                               />
                             </div>
+                          {/if}
+                          <!-- Play Button Overlay -->
+                          <div class="absolute inset-0 flex items-center justify-center bg-black/20">
+                            <img
+                              src="/icons/youtube-icon.svg"
+                              alt="Play"
+                              class="w-8 h-8"
+                            />
                           </div>
-                        </button>
-                      </div>
-                    {/each}
-                  {:else}
-                    <div class="p-4 text-center text-light-text-tertiary">
-                      No modules available
+                        </div>
+                      </button>
                     </div>
-                  {/if}
-                </div>
+                  {/each}
+                {:else}
+                  <div class="p-4 text-center text-light-text-tertiary">
+                    No modules available
+                  </div>
+                {/if}
               </div>
 
+              <!-- YouTube Playlist Button - Desktop -->
+              {#if courseDetails?.YouTube_Playlist_URL}
+                <div class=" mt-2">
+                  <a
+                    href={courseDetails.YouTube_Playlist_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="w-full px-4 py-2 flex items-center justify-center gap-2 bg-[#FF0000] hover:bg-[#CC0000] text-white rounded-2xl transition-colors"
+                  >
+                    <span class="text-semibody">View Playlist on Youtube</span>
+                  </a>
+                </div>
+              {/if}
+            </div>
+          </div>
         </div>
       </div>
     </div>

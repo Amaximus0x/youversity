@@ -50,12 +50,23 @@ export async function saveCourseToFirebase(userId: string, courseData: any) {
     const publicCourseRef = doc(collection(db, 'courses'));
     const courseId = publicCourseRef.id;
 
+    // Try to extract playlist ID from the first video URL
+    let playlistUrl = '';
+    if (courseData.Final_Module_YouTube_Video_URL?.length > 0) {
+      const firstVideoUrl = courseData.Final_Module_YouTube_Video_URL[0];
+      const playlistId = getPlaylistIdFromUrl(firstVideoUrl);
+      if (playlistId) {
+        playlistUrl = `https://www.youtube.com/playlist?list=${playlistId}`;
+      }
+    }
+
     // Add required metadata for courses
     const courseWithMetadata = {
       ...courseData,
+      YouTube_Playlist_URL: playlistUrl,
       createdAt: serverTimestamp(),
       id: courseId,
-      createdBy: userId,  // Store only the user ID
+      createdBy: userId,
       userId,
       isPublic: true,
       views: 0,
@@ -166,9 +177,34 @@ export async function getUserCourses(userId: string) {
   }
 }
 
+// Helper function to generate playlist URL from video URLs
+function generatePlaylistUrl(videoUrls: string[]): string {
+  if (!videoUrls?.length) return '';
+  
+  // Try to extract playlist ID from any video URL
+  for (const url of videoUrls) {
+    const playlistId = getPlaylistIdFromUrl(url);
+    if (playlistId) {
+      return `https://www.youtube.com/playlist?list=${playlistId}`;
+    }
+  }
+
+  // If no playlist ID found, create a custom playlist URL with video IDs
+  const videoIds = videoUrls.map(url => {
+    const match = url.match(/(?:https?:\/\/)?(?:www\.)?youtu\.?be(?:\.com)?\/?.*(?:watch|embed)?(?:.*v=|v\/|\/)([\w-_]+)/i);
+    return match ? match[1] : null;
+  }).filter(Boolean);
+
+  if (videoIds.length) {
+    // Create a playlist URL with the first video and additional videos as playlist
+    return `https://www.youtube.com/watch?v=${videoIds[0]}&list=${videoIds.join(',')}`;
+  }
+
+  return '';
+}
+
 export async function getUserCourse(userId: string, courseId: string) {
   try {
-    // First try to get from public courses
     const courseRef = doc(db, 'courses', courseId);
     const courseDoc = await getDoc(courseRef);
     
@@ -177,6 +213,21 @@ export async function getUserCourse(userId: string, courseId: string) {
     }
 
     const courseData = courseDoc.data();
+    
+    // Generate playlist URL if missing but has video URLs
+    if (!courseData.YouTube_Playlist_URL && courseData.Final_Module_YouTube_Video_URL?.length > 0) {
+      courseData.YouTube_Playlist_URL = generatePlaylistUrl(courseData.Final_Module_YouTube_Video_URL);
+      
+      // Optionally update the document with the generated URL
+      try {
+        await updateDoc(courseRef, {
+          YouTube_Playlist_URL: courseData.YouTube_Playlist_URL
+        });
+      } catch (error) {
+        console.error('Error updating playlist URL:', error);
+        // Continue even if update fails
+      }
+    }
     
     // Check if user is creator
     const isCreator = courseData.createdBy === userId;
@@ -378,6 +429,21 @@ export async function getSharedCourse(courseId: string): Promise<FinalCourseStru
       throw new Error('This course is not public');
     }
 
+    // Generate playlist URL if missing but has video URLs
+    if (!courseData.YouTube_Playlist_URL && courseData.Final_Module_YouTube_Video_URL?.length > 0) {
+      courseData.YouTube_Playlist_URL = generatePlaylistUrl(courseData.Final_Module_YouTube_Video_URL);
+      
+      // Optionally update the document with the generated URL
+      try {
+        await updateDoc(courseRef, {
+          YouTube_Playlist_URL: courseData.YouTube_Playlist_URL
+        });
+      } catch (error) {
+        console.error('Error updating playlist URL:', error);
+        // Continue even if update fails
+      }
+    }
+
     // Increment view count
     try {
       await updateDoc(courseRef, {
@@ -385,12 +451,12 @@ export async function getSharedCourse(courseId: string): Promise<FinalCourseStru
       });
     } catch (error) {
       console.error('Error updating view count:', error);
-      // Don't throw error for view count update failure
     }
 
     // Ensure all required fields are present with proper types
     const enrichedCourseData: FinalCourseStructure = {
       id: courseId,
+      ...courseData,
       Final_Course_Title: courseData.Final_Course_Title || '',
       Final_Course_Objective: courseData.Final_Course_Objective || '',
       Final_Course_Introduction: courseData.Final_Course_Introduction || '',
@@ -995,4 +1061,9 @@ export async function toggleBookmark(userId: string, courseId: string) {
     console.error('Error toggling bookmark:', error);
     throw error;
   }
+}
+
+function getPlaylistIdFromUrl(url: string): string | null {
+  const playlistMatch = url.match(/[&?]list=([^&]+)/i);
+  return playlistMatch ? playlistMatch[1] : null;
 }
