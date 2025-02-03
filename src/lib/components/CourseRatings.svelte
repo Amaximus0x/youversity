@@ -3,74 +3,77 @@
   import { goto } from '$app/navigation';
   import { submitCourseRating, getCourseRatings, getUserCourseRating } from '$lib/firebase';
   import type { CourseRating } from '$lib/types/course';
-  import { Star, StarHalf } from 'lucide-svelte';
   import { onMount } from 'svelte';
   import { fade } from 'svelte/transition';
 
   export let courseId: string;
   
   let ratings: CourseRating[] = [];
-  let userRating = 0;
-  let userReview = '';
-  let loading = false;
+  let loading = true;
   let error: string | null = null;
+  let showReviewInput = false;
+  let reviewText = '';
   let submitting = false;
-  let showReviewForm = false;
-  let averageRating = 0;
+  let userExistingReview: CourseRating | null = null;
+  let isEditing = false;
 
-  onMount(async () => {
+  async function loadReviews() {
     try {
       loading = true;
       ratings = await getCourseRatings(courseId);
-      console.log('Loaded ratings:', ratings);
       
+      // Check for user's existing review
       if ($user) {
-        const existingRating = await getUserCourseRating($user.uid, courseId);
-        if (existingRating) {
-          userRating = existingRating.rating;
-          userReview = existingRating.review;
+        userExistingReview = await getUserCourseRating($user.uid, courseId);
+        if (userExistingReview) {
+          reviewText = userExistingReview.review;
         }
       }
-      
-      // Calculate initial average
-      averageRating = getAverageRating();
-    } catch (err) {
-      console.error('Error loading ratings:', err);
-      error = err instanceof Error ? err.message : 'Failed to load ratings';
+    } catch (err: any) {
+      error = err.message;
+      console.error('Error loading reviews:', err);
     } finally {
       loading = false;
     }
-  });
+  }
 
-  async function handleSubmitRating() {
-    if (!$user) return;
-    
+  async function handleSubmitReview() {
+    if (!reviewText.trim() || !$user) return;
+
     try {
       submitting = true;
-      error = null;
-      
       await submitCourseRating(
         $user.uid,
         courseId,
-        userReview,
+        reviewText,
         $user.displayName || 'Anonymous',
-        $user.photoURL || undefined
+        $user.photoURL
       );
       
-      // Refresh ratings
-      ratings = await getCourseRatings(courseId);
-      showReviewForm = false;
+      // Refresh the reviews list
+      await loadReviews();
+      
+      // Reset the form
+      showReviewInput = false;
+      isEditing = false;
     } catch (err) {
       console.error('Error submitting review:', err);
-      error = err instanceof Error ? err.message : 'Failed to submit review';
     } finally {
       submitting = false;
     }
   }
 
+  function handleEditReview() {
+    if (userExistingReview) {
+      reviewText = userExistingReview.review;
+      isEditing = true;
+      showReviewInput = true;
+    }
+  }
+
   function formatDate(timestamp: any) {
     if (!timestamp) return '';
-    const date = timestamp.toDate();
+    const date = timestamp.toDate?.() || timestamp;
     return date.toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'long',
@@ -78,37 +81,10 @@
     });
   }
 
-  function getAverageRating(): number {
-    console.log('Calculating average for ratings:', ratings);
-    if (!ratings || ratings.length === 0) {
-      console.log('No ratings available');
-      return 0;
-    }
-    
-    let validRatings = ratings.filter(r => typeof r.rating === 'number' && !isNaN(r.rating));
-    console.log('Valid ratings:', validRatings);
-    
-    if (validRatings.length === 0) {
-      console.log('No valid numeric ratings found');
-      return 0;
-    }
-    
-    const total = validRatings.reduce((sum, r) => sum + r.rating, 0);
-    const average = total / validRatings.length;
-    console.log('Total:', total, 'Count:', validRatings.length, 'Average:', average);
-    
-    return Number(average.toFixed(1));
-  }
-
-  // Update averageRating whenever ratings change
-  $: {
-    if (ratings) {
-      console.log('Ratings updated:', ratings);
-      averageRating = getAverageRating();
-      console.log('New average rating:', averageRating);
-    }
-  }
+  // Load reviews on mount
+  onMount(loadReviews);
 </script>
+
 <!-- Course Reviews Section -->
 <div class="bg-transparent rounded-2xl border border-light-border dark:border-dark-border p-6">
   <div class="flex items-center justify-between mb-6">
@@ -121,29 +97,64 @@
     </button>
   </div>
 
+  <!-- Review Input Section -->
+  {#if showReviewInput}
+    <div transition:fade={{ duration: 200 }} class="mb-6">
+      <form on:submit|preventDefault={handleSubmitReview} class="space-y-4">
+        <textarea
+          bind:value={reviewText}
+          placeholder="Write your review..."
+          class="w-full h-32 p-4 rounded-lg border border-light-border dark:border-dark-border bg-light-bg-primary dark:bg-dark-bg-primary text-light-text-primary dark:text-dark-text-primary resize-none focus:outline-none focus:border-brand-turquoise transition-colors"
+        ></textarea>
+        <div class="flex justify-end gap-2">
+          <button
+            type="button"
+            class="px-4 py-2 text-light-text-secondary dark:text-dark-text-secondary hover:text-light-text-primary dark:hover:text-dark-text-primary transition-colors"
+            on:click={() => {
+              showReviewInput = false;
+              isEditing = false;
+              reviewText = userExistingReview?.review || '';
+            }}
+            disabled={submitting}
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            class="px-4 py-2 bg-brand-turquoise text-white rounded-lg hover:bg-[#3BADB3] transition-colors disabled:opacity-50"
+            disabled={!reviewText.trim() || submitting}
+          >
+            {submitting ? 'Submitting...' : isEditing ? 'Update Review' : 'Submit Review'}
+          </button>
+        </div>
+      </form>
+    </div>
+  {/if}
+
   <div class="flex items-center gap-8 mb-8">
     <!-- Total Reviews -->
     <div>
-      <h3 class="text-light-text-tertiary text-mini-body ">Total Reviews</h3>
+      <h3 class="text-light-text-tertiary text-body">Total Reviews</h3>
       <p class="text-[32px] font-medium text-light-text-primary dark:text-dark-text-primary">
-        {(ratings.length)}
+        {ratings.length}
       </p>
     </div>
 
-
     <!-- Add Review Button -->
-    <button 
-      class="ml-auto px-4 py-2 bg-black/[0.05] text-Green text-semibody-medium rounded-lg hover:bg-black/[0.08] transition-colors"
-      on:click={() => {
-        if ($user) {
-          showReviewForm = true;
-        } else {
-          goto('/login');
-        }
-      }}
-    >
-      Add Review
-    </button>
+    {#if $user && !showReviewInput}
+      <button 
+        class="ml-auto px-4 py-2 bg-black/[0.05] text-Green text-semibody-medium rounded-lg hover:bg-black/[0.08] transition-colors"
+        on:click={() => {
+          if (userExistingReview) {
+            handleEditReview();
+          } else {
+            showReviewInput = true;
+          }
+        }}
+      >
+        {userExistingReview ? 'Edit Review' : 'Add Review'}
+      </button>
+    {/if}
   </div>
 
   <!-- Reviews List -->
@@ -153,103 +164,46 @@
         <div class="bg-gray-100 h-32 rounded-lg"></div>
       {/each}
     </div>
+  {:else if error}
+    <p class="text-brand-red text-center py-4">{error}</p>
   {:else if ratings.length === 0}
-    <p class="text-light-text-tertiary text-center py-8">No reviews yet. Be the first to review this course!</p>
+    <p class="text-light-text-tertiary text-center py-8">
+      No reviews yet. Be the first to review this course!
+    </p>
   {:else}
     <div class="space-y-8">
-      {#each ratings as rating}
+      {#each ratings as review (review.userId + '-' + review.createdAt)}
         <div class="pb-8 border-b border-light-border dark:border-dark-border last:border-b-0">
           <div class="flex items-start justify-between mb-4">
             <div class="flex items-center gap-3">
-              {#if rating.userPhotoURL}
+              {#if review.userPhotoURL}
                 <img 
-                  src={rating.userPhotoURL} 
-                  alt={rating.userDisplayName}
+                  src={review.userPhotoURL} 
+                  alt={review.userDisplayName}
                   class="w-12 h-12 rounded-full object-cover"
                 />
               {:else}
                 <div class="w-12 h-12 rounded-full bg-[#F5F5F5] flex items-center justify-center">
                   <span class="text-[#2A4D61] font-medium">
-                    {rating.userDisplayName[0].toUpperCase()}
+                    {review.userDisplayName[0].toUpperCase()}
                   </span>
                 </div>
               {/if}
               <div>
-                <p class="text-body font-medium text-light-text-primary dark:text-dark-text-primary">
-                  {rating.userDisplayName}
+                <p class="text-body-semibold text-light-text-primary dark:text-dark-text-primary">
+                  {review.userDisplayName}
                 </p>
-                <p class="text-light-text-tertiary text-body">
-                  {formatDate(rating.createdAt)}
+                <p class="text-light-text-tertiary text-mini-body">
+                  {formatDate(review.createdAt)}
                 </p>
               </div>
             </div>
           </div>
-          <p class="text-body text-light-text-secondary dark:text-dark-text-secondary">
-            {rating.review}
+          <p class="text-semi-body text-light-text-secondary dark:text-dark-text-secondary">
+            {review.review}
           </p>
         </div>
       {/each}
     </div>
   {/if}
 </div> 
-
-<!-- Review Form Modal -->
-{#if showReviewForm}
-  <div 
-    class="fixed inset-0 bg-black/30 z-50 flex items-start justify-center pt-20"
-    on:click={() => showReviewForm = false}
-    transition:fade={{ duration: 200 }}
-  >
-    <div 
-      class="bg-white rounded-2xl w-[500px] overflow-hidden"
-      on:click|stopPropagation
-    >
-      <!-- Header -->
-      <div class="flex items-center justify-between px-6 py-4 border-b border-[rgba(0,0,0,0.05)]">
-        <h2 class="text-base font-medium">Add Review</h2>
-        <button 
-          on:click={() => showReviewForm = false}
-          class="w-6 h-6 flex items-center justify-center hover:opacity-70 transition-opacity"
-        >
-          <img src="/icons/cancel-square.svg" alt="Close" class="w-6 h-6" />
-        </button>
-      </div>
-
-      <!-- Content -->
-      <form on:submit|preventDefault={handleSubmitRating} class="px-6 py-4">
-        <div class="mb-6">
-          <label class="block text-[#5F6368] text-sm mb-2">Review</label>
-          <textarea
-            bind:value={userReview}
-            class="w-full px-4 py-3 border border-[rgba(0,0,0,0.05)] rounded-lg focus:outline-none focus:border-[#42C1C8] transition-colors"
-            rows="4"
-            placeholder="Write your review here..."
-            required
-          ></textarea>
-        </div>
-
-        {#if error}
-          <p class="text-[#EE434A] text-sm mb-4">{error}</p>
-        {/if}
-
-        <div class="flex justify-end gap-4">
-          <button
-            type="button"
-            class="px-4 py-2 text-[#5F6368] hover:bg-[#F5F5F5] rounded-lg transition-colors"
-            on:click={() => showReviewForm = false}
-            disabled={submitting}
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            class="px-6 py-2 bg-[#42C1C8] text-white rounded-lg hover:opacity-70 transition-opacity disabled:opacity-50"
-            disabled={submitting}
-          >
-            {submitting ? 'Submitting...' : 'Submit Review'}
-          </button>
-        </div>
-      </form>
-    </div>
-  </div>
-{/if} 
