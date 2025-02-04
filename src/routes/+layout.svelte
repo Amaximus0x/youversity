@@ -18,6 +18,7 @@
   let showFilterModal = false;
   let currentFilter: 'relevance' | 'latest' = 'relevance';
   let activeFilterCount = 0;
+  let showMobileSearch = false;
   
   onMount(() => {
     isMounted = true;
@@ -102,6 +103,18 @@
     });
     window.dispatchEvent(event);
     showFilterModal = false;
+  }
+
+  function toggleMobileSearch() {
+    showMobileSearch = !showMobileSearch;
+  }
+
+  function handleMobileSearch(e: Event) {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      showMobileSearch = false;
+      goto(`/search?q=${encodeURIComponent(searchQuery)}&filter=relevance`);
+    }
   }
 
   onMount(() => {
@@ -230,47 +243,82 @@
         <header class="fixed top-0 right-0 left-0 lg:left-64 lg:h-24 px-5 lg:px-4 pt-6 pb-4 lg:ml-1.5 lg:border-b border-light-border dark:border-dark-border bg-light-bg-secondary dark:bg-dark-bg-secondary z-50">
           <!-- Mobile Header -->
           <div class="h-10 justify-between items-center inline-flex lg:hidden w-full">
-            <div class=" w-[125.33px] h-[38px] relative">
-              <a href="/">
-              <img 
-                src="/youversity-logo-small.svg" 
-                alt="Youversity Logo" 
-                class="left-0 top-0 absolute"
-              />
-              </a>
-            </div>
-            <div class="justify-start items-start gap-4 flex">
-              <button 
-                class="p-2 rounded-[100px] border border-black/5 justify-start items-center gap-2.5 flex"
-                on:click={() => goto('/search')}
-              >
-                <img src="/icons/search-01.svg" alt="Search" class="w-6 h-6" />
-              </button>
-              <div class="p-2 rounded-[100px] border border-black/5 justify-start items-center gap-2.5 flex">
-                <img src="/icons/notification-block-02.svg" alt="Notification" class="w-6 h-6" />
-              </div>
-              {#if $user}
-                <div 
-                  class="h-10 bg-white rounded-[100px] justify-center items-center flex overflow-hidden cursor-pointer"
-                  on:click={() => goto('/profile')}
-                  on:keydown={(e) => e.key === 'Enter' && goto('/profile')}
-                  role="button"
-                  tabindex="0"
+            {#if showMobileSearch}
+              <!-- Mobile Search View -->
+              <div class="w-full flex items-center gap-2">
+                <button 
+                  class="p-2"
+                  on:click={() => {
+                    showMobileSearch = false;
+                    searchQuery = '';
+                  }}
                 >
-                  <img 
-                    src={$user.photoURL || ''} 
-                    alt={$user.displayName || 'User'} 
-                    class="w-[40px] h-[40px] object-cover"
+                  <img src="/icons/arrow-left.svg" alt="Back" class="w-6 h-6" />
+                </button>
+                
+                <form 
+                  on:submit={handleMobileSearch}
+                  class="flex-1 flex items-center bg-white dark:bg-dark-bg-primary border border-light-border dark:border-dark-border rounded-xl h-10"
+                >
+                  <input
+                    type="text"
+                    placeholder="Search Courses..."
+                    bind:value={searchQuery}
+                    class="flex-1 px-3 bg-transparent border-none focus:outline-none text-body text-light-text-primary dark:text-dark-text-primary placeholder:text-light-text-secondary dark:placeholder:text-dark-text-secondary"
                   />
+                  <button
+                    type="button"
+                    class="px-2 py-1 mr-1"
+                    on:click={() => showFilterModal = true}
+                  >
+                    <img src="/icons/filter-icon.svg" alt="Filter" class="w-6 h-6" />
+                  </button>
+                </form>
+              </div>
+            {:else}
+              <!-- Regular Mobile Header -->
+              <div class="w-[125.33px] h-[38px] relative">
+                <a href="/">
+                  <img 
+                    src="/youversity-logo-small.svg" 
+                    alt="Youversity Logo" 
+                    class="left-0 top-0 absolute"
+                  />
+                </a>
+              </div>
+              <div class="justify-start items-start gap-4 flex">
+                <button 
+                  class="p-2 rounded-[100px] border border-black/5 justify-start items-center gap-2.5 flex"
+                  on:click={toggleMobileSearch}
+                >
+                  <img src="/icons/search-01.svg" alt="Search" class="w-6 h-6" />
+                </button>
+                <div class="p-2 rounded-[100px] border border-black/5 justify-start items-center gap-2.5 flex">
+                  <img src="/icons/notification-block-02.svg" alt="Notification" class="w-6 h-6" />
                 </div>
-                {:else}
-                <div class="w-12 h-12 rounded-full bg-[#F5F5F5] flex items-center justify-center">
-                  <span class="text-[#2A4D61] font-medium">
-                    {($user?.email[0].toUpperCase()) || 'U'}
-                  </span>
-                </div>
-              {/if}
-            </div>
+                {#if $user}
+                  <div 
+                    class="h-10 bg-white rounded-[100px] justify-center items-center flex overflow-hidden cursor-pointer"
+                    on:click={() => goto('/profile')}
+                    on:keydown={(e) => e.key === 'Enter' && goto('/profile')}
+                    role="button"
+                    tabindex="0"
+                  >
+                    <img 
+                      src={$user.photoURL || ''} 
+                      alt={$user.displayName || 'User'} 
+                      class="w-[40px] h-[40px] object-cover"
+                    />
+                  </div>
+                  {:else}
+                  <div class="w-12 h-12 rounded-full bg-[#F5F5F5] flex items-center justify-center">
+                    <span class="text-[#2A4D61] font-medium">
+                      {($user?.email[0].toUpperCase()) || 'U'}
+                    </span>
+                  </div>
+                {/if}
+              </div>
+            {/if}
           </div>
 
           <!-- Desktop Header -->
