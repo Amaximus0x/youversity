@@ -518,7 +518,6 @@
                       alt="Bookmark" 
                       class="w-5 h-5"
                     />
-                    <span>{isBookmarked ? "Bookmarked" : "Bookmark Course"}</span>
                   </button>
                 </div>
               {/if}
@@ -978,7 +977,7 @@
 <!-- Update the Floating Action Button -->
 {#if !isEnrolled && !isCreator}
   <div
-    class="fixed bottom-0 left-0 right-0 pb-36 pt-4 z-[100] lg:hidden transition-opacity duration-300"
+    class="fixed bottom-0 left-0 right-0 pb-36 pt-4 z-[60] lg:hidden transition-opacity duration-300"
     class:opacity-0={!showFloatingButton}
     class:pointer-events-none={!showFloatingButton}
   >

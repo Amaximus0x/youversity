@@ -319,7 +319,7 @@
                     <div class="absolute inset-0 transition-colors duration-300 ease-in-out">
                       <button
                         type="button"
-                        class="h-8 px-2 py-3.5 bg-white rounded-[10px] border border-black/5 justify-start items-center gap-2 inline-flex"
+                        class="h-8 px-2 py-3.5 bg-light-bg-primary dark:bg-dark-bg-primary rounded-[10px] border border-black/5 justify-start items-center gap-2 inline-flex"
                         on:click={() => showFilterModal = true}
                       >
                         <img 
@@ -327,7 +327,7 @@
                           alt="Filter"
                           class="w-6 h-6" 
                         />
-                        <span class="text-black text-base font-normal font-['Poppins'] leading-normal">Filter</span>
+                        <span class="text-light-text-primary dark:text-dark-text-primary text-base font-normal font-['Poppins'] leading-normal">Filter</span>
                         {#if activeFilterCount > 0}
                           <div class="px-2 py-0.5 bg-[#eb434a] rounded-[40px] justify-start items-center gap-2 flex">
                             <div class="text-center text-white text-[10px] font-semibold font-['Poppins'] leading-none">
