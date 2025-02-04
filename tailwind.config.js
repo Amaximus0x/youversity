@@ -35,11 +35,11 @@ export default {
         },
         // Light theme colors
         'light': {
-          // 'bg': {
-          //   'primary': '#FFFFFF',
-          //   'secondary': '#FFF2F3',
-          //   'tertiary': '#EDFEFF'
-          // },
+          'bg': {
+            'primary': '#FFFFFF',
+            'secondary': '#FFF2F3',
+            'tertiary': '#EDFEFF'
+          },
           'text': {
             'primary': '#000000',
             'secondary': '#494848',
@@ -49,11 +49,11 @@ export default {
         },
         // Dark theme colors
         'dark': {
-          // 'bg': {
-          //   'primary': '#1E3443',
-          //   'secondary': '#2A4D61',
-          //   'tertiary': '#000000'
-          // },
+          'bg': {
+            'primary': '#000000',
+            'secondary': '#241015',
+            'tertiary': '#000000'
+          },
           'text': {
             'primary': '#FFFFFF',
             'secondary': '#E8EAED',

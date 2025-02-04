@@ -76,7 +76,8 @@
     <div class="flex-1 w-full p-4 flex flex-col justify-between gap-4">
       <div class="flex-1">
         <!-- Title and Description -->
-        <h3 class="text-black dark:text-white text-h4-medium leading-7 line-clamp-2 mb-2">
+        <!-- <h3 class="text-black dark:text-white text-h4-medium leading-7 line-clamp-2 mb-2"> -->
+         <h3 class="text-black dark:text-white text-h4-medium leading-7 mb-3">
           {course.Final_Course_Title}
         </h3>
         <p class="text-[#a2a2a2] text-semibody leading-snug line-clamp-2">

@@ -104,12 +104,12 @@
         <textarea
           bind:value={reviewText}
           placeholder="Write your review..."
-          class="w-full h-32 p-4 rounded-lg border border-light-border dark:border-dark-border bg-light-bg-primary dark:bg-dark-bg-primary text-light-text-primary dark:text-dark-text-primary resize-none focus:outline-none focus:border-brand-turquoise transition-colors"
+          class="w-full h-32 p-4 rounded-lg border border-light-border dark:border-dark-border bg-black/[0.05] text-light-text-primary dark:text-dark-text-primary resize-none focus:outline-none focus:border-brand-turquoise transition-colors"
         ></textarea>
         <div class="flex justify-end gap-2">
           <button
             type="button"
-            class="px-4 py-2 text-light-text-secondary dark:text-dark-text-secondary hover:text-light-text-primary dark:hover:text-dark-text-primary transition-colors"
+            class="px-4 py-2  bg-black/[0.05] text-brand-red/100 text-semibody-medium rounded-lg hover:bg-black/[0.08] transition-colors "
             on:click={() => {
               showReviewInput = false;
               isEditing = false;
@@ -121,7 +121,7 @@
           </button>
           <button
             type="submit"
-            class="px-4 py-2 bg-brand-turquoise text-white rounded-lg hover:bg-[#3BADB3] transition-colors disabled:opacity-50"
+            class="px-4 py-2  bg-Green text-white text-semibody-medium rounded-lg hover:bg-GreenHover transition-colors disabled:opacity-50"
             disabled={!reviewText.trim() || submitting}
           >
             {submitting ? 'Submitting...' : isEditing ? 'Update Review' : 'Submit Review'}

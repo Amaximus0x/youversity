@@ -74,8 +74,8 @@
     <div class="self-stretch h-52 p-4 flex-col justify-start items-start gap-4 flex bg-transparent">
       <div class="self-stretch h-[123px] flex-col justify-start items-start gap-2 flex">
         <div class="self-stretch h-[100px] flex-col justify-start items-start gap-2 flex">
-          <h3 class="self-stretch h-[55px] text-black dark:text-white text-xl font-medium font-['Poppins'] leading-7 line-clamp-2">{course.Final_Course_Title}</h3>
-          <p class="self-stretch text-[#a2a2a2] text-sm font-normal font-['Poppins'] leading-snug line-clamp-2">{course.Final_Course_Objective}</p>
+          <h3 class="self-stretch h-[55px] text-black dark:text-white text-body-semibold lg:text-h4-medium line-clamp-2">{course.Final_Course_Title}</h3>
+          <p class="self-stretch text-[#a2a2a2] text-semi-body line-clamp-2">{course.Final_Course_Objective}</p>
         </div>
         
         <div class="self-stretch h-5 flex-col justify-start items-start gap-2 flex">

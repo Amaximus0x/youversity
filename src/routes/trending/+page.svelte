@@ -58,7 +58,7 @@
 
     <!-- Course List -->
     {#if loading}
-      <div class="flex flex-col md:grid md:grid-cols-2 lg:grid-cols-4 px-5 lg:px-0 gap-4">
+      <div class="flex flex-col md:grid md:grid-cols-2 lg:grid-cols-3 px-5 lg:px-0 gap-4">
         {#each Array(8) as _}
           <div class="w-[390px] md:w-auto h-[356px] bg-light-bg-secondary dark:bg-dark-bg-secondary animate-pulse rounded-[14px]"></div>
         {/each}
@@ -68,7 +68,7 @@
         No trending courses available at the moment
       </div>
     {:else}
-      <div class="flex flex-col md:grid md:grid-cols-2 lg:grid-cols-4 px-5 lg:px-0 gap-4">
+      <div class="flex flex-col md:grid md:grid-cols-2 lg:grid-cols-3 px-5 lg:px-0 gap-4">
         {#each filteredCourses as course (course.id)}
           <CourseCard {course} onShare={handleShare} />
         {/each}
