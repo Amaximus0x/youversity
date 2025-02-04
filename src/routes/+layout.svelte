@@ -243,40 +243,7 @@
         <header class="fixed top-0 right-0 left-0 lg:left-64 lg:h-24 px-5 lg:px-4 pt-6 pb-4 lg:ml-1.5 lg:border-b border-light-border dark:border-dark-border bg-light-bg-secondary dark:bg-dark-bg-secondary z-50">
           <!-- Mobile Header -->
           <div class="h-10 justify-between items-center inline-flex lg:hidden w-full">
-            {#if showMobileSearch}
-              <!-- Mobile Search View -->
-              <div class="w-full flex items-center gap-2">
-                <button 
-                  class="p-2"
-                  on:click={() => {
-                    showMobileSearch = false;
-                    searchQuery = '';
-                  }}
-                >
-                  <img src="/icons/arrow-left.svg" alt="Back" class="w-6 h-6" />
-                </button>
-                
-                <form 
-                  on:submit={handleMobileSearch}
-                  class="flex-1 flex items-center bg-white dark:bg-dark-bg-primary border border-light-border dark:border-dark-border rounded-xl h-10"
-                >
-                  <input
-                    type="text"
-                    placeholder="Search Courses..."
-                    bind:value={searchQuery}
-                    class="flex-1 px-3 bg-transparent border-none focus:outline-none text-body text-light-text-primary dark:text-dark-text-primary placeholder:text-light-text-secondary dark:placeholder:text-dark-text-secondary"
-                  />
-                  <button
-                    type="button"
-                    class="px-2 py-1 mr-1"
-                    on:click={() => showFilterModal = true}
-                  >
-                    <img src="/icons/filter-icon.svg" alt="Filter" class="w-6 h-6" />
-                  </button>
-                </form>
-              </div>
-            {:else}
-              <!-- Regular Mobile Header -->
+            {#if !showMobileSearch}
               <div class="w-[125.33px] h-[38px] relative">
                 <a href="/">
                   <img 
@@ -473,6 +440,55 @@
   onFilterChange={handleFilterChange}
   onClose={() => showFilterModal = false}
 />
+
+<!-- Mobile Search Modal -->
+{#if showMobileSearch}
+  <div 
+    class="fixed inset-0 z-[60] lg:hidden bg-gradient-to-b from-[#FFF2F3] to-BackgoundBlue dark:from-dark-bg-secondary dark:to-dark-bg-primary/40"
+  >
+    <!-- Search Header -->
+    <div class="px-5 pt-6">
+      <div class="flex items-center gap-3">
+        <button 
+          class="p-2"
+          on:click={() => {
+            showMobileSearch = false;
+            searchQuery = '';
+          }}
+        >
+          <img src="/icons/arrow-left.svg" alt="Back" class="w-6 h-6" />
+        </button>
+        
+        <form 
+          on:submit={handleMobileSearch}
+          class="flex-1"
+        >
+          <div class="flex items-center bg-white dark:bg-dark-bg-primary border border-brand-red rounded-2xl h-12">
+            <input
+              type="text"
+              placeholder="Search Courses..."
+              bind:value={searchQuery}
+              class="flex-1 px-4 bg-transparent border-none focus:outline-none text-body text-light-text-primary dark:text-dark-text-primary placeholder:text-light-text-secondary dark:placeholder:text-dark-text-secondary"
+              autofocus
+            />
+            <button
+              type="button"
+              class="px-4 py-2"
+              on:click={() => showFilterModal = true}
+            >
+              <img src="/icons/filter-icon.svg" alt="Filter" class="w-6 h-6" />
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Search Content -->
+    <div class="px-5 pt-6">
+      <!-- You can add recent searches or search suggestions here -->
+    </div>
+  </div>
+{/if}
 
 <style>
   :global(body) {
