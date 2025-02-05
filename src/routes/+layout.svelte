@@ -12,6 +12,7 @@
   import { onMount } from 'svelte';
   import { fade } from 'svelte/transition';
   import FilterModal from '$lib/components/FilterModal.svelte';
+  import { saveRecentSearch } from '$lib/services/search';
 
   let isSearchPage = false;
   let isMounted = false;
@@ -22,25 +23,17 @@
   
   onMount(() => {
     isMounted = true;
-    window.addEventListener('filterchange', (event: Event) => {
-      const customEvent = event as CustomEvent<{ ratings: number[], sortByLatest: boolean }>;
-      activeFilterCount = (customEvent.detail.ratings.length > 0 ? 1 : 0) + 
-                         (customEvent.detail.sortByLatest ? 1 : 0);
-    });
-
-    // Update isSearchPage when mounted and when $page is defined
-    if ($page?.url?.pathname) {
-      isSearchPage = $page.url.pathname === '/search';
-    }
-    
-    // Subscribe to page changes
-    return () => {
-      window.removeEventListener('filterchange', () => {});
-    };
   });
 
   $: if (isMounted && $page?.url?.pathname) {
     isSearchPage = $page.url.pathname === '/search';
+    if (isSearchPage) {
+      const urlParams = new URLSearchParams($page.url.search);
+      const filter = urlParams.get('filter') as 'relevance' | 'latest';
+      if (filter) {
+        currentFilter = filter;
+      }
+    }
   }
 
   // Sidebar items configuration
@@ -87,22 +80,24 @@
     isOnline = navigator.onLine;
   }
 
-  function handleSearch(e: Event) {
+  async function handleSearch(e: Event) {
     e.preventDefault();
     if (searchQuery.trim()) {
-      goto(`/search?q=${encodeURIComponent(searchQuery)}&filter=relevance`);
+      saveRecentSearch(searchQuery);
+      await goto(`/search?q=${encodeURIComponent(searchQuery)}&filter=${currentFilter}`);
     }
   }
 
-  // Create a custom event dispatcher for filter changes
-  function handleFilterChange(filters: { ratings: number[], sortByLatest: boolean }) {
-    const event = new CustomEvent('filterchange', { 
-      detail: filters,
-      bubbles: true,
-      composed: true
-    });
-    window.dispatchEvent(event);
+  function handleFilterChange(newFilter: 'relevance' | 'latest') {
+    currentFilter = newFilter;
     showFilterModal = false;
+    showMobileSearch = false;
+    
+    activeFilterCount = newFilter === 'relevance' ? 0 : 1;
+    
+    if (searchQuery) {
+      goto(`/search?q=${encodeURIComponent(searchQuery)}&filter=${newFilter}`, { replaceState: true });
+    }
   }
 
   function toggleMobileSearch() {
@@ -113,7 +108,7 @@
     e.preventDefault();
     if (searchQuery.trim()) {
       showMobileSearch = false;
-      goto(`/search?q=${encodeURIComponent(searchQuery)}&filter=relevance`);
+      goto(`/search?q=${encodeURIComponent(searchQuery)}&filter=${currentFilter}`);
     }
   }
 
@@ -291,13 +286,18 @@
           <!-- Desktop Header -->
           <div class="hidden lg:flex justify-between items-center gap-8 w-full h-full max-w-auto mx-auto">
             <!-- search bar -->
-            <div class="flex-1 max-w-[611px] mx-auto ml-0">
-              <form on:submit={handleSearch} class="w-full flex items-center bg-light-bg-primary dark:bg-dark-bg-primary border-[1.5px] {
-                isSearchFocused ? 'border-brand-red' : 'border-light-border dark:border-dark-border'
-              } rounded-2xl h-12 transition-all duration-300 ease-in-out">
+            <div class="flex-1 max-w-[611px] mx-0">
+              <form 
+                on:submit={handleSearch} 
+                class="w-full h-12 flex items-center gap-2 bg-white dark:bg-dark-bg-primary pl-4 pr-2 py-2 border-[1.5px] {
+                  isSearchFocused ? 'border-brand-red' : 'border-black/5'
+                } rounded-2xl transition-all duration-200"
+              >
+                <!-- Search Icon -->
+
                 <div 
-                  class="transition-all duration-200 ease-in-out ml-4 {
-                    isSearchFocused ? 'hidden' : 'opacity-60'
+                  class="flex-none transition-transform duration-200 {
+                    isSearchFocused ? '-translate-x-2 opacity-0' : 'translate-x-0 opacity-60'
                   }"
                 >
                   <img 
@@ -306,38 +306,44 @@
                     class="w-6 h-6" 
                   />
                 </div>
+
+                <!-- Search Input -->
                 <input
                   type="text"
                   placeholder="Search Courses..."
                   bind:value={searchQuery}
                   on:focus={() => isSearchFocused = true}
                   on:blur={() => isSearchFocused = false}
-                  class="flex-1 pl-2 pr-1 bg-transparent border-none focus:pl-4 focus:outline-none text-body text-light-text-primary dark:text-dark-text-primary placeholder:text-light-text-secondary dark:placeholder:text-dark-text-secondary"
+                  class="flex-1 h-6 bg-transparent border-none outline-none text-body text-black dark:text-white font-normal tracking-[-0.01em] transition-all duration-200 {
+                    isSearchFocused ? 'pl-0' : 'pl-2'
+                  } placeholder:text-[#494848] dark:placeholder:text-dark-text-secondary"
                 />
-                <div class="flex items-center pl-2 border-[rgba(0,0,0,0.05)]">
-                  <div class="relative w-[94px] h-[32px]">
-                    <div class="absolute inset-0 transition-colors duration-300 ease-in-out">
-                      <button
-                        type="button"
-                        class="h-8 px-2 py-3.5 bg-light-bg-primary dark:bg-dark-bg-primary rounded-[10px] border border-black/5 justify-start items-center gap-2 inline-flex"
-                        on:click={() => showFilterModal = true}
-                      >
-                        <img 
-                          src="/icons/filter-icon.svg" 
-                          alt="Filter"
-                          class="w-6 h-6" 
-                        />
-                        <span class="text-light-text-primary dark:text-dark-text-primary text-base font-normal font-['Poppins'] leading-normal">Filter</span>
-                        {#if activeFilterCount > 0}
-                          <div class="px-2 py-0.5 bg-[#eb434a] rounded-[40px] justify-start items-center gap-2 flex">
-                            <div class="text-center text-white text-[10px] font-semibold font-['Poppins'] leading-none">
-                              {activeFilterCount}
-                            </div>
-                          </div>
-                        {/if}
-                      </button>
+
+                <!-- Filter Button -->
+                <div class="flex-none">
+                  <button
+                    type="button"
+                    class="h-8 flex items-center gap-2 bg-white dark:bg-dark-bg-primary px-2 py-3.5 border-[1.5px] border-black/5 rounded-[10px]"
+                    on:click={() => showFilterModal = true}
+                  >
+                    <div class="relative w-6 h-6 flex-none">
+                      <img 
+                        src="/icons/filter-icon.svg" 
+                        alt="Filter"
+                        class="w-6 h-6" 
+                      />
                     </div>
-                  </div>
+                    <span class="text-body text-black dark:text-white font-normal tracking-[-0.01em] flex-none">
+                      Filter
+                    </span>
+                    {#if activeFilterCount > 0}
+                      <div class="flex items-center px-2 py-0.5 h-5 bg-brand-red rounded-[40px] flex-none">
+                        <span class="text-white text-[10px] leading-4 font-semibold min-w-[6px] text-center">
+                          {activeFilterCount}
+                        </span>
+                      </div>
+                    {/if}
+                  </button>
                 </div>
               </form>
             </div>
@@ -436,9 +442,11 @@
 
 <FilterModal 
   show={showFilterModal}
-  {currentFilter}
+  currentFilter={currentFilter}
   onFilterChange={handleFilterChange}
-  onClose={() => showFilterModal = false}
+  onClose={() => {
+    showFilterModal = false;
+  }}
 />
 
 <!-- Mobile Search Modal -->

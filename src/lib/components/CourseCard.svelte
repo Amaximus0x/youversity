@@ -81,7 +81,16 @@
           {course.Final_Course_Title}
         </h3>
         <p class="text-[#a2a2a2] text-semibody leading-snug line-clamp-2">
-          {course.Final_Course_Objective}
+          <!-- {course.Final_Course_Objective} -->
+          {new Date(
+            course.createdAt?.toDate?.() ||
+              course.createdAt ||
+              Date.now(),
+          ).toLocaleDateString("en-US", {
+            month: "long",
+            day: "numeric",
+            year: "numeric",
+          })}
         </p>
       </div>
 

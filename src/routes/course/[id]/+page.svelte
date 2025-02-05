@@ -365,7 +365,7 @@
           <!-- Video Player Container -->
           <div class="relative w-full lg:rounded-2xl overflow-hidden">
             <div
-              class="fixed lg:relative top-[86px] lg:top-0 left-0 right-0 z-30 bg-black aspect-video"
+              class="fixed lg:relative top-[85px] lg:top-0 left-0 right-0 z-30 bg-black aspect-video"
             >
               <div class="video-container w-full h-full">
                 {#if courseDetails?.Final_Module_YouTube_Video_URL?.length > 0 && courseDetails?.Final_Module_YouTube_Video_URL[$currentModuleStore]}

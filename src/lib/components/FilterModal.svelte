@@ -5,38 +5,28 @@
   export let show = false;
   export let onClose: () => void;
   export let currentFilter: SearchFilter = 'relevance';
-  export let onFilterChange: (filters: { ratings: number[], sortByLatest: boolean }) => void;
+  export let onFilterChange: (filter: SearchFilter) => void;
 
-  let sortOrder: 'relevance' = 'relevance';
-  let latestFirst = false;
-  let earliestFirst = false;
+  let selectedFilter: SearchFilter = currentFilter;
+
+  // Update selected filter when currentFilter prop changes
+  $: {
+    selectedFilter = currentFilter;
+  }
 
   function handleFilter() {
-    onFilterChange({
-      ratings: [],
-      sortByLatest: latestFirst
-    });
+    onFilterChange(selectedFilter);
     onClose();
   }
 
   function clearAll() {
-    latestFirst = false;
-    earliestFirst = false;
-    onFilterChange({
-      ratings: [],
-      sortByLatest: false
-    });
+    selectedFilter = 'relevance';
+    onFilterChange('relevance');
     onClose();
   }
 
-  function handleSortChange(type: 'latest' | 'earliest') {
-    if (type === 'latest') {
-      latestFirst = !latestFirst;
-      if (latestFirst) earliestFirst = false;
-    } else {
-      earliestFirst = !earliestFirst;
-      if (earliestFirst) latestFirst = false;
-    }
+  function handleSortChange(filter: SearchFilter) {
+    selectedFilter = filter;
   }
 </script>
 
@@ -64,39 +54,18 @@
       <!-- Content -->
       <div class="px-6 py-4">
         <!-- Sort by -->
-        <div class="flex gap-3 items-center mb-4">
-          <h3 class="text-mini-body">Sort by:</h3>
-          <div class="flex items-center gap-2">
-            <button 
-              class="px-2 py-1 rounded-lg {!latestFirst && !earliestFirst ? ' border border-brand-red' : 'border border-[#E5E7EB]'}"
-              on:click={() => {
-                latestFirst = false;
-                earliestFirst = false;
-              }}
-            >
-              <span class="{!latestFirst && !earliestFirst ? 'text-Black dark:text-White' : 'text-[#6B7280]'} text-mini-body">
-                Relevance
-              </span>
-              {#if !latestFirst && !earliestFirst}
-                <img src="/icons/checkmark-square-active.svg" alt="Selected" class="w-4 h-4 inline-block ml-2" />
-              {/if}
-            </button>
-          </div>
-        </div>
-
-        <!-- Creation Date -->
         <div class="mb-4">
           <h3 class="text-mini-body uppercase text-Grey mb-3">CREATION DATE</h3>
           <div class="space-y-3">
             <label class="flex items-center gap-3 cursor-pointer">
               <input 
                 type="checkbox"
-                checked={latestFirst}
+                checked={selectedFilter === 'latest'}
                 on:change={() => handleSortChange('latest')}
                 class="hidden"
               />
               <img 
-                src={latestFirst ? '/icons/checkmark-square-active.svg' : '/icons/checkmark-square-inactive.svg'} 
+                src={selectedFilter === 'latest' ? '/icons/checkmark-square-active.svg' : '/icons/checkmark-square-inactive.svg'} 
                 alt="Checkbox"
                 class="w-5 h-5"
               />
@@ -105,12 +74,12 @@
             <label class="flex items-center gap-3 cursor-pointer">
               <input 
                 type="checkbox"
-                checked={earliestFirst}
+                checked={selectedFilter === 'earliest'}
                 on:change={() => handleSortChange('earliest')}
                 class="hidden"
               />
               <img 
-                src={earliestFirst ? '/icons/checkmark-square-active.svg' : '/icons/checkmark-square-inactive.svg'} 
+                src={selectedFilter === 'earliest' ? '/icons/checkmark-square-active.svg' : '/icons/checkmark-square-inactive.svg'} 
                 alt="Checkbox"
                 class="w-5 h-5"
               />
