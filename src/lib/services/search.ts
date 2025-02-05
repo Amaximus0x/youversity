@@ -27,18 +27,14 @@ export async function searchCourses(
   const coursesRef = collection(db, 'courses');
   let q = query(coursesRef, where('isPublic', '==', true));
 
-  // Add initial sorting based on filter
-  if (filter === 'latest' || filter === 'earliest') {
-    // Apply date-based sorting when filter is explicitly set
-    q = query(q, orderBy('createdAt', filter === 'earliest' ? 'asc' : 'desc'));
-  } else {
-    // For relevance, initially sort by views to get most popular content first
-    q = query(q, orderBy('views', 'desc'));
-  }
-
-  q = query(q, limit(pageSize * 2)); // Fetch extra results for better filtering
-
   try {
+    // First try with the composite index
+    if (filter === 'latest' || filter === 'earliest') {
+      q = query(q, orderBy('createdAt', filter === 'earliest' ? 'asc' : 'desc'));
+    } else {
+      q = query(q, orderBy('views', 'desc'));
+    }
+
     const snapshot = await getDocs(q);
     let courses = snapshot.docs.map(doc => ({
       id: doc.id,
@@ -53,7 +49,6 @@ export async function searchCourses(
         const objective = course.Final_Course_Objective?.toLowerCase() || '';
         const modulesTitles = course.Final_Module_Title?.map(title => title.toLowerCase()) || [];
         
-        // Match any search term in title, objective, or module titles
         return searchTerms.some(term => 
           title.includes(term) || 
           objective.includes(term) ||
@@ -61,7 +56,7 @@ export async function searchCourses(
         );
       });
 
-      // Apply relevance sorting only if filter is 'relevance'
+      // Sort by relevance if needed
       if (filter === 'relevance') {
         courses.sort((a, b) => {
           const scoreA = calculateRelevanceScore(a, searchTerms);
@@ -74,13 +69,57 @@ export async function searchCourses(
     // Limit results after filtering
     courses = courses.slice(0, pageSize);
 
-    console.log('Filtered courses:', courses.length);
     return {
       courses,
       total: courses.length
     };
+
   } catch (error) {
     console.error('Search error:', error);
+    
+    // Fallback: If index error, fetch all and sort client-side
+    if (error.toString().includes('requires an index')) {
+      const fallbackQuery = query(coursesRef, where('isPublic', '==', true));
+      const snapshot = await getDocs(fallbackQuery);
+      let courses = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as (FinalCourseStructure & { id: string })[];
+
+      // Apply search and sorting client-side
+      if (searchQuery) {
+        const searchTerms = searchQuery.toLowerCase().split(' ');
+        courses = courses.filter(course => {
+          const title = course.Final_Course_Title?.toLowerCase() || '';
+          const objective = course.Final_Course_Objective?.toLowerCase() || '';
+          const modulesTitles = course.Final_Module_Title?.map(title => title.toLowerCase()) || [];
+          
+          return searchTerms.some(term => 
+            title.includes(term) || 
+            objective.includes(term) ||
+            modulesTitles.some(moduleTitle => moduleTitle.includes(term))
+          );
+        });
+      }
+
+      // Apply sorting
+      if (filter === 'latest' || filter === 'earliest') {
+        courses.sort((a, b) => {
+          const dateA = new Date(a.createdAt?.toDate?.() || a.createdAt || 0);
+          const dateB = new Date(b.createdAt?.toDate?.() || b.createdAt || 0);
+          return filter === 'earliest' ? 
+            dateA.getTime() - dateB.getTime() : 
+            dateB.getTime() - dateA.getTime();
+        });
+      }
+
+      courses = courses.slice(0, pageSize);
+      return {
+        courses,
+        total: courses.length
+      };
+    }
+
     throw error;
   }
 }

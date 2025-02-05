@@ -12,19 +12,91 @@
   import { onMount } from 'svelte';
   import { fade } from 'svelte/transition';
   import FilterModal from '$lib/components/FilterModal.svelte';
-  import { saveRecentSearch } from '$lib/services/search';
+  import { saveRecentSearch, getRecentSearches, clearRecentSearches, getSearchRecommendations } from '$lib/services/search';
 
+  // State variables
   let isSearchPage = false;
   let isMounted = false;
   let showFilterModal = false;
   let currentFilter: 'relevance' | 'latest' = 'relevance';
   let activeFilterCount = 0;
   let showMobileSearch = false;
-  
-  onMount(() => {
+  let menuOpen = false;
+  let searchQuery = '';
+  let isOnline = true;
+  let isSearchFocused = false;
+
+  // Initialize search-related arrays
+  let recentSearches: Array<{ query: string; timestamp: number }> = [];
+  let recommendations: string[] = [];
+
+  // Sidebar items configuration
+  const sidebarItems = [
+    { icon: '/icons/home.svg', label: 'Home', href: '/', isActive: true },
+    { icon: '/icons/fire-02.svg', label: 'Trending', href: '/trending', isActive: false },
+    { icon: '/icons/video-replay.svg', label: 'My Courses', href: '/my-courses', isActive: false },
+    { icon: '/icons/bookmark-03.svg', label: 'Bookmarks', href: '/bookmarks', isActive: false },
+    { icon: '/icons/settings-02.svg', label: 'Settings', href: '/settings', isActive: false },
+  ];
+
+  // Mobile navigation items
+  const mobileNavItems = [
+    { icon: '/icons/home.svg', label: 'Home', href: '/' },
+    { icon: '/icons/fire-02.svg', label: 'Trending', href: '/trending' },
+    { icon: '/icons/video-replay.svg', label: 'My Courses', href: '/my-courses' },
+    { icon: '/icons/bookmark-03.svg', label: 'Bookmarks', href: '/bookmarks' },
+    { icon: '/icons/settings-02.svg', label: 'Settings', href: '/settings' },
+  ];
+
+  // Add this function to handle clicks outside the search area
+  function handleClickOutside(event: MouseEvent) {
+    const target = event.target as HTMLElement;
+    if (!target.closest('form')) {
+      isSearchFocused = false;
+    }
+  }
+
+  // Load data on mount
+  onMount(async () => {
     isMounted = true;
+    updateOnlineStatus();
+    window.addEventListener('online', updateOnlineStatus);
+    window.addEventListener('offline', updateOnlineStatus);
+
+    // Load recent searches
+    recentSearches = getRecentSearches();
+
+    // Load recommendations
+    try {
+      recommendations = await getSearchRecommendations();
+    } catch (error) {
+      console.error('Error loading recommendations:', error);
+      recommendations = [];
+    }
+
+    // Register service worker
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker
+        .register('/service-worker.js')
+        .then((registration) => {
+          console.log('ServiceWorker registration successful');
+        })
+        .catch((err) => {
+          console.error('ServiceWorker registration failed:', err);
+        });
+    }
+
+    // Add click event listener for handling clicks outside search
+    document.addEventListener('click', handleClickOutside);
+
+    return () => {
+      window.removeEventListener('online', updateOnlineStatus);
+      window.removeEventListener('offline', updateOnlineStatus);
+      document.removeEventListener('click', handleClickOutside);
+    };
   });
 
+  // Reactive declarations
   $: if (isMounted && $page?.url?.pathname) {
     isSearchPage = $page.url.pathname === '/search';
     if (isSearchPage) {
@@ -36,31 +108,21 @@
     }
   }
 
-  // Sidebar items configuration
-  const sidebarItems = [
-    { icon: '/icons/home.svg', label: 'Home', href: '/', isActive: true },
-    { icon: '/icons/fire-02.svg', label: 'Trending', href: '/trending', isActive: false },
-    { icon: '/icons/video-replay.svg', label: 'My Courses', href: '/my-courses', isActive: false },
-    { icon: '/icons/bookmark-03.svg', label: 'Bookmarks', href: '/bookmarks', isActive: false },
-    { icon: '/icons/settings-02.svg', label: 'Settings', href: '/settings', isActive: false },
-  ];
+  // Event handlers
+  function updateOnlineStatus() {
+    isOnline = navigator.onLine;
+  }
 
-  // Mobile navigation items (simplified version of sidebar items)
-  const mobileNavItems = [
-    { icon: '/icons/home.svg', label: 'Home', href: '/' },
-    { icon: '/icons/fire-02.svg', label: 'Trending', href: '/trending' },
-    { icon: '/icons/video-replay.svg', label: 'My Courses', href: '/my-courses' },
-    { icon: '/icons/bookmark-03.svg', label: 'Bookmarks', href: '/bookmarks' },
-    { icon: '/icons/settings-02.svg', label: 'Settings', href: '/settings' },
-  ];
-
-  let menuOpen = false;
-  let searchQuery = '';
-  let isOnline = true;
-  let isSearchFocused = false;
+  function updateRecentSearches() {
+    recentSearches = getRecentSearches();
+  }
 
   function toggleMenu() {
     menuOpen = !menuOpen;
+  }
+
+  function toggleMobileSearch() {
+    showMobileSearch = !showMobileSearch;
   }
 
   async function handleAuth() {
@@ -76,15 +138,23 @@
     goto('/create-course');
   }
 
-  function updateOnlineStatus() {
-    isOnline = navigator.onLine;
-  }
-
   async function handleSearch(e: Event) {
     e.preventDefault();
     if (searchQuery.trim()) {
       saveRecentSearch(searchQuery);
+      updateRecentSearches();
+      isSearchFocused = false;
       await goto(`/search?q=${encodeURIComponent(searchQuery)}&filter=${currentFilter}`);
+    }
+  }
+
+  function handleMobileSearch(e: Event) {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      saveRecentSearch(searchQuery);
+      updateRecentSearches();
+      showMobileSearch = false;
+      goto(`/search?q=${encodeURIComponent(searchQuery)}&filter=${currentFilter}`);
     }
   }
 
@@ -100,40 +170,10 @@
     }
   }
 
-  function toggleMobileSearch() {
-    showMobileSearch = !showMobileSearch;
+  function handleClearRecentSearches() {
+    clearRecentSearches();
+    recentSearches = [];
   }
-
-  function handleMobileSearch(e: Event) {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      showMobileSearch = false;
-      goto(`/search?q=${encodeURIComponent(searchQuery)}&filter=${currentFilter}`);
-    }
-  }
-
-  onMount(() => {
-    updateOnlineStatus();
-    window.addEventListener('online', updateOnlineStatus);
-    window.addEventListener('offline', updateOnlineStatus);
-
-    // Register service worker
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker
-        .register('/service-worker.js')
-        .then((registration) => {
-          console.log('ServiceWorker registration successful');
-        })
-        .catch((err) => {
-          console.error('ServiceWorker registration failed:', err);
-        });
-    }
-
-    return () => {
-      window.removeEventListener('online', updateOnlineStatus);
-      window.removeEventListener('offline', updateOnlineStatus);
-    };
-  });
 </script>
 
 {#if !isOnline}
@@ -288,50 +328,27 @@
             <!-- search bar -->
             <div class="flex-1 max-w-[611px] mx-0">
               <form 
-                on:submit={handleSearch} 
-                class="w-full h-12 flex items-center gap-2 bg-white dark:bg-dark-bg-primary pl-4 pr-2 py-2 border-[1.5px] {
-                  isSearchFocused ? 'border-brand-red' : 'border-black/5'
-                } rounded-2xl transition-all duration-200"
+                on:submit={handleSearch}
+                class="relative flex-1 max-w-[600px]"
               >
-                <!-- Search Icon -->
-
-                <div 
-                  class="flex-none transition-transform duration-200 {
-                    isSearchFocused ? '-translate-x-2 opacity-0' : 'translate-x-0 opacity-60'
-                  }"
-                >
-                  <img 
-                    src="/icons/search-01.svg" 
-                    alt="Search"
-                    class="w-6 h-6" 
+                <div class="flex items-center bg-white dark:bg-dark-bg-primary border border-light-border dark:border-dark-border hover:border-brand-red focus-within:border-brand-red rounded-2xl h-12 transition-colors">
+                  <div class="pl-4">
+                    <img src="/icons/search-01.svg" alt="Search" class="w-6 h-6 opacity-60" />
+                  </div>
+                  <input
+                    type="text"
+                    placeholder="Search courses..."
+                    bind:value={searchQuery}
+                    on:focus={() => isSearchFocused = true}
+                    class="flex-1 px-4 bg-transparent border-none focus:outline-none text-body text-light-text-primary dark:text-dark-text-primary placeholder:text-light-text-secondary dark:placeholder:text-dark-text-secondary"
                   />
-                </div>
-
-                <!-- Search Input -->
-                <input
-                  type="text"
-                  placeholder="Search Courses..."
-                  bind:value={searchQuery}
-                  on:focus={() => isSearchFocused = true}
-                  on:blur={() => isSearchFocused = false}
-                  class="flex-1 h-6 bg-transparent border-none outline-none text-body text-black dark:text-white font-normal tracking-[-0.01em] transition-all duration-200 {
-                    isSearchFocused ? 'pl-0' : 'pl-2'
-                  } placeholder:text-[#494848] dark:placeholder:text-dark-text-secondary"
-                />
-
-                <!-- Filter Button -->
-                <div class="flex-none">
                   <button
                     type="button"
-                    class="h-8 flex items-center gap-2 bg-white dark:bg-dark-bg-primary px-2 py-3.5 border-[1.5px] border-black/5 rounded-[10px]"
+                    class="px-4 py-2 flex items-center gap-2"
                     on:click={() => showFilterModal = true}
                   >
-                    <div class="relative w-6 h-6 flex-none">
-                      <img 
-                        src="/icons/filter-icon.svg" 
-                        alt="Filter"
-                        class="w-6 h-6" 
-                      />
+                    <div class="w-6 h-6 relative">
+                      <img src="/icons/filter-icon.svg" alt="Filter" class="w-6 h-6" />
                     </div>
                     <span class="text-body text-black dark:text-white font-normal tracking-[-0.01em] flex-none">
                       Filter
@@ -345,6 +362,68 @@
                     {/if}
                   </button>
                 </div>
+
+                <!-- Search Suggestions Dropdown -->
+                {#if isSearchFocused}
+                  <div 
+                    class="absolute top-full left-0 right-[80px] mt-2 bg-white dark:bg-dark-bg-primary rounded-2xl border border-light-border dark:border-dark-border shadow-lg z-50"
+                    on:click|stopPropagation
+                  >
+                    <div class="p-6">
+                      <!-- Recent Searches -->
+                      {#if recentSearches.length > 0}
+                        <div class="mb-8">
+                          <div class="flex justify-between items-center mb-4 border-b border-light-border dark:border-dark-border pb-2">
+                            <h2 class="text-h4-medium text-light-text-primary dark:text-dark-text-primary">Recent Search</h2>
+                            <button 
+                              class="text-brand-red text-body"
+                              on:click={handleClearRecentSearches}
+                            >
+                              Clear
+                            </button>
+                          </div>
+                          <div class="flex flex-col">
+                            {#each recentSearches as search}
+                              <button
+                                class="flex items-center gap-2 py-2 text-light-text-primary dark:text-dark-text-primary hover:bg-Black/5 dark:hover:bg-White/5 transition-colors"
+                                on:click={() => {
+                                  searchQuery = search.query;
+                                  isSearchFocused = false;
+                                  handleSearch(new Event('submit'));
+                                }}
+                              >
+                                <img src="/icons/time-quarter-pass.svg" alt="Recent" class="w-5 h-5 opacity-60" />
+                                <span class="text-semi-body-medium">{search.query}</span>
+                              </button>
+                            {/each}
+                          </div>
+                        </div>
+                      {/if}
+
+                      <!-- Try searching for -->
+                      {#if recommendations.length > 0}
+                        <div>
+                          <h2 class="text-h4-medium mb-4 text-light-text-primary dark:text-dark-text-primary">Try searching for</h2>
+                          <div class="flex flex-col gap-4">
+                            {#each recommendations as recommendation}
+                              <button
+                                class="flex items-center gap-2 text-light-text-primary dark:text-dark-text-primary hover:text-brand-red transition-colors"
+                                on:click={() => {
+                                  searchQuery = recommendation;
+                                  isSearchFocused = false;
+                                  handleSearch(new Event('submit'));
+                                }}
+                              >
+                                <img src="/icons/search.svg" alt="Search" class="w-5 h-5 opacity-60" />
+                                <span class="text-semi-body">{recommendation}</span>
+                              </button>
+                            {/each}
+                          </div>
+                        </div>
+                      {/if}
+                    </div>
+                  </div>
+                {/if}
               </form>
             </div>
 
@@ -493,7 +572,55 @@
 
     <!-- Search Content -->
     <div class="px-5 pt-6">
-      <!-- You can add recent searches or search suggestions here -->
+      <!-- Recent Searches -->
+      {#if recentSearches.length > 0}
+        <div class="mb-8">
+          <div class="flex justify-between items-center mb-4">
+            <h2 class="text-h4-medium">Recent Search</h2>
+            <button 
+              class="text-brand-red text-semi-body"
+              on:click={handleClearRecentSearches}
+            >
+              Clear
+            </button>
+          </div>
+          <div class="flex flex-col gap-4">
+            {#each recentSearches as search}
+              <button
+                class="flex items-center gap-2 text-light-text-primary dark:text-dark-text-primary"
+                on:click={() => {
+                  searchQuery = search.query;
+                  handleMobileSearch(new Event('submit'));
+                }}
+              >
+                <img src="/icons/clock.svg" alt="Recent" class="w-5 h-5 opacity-60" />
+                <span class="text-semi-body">{search.query}</span>
+              </button>
+            {/each}
+          </div>
+        </div>
+      {/if}
+
+      <!-- Try searching for -->
+      {#if recommendations.length > 0}
+        <div>
+          <h2 class="text-h4-medium mb-4">Try searching for</h2>
+          <div class="flex flex-col gap-4">
+            {#each recommendations as recommendation}
+              <button
+                class="flex items-center gap-2 text-light-text-primary dark:text-dark-text-primary"
+                on:click={() => {
+                  searchQuery = recommendation;
+                  handleMobileSearch(new Event('submit'));
+                }}
+              >
+                <img src="/icons/search.svg" alt="Search" class="w-5 h-5 opacity-60" />
+                <span class="text-semi-body">{recommendation}</span>
+              </button>
+            {/each}
+          </div>
+        </div>
+      {/if}
     </div>
   </div>
 {/if}
