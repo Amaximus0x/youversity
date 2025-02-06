@@ -65,7 +65,7 @@
       No trending courses available at the moment
     </div>
   {:else}
-    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 justify-items-center">
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4 justify-items-center">
       {#each filteredCourses as course (course.id)}
         <CourseCard {course} onShare={handleShare} />
       {/each}
