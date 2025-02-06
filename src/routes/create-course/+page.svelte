@@ -23,6 +23,13 @@
   let currentModuleIndex = 0;
   let showCustomUrlInput = false;
   let moduleTranscripts: string[] = [];
+  let allModulesLoaded = false;
+
+  function checkAllModulesLoaded() {
+    if (!courseStructure) return false;
+    return moduleVideos.length === courseStructure.OG_Module_Title.length && 
+           moduleVideos.every(moduleVideo => moduleVideo && moduleVideo.length > 0);
+  }
 
   function handleCustomVideoAdd(video: VideoItem, moduleIndex: number) {
     if (!moduleVideos[moduleIndex]) {
@@ -30,6 +37,7 @@
     }
     moduleVideos[moduleIndex] = [...moduleVideos[moduleIndex], video];
     moduleVideos = [...moduleVideos];
+    allModulesLoaded = checkAllModulesLoaded();
     showCustomUrlInput = false;
   }
 
@@ -65,6 +73,9 @@
       // Update the videos for this module
       moduleVideos[moduleIndex] = data.videos;
       moduleVideos = [...moduleVideos]; // Trigger reactivity
+      
+      // Check if all modules are loaded after this update
+      allModulesLoaded = checkAllModulesLoaded();
       
       // Calculate progress: 20% for structure + 80% for modules
       // Each module takes an equal share of the remaining 80%
@@ -126,7 +137,7 @@
       const selectedVideosList = moduleVideos.map((videos, index) => ({
         ...videos[selectedVideos[index]],
         moduleIndex: index,
-        moduleTitle: courseStructure.OG_Module_Title[index]
+        moduleTitle: courseStructure?.OG_Module_Title[index]
       }));
 
       const response = await fetch('/api/create-final-course', {
@@ -248,7 +259,7 @@
 </script>
 
 <div class="min-h-screen bg-transparent">
-  <div class="container mx-auto px-4 py-8">
+  <div class="container mx-auto">
     <CourseGenerationHeader />
     
     {#if error}
@@ -265,15 +276,15 @@
       <div class="space-y-8">
         <!-- Course Title and Objective -->
         <div>
-          <h1 class="text-3xl font-bold text-[#2A4D61] mb-2">{courseStructure.OG_Course_Title}</h1>
-          <p class="text-[#1E3443]/80">{courseStructure.OG_Course_Objective}</p>
+          <h1 class="text-h2-mobile lg:text-h2 text-Black dark:text-White mb-2">{courseStructure.OG_Course_Title}</h1>
+          <p class="text-semi-body lg:text-body text-Black2">{courseStructure.OG_Course_Objective}</p>
         </div>
 
         <!-- Module Navigation -->
-        <div class="flex gap-2 overflow-x-auto pb-4 scrollbar-hide">
+        <div class="flex gap-2 overflow-x-auto  scrollbar-hide">
           {#each courseStructure.OG_Module_Title as title, index}
             <button
-              class="px-4 py-2 rounded-full whitespace-nowrap transition-all duration-200 {currentModuleIndex === index ? 'bg-[#2A4D61] text-white' : 'bg-gray-100 text-[#2A4D61] hover:bg-gray-200'}"
+              class="px-4 py-2 rounded-lg whitespace-nowrap transition-all duration-200 {currentModuleIndex === index ? 'text-body-semibold bg-Green text-white' : 'text-body bg-Black/5 text-Green hover:bg-gray-200'}"
               on:click={() => currentModuleIndex = index}
             >
               Module {index + 1}
@@ -285,7 +296,7 @@
         <div>
           <div class="flex items-center justify-between mb-6">
             <div class="flex items-center gap-2">
-              <h2 class="text-xl font-semibold text-[#2A4D61]">
+              <h2 class="text-body-semibold lg:text-h4-medium text-Black dark:text-White">
                 Module {currentModuleIndex + 1}: {courseStructure.OG_Module_Title[currentModuleIndex]}
               </h2>
               <button
@@ -293,12 +304,12 @@
                 on:click={() => handleRegenerateModuleVideos(currentModuleIndex)}
               >
                 <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M15.1667 1L15.7646 2.11777C16.1689 2.87346 16.371 3.25131 16.2374 3.41313C16.1037 3.57495 15.6635 3.44426 14.7831 3.18288C13.9029 2.92155 12.9684 2.78095 12 2.78095C6.75329 2.78095 2.5 6.90846 2.5 12C2.5 13.6791 2.96262 15.2535 3.77093 16.6095M8.83333 23L8.23536 21.8822C7.83108 21.1265 7.62894 20.7486 7.7626 20.5868C7.89627 20.425 8.33649 20.5557 9.21689 20.8171C10.0971 21.0784 11.0316 21.219 12 21.219C17.2467 21.219 21.5 17.0915 21.5 12C21.5 10.3208 21.0374 8.74647 20.2291 7.39047"/>
                 </svg>
               </button>
             </div>
             <button
-              class="bg-[#EE434A] hover:bg-[#D93D44] text-white px-6 py-3 rounded-2xl flex items-center gap-2 transition-colors duration-200"
+              class="bg-brand-red hover:bg-ButtonHover text-mini-body lg:text-semi-body text-white px-2 py-2 rounded-lg flex items-center gap-2 transition-colors duration-200"
               on:click={() => showCustomUrlInput = true}
             >
               Add Custom Video
@@ -326,19 +337,25 @@
         </div>
       </div>
 
-      <!-- Generate Course Button -->
+      <!-- Generate Complete Course Button -->
       <div 
-        class="relative flex justify-left mt-4 mb-10 w-[261px] h-[54px]"
+        class="relative flex justify-left mt-4 mb-10 w-auto h-[54px]"
         in:fly={{ y: 20, duration: 500, delay: 200 }}
         out:fade
       >
         <button
           on:click={handleSaveCourse}
-          class="bg-[#EE434A] hover:bg-[#D93D44] text-white px-6 py-3 rounded-2xl text-base shadow-lg flex items-center justify-center transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed min-w-[250px] gap-2"
-          disabled={!courseStructure.OG_Module_Title.every((_, index) => selectedVideos[index] !== undefined)}
+          class="px-4 py-2 rounded-2xl text-base shadow-lg flex items-center justify-center transition-all duration-200 min-w-[250px] gap-2 {!allModulesLoaded || !courseStructure?.OG_Module_Title.every((_, index) => selectedVideos[index] !== undefined) ? 'bg-Black/5 cursor-not-allowed text-Grey' : 'bg-brand-red hover:bg-ButtonHover text-white'}"
+          disabled={!allModulesLoaded || !courseStructure?.OG_Module_Title.every((_, index) => selectedVideos[index] !== undefined)}
         >
-          Generate Final Course
-          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <span class="text-body">Generate Complete Course</span>
+          <svg 
+            class="w-5 h-5 {!allModulesLoaded ? 'fill-Grey' : ''}" 
+            viewBox="0 0 24 24" 
+            fill="none" 
+            stroke="currentColor" 
+            stroke-width="2"
+          >
             <path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
           </svg>
         </button>

@@ -16,6 +16,13 @@
   let showLeftArrow = false;
   let showRightArrow = true;
 
+  // Add a reactive statement to watch currentModuleIndex changes
+  $: if (sliderRef && currentModuleIndex !== undefined) {
+    // Reset scroll position when module changes
+    sliderRef.scrollTo({ left: 0, behavior: 'smooth' });
+    updateArrows();
+  }
+
   function handlePlayVideo(video: VideoItem, event: MouseEvent) {
     event.stopPropagation();
     currentPlayingVideo = video;
@@ -61,12 +68,15 @@
 
     <div
       bind:this={sliderRef}
-      class="flex gap-6 overflow-x-auto scrollbar-hide pb-8 px-2 pt-2"
+      class="flex gap-6 overflow-x-auto scrollbar-hide pb-16 px-2 pt-2"
       on:scroll={updateArrows}
     >
       {#each moduleVideos[currentModuleIndex] as video, videoIndex}
-        <div 
+        <!-- <div 
           class="flex-shrink-0 w-[250px] h-[202px]"
+        > -->
+        <div 
+          class="flex-shrink-0 w-[340px] h-[230px]"
         >
           <div 
             class="group relative bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer border border-gray-100"
@@ -77,35 +87,36 @@
           >
             <div class="flex flex-col">
               <!-- Title and Duration -->
-              <div class="p-2 flex items-start justify-between">
-                <div>
-                  <h3 class="text-base font-semibold text-[#2A4D61] line-clamp-1 mb-1">
+              <div class=" flex items-start justify-between">
+                <div class="p-2 ">
+                  <h3 class="text-semibody-medium text-Black dark:text-White line-clamp-2 mb-1">
                     {video.title}
                   </h3>
-                  <span class="text-sm text-[#2A4D61]/60">
+                  <span class="text-mini-body text-Grey">
                     {video.length} min
                   </span>
                 </div>
-                <button class="text-[#42C1C8] p-1 hover:text-[#2A4D61] transition-colors duration-200">
+                <!-- <button class="text-[#42C1C8] p-1 hover:text-[#2A4D61] transition-colors duration-200">
                   <Edit2 class="w-5 h-5" />
-                </button>
+                </button> -->
               </div>
 
               <!-- Thumbnail with Play Button -->
-              <div class="relative aspect-video rounded-xl overflow-hidden px-2 pb-2">
+              <div class="relative aspect-video rounded-lg overflow-hidden px-2 pb-2">
                 <img
                   src={video.thumbnailUrl}
                   alt={video.title}
-                  class="w-full h-full object-cover rounded-xl overflow-hidden"
+                  class="w-full h-full object-cover rounded-lg overflow-hidden"
                 />
-                <div class="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-all duration-200 flex items-center justify-center">
+                <!-- <div class="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-all duration-200 flex items-center justify-center"> -->
                   <button
                     class="text-white opacity-0 group-hover:opacity-100 transition-all duration-200 hover:scale-110 transform"
                     on:click|stopPropagation={(e) => handlePlayVideo(video, e)}
                   >
-                    <Play class="w-12 h-12" />
+                  <img src="/icons/youtube-icon.svg" alt="Play" class="w-12 h-12" />
+                    <!-- <Play class="w-12 h-12" /> -->
                   </button>
-                </div>
+                <!-- </div> -->
               </div>
             </div>
           </div>
