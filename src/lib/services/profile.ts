@@ -73,30 +73,16 @@ export async function createUserProfile(userId: string, initialData: Partial<Use
   }
 }
 
-export async function getUserProfile(userId: string): Promise<UserProfile | null> {
+export async function getUserProfile(userId: string) {
   try {
-    if (!userId) {
-      throw new Error('User ID is required');
+    const userDoc = await getDoc(doc(db, 'users', userId));
+    if (userDoc.exists()) {
+      return userDoc.data();
     }
-
-    const userRef = doc(db, 'users', userId);
-    const userDoc = await getDoc(userRef);
-    
-    if (!userDoc.exists()) {
-      return null;
-    }
-
-    const data = userDoc.data();
-    
-    // Convert Firestore Timestamps to Dates
-    return {
-      ...data,
-      createdAt: data.createdAt?.toDate() || new Date(),
-      updatedAt: data.updatedAt?.toDate() || new Date()
-    } as UserProfile;
+    return null;
   } catch (error) {
     console.error('Error fetching user profile:', error);
-    throw new Error('Failed to fetch user profile');
+    return null;
   }
 }
 
