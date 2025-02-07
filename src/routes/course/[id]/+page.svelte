@@ -23,6 +23,7 @@
     removeEnrollment,
   } from "$lib/firebase";
   import { browser } from "$app/environment";
+  import ShareModal from "$lib/components/ShareModal.svelte";
 
   // Initialize states with null to indicate not loaded yet
   let courseDetails: any = null;
@@ -53,6 +54,9 @@
 
   // Add this line after the state variables
   let initialModuleSet = false;
+
+  // Add this state variable with other state variables
+  let showShareModal = false;
 
   // Load saved state from localStorage
   function loadSavedState() {
@@ -352,6 +356,11 @@
       removing = false;
     }
   }
+
+  // Add this function with other functions
+  function handleShare() {
+    showShareModal = true;
+  }
 </script>
 
 <!-- Main Container -->
@@ -418,7 +427,7 @@
 
           <!-- Course Info Section -->
           <div
-            class=" {$currentModuleStore >= 0 && $currentModuleStore < courseDetails?.Final_Module_Title?.length ? 'mt-[calc(1vw)]' : ''}"
+            class=" {$currentModuleStore >= 0 && $currentModuleStore < courseDetails?.Final_Module_Title?.length ? 'mt-[calc(59vw)] lg:mt-[calc(1vw)]' : ''}"
             bind:this={contentStartElement}
           >
             <!-- Course Module Title -->
@@ -437,41 +446,8 @@
               </h4>
             </div>
 
-            <!-- Stats Section -->
-            <div class="flex items-center gap-4">
-              <!-- Upvotes -->
-              <button
-                class="flex items-center gap-2 bg-Black/5 px-2 py-2 rounded-2xl hover:opacity-80 transition-opacity disabled:opacity-50"
-                on:click={handleLike}
-                disabled={liking}
-              >
-                <img
-                  src={hasLiked
-                    ? "/icons/upvote-filled.svg"
-                    : "/icons/upvote.svg"}
-                  alt="Upvotes"
-                  class="w-5 h-5"
-                />
-                <span
-                  class={hasLiked
-                    ? "text-semibody-medium text-Black"
-                    : "text-semibody text-Black2 hover:text-Black"}
-                >
-                  {formatNumber(courseDetails?.likes || 0)} Upvotes
-                </span>
-              </button>
-
-              <!-- Views -->
-              <div class="flex items-center gap-2">
-                <img src="/icons/view.svg" alt="Views" class="w-5 h-5" />
-                <span class="text-semibody-medium text-light-text-secondary">
-                  {formatNumber(courseDetails?.views || 0)} views
-                </span>
-              </div>
-            </div>
-
             <!-- Creator Info with Bookmark Button -->
-            <div class="flex items-center justify-between mt-4">
+            <div class="flex items-center justify-between">
               <!-- Creator Info -->
               <div class="flex items-center gap-3">
                 <div>
@@ -526,25 +502,81 @@
               {#if !isCreator}
                 <div class="block lg:hidden">
                   <button
-                    class="w-full px-4 py-2 text-semibody-medium flex items-center justify-center gap-2 bg-Black/5 text-Green rounded-2xl hover:bg-Black/5 transition-colors"
+                    class="w-full px-4 py-2 text-semibody-medium flex items-center justify-center gap-2 bg-Black/5 text-Green rounded-full hover:bg-Black/5 transition-colors"
                     on:click={handleBookmark}
                   >
                     <img 
                       src={isBookmarked ? "/icons/bookmark-filled.svg" : "/icons/bookmark.svg"} 
                       alt="Bookmark" 
-                      class="w-5 h-5"
+                      class="w-6 h-[37px]"
                     />
                   </button>
                 </div>
               {/if}
             </div>
 
+            <!-- Stats Section -->
+            <div class="flex items-center gap-4 mt-4">
+              <!-- Upvotes -->
+              <button
+                class="flex items-center gap-2 bg-Black/5 px-2 py-2 rounded-2xl hover:opacity-80 transition-opacity disabled:opacity-50"
+                on:click={handleLike}
+                disabled={liking}
+              >
+                <img
+                  src={hasLiked
+                    ? "/icons/upvote-filled.svg"
+                    : "/icons/upvote.svg"}
+                  alt="Upvotes"
+                  class="w-5 h-5"
+                />
+                <span
+                  class={hasLiked
+                    ? "text-semibody-medium text-Black"
+                    : "text-semibody text-Black2 hover:text-Black"}
+                >
+                  {formatNumber(courseDetails?.likes || 0)} Upvotes
+                </span>
+              </button>
+
+              <!-- Share Button -->
+              <button
+                class="flex items-center gap-2 bg-Black/5 px-2 py-2 rounded-full hover:opacity-80 transition-opacity"
+                on:click={handleShare}
+              >
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M21 6.5C21 8.15685 19.6569 9.5 18 9.5C16.3431 9.5 15 8.15685 15 6.5C15 4.84315 16.3431 3.5 18 3.5C19.6569 3.5 21 4.84315 21 6.5Z" stroke="#494848" stroke-width="1.5"/>
+                <path d="M9 12C9 13.6569 7.65685 15 6 15C4.34315 15 3 13.6569 3 12C3 10.3431 4.34315 9 6 9C7.65685 9 9 10.3431 9 12Z" stroke="#494848" stroke-width="1.5"/>
+                <path d="M21 17.5C21 19.1569 19.6569 20.5 18 20.5C16.3431 20.5 15 19.1569 15 17.5C15 15.8431 16.3431 14.5 18 14.5C19.6569 14.5 21 15.8431 21 17.5Z" stroke="#494848" stroke-width="1.5"/>
+                <path d="M8.72852 10.7495L15.2285 7.75M8.72852 13.25L15.2285 16.2495" stroke="#494848" stroke-width="1.5"/>
+              </svg>
+                
+              </button>
+
+              <!-- Views -->
+              <div class="flex items-center gap-2">
+                <img src="/icons/view.svg" alt="Views" class="w-5 h-5" />
+                <span class="text-semibody-medium text-light-text-secondary">
+                  {formatNumber(courseDetails?.views || 0)} views
+                </span>
+              </div>
+            </div>
+
+            
+
             <!-- Module Content -->
             <div class="mt-6">
               {#if $currentModuleStore === -1}
                 <!-- Course Introduction and Objectives -->
                 <div>
-                  <h3 class="text-h4-medium text-Black mb-4">Course Introduction</h3>
+                  <!-- Add Course Title here -->
+                  <div class="mt-6 mb-2">
+                    <p class="text-h2-mobile lg:text-h2 text-Black">
+                      {courseDetails?.Final_Course_Title}
+                    </p>
+                  </div>
+
+                  <!-- <h3 class="text-h4-medium text-Black mb-4">Course Introduction</h3> -->
                   <p class="text-body text-light-text-secondary">
                     {courseDetails?.Final_Course_Introduction}
                   </p>
@@ -559,6 +591,13 @@
               {:else if $currentModuleStore === courseDetails?.Final_Module_Title?.length}
                 <!-- Course Conclusion -->
                 <div>
+                  <!-- Add Course Title here too -->
+                  <div class="mt-6 mb-8">
+                    <p class="text-h2-mobile lg:text-h2 text-Black">
+                      {courseDetails?.Final_Course_Title}
+                    </p>
+                  </div>
+
                   <h3 class="text-h4-medium text-Black mb-4">Course Conclusion</h3>
                   <p class="text-body text-light-text-secondary">
                     {courseDetails?.Final_Course_Conclusion}
@@ -801,6 +840,7 @@
               <!-- Desktop Action Buttons -->
               <div class="mt-6 flex flex-col gap-3">
                 <!-- Enroll/Start button -->
+                 {#if !isEnrolled && !isCreator}
                 <button
                   class="w-full px-4 py-2 flex items-center justify-center text-semibody-medium rounded-2xl transition-colors {
                     isEnrolled 
@@ -821,6 +861,7 @@
                     />
                   {/if}
                 </button>
+                {/if}
 
                 <!-- Bookmark button -->
                 <button
@@ -1109,6 +1150,13 @@
     </button>
   </div>
 {/if}
+
+<!-- Add the ShareModal component at the bottom of the template, just before the style tag -->
+<ShareModal 
+  show={showShareModal} 
+  courseId={$page.params.id} 
+  onClose={() => showShareModal = false} 
+/>
 
 <style>
   .video-container {
