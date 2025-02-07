@@ -44,7 +44,7 @@ const getInitialState = () => {
     courseTitle: '',
     minimized: false,
     courseId: null,
-    isInitialBuild: false,
+    isInitialBuild: true,
     error: null,
     isCreateCourse: false,
     notification: {
@@ -71,69 +71,41 @@ const createLoadingStore = () => {
 
   return {
     subscribe,
-    startLoading: (courseTitle: string = '', isInitialBuild: boolean = false, isCreateCourse: boolean = false) => {
-      if (browser && window.loadingStateTimeout) {
-        clearTimeout(window.loadingStateTimeout);
-      }
-      
+    startLoading: (title: string, showProgress = true, isInitialBuild = true) => 
       update(state => ({
         ...state,
         isLoading: true,
-        currentModule: 0,
-        progress: 0,
-        courseTitle,
+        courseTitle: title,
         isInitialBuild,
-        isCreateCourse,
-        minimized: false,
-        currentStep: 'Generating Course',
-        notification: {
-          show: false,
-          type: null,
-          message: ''
-        }
-      }));
-
-      // Don't auto-minimize for course generation
-      if (browser && !isCreateCourse) {
-        window.loadingStateTimeout = window.setTimeout(() => {
-          update(state => ({ ...state, minimized: true }));
-        }, 3000);
-      }
-    },
-    stopLoading: (courseId: string | null = null) => update(state => {
-      // Ensure we have the course title before stopping
-      if (!state.courseTitle) {
-        console.warn('No course title found when stopping loading');
+        progress: 0
+      })),
+    stopLoading: (courseId?: string) => 
+      update(state => ({
+        ...state,
+        courseId: courseId || null,
+        isLoading: false
+      })),
+    setMinimized: (minimized: boolean) => update(state => ({ ...state, minimized })),
+    clearState: () => update(state => {
+      const newState = {
+        isLoading: false,
+        progress: 0,
+        currentStep: '',
+        error: null,
+        currentModule: 0,
+        totalModules: 0,
+        courseId: state.courseId,
+        courseTitle: state.courseTitle,
+        isInitialBuild: true
+      };
+      
+      if (!state.minimized) {
+        newState.courseId = null;
+        newState.courseTitle = '';
       }
       
-      return {
-        ...state,
-        isLoading: !state.isCreateCourse, // Keep loading true for create course page
-        currentModule: 0,
-        currentStep: '',
-        progress: 100,
-        courseId,
-        notification: !state.isInitialBuild ? {
-          show: true,
-          type: 'success',
-          message: `Your Course is ready,\n${state.courseTitle || 'Untitled Course'}`
-        } : {
-          show: false,
-          type: null,
-          message: ''
-        }
-      };
+      return newState;
     }),
-    setMinimized: (minimized: boolean) => update(state => ({ ...state, minimized })),
-    clearState: () => {
-      if (browser) {
-        localStorage.removeItem('loadingState');
-        if (window.loadingStateTimeout) {
-          clearTimeout(window.loadingStateTimeout);
-        }
-      }
-      set(getInitialState());
-    },
     setCurrentModule: (module: number, title: string = '') => 
       update(state => ({ 
         ...state, 

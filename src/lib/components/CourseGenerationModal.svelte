@@ -1,7 +1,9 @@
 <script lang="ts">
   import { fade, fly } from 'svelte/transition';
   import { loadingState } from '$lib/stores/loadingState';
+  import { modalState } from '$lib/stores/modalState';
   import { goto } from '$app/navigation';
+  import { onMount } from 'svelte';
 
   function getProgressMessage($loadingState: any) {
     if ($loadingState.progress === 100) {
@@ -13,33 +15,41 @@
     return "Preparing your course...";
   }
 
-  let isMinimized = false;
-
   function handleOutsideClick() {
-    isMinimized = true;
+    modalState.setMinimized(true);
   }
 
   function handleMaximize() {
-    isMinimized = false;
+    modalState.setMinimized(false);
   }
 
   function handleViewCourse() {
     if ($loadingState.courseId) {
       goto(`/course/${$loadingState.courseId}`);
+      modalState.reset();
       loadingState.clearState();
     }
   }
 
+  onMount(() => {
+    // Restore minimized state from localStorage if needed
+    const storedModalState = localStorage.getItem('modalState');
+    if (storedModalState) {
+      const { isMinimized } = JSON.parse(storedModalState);
+      modalState.setMinimized(isMinimized);
+    }
+  });
+
   $: isComplete = $loadingState.progress === 100;
-  // Only show modal when isLoading is true AND isInitialBuild is false
-  $: shouldShowModal = $loadingState.isLoading && !$loadingState.isInitialBuild;
+  $: shouldShowModal = ($loadingState.isLoading && !$loadingState.isInitialBuild) || 
+                      ($loadingState.courseId && $modalState.isMinimized);
 </script>
 
 {#if shouldShowModal}
-  {#if isMinimized}
+  {#if $modalState.isMinimized}
     <!-- Minimized version in top-right corner -->
     <div 
-      class="fixed top-4 right-4 z-50 w-[400px]"
+      class="modal-content fixed top-4 right-4 z-50 w-[400px]"
       in:fly={{ x: 50, duration: 300 }}
       out:fade
     >
@@ -97,7 +107,7 @@
   {:else}
     <!-- Full screen modal -->
     <div 
-      class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50"
+      class="modal-content fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50"
       transition:fade={{ duration: 200 }}
       on:click={handleOutsideClick}
     >

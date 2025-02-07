@@ -379,6 +379,7 @@
   </div>
 </div>
 
+<!-- Keep this for complete course generation -->
 <CourseGenerationModal />
 
 <style>
