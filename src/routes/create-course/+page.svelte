@@ -13,6 +13,7 @@
   import { saveCourseToFirebase } from '$lib/firebase';
   import { user, isAuthenticated } from '$lib/stores/auth';
   import CourseGenerationHeader from '$lib/components/CourseGenerationHeader.svelte';
+  import CourseGenerationModal from '$lib/components/CourseGenerationModal.svelte';
 
   let courseObjective = '';
   let courseStructure: CourseStructure | null = null;
@@ -110,8 +111,9 @@
 
     if (!courseStructure) return;
     
-    loadingState.startLoading(courseStructure.OG_Course_Title, false);
-    loadingState.setStep('Preparing to generate final course...');
+    // Start loading with modal, explicitly set isInitialBuild to false
+    loadingState.startLoading('Generating Complete Course', false, false);
+    loadingState.setProgress(0);
     
     try {
       loading = true;
@@ -120,19 +122,18 @@
 
       // Fetch transcripts for all selected videos
       for (let i = 0; i < selectedVideos.length; i++) {
-        loadingState.setCurrentModule(i + 1);
         loadingState.setStep(`Fetching transcript for Module ${i + 1}: ${courseStructure.OG_Module_Title[i]}`);
         
         const video = moduleVideos[i][selectedVideos[i]];
         const transcript = await getVideoTranscript(video.videoId);
         moduleTranscripts[i] = transcript;
         
-        const progress = ((i + 1) / selectedVideos.length) * 80; // Leave 20% for final steps
+        const progress = ((i + 1) / selectedVideos.length) * 40; // First 40% for transcripts
         loadingState.setProgress(progress);
       }
 
       loadingState.setStep('Generating course content and quizzes...');
-      loadingState.setProgress(85);
+      loadingState.setProgress(60);
 
       const selectedVideosList = moduleVideos.map((videos, index) => ({
         ...videos[selectedVideos[index]],
@@ -150,14 +151,14 @@
         })
       });
 
+      loadingState.setProgress(80);
+      loadingState.setStep('Processing course content...');
+
       const data = await response.json();
       if (!data.success) throw new Error(data.error || 'Failed to create final course');
 
       loadingState.setStep('Saving your course...');
-      loadingState.setProgress(95);
-      
-      // Update loading state with the final course title
-      loadingState.startLoading(data.course.Final_Course_Title, false);
+      loadingState.setProgress(90);
       
       // Save to Firebase
       const courseId = await saveCourseToFirebase($user.uid, {
@@ -171,21 +172,24 @@
 
       loadingState.setStep('Course creation complete!');
       loadingState.setProgress(100);
-      loadingState.stopLoading(courseId);
       
+      // Short delay to show completion
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      loadingState.stopLoading(courseId);
       goto(`/course/${courseId}`);
+      
     } catch (err: any) {
       console.error('Error saving course:', err);
       error = err.message;
       loadingState.setError(error);
     } finally {
       loading = false;
-      loadingState.stopLoading();
     }
   }
 
   async function handleBuildCourse() {
-    loadingState.startLoading('', true, true);
+    loadingState.startLoading('', true, true); // Explicitly set isInitialBuild to true
     loadingState.setStep('Analyzing your course objective...');
     error = null;
     moduleVideos = [];
@@ -370,6 +374,8 @@
     {/if}
   </div>
 </div>
+
+<CourseGenerationModal />
 
 <style>
   .scrollbar-hide::-webkit-scrollbar {
