@@ -99,14 +99,14 @@ function createLoadingStore() {
     setMinimized: (minimized: boolean) => update(state => ({ ...state, minimized })),
     setCourseTitle: (title: string) => update(state => ({ ...state, courseTitle: title })),
     clearState: () => update(state => {
-      if (state.courseId && state.minimized) {
-        return {
-          ...state,
-          isLoading: false,
-          error: null
-        };
+      // Always return a fresh state regardless of conditions
+      const freshState = getInitialState();
+      
+      if (browser) {
+        localStorage.removeItem('loadingState');
       }
-      return getInitialState();
+      
+      return freshState;
     }),
     setCurrentModule: (module: number, title: string = '') => 
       update(state => ({ 
@@ -129,7 +129,7 @@ function createLoadingStore() {
     setError: (error: string | null) => update(state => ({ 
       ...state, 
       error,
-      isLoading: error ? true : state.isLoading,
+      isLoading: false,
       notification: error && !state.isInitialBuild ? {
         show: true,
         type: 'error',
@@ -144,7 +144,12 @@ function createLoadingStore() {
         message: ''
       }
     })),
-    clearError: () => update(state => ({ ...state, error: null }))
+    clearError: () => update(state => ({ 
+      ...state, 
+      error: null,
+      isLoading: false,
+      isCreateCourse: false
+    }))
   };
 }
 

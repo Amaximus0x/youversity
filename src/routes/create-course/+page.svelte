@@ -177,13 +177,7 @@
 
       loadingState.setStep('Course is ready');
       loadingState.setProgress(100);
-      
-      // Show completion state for a moment before redirecting
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Don't clear the state - let user see the completion state
-      // The state will be cleared when they click "View Course"
-      goto(`/course/${courseId}`);
+      loadingState.stopLoading(courseId); // Pass courseId to keep track of it
       
     } catch (err: any) {
       console.error('Error saving course:', err);
