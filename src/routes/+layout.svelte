@@ -13,6 +13,7 @@
   import { fade } from 'svelte/transition';
   import FilterModal from '$lib/components/FilterModal.svelte';
   import { saveRecentSearch, getRecentSearches, clearRecentSearches, getSearchRecommendations } from '$lib/services/search';
+  import CourseGenerationModal from '$lib/components/CourseGenerationModal.svelte';
 
   // State variables
   let isSearchPage = false;
@@ -635,3 +636,5 @@
     @apply backdrop-blur-[2px];
   } */
 </style>
+
+<CourseGenerationModal />

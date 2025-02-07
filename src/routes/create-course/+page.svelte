@@ -111,8 +111,8 @@
 
     if (!courseStructure) return;
     
-    // Start loading with modal, explicitly set isInitialBuild to false
-    loadingState.startLoading('Generating Complete Course', false, false);
+    // Start loading with modal
+    loadingState.startLoading(courseStructure.OG_Course_Title, false, false);
     loadingState.setProgress(0);
     
     try {
@@ -157,6 +157,9 @@
       const data = await response.json();
       if (!data.success) throw new Error(data.error || 'Failed to create final course');
 
+      // Update loading state with final course title
+      loadingState.setCourseTitle(data.course.Final_Course_Title);
+      
       loadingState.setStep('Saving your course...');
       loadingState.setProgress(90);
       
@@ -170,13 +173,14 @@
         likes: 0
       });
 
-      loadingState.setStep('Course creation complete!');
+      loadingState.setStep('Course is ready');
       loadingState.setProgress(100);
       
-      // Short delay to show completion
+      // Show completion state for a moment before redirecting
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      loadingState.stopLoading(courseId);
+      // Don't clear the state - let user see the completion state
+      // The state will be cleared when they click "View Course"
       goto(`/course/${courseId}`);
       
     } catch (err: any) {
