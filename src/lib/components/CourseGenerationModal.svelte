@@ -19,14 +19,22 @@
                     ($loadingState.courseId && $modalState.isMinimized)
   });
 
-  function getProgressMessage($loadingState: any) {
-    if ($loadingState.progress === 100) {
-      return "Course is ready";
-    }
+
+
+  function getGenerationStep($loadingState: any) {
     if ($loadingState.currentStep) {
       return $loadingState.currentStep;
     }
-    return "Preparing your course...";
+
+    if ($loadingState.currentModule === 0) {
+      return "Preparing course content...";
+    }
+
+    if ($loadingState.currentModule <= $loadingState.totalModules) {
+      return `Processing Module ${$loadingState.currentModule}: ${$loadingState.currentModuleTitle}`;
+    }
+
+    return "Finalizing your course...";
   }
 
   function handleOutsideClick() {
@@ -93,7 +101,7 @@
   {#if $modalState.isMinimized}
     <!-- Minimized version in top-right corner -->
     <div 
-      class="modal-content fixed top-4 right-4 z-50 w-[400px]"
+      class="modal-content fixed top-28 right-4 z-50 w-[400px]"
       in:fly={{ x: 50, duration: 300 }}
       out:fade
     >
@@ -147,7 +155,11 @@
         {/if}
 
         <p class="text-semi-body text-Black dark:text-White truncate mb-2">
-          {$loadingState.courseTitle}
+          {#if isComplete}
+            {$loadingState.courseTitle}
+          {:else}
+            {getGenerationStep($loadingState)}
+          {/if}
         </p>
 
         {#if isComplete}
@@ -231,7 +243,11 @@
           {/if}
 
           <p class="text-semi-body text-Black dark:text-White mb-4">
-            {$loadingState.courseTitle}
+            {#if isComplete}
+              {$loadingState.courseTitle}
+            {:else}
+              {getGenerationStep($loadingState)}
+            {/if}
           </p>
 
           {#if isComplete}

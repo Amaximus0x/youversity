@@ -79,9 +79,9 @@
           class="flex-shrink-0 w-[340px] h-[230px]"
         >
           <div 
-            class="group relative bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer border border-gray-100"
+            class="group relative  rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer border border-gray-100"
             class:ring-2={selectedVideos[currentModuleIndex] === videoIndex}
-            class:ring-[#42C1C8]={selectedVideos[currentModuleIndex] === videoIndex}
+            class:ring-brand-red={selectedVideos[currentModuleIndex] === videoIndex}
             class:ring-offset-2={selectedVideos[currentModuleIndex] === videoIndex}
             on:click={() => selectVideo(videoIndex)}
           >

@@ -653,7 +653,7 @@
 
   .fixed-overlay {
     position: fixed;
-    top: 0;
+    top: 7rem;
     left: 0;
     right: 0;
     bottom: 0;
