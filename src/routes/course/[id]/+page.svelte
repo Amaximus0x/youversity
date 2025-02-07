@@ -51,6 +51,9 @@
   // Add state for remove operation
   let removing = false;
 
+  // Add this line after the state variables
+  let initialModuleSet = false;
+
   // Load saved state from localStorage
   function loadSavedState() {
     if (browser) {
@@ -148,6 +151,11 @@
         isCreator = false;
         isEnrolled = false;
         showProgress = false;
+        // Set initial module to introduction for non-enrolled users
+        if (!initialModuleSet) {
+          currentModuleStore.set(-1);
+          initialModuleSet = true;
+        }
       }
     } catch (err) {
       console.error("Error:", err);
@@ -364,60 +372,68 @@
         <div class="w-full lg:col-span-8">
           <!-- Video Player Container -->
           <div class="relative w-full lg:rounded-2xl overflow-hidden">
-            <div
-              class="fixed lg:relative top-[85px] lg:top-0 left-0 right-0 z-30 bg-black aspect-video"
-            >
-              <div class="video-container w-full h-full">
-                {#if courseDetails?.Final_Module_YouTube_Video_URL?.length > 0 && courseDetails?.Final_Module_YouTube_Video_URL[$currentModuleStore]}
-                  <iframe
-                    title={courseDetails?.Final_Module_Title[
-                      $currentModuleStore
-                    ] || "Course Video"}
-                    class="absolute inset-0 w-full h-full"
-                    src={(() => {
-                      try {
-                        const videoUrl =
-                          courseDetails.Final_Module_YouTube_Video_URL[
-                            $currentModuleStore
-                          ];
-                        const videoId = videoUrl?.match(
-                          /(?:https?:\/\/)?(?:www\.)?youtu\.?be(?:\.com)?\/?.*(?:watch|embed)?(?:.*v=|v\/|\/)([\w-_]+)/i,
-                        )?.[1];
-                        return videoId
-                          ? `https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1&enablejsapi=0&origin=${window.location.origin}`
-                          : "";
-                      } catch (error) {
-                        console.error("Error parsing YouTube URL:", error);
-                        return "";
-                      }
-                    })()}
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowfullscreen
-                    loading="lazy"
-                  />
-                {:else}
-                  <div
-                    class="absolute inset-0 flex items-center justify-center bg-black/5"
-                  >
-                    <p class="text-light-text-tertiary">No video available</p>
-                  </div>
-                {/if}
+            {#if $currentModuleStore >= 0 && $currentModuleStore < courseDetails?.Final_Module_Title?.length}
+              <div
+                class="fixed lg:relative top-[85px] lg:top-0 left-0 right-0 z-30 bg-black aspect-video"
+              >
+                <div class="video-container w-full h-full">
+                  {#if courseDetails?.Final_Module_YouTube_Video_URL?.length > 0 && courseDetails?.Final_Module_YouTube_Video_URL[$currentModuleStore]}
+                    <iframe
+                      title={courseDetails?.Final_Module_Title[
+                        $currentModuleStore
+                      ] || "Course Video"}
+                      class="absolute inset-0 w-full h-full"
+                      src={(() => {
+                        try {
+                          const videoUrl =
+                            courseDetails.Final_Module_YouTube_Video_URL[
+                              $currentModuleStore
+                            ];
+                          const videoId = videoUrl?.match(
+                            /(?:https?:\/\/)?(?:www\.)?youtu\.?be(?:\.com)?\/?.*(?:watch|embed)?(?:.*v=|v\/|\/)([\w-_]+)/i,
+                          )?.[1];
+                          return videoId
+                            ? `https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1&enablejsapi=0&origin=${window.location.origin}`
+                            : "";
+                        } catch (error) {
+                          console.error("Error parsing YouTube URL:", error);
+                          return "";
+                        }
+                      })()}
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowfullscreen
+                      loading="lazy"
+                    />
+                  {:else}
+                    <div
+                      class="absolute inset-0 flex items-center justify-center bg-black/5"
+                    >
+                      <p class="text-light-text-tertiary">No video available</p>
+                    </div>
+                  {/if}
+                </div>
               </div>
-            </div>
+            {/if}
           </div>
 
           <!-- Course Info Section -->
           <div
-            class="mt-[calc(56.25vw+24px)] lg:mt-8"
+            class=" {$currentModuleStore >= 0 && $currentModuleStore < courseDetails?.Final_Module_Title?.length ? 'mt-[calc(1vw)]' : ''}"
             bind:this={contentStartElement}
           >
             <!-- Course Module Title -->
             <div class="mb-4">
               <h4 class="text-h4-medium text-Black">
-                <span class="text-h4-medium text-Black2"
-                  >{($currentModuleStore + 1).toString().padStart(2, "0")}</span
-                >: {courseDetails.Final_Module_Title[$currentModuleStore] ||
-                  "Loading module..."}
+                {#if $currentModuleStore === -1}
+                  Course Introduction and Objectives
+                {:else if $currentModuleStore === courseDetails?.Final_Module_Title?.length}
+                  Course Conclusion
+                {:else}
+                  <span class="text-h4-medium text-Black2"
+                    >{($currentModuleStore + 1).toString().padStart(2, "0")}</span
+                  >: {courseDetails.Final_Module_Title[$currentModuleStore] ||
+                    "Loading module..."}
+                {/if}
               </h4>
             </div>
 
@@ -525,69 +541,55 @@
 
             <!-- Module Content -->
             <div class="mt-6">
-              <!-- Course Title -->
-              <div class="mt-6">
-                <p class="text-h2-mobile lg:text-h2 text-Black">
-                  {courseDetails?.Final_Course_Title}
-                </p>
-              </div>
-              <!-- Course Introduction - Show for first module when not enrolled or is creator -->
-              {#if $currentModuleStore === 0 && (!isEnrolled || isCreator)}
-                <div class="mt-6">
-                  <h3 class="text-h4-medium text-Black mb-4">
-                    Course Introduction
-                  </h3>
+              {#if $currentModuleStore === -1}
+                <!-- Course Introduction and Objectives -->
+                <div>
+                  <h3 class="text-h4-medium text-Black mb-4">Course Introduction</h3>
                   <p class="text-body text-light-text-secondary">
                     {courseDetails?.Final_Course_Introduction}
                   </p>
+
+                  <div class="mt-6">
+                    <h3 class="text-h4-medium text-Black mb-4">Course Objective</h3>
+                    <p class="text-body text-light-text-secondary dark:text-dark-text-secondary">
+                      {courseDetails?.Final_Course_Objective}
+                    </p>
+                  </div>
                 </div>
-              {/if}
-
-              <!-- Course Objectives - Show for first module when not enrolled or is creator -->
-              {#if $currentModuleStore === 0 && (!isEnrolled || isCreator)}
-                <div class="mt-6">
-                  <h3 class="text-h4-medium text-Black mb-4">
-                    Course Objective
-                  </h3>
-                  <p
-                    class="text-body text-light-text-secondary dark:text-dark-text-secondary"
-                  >
-                    {courseDetails?.Final_Course_Objective}
-                  </p>
-                </div>
-              {/if}
-
-              <!-- Module Objective - Show for all modules -->
-              <div class="mt-6">
-                <h3 class="text-h4-medium text-Black mb-4">Module Objective</h3>
-                <p
-                  class="text-body text-light-text-secondary dark:text-dark-text-secondary"
-                >
-                  {courseDetails?.Final_Module_Objective[$currentModuleStore] ||
-                    "Loading module..."}
-                </p>
-              </div>
-
-              <!-- Course Conclusion - Show only for last module when completed -->
-              {#if $currentModuleStore === courseDetails.Final_Module_Title.length - 1 && hasCompletedAllModules()}
-                <div class="mt-6">
-                  <h3 class="text-h4-medium text-Black mb-4">
-                    Course Conclusion
-                  </h3>
+              {:else if $currentModuleStore === courseDetails?.Final_Module_Title?.length}
+                <!-- Course Conclusion -->
+                <div>
+                  <h3 class="text-h4-medium text-Black mb-4">Course Conclusion</h3>
                   <p class="text-body text-light-text-secondary">
                     {courseDetails?.Final_Course_Conclusion}
                   </p>
-                  <div class="flex items-center gap-4 mt-4">
-                    <div class="flex items-center gap-2">
-                      <img
-                        src="/icons/check-circle.svg"
-                        alt="Completed"
-                        class="w-5 h-5"
-                      />
-                      <span class="text-semibody-medium text-Black">
-                        All {courseDetails.Final_Module_Title.length} modules completed
-                      </span>
+                  {#if hasCompletedAllModules()}
+                    <div class="flex items-center gap-4 mt-4">
+                      <div class="flex items-center gap-2">
+                        <img src="/icons/check-circle.svg" alt="Completed" class="w-5 h-5" />
+                        <span class="text-semibody-medium text-Black">
+                          All {courseDetails.Final_Module_Title.length} modules completed
+                        </span>
+                      </div>
                     </div>
+                  {/if}
+                </div>
+              {:else}
+                <!-- Regular Module Content -->
+                <div>
+                  <!-- Course Title -->
+                  <div class="mt-6">
+                    <p class="text-h2-mobile lg:text-h2 text-Black">
+                      {courseDetails?.Final_Course_Title}
+                    </p>
+                  </div>
+
+                  <!-- Module Objective -->
+                  <div class="mt-6">
+                    <h3 class="text-h4-medium text-Black mb-4">Module Objective</h3>
+                    <p class="text-body text-light-text-secondary dark:text-dark-text-secondary">
+                      {courseDetails?.Final_Module_Objective[$currentModuleStore] || "Loading module..."}
+                    </p>
                   </div>
                 </div>
               {/if}
@@ -650,12 +652,29 @@
                   <!-- Course Modules List -->
                   <div class="space-y-2.5">
                     {#if courseDetails?.Final_Module_Title?.length > 0}
-                      {#each courseDetails.Final_Module_Title as title, index}
-                        <div
-                          class="p-2 rounded-2xl border border-light-border hover:bg-Black/5 dark:hover:bg-Black/5 transition-colors duration-200 {activeModuleClass(
-                            index,
-                          )}"
+                      <!-- Course Introduction Card -->
+                      <div class="p-2 rounded-2xl border border-light-border hover:bg-Black/5 dark:hover:bg-Black/5 transition-colors duration-200 {activeModuleClass(-1)}">
+                        <button
+                          class="w-full flex items-center gap-4"
+                          on:click={() => {
+                            currentModuleStore.set(-1);
+                            if (typeof currentModule !== "undefined") {
+                              currentModule = -1;
+                            }
+                          }}
                         >
+                          <!-- Module Info -->
+                          <div class="flex-1 min-w-0 text-center">
+                            <p class="text-body-semibold text-Black2 px-2 py-6 mb-2">
+                              Course Introduction and Objectives
+                            </p>
+                          </div>
+                        </button>
+                      </div>
+
+                      <!-- Regular Module Cards -->
+                      {#each courseDetails.Final_Module_Title as title, index}
+                        <div class="p-2 rounded-2xl border border-light-border hover:bg-Black/5 dark:hover:bg-Black/5 transition-colors duration-200 {activeModuleClass(index)}">
                           <button
                             class="w-full flex items-start gap-4"
                             on:click={() => {
@@ -722,6 +741,28 @@
                           </button>
                         </div>
                       {/each}
+
+                      <!-- Course Conclusion Card - Only show for enrolled users and creators -->
+                      {#if isEnrolled || isCreator}
+                        <div class="p-2 rounded-2xl border border-light-border hover:bg-Black/5 dark:hover:bg-Black/5 transition-colors duration-200 {activeModuleClass(courseDetails.Final_Module_Title.length)}">
+                          <button
+                            class="w-full flex items-center gap-4"
+                            on:click={() => {
+                              currentModuleStore.set(courseDetails.Final_Module_Title.length);
+                              if (typeof currentModule !== "undefined") {
+                                currentModule = courseDetails.Final_Module_Title.length;
+                              }
+                            }}
+                          >
+                            <!-- Module Info -->
+                            <div class="flex-1 min-w-0 text-center">
+                              <p class="text-body-semibold text-Black2 px-2 py-6 mb-2">
+                                Course Conclusion
+                              </p>
+                            </div>
+                          </button>
+                        </div>
+                      {/if}
                     {:else}
                       <div class="p-4 text-center text-light-text-tertiary">
                         No modules available
@@ -881,14 +922,31 @@
               <!-- Course Modules List -->
               <div class="space-y-2.5">
                 {#if courseDetails?.Final_Module_Title?.length > 0}
-                  {#each courseDetails.Final_Module_Title as title, index}
-                    <div
-                      class="p-2 rounded-2xl border border-light-border hover:bg-Black/5 dark:hover:bg-Black/5 transition-colors duration-200 {activeModuleClass(
-                        index,
-                      )}"
+                  <!-- Course Introduction Card -->
+                  <div class="p-2 rounded-2xl border border-light-border hover:bg-Black/5 dark:hover:bg-Black/5 transition-colors duration-200 {activeModuleClass(-1)}">
+                    <button
+                      class="w-full flex items-center gap-4"
+                      on:click={() => {
+                        currentModuleStore.set(-1);
+                        if (typeof currentModule !== "undefined") {
+                          currentModule = -1;
+                        }
+                      }}
                     >
+                      <!-- Module Info -->
+                      <div class="flex-1 min-w-0 text-center">
+                        <p class="text-body-semibold text-Black2 px-2 py-6 mb-2">
+                          Course Introduction and Objectives
+                        </p>
+                      </div>
+                    </button>
+                  </div>
+
+                  <!-- Regular Module Cards -->
+                  {#each courseDetails.Final_Module_Title as title, index}
+                    <div class="p-2 rounded-2xl border border-light-border hover:bg-Black/5 dark:hover:bg-Black/5 transition-colors duration-200 {activeModuleClass(index)}">
                       <button
-                        class="w-full flex items-center gap-4"
+                        class="w-full flex items-start gap-4"
                         on:click={() => {
                           currentModuleStore.set(index);
                           if (typeof currentModule !== "undefined") {
@@ -897,14 +955,19 @@
                         }}
                       >
                         <!-- Module Info -->
-                        <div class="flex-1 min-w-0 text-left inline-block">
-                          <p class="text-semibody-medium text-Black mb-2">
+                        <div class="flex-1 min-w-0 text-left">
+                          <p
+                            class="text-semibody-medium text-Black mb-2 inline-block"
+                          >
                             <span class="text-semibody-medium text-Black2">
                               {(index + 1).toString().padStart(2, "0")}:
                             </span>
+
                             {title}
                           </p>
-                          <p class="text-mini-body text-light-text-tertiary">
+                          <p
+                            class="text-mini-body text-light-text-tertiary"
+                          >
                             {courseDetails?.Final_Module_Video_Duration?.[
                               index
                             ] || "0"} min
@@ -946,6 +1009,28 @@
                       </button>
                     </div>
                   {/each}
+
+                  <!-- Course Conclusion Card - Only show for enrolled users and creators -->
+                  {#if isEnrolled || isCreator}
+                    <div class="p-2 rounded-2xl border border-light-border hover:bg-Black/5 dark:hover:bg-Black/5 transition-colors duration-200 {activeModuleClass(courseDetails.Final_Module_Title.length)}">
+                      <button
+                        class="w-full flex items-center gap-4"
+                        on:click={() => {
+                          currentModuleStore.set(courseDetails.Final_Module_Title.length);
+                          if (typeof currentModule !== "undefined") {
+                            currentModule = courseDetails.Final_Module_Title.length;
+                          }
+                        }}
+                      >
+                        <!-- Module Info -->
+                        <div class="flex-1 min-w-0 text-center">
+                          <p class="text-body-semibold text-Black2 px-2 py-6 mb-2">
+                            Course Conclusion
+                          </p>
+                        </div>
+                      </button>
+                    </div>
+                  {/if}
                 {:else}
                   <div class="p-4 text-center text-light-text-tertiary">
                     No modules available
