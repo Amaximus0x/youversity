@@ -157,8 +157,10 @@
       const data = await response.json();
       if (!data.success) throw new Error(data.error || 'Failed to create final course');
 
-      // Update loading state with final course title
-      loadingState.setCourseTitle(data.course.Final_Course_Title);
+      // Update course title
+      if (courseStructure) {
+        loadingState.startLoading(courseStructure.OG_Course_Title, true, false);
+      }
       
       loadingState.setStep('Saving your course...');
       loadingState.setProgress(90);

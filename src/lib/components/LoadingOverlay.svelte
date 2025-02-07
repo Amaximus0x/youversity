@@ -1,5 +1,12 @@
 <script lang="ts">
+  export let show: boolean = false;
   import { loadingState } from '$lib/stores/loadingState';
+  import { page } from '$app/stores';
+
+  // Only show loading overlay for non-course-generation loading states
+  $: shouldShowOverlay = $loadingState.isLoading && 
+                        !$loadingState.isCreateCourse && 
+                        show;
 
   function getLoadingMessage($loadingState: any) {
     if ($loadingState.currentStep) {
@@ -37,7 +44,7 @@
   }
 </script>
 
-{#if $loadingState.isLoading}
+{#if shouldShowOverlay}
   <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 sm:p-0">
     <div class="bg-white rounded-lg shadow-xl w-full max-w-sm sm:max-w-md md:max-w-lg transform transition-all">
       <div class="p-4 sm:p-6 md:p-8">

@@ -55,17 +55,24 @@ const getInitialState = () => {
   };
 };
 
-const createLoadingStore = () => {
+function createLoadingStore() {
   const { subscribe, set, update } = writable<LoadingState>(getInitialState());
-
-  // Clear timeout on store initialization
-  if (browser && window.loadingStateTimeout) {
-    clearTimeout(window.loadingStateTimeout);
-  }
 
   if (browser) {
     subscribe(state => {
-      localStorage.setItem('loadingState', JSON.stringify(state));
+      if (state.courseId || state.minimized || state.isLoading) {
+        localStorage.setItem('loadingState', JSON.stringify({
+          ...state,
+          isLoading: state.isLoading,
+          courseId: state.courseId,
+          courseTitle: state.courseTitle,
+          progress: state.progress,
+          minimized: state.minimized,
+          isInitialBuild: state.isInitialBuild
+        }));
+      } else {
+        localStorage.removeItem('loadingState');
+      }
     });
   }
 
@@ -77,34 +84,29 @@ const createLoadingStore = () => {
         isLoading: true,
         courseTitle: title,
         isInitialBuild,
-        progress: 0
+        isCreateCourse: true,
+        progress: 0,
+        minimized: false
       })),
     stopLoading: (courseId?: string) => 
       update(state => ({
         ...state,
         courseId: courseId || null,
-        isLoading: false
+        isLoading: false,
+        isInitialBuild: false,
+        isCreateCourse: courseId ? true : false
       })),
     setMinimized: (minimized: boolean) => update(state => ({ ...state, minimized })),
+    setCourseTitle: (title: string) => update(state => ({ ...state, courseTitle: title })),
     clearState: () => update(state => {
-      const newState = {
-        isLoading: false,
-        progress: 0,
-        currentStep: '',
-        error: null,
-        currentModule: 0,
-        totalModules: 0,
-        courseId: state.courseId,
-        courseTitle: state.courseTitle,
-        isInitialBuild: true
-      };
-      
-      if (!state.minimized) {
-        newState.courseId = null;
-        newState.courseTitle = '';
+      if (state.courseId && state.minimized) {
+        return {
+          ...state,
+          isLoading: false,
+          error: null
+        };
       }
-      
-      return newState;
+      return getInitialState();
     }),
     setCurrentModule: (module: number, title: string = '') => 
       update(state => ({ 
@@ -144,6 +146,6 @@ const createLoadingStore = () => {
     })),
     clearError: () => update(state => ({ ...state, error: null }))
   };
-};
+}
 
 export const loadingState = createLoadingStore(); 

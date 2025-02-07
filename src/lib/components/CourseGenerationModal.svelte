@@ -4,6 +4,20 @@
   import { modalState } from '$lib/stores/modalState';
   import { goto } from '$app/navigation';
   import { onMount } from 'svelte';
+  import { page } from '$app/stores';
+  import { browser } from '$app/environment';
+
+  // Add debugging logs
+  $: console.log('Modal Debug State:', {
+    isLoading: $loadingState.isLoading,
+    isInitialBuild: $loadingState.isInitialBuild,
+    courseId: $loadingState.courseId,
+    courseTitle: $loadingState.courseTitle,
+    isMinimized: $modalState.isMinimized,
+    currentPage: $page.url.pathname,
+    shouldShowModal: ($loadingState.isCreateCourse && !$loadingState.isInitialBuild) || 
+                    ($loadingState.courseId && $modalState.isMinimized)
+  });
 
   function getProgressMessage($loadingState: any) {
     if ($loadingState.progress === 100) {
@@ -32,17 +46,26 @@
   }
 
   onMount(() => {
-    // Restore minimized state from localStorage if needed
-    const storedModalState = localStorage.getItem('modalState');
-    if (storedModalState) {
-      const { isMinimized } = JSON.parse(storedModalState);
-      modalState.setMinimized(isMinimized);
+    if (browser) {
+      // Log initial state on mount
+      console.log('Modal Mounted:', {
+        storedLoadingState: localStorage.getItem('loadingState'),
+        storedModalState: localStorage.getItem('modalState')
+      });
+
+      // Restore minimized state from localStorage if needed
+      const storedModalState = localStorage.getItem('modalState');
+      if (storedModalState) {
+        const { isMinimized } = JSON.parse(storedModalState);
+        modalState.setMinimized(isMinimized);
+      }
     }
   });
 
-  $: isComplete = $loadingState.progress === 100;
-  $: shouldShowModal = ($loadingState.isLoading && !$loadingState.isInitialBuild) || 
+  $: shouldShowModal = ($loadingState.isCreateCourse && !$loadingState.isInitialBuild) || 
                       ($loadingState.courseId && $modalState.isMinimized);
+
+  $: isComplete = $loadingState.progress === 100;
 </script>
 
 {#if shouldShowModal}
@@ -112,8 +135,7 @@
       on:click={handleOutsideClick}
     >
       <div 
-        class="w-[746px] bg-white dark:bg-dark-background-primary rounded-2xl shadow-lg border border-[rgba(0,0,0,0.05)] px-4 pt-2 pb-4"
-        in:fade={{ duration: 200, delay: 200 }}
+        class="bg-white dark:bg-dark-background-primary rounded-2xl shadow-lg max-w-lg w-full mx-4 p-6"
         on:click|stopPropagation
       >
         <div class="flex items-center justify-between">

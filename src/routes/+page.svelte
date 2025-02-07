@@ -84,9 +84,6 @@
 
   onMount(async () => {
     try {
-      // Clear any existing loading state
-      loadingState.clearState();
-      
       console.log('Fetching trending courses...');
       // Get courses sorted by views/likes
       publicCourses = await getPublicCourses();
@@ -165,15 +162,7 @@
   }
 
   onMount(() => {
-    // Only clear loading state if there's no active course generation
-    if (!$loadingState.isLoading) {
-      loadingState.clearState();
-    }
     return () => {
-      // Only clear on unmount if there's no active course generation
-      if (!$loadingState.isLoading) {
-        loadingState.clearState();
-      }
     };
   });
 
