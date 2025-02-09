@@ -53,6 +53,26 @@
 
       <!-- Content -->
       <div class="px-6 py-4">
+         <!-- Sort by -->
+         <div class="flex gap-3 items-center mb-4">
+          <h3 class="text-mini-body">Sort by:</h3>
+          <div class="flex items-center gap-2">
+            <button 
+              class="px-2 py-1 rounded-lg {selectedFilter === 'relevance' ? ' border border-brand-red' : 'border border-[#E5E7EB]'}"
+              on:click={() => {
+                selectedFilter = '';
+              }}
+            >
+              <span class="{(selectedFilter === 'latest' || selectedFilter === 'earliest') ? 'text-Black dark:text-White' : 'text-[#6B7280]'} text-mini-body">
+                Relevance
+              </span>
+              {#if selectedFilter === 'relevance'}
+                <img src="/icons/checkmark-square-active.svg" alt="Selected" class="w-4 h-4 inline-block ml-2" />
+              {/if}
+            </button>
+          </div>
+        </div>
+        
         <!-- Sort by -->
         <div class="mb-4">
           <h3 class="text-mini-body uppercase text-Grey mb-3">CREATION DATE</h3>
