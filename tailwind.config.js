@@ -74,7 +74,7 @@ export default {
         "TransparentWhite 1": "#FFFFFF",
         "Grey2": "#EBEBEB",
 
-        "TransparentGreen 2": "#41C1CB",
+        "TransparentGreen2": "#41C1CB",
         "blackTransparent": "#000000",
         "GreenHover": "#1E3443",
         "ButtonHover": "#C3373C",
