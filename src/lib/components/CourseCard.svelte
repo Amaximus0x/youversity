@@ -90,7 +90,7 @@
 </script>
 
 <!-- <div class="max-w-[361px] "> -->
-<div class="max-w-[396px] ">
+<div class="min-w-[325px] max-w-[396px]">
   <div 
     class="w-full backdrop-blur-sm rounded-[14px] border border-light-border dark:border-dark-border flex-col justify-start items-start inline-flex overflow-hidden cursor-pointer transition-transform hover:scale-[1.02] hover:shadow-lg"
     on:click={() => handleNavigateToCourse(course.id)}
