@@ -3,12 +3,18 @@
   import type { FinalCourseStructure } from '$lib/types/course';
   import ShareModal from '$lib/components/ShareModal.svelte';
   import Skeleton from './Skeleton.svelte';
+    import UserCourseCard from './UserCourseCard.svelte';
 
   export let courses: (FinalCourseStructure & { id: string; progress?: number })[] = [];
   export let loading = false;
   export let error: string | null = null;
   let showShareModal = false;
   let selectedCourseId = '';
+
+  function handleShare(courseId: string) {
+    selectedCourseId = courseId;
+    showShareModal = true;
+  }
 
   function getSkeletonCount(): number {
     return 4;
@@ -88,7 +94,12 @@
   </div>
 </div>
 {:else}
-  <div class="flex gap-4 overflow-x-auto pb-4 -mx-4 px-4 hide-scrollbar">
+<div class="flex gap-4 overflow-x-auto pb-4 -mx-4 px-4 hide-scrollbar">
+{#each courses as course (course.id)}
+      <UserCourseCard {course} onShare={handleShare} />
+    {/each}
+  </div>
+  <!-- <div class="flex gap-4 overflow-x-auto pb-4 -mx-4 px-4 hide-scrollbar">
     {#each courses as course}
       <div class="p-2">
         <div 
@@ -168,7 +179,7 @@
         </div>
       </div>
     {/each}
-  </div>
+  </div> -->
 {/if}
 
 {#if showShareModal}
