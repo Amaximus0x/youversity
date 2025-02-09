@@ -1,8 +1,8 @@
 <script lang="ts">
-  import type { CourseStructure, VideoItem } from '$lib/types/course';
-  import { Play, ChevronLeft, ChevronRight, Edit2 } from 'lucide-svelte';
-  import VideoPlayer from './VideoPlayer.svelte';
-  import { fade, scale } from 'svelte/transition';
+  import type { CourseStructure, VideoItem } from "$lib/types/course";
+  import { Play, ChevronLeft, ChevronRight, Edit2 } from "lucide-svelte";
+  import VideoPlayer from "./VideoPlayer.svelte";
+  import { fade, scale } from "svelte/transition";
 
   export let courseStructure: CourseStructure;
   export let moduleVideos: VideoItem[][];
@@ -19,7 +19,7 @@
   // Add a reactive statement to watch currentModuleIndex changes
   $: if (sliderRef && currentModuleIndex !== undefined) {
     // Reset scroll position when module changes
-    sliderRef.scrollTo({ left: 0, behavior: 'smooth' });
+    sliderRef.scrollTo({ left: 0, behavior: "smooth" });
     updateArrows();
   }
 
@@ -47,10 +47,10 @@
     }
   }
 
-  function scroll(direction: 'left' | 'right') {
+  function scroll(direction: "left" | "right") {
     if (sliderRef) {
-      const scrollAmount = direction === 'left' ? -320 : 320;
-      sliderRef.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+      const scrollAmount = direction === "left" ? -320 : 320;
+      sliderRef.scrollBy({ left: scrollAmount, behavior: "smooth" });
     }
   }
 </script>
@@ -60,7 +60,7 @@
     {#if showLeftArrow}
       <button
         class="absolute -left-3 top-1/2 -translate-y-1/2 bg-white p-2 rounded-full shadow-md z-20 hover:bg-gray-50"
-        on:click={() => scroll('left')}
+        on:click={() => scroll("left")}
       >
         <ChevronLeft class="w-6 h-6 text-[#2A4D61]" />
       </button>
@@ -72,24 +72,24 @@
       on:scroll={updateArrows}
     >
       {#each moduleVideos[currentModuleIndex] as video, videoIndex}
-        <!-- <div 
-          class="flex-shrink-0 w-[250px] h-[202px]"
-        > -->
-        <div 
-          class="flex-shrink-0 w-[340px] h-[230px]"
-        >
-          <div 
-            class="group relative  rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer border border-gray-100"
+
+        <div class="flex-shrink-0 w-[340px] h-[230px]">
+          <div
+            class="group relative rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer border border-gray-100"
             class:ring-2={selectedVideos[currentModuleIndex] === videoIndex}
-            class:ring-brand-red={selectedVideos[currentModuleIndex] === videoIndex}
-            class:ring-offset-2={selectedVideos[currentModuleIndex] === videoIndex}
+            class:ring-brand-red={selectedVideos[currentModuleIndex] ===
+              videoIndex}
+            class:ring-offset-2={selectedVideos[currentModuleIndex] ===
+              videoIndex}
             on:click={() => selectVideo(videoIndex)}
           >
             <div class="flex flex-col">
               <!-- Title and Duration -->
               <div class=" flex items-start justify-between">
-                <div class="p-2 ">
-                  <h3 class="text-semibody-medium text-Black dark:text-White line-clamp-2 mb-1">
+                <div class="p-2">
+                  <h3
+                    class="text-semibody-medium text-Black dark:text-White line-clamp-2 mb-1"
+                  >
                     {video.title}
                   </h3>
                   <span class="text-mini-body text-Grey">
@@ -102,21 +102,26 @@
               </div>
 
               <!-- Thumbnail with Play Button -->
-              <div class="relative aspect-video rounded-lg overflow-hidden px-2 pb-2">
+              <div
+                class="relative aspect-video rounded-lg overflow-hidden px-2 pb-2"
+              >
                 <img
                   src={video.thumbnailUrl}
                   alt={video.title}
                   class="w-full h-full object-cover rounded-lg overflow-hidden"
                 />
-                <!-- <div class="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-all duration-200 flex items-center justify-center"> -->
+                <div class="absolute inset-0 bg-black/20 hover:bg-black/30 transition-all duration-200 flex items-center justify-center">
                   <button
-                    class="text-white opacity-0 group-hover:opacity-100 transition-all duration-200 hover:scale-110 transform"
+                    class="text-white hover:scale-110 transform transition-transform duration-200"
                     on:click|stopPropagation={(e) => handlePlayVideo(video, e)}
                   >
-                  <img src="/icons/youtube-icon.svg" alt="Play" class="w-12 h-12" />
-                    <!-- <Play class="w-12 h-12" /> -->
+                    <img
+                      src="/icons/youtube-icon.svg"
+                      alt="Play"
+                      class="w-4 h-4"
+                    />
                   </button>
-                <!-- </div> -->
+                </div>
               </div>
             </div>
           </div>
@@ -127,7 +132,7 @@
     {#if showRightArrow}
       <button
         class="absolute -right-3 top-1/2 -translate-y-1/2 bg-white p-2 rounded-full shadow-md z-20 hover:bg-gray-50"
-        on:click={() => scroll('right')}
+        on:click={() => scroll("right")}
       >
         <ChevronRight class="w-6 h-6 text-[#2A4D61]" />
       </button>
@@ -141,12 +146,12 @@
 
 <!-- Video Player Modal -->
 {#if showVideoPlayer && currentPlayingVideo}
-  <div 
+  <div
     class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 md:p-6"
     on:click|self={closeVideoPlayer}
     transition:fade={{ duration: 200 }}
   >
-    <div 
+    <div
       class="bg-white rounded-lg w-full h-[90vh] max-w-[90vw] md:max-w-[80vw] lg:max-w-[1200px] relative flex flex-col"
       in:scale={{ duration: 300, delay: 200, start: 0.95 }}
       out:scale={{ duration: 200, start: 1 }}
@@ -155,15 +160,25 @@
         class="absolute -top-2 -right-2 bg-white p-1.5 rounded-full shadow-lg hover:bg-gray-100 transition-colors duration-200 z-10"
         on:click={closeVideoPlayer}
       >
-        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+        <svg
+          class="w-5 h-5"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M6 18L18 6M6 6l12 12"
+          />
         </svg>
       </button>
-      
+
       <div class="flex-1 min-h-0 flex flex-col">
         <div class="relative flex-1">
-          <VideoPlayer 
-            videoId={currentPlayingVideo.videoId} 
+          <VideoPlayer
+            videoId={currentPlayingVideo.videoId}
             class="absolute inset-0"
           />
         </div>
@@ -182,7 +197,7 @@
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
-  
+
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
   }
@@ -193,4 +208,4 @@
     -webkit-box-orient: vertical;
     overflow: hidden;
   }
-</style> 
+</style>
