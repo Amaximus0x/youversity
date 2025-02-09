@@ -29,6 +29,11 @@
   .hide-scrollbar::-webkit-scrollbar {
     display: none;  /* Chrome, Safari and Opera */
   }
+
+  .scroll-container {
+    scroll-snap-type: x mandatory;
+    scroll-behavior: smooth;
+  }
 </style>
 
 <div class="flex gap-4 overflow-x-auto pb-4 -mx-4 px-4 hide-scrollbar">
@@ -45,9 +50,13 @@
       No trending courses available at the moment
     </div>
   {:else}
+  <div class="flex gap-6 overflow-x-auto pb-4 -mx-4 px-4 hide-scrollbar scroll-container">
     {#each courses as course (course.id)}
-      <CourseCard {course} onShare={handleShare} />
+      <div class="scroll-item flex-none w-[325px]">
+        <CourseCard {course} onShare={handleShare} />
+      </div>
     {/each}
+  </div>
   {/if}
 </div>
 
