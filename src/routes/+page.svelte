@@ -229,8 +229,9 @@
       </div>
 
       <form 
+        id="create-course"
         on:submit={handleCreateCourse} 
-        class="relative flex-1 max-w-auto h-[54px] lg:max-w-[812px] "
+        class="relative flex-1 max-w-auto h-[54px] lg:max-w-[812px]"
       >
         <button
           type="submit"
@@ -243,7 +244,6 @@
             alt="Create"
             class="w-5 h-5" 
           />
-
         </button>
         <div class="relative w-full">
           <div 
@@ -258,6 +258,7 @@
             />
           </div>
           <input
+            id="course-objective-input"
             type="text"
             bind:value={learningObjective}
             placeholder="Enter what you want to learn..."

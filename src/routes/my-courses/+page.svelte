@@ -5,6 +5,7 @@
   import ShareModal from '$lib/components/ShareModal.svelte';
   import type { FinalCourseStructure } from '$lib/types/course';
   import UserCourseCard from '$lib/components/UserCourseCard.svelte';
+  import { goto } from '$app/navigation';
 
   let allCourses: (FinalCourseStructure & { id: string; progress?: number })[] = [];
   let enrolledCourses: (FinalCourseStructure & { id: string; progress?: number })[] = [];
@@ -80,6 +81,22 @@
     enrolled: enrolledCourses.length,
     created: createdCourses.length
   };
+
+  // Add this function to handle create course navigation
+  async function handleCreateCourse() {
+    await goto('/');
+    // Wait for navigation to complete and DOM to update
+    setTimeout(() => {
+      const createCourseInput = document.querySelector('#course-objective-input') as HTMLInputElement;
+      const createCourseSection = document.querySelector('#create-course');
+      if (createCourseSection) {
+        createCourseSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+      if (createCourseInput) {
+        createCourseInput.focus();
+      }
+    }, 100);
+  }
 </script>
 
 <div class="min-h-screen">
@@ -164,10 +181,10 @@
           <!-- Create Course Button -->
           <button 
             class="flex items-center gap-2 px-2 pl-4 py-2 bg-brand-red text-white rounded-lg hover:bg-ButtonHover transition-colors"
+            on:click={handleCreateCourse}
           >
-          <span class="text-body">Create Course</span>
+            <span class="text-body">Create Course</span>
             <img src="/icons/plus-sign.svg" alt="Create" class="w-6 h-6" />
-
           </button>
         </div>
 
@@ -189,6 +206,7 @@
       <!-- Create Course Button -->
       <button 
         class="flex items-center px-2 py-2 bg-brand-red text-white rounded-lg hover:bg-ButtonHover transition-colors"
+        on:click={handleCreateCourse}
       >
         <img src="/icons/plus-sign.svg" alt="Create" class="w-6 h-6" />
       </button>
