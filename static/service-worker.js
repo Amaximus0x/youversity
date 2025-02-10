@@ -1,9 +1,10 @@
 const CACHE_NAME = 'youversity-cache-v1';
 const STATIC_ASSETS = [
   '/',
-  '/favicon.png',
+  '/favicon.ico',
   '/google-icon.svg'
 ];
+
 
 // Helper function to check if URL is supported for caching
 function isRequestCacheable(request) {
