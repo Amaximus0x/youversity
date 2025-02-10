@@ -208,14 +208,14 @@
       </div>
 
       <!-- Progress Bar -->
-      <div
+      <!-- <div
         class="w-full h-3 bg-Black/5 dark:bg-White/5 rounded-full overflow-hidden"
       >
         <div
           class="h-full bg-brand-turquoise rounded-full"
           style="width: {course.progress || 0}%"
         ></div>
-      </div>
+      </div> -->
     </div>
 
     <!-- View Course Button -->
