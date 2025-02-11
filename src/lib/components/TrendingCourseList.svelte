@@ -2,7 +2,7 @@
   import type { FinalCourseStructure } from '$lib/types/course';
   import ShareModal from '$lib/components/ShareModal.svelte';
   import Skeleton from './Skeleton.svelte';
-  import CourseCard from './CourseCard.svelte';
+  import TrendingCard from './TrendingCard.svelte';
   
   export let courses: (FinalCourseStructure & { id: string })[] = [];
   export let loading = false;
@@ -53,7 +53,7 @@
   <div class="flex gap-6 overflow-x-auto pb-4 -mx-4 px-4 hide-scrollbar scroll-container">
     {#each courses as course (course.id)}
       <div class="scroll-item flex-none w-[325px]">
-        <CourseCard {course} onShare={handleShare} />
+        <TrendingCard {course} onShare={handleShare} />
       </div>
     {/each}
   </div>

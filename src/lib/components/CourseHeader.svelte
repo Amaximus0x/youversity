@@ -12,6 +12,7 @@
     export let hasLiked: boolean = false;
     export let liking: boolean = false;
     export let showShareModal: boolean = false;
+    export let isEnrolled: boolean = false;
 
     // Check if we're on the module page
     $: isModulePage = $page.url.pathname.includes("/module");
@@ -78,12 +79,13 @@
     </div>
 
     <!-- Module Button -->
+    {#if !isCreator || !isEnrolled}
     <div class="lg:hidden flex items-center">
         <button
             class="flex items-center"
             on:click={() => {
                 if (isModulePage) {
-                    goto(`/course/${courseDetails.id}`);
+                    goto(`/course/${courseDetails.id}/intro`);
                 } else {
                     goto(`/course/${courseDetails.id}/module?tab=modules`);
                 }
@@ -107,6 +109,7 @@
 
         </button>
     </div>
+    {/if}
 </div>
 
 <!-- Creator Info with Bookmark and Share Button -->
@@ -214,3 +217,57 @@
         </button>
     </div>
 </div>
+
+<!-- Navigation Buttons - Only for enrolled users and creators -->
+<!-- do not show on module page -->
+{#if isEnrolled || isCreator && $currentModuleStore !== -1 && $currentModuleStore !== 0}
+  <div class="flex items-center justify-between mt-4">
+    <!-- Prev and Next Buttons -->
+    <div class="flex items-center gap-4 ">
+      <button
+        class="px-2 pr-[14px] py-2 text-semi-body bg-Black/5 rounded-lg text-Green hover:text-GreenHover flex items-center gap-1"
+        on:click={() => {
+          if ($currentModuleStore > -1) {
+            currentModuleStore.set($currentModuleStore - 1);
+            goto(`/course/${courseDetails.id}`);
+          }
+        }}
+        disabled={$currentModuleStore <= -1}
+      >
+      <svg class=" stroke-Green rotate-180" width="24" height="24"  fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M9 6C9 6 15 10.4189 15 12C15 13.5812 9 18 9 18" stroke="" stroke-width="1.5" />
+        </svg>
+        Prev
+      </button>
+
+      <button
+        class="px-2 py-2 pl-[14px] text-semi-body bg-Black/5 rounded-lg text-Green hover:text-GreenHover flex items-center gap-1"
+        on:click={() => {
+          if ($currentModuleStore < (courseDetails?.Final_Module_Title?.length || 0)) {
+            currentModuleStore.set($currentModuleStore + 1);
+            goto(`/course/${courseDetails.id}`);
+          }
+        }}
+        disabled={$currentModuleStore >= (courseDetails?.Final_Module_Title?.length || 0)}
+      >
+        Next
+        <svg class="w-6 h-6 stroke-Green" xmlns="http://www.w3.org/2000/svg" fill="none">
+            <path d="M9 6C9 6 15 10.4189 15 12C15 13.5812 9 18 9 18" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+      </button>
+    </div>
+
+    <!-- Course Intro Button -->
+    <button
+      class="px-4 py-2 text-body text-brand-turquoise hover:text-brand-turquoise/80  flex items-center gap-1"
+      on:click={() => {
+        currentModuleStore.set(-1);
+        goto(`/course/${courseDetails.id}`);
+      }}
+    >
+      Course Intro
+      <img src="/icons/arrow-right.svg" alt="Next" class="w-6 h-6" />
+    </button>
+  </div>
+{/if}
+

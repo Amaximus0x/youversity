@@ -4,9 +4,8 @@
   import type { FinalCourseStructure } from '$lib/types/course';
   import { onMount, onDestroy } from 'svelte';
   import { goto } from '$app/navigation';
-  import TrendingCourseList from '$lib/components/TrendingCourseList.svelte';
+  import TrendingCard from '$lib/components/TrendingCard.svelte';
   import FilterModal from '$lib/components/FilterModal.svelte';
-  import CourseCard from '$lib/components/CourseCard.svelte';
 
   let searchQuery = '';
   let currentFilter: SearchFilter = 'relevance';
@@ -157,7 +156,7 @@
     {:else}
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {#each searchResults as course (course.id)}
-          <CourseCard {course} onShare={handleShare} />
+          <TrendingCard {course} onShare={handleShare} />
         {/each}
       </div>
     {/if}

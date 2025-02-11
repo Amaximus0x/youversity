@@ -278,7 +278,7 @@
   // Update onDestroy
   onDestroy(() => {
     // Only cleanup if we're navigating away from the course page
-    if (browser && $page.url.pathname !== currentPath) {
+    if (browser && ($page.url.pathname !== currentPath || $page.url.pathname !== `/course/${$page.params.id}` || $page.url.pathname !== `/course/${$page.params.id}/module`)) {
       localStorage.removeItem(`course_${$page.params.id}_state`);
       courseDetails = null;
       isEnrolled = false;
@@ -312,6 +312,8 @@
         isEnrolled: false,
         showProgress: false,
       });
+      //go to course page
+      goto(`/course/${$page.params.id}/intro`);
 
       // Show success message or handle UI updates
       console.log("Successfully unenrolled from course");
@@ -345,7 +347,7 @@
         <!-- Left Column - Video and Course Info -->
         <div class="w-full lg:col-span-8">
           <!-- Video Player Container -->
-          <div class="relative w-full lg:rounded-2xl overflow-hidden">
+          <!-- <div class="relative w-full lg:rounded-2xl overflow-hidden">
             {#if $currentModuleStore >= 0 && $currentModuleStore < courseDetails?.Final_Module_Title?.length}
               <div
                 class="fixed lg:relative top-[85px] lg:top-0 left-0 right-0 z-30 bg-black aspect-video"
@@ -388,18 +390,18 @@
                 </div>
               </div>
             {/if}
-          </div>
+          </div> -->
 
           <!-- Course Info Section -->
           <div
             class=" {$currentModuleStore >= 0 &&
             $currentModuleStore < courseDetails?.Final_Module_Title?.length
-              ? 'mt-[calc(59vw)] lg:mt-[calc(1vw)]'
+              ? 'mt-[calc(59vw)] lg:mt-[calc(0vw)]'
               : ''}"
             bind:this={contentStartElement}
           >
             <!-- Course Module Title -->
-            <!-- <div class="mb-4">
+            <div class="mb-4">
               <h4 class="text-h4-medium text-Black">
                 {#if $currentModuleStore === -1}
                   Course Introduction and Objectives
@@ -414,7 +416,7 @@
                     "Loading module..."}
                 {/if}
               </h4>
-            </div> -->
+            </div>
 
             <!-- Creator Info with Bookmark and Share Button -->
             <CourseHeader
@@ -425,7 +427,6 @@
               {hasLiked}
               {liking}
               {showShareModal}
-              {isEnrolled}
               on:like={handleLike}
               on:bookmark={handleBookmark}
               on:share={() => (showShareModal = true)}
@@ -468,6 +469,10 @@
                       {courseDetails?.Final_Course_Title}
                     </p>
                   </div>
+
+                  <h3 class="text-h4-medium text-Black mb-4">
+                    Course Conclusion
+                  </h3>
                   <p class="text-body text-light-text-secondary">
                     {courseDetails?.Final_Course_Conclusion}
                   </p>
@@ -570,9 +575,10 @@
             <!-- Desktop Reviews Section -->
             <div class="hidden lg:block">
               <!-- Desktop Action Buttons -->
-              <!-- Enroll/Start button -->
               <div class="mt-6 flex flex-col gap-3">
-                <!-- <button
+                <!-- Enroll/Start button -->
+                <!-- {#if !isEnrolled && !isCreator} -->
+                <button
                   class="w-full px-4 py-2 flex items-center justify-center text-semibody-medium rounded-2xl transition-colors {isEnrolled
                     ? 'bg-brand-red hover:bg-ButtonHover text-white'
                     : 'bg-Green hover:bg-GreenHover text-white'}"
@@ -595,7 +601,9 @@
                       class="w-6 h-6 ml-2"
                     />
                   {/if}
-                </button> -->
+                </button>
+                <!-- {/if}    -->
+
                 
               </div>
 
@@ -659,7 +667,8 @@
 </div>
 
 <!-- Update the Floating Action Button -->
-<!-- 
+<!-- only show on intro Page -->
+ {#if $currentModuleStore === -1}
 <div
   class="fixed bottom-0 left-0 right-0 pb-36 pt-4 z-[60] lg:hidden transition-opacity duration-300"
   class:opacity-0={!showFloatingButton}
@@ -673,7 +682,7 @@
       on:click={isEnrolled
         ? () => {
             // Get last accessed module from enrollment progress
-            const lastModule = enrollmentProgress?.lastAccessedModule || -1;
+            const lastModule = enrollmentProgress?.lastAccessedModule || 1;
             currentModuleStore.set(lastModule);
             goto(`/course/${$page.params.id}`);
           }
@@ -692,8 +701,8 @@
       {/if}
     </button>
   </div>
-</div> -->
-
+</div>
+{/if}
 
 <!-- Move the mobile version to a conditional render -->
 

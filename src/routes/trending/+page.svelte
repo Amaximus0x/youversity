@@ -2,7 +2,7 @@
   import { onMount } from 'svelte';
   import { getPublicCourses } from '$lib/firebase';
   import type { FinalCourseStructure } from '$lib/types/course';
-  import CourseCard from '$lib/components/CourseCard.svelte';
+  import TrendingCard from '$lib/components/TrendingCard.svelte';
   import ShareModal from '$lib/components/ShareModal.svelte';
 
   let trendingCourses: (FinalCourseStructure & { id: string })[] = [];
@@ -67,7 +67,7 @@
   {:else}
     <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4 justify-items-center">
       {#each filteredCourses as course (course.id)}
-        <CourseCard {course} onShare={handleShare} />
+        <TrendingCard {course} onShare={handleShare} />
       {/each}
     </div>
   {/if}

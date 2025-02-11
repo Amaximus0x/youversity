@@ -38,7 +38,7 @@
             return;
         }
         currentModuleStore.set(index);
-        goto(`/course/${$page.params.id}/learn`);
+        goto(`/course/${$page.params.id}`);
     }
 </script>
 
@@ -229,10 +229,16 @@
                     {/each}
 
                     <!-- Course Conclusion Card - Only show for enrolled users and creators -->
-                    {#if isEnrolled || isCreator}
+                    <!-- {#if isEnrolled || isCreator}
                         <div
                             class="hidden lg:block p-2 rounded-2xl border border-light-border hover:bg-Black/5 dark:hover:bg-Black/5 transition-colors duration-200 {activeModuleClass(
                                 courseDetails.Final_Module_Title.length,
+                            )}"
+                        > -->
+
+                        {#if (isEnrolled || isCreator) && courseDetails?.Final_Module_Title?.length >= 0}
+                        <div
+                            class="hidden lg:block p-2 rounded-2xl border border-light-border hover:bg-Black/5 dark:hover:bg-Black/5 transition-colors duration-200,
                             )}"
                         >
                             <button
@@ -294,7 +300,7 @@
                 if (typeof currentModule !== "undefined") {
                     currentModule = courseDetails.Final_Module_Title.length;
                 }
-                goto(`/course/${$page.params.id}/learn`);
+                goto(`/course/${$page.params.id}`);
             }}
         >
             <span class="text-body">Course Conclusion</span>
