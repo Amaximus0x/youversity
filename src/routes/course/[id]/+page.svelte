@@ -458,7 +458,7 @@
               {showShareModal}
               on:like={handleLike}
               on:bookmark={handleBookmark}
-              on:share={() => showShareModal = true}
+              on:share={() => (showShareModal = true)}
             />
 
             <!-- Module Content -->
@@ -549,7 +549,7 @@
 
             <!-- Move Reviews Section after Course Conclusion for mobile -->
             <div class="lg:hidden">
-              <!-- Course Progress and Modules for mobile -->
+              <!-- Course Enrollment Progress for mobile -->
               {#if showProgress && $user && (isCreator || isEnrolled)}
                 <div
                   class="mt-6 rounded-2xl border border-light-border dark:border-dark-border"
@@ -589,12 +589,14 @@
               {/if}
 
               <!-- Course Modules for mobile -->
-              
 
               <!-- Reviews Section for mobile -->
               {#if courseDetails.isPublic}
                 <div class="w-full mt-6">
-                  <CourseRatings courseId={$page.params.id} />
+                  <CourseRatings
+                    courseId={$page.params.id}
+                    showReadAll={true}
+                  />
                 </div>
               {/if}
             </div>
@@ -654,7 +656,10 @@
               <!-- Reviews Section -->
               {#if courseDetails.isPublic}
                 <div class="w-full mt-6">
-                  <CourseRatings courseId={$page.params.id} />
+                  <CourseRatings
+                    courseId={$page.params.id}
+                    showReadAll={true}
+                  />
                 </div>
               {/if}
 
@@ -688,7 +693,7 @@
         <!-- Right Column - Progress and Modules -->
         <div class="hidden lg:block w-full lg:col-span-4">
           <!-- Progress Section -->
-          {#if showProgress && $user && (isCreator || isEnrolled)}
+          <!-- {#if showProgress && $user && (isCreator || isEnrolled)}
             <div
               class="mb-4 rounded-2xl border border-light-border dark:border-dark-border"
             >
@@ -723,15 +728,18 @@
                 </span>
               </div>
             </div>
-          {/if}
+          {/if} -->
           <!-- Course Modules Section -->
 
           <CourseModuleList
             {courseDetails}
             {isCreator}
             {isEnrolled}
-            completedModules={isCreator 
-              ? moduleProgress.map((m, i) => m?.completed ? i : -1).filter(i => i !== -1)
+            showProgress={true}
+            completedModules={isCreator
+              ? moduleProgress
+                  .map((m, i) => (m?.completed ? i : -1))
+                  .filter((i) => i !== -1)
               : enrollmentProgress?.completedModules || []}
             bind:currentModule
           />

@@ -154,7 +154,7 @@
     }
 </script>
 
-<div class="min-h-screen mx-[-20px]">
+<div class="min-h-screen mx-[-20px] mb-[32px]">
     <!-- Tab buttons -->
     <div class="w-full border-b border-light-border dark:border-dark-border">
         <div class="container mx-auto flex gap-2 px-5 py-2">
@@ -216,6 +216,7 @@
                         {courseDetails}
                         {isCreator}
                         {isEnrolled}
+                        showProgress={true}
                         completedModules={isCreator
                             ? moduleProgress
                                   .map((m, i) => (m?.completed ? i : -1))
@@ -223,7 +224,10 @@
                             : enrollmentProgress?.completedModules || []}
                     />
                 {:else}
-                    <CourseRatings courseId={$page.params.id} />
+                    <CourseRatings 
+                        courseId={$page.params.id}
+                        showReadAll={false}
+                    />
                 {/if}
             </div>
         {/if}

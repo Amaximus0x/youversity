@@ -5,8 +5,10 @@
   import type { CourseRating } from '$lib/types/course';
   import { onMount } from 'svelte';
   import { fade } from 'svelte/transition';
+  import { page } from '$app/stores';
 
   export let courseId: string;
+  export let showReadAll: boolean = true;
   
   let ratings: CourseRating[] = [];
   let loading = true;
@@ -89,12 +91,15 @@
 <div class="bg-transparent rounded-2xl border border-light-border dark:border-dark-border p-6">
   <div class="flex items-center justify-between mb-6">
     <h2 class="text-h3-mobile text-light-text-primary dark:text-dark-text-primary">Course Reviews</h2>
-    <button 
-      class="text-brand-turquoise text-body hover:underline transition-opacity flex items-center gap-1"
-    >
-      Read all
-      <img src="/icons/arrow-right.svg" alt="arrow" class="w-5 h-5" />
-    </button>
+    {#if showReadAll}
+      <button 
+        class="text-brand-turquoise text-body hover:underline transition-opacity flex items-center gap-1"
+        on:click={() => goto(`/course/${courseId}/module?tab=reviews`)}
+      >
+        Read all
+        <img src="/icons/arrow-right.svg" alt="arrow" class="w-5 h-5" />
+      </button>
+    {/if}
   </div>
 
   <!-- Review Input Section -->
