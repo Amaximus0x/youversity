@@ -3,6 +3,7 @@
   import { goto } from "$app/navigation";
   import { page } from "$app/stores";
   import type { FinalCourseStructure } from "$lib/types/course";
+  import EnrollModal from "./EnrollModal.svelte";
 
   export let courseDetails: FinalCourseStructure;
   export let isCreator = false;
@@ -12,6 +13,9 @@
   export let completedModules: number[] = [];
   
   export let currentModule: number | undefined;
+
+  let showEnrollModal = false;
+  let selectedModule: number | undefined;
 
   // Helper function to check if a module is completed
   function isModuleCompleted(index: number): boolean {
@@ -24,6 +28,11 @@
 
   // Function to handle module navigation
   function handleModuleClick(index: number) {
+    if (!isEnrolled && !isCreator && index !== -1) {
+      showEnrollModal = true;
+      selectedModule = index;
+      return;
+    }
     currentModuleStore.set(index);
     goto(`/course/${$page.params.id}/learn`);
   }
@@ -144,4 +153,14 @@
       </div>
     {/if}
   </div>
-</div> 
+</div>
+
+<!-- Enroll Modal -->
+<EnrollModal
+  show={showEnrollModal}
+  {courseDetails}
+  onClose={() => {
+    showEnrollModal = false;
+    selectedModule = undefined;
+  }}
+/> 

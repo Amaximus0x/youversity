@@ -159,7 +159,7 @@
     <div class="w-full border-b border-light-border dark:border-dark-border">
         <div class="container mx-auto flex gap-2 px-5 py-2">
             <button
-                class="flex-1 px-4 py-4 text-semi-body rounded-lg transition-colors {activeTab ===
+                class="flex-1 px-4 py-4 text-h4- rounded-lg transition-colors {activeTab ===
                 'modules'
                     ? 'bg-Green text-white'
                     : 'text-Green bg-Black/5 hover:bg-Black/10'}"
@@ -191,7 +191,7 @@
         {:else if courseDetails}
             <!-- Course Title -->
             <h1
-                class="text-h2-mobile lg:text-h2 text-Black dark:text-White mb-4"
+                class="text-h4-medium lg:text-h2 text-Black dark:text-White mb-4"
             >
                 {courseDetails.Final_Course_Title}
             </h1>
