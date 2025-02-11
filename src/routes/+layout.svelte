@@ -334,7 +334,7 @@
           </div>
         </div>
 
-        <!-- <div class="border-t border-light-border dark:border-dark-border">
+        <div class="border-t border-light-border dark:border-dark-border">
           <button 
             on:click={handleAuth}
             class="flex items-center w-full px-8 h-[44px] text-light-text-secondary dark:text-dark-text-secondary hover:bg-light-bg-secondary dark:hover:bg-dark-bg-secondary transition-colors"
@@ -346,7 +346,7 @@
             />
             <span class="text-[15px] font-normal">{$user ? 'Sign Out' : 'Sign In'}</span>
           </button>
-        </div> -->
+        </div>
       </aside>
 
       <!-- Main Content with Navigation -->

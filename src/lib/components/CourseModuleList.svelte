@@ -1,5 +1,7 @@
 <script lang="ts">
   import { currentModuleStore } from "$lib/stores/course";
+  import { goto } from "$app/navigation";
+  import { page } from "$app/stores";
   import type { FinalCourseStructure } from "$lib/types/course";
 
   export let courseDetails: FinalCourseStructure;
@@ -13,15 +15,18 @@
 
   // Helper function to check if a module is completed
   function isModuleCompleted(index: number): boolean {
-    if (isCreator) {
-      return moduleProgress[index]?.completed || false;
-    }
     return completedModules.includes(index);
   }
 
   // Update the module card styling
   $: activeModuleClass = (index: number) =>
     $currentModuleStore === index ? "bg-[rgba(66,193,200,0.1)]" : "";
+
+  // Function to handle module navigation
+  function handleModuleClick(index: number) {
+    currentModuleStore.set(index);
+    goto(`/course/${$page.params.id}/learn`);
+  }
 </script>
 
 <div class="border border-light-border dark:border-dark-border rounded-3xl overflow-hidden">
@@ -56,16 +61,11 @@
         </div>
 
         <!-- Regular Module Cards -->
-        {#each courseDetails.Final_Module_Title as title, index}
+        {#each courseDetails.Final_Module_Title as title, index (index)}
           <div class="p-2 rounded-2xl border border-light-border lg:hover:bg-Black/5 lg:dark:hover:bg-Black/5 transition-colors duration-200 {activeModuleClass(index)}">
             <button
               class="w-full flex items-start gap-4"
-              on:click={() => {
-                currentModuleStore.set(index);
-                if (typeof currentModule !== "undefined") {
-                  currentModule = index;
-                }
-              }}
+              on:click={() => handleModuleClick(index)}
             >
               <!-- Module Info -->
               <div class="flex-1 min-w-0 text-left">

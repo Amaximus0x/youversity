@@ -25,6 +25,7 @@
   import { browser } from "$app/environment";
   import ShareModal from "$lib/components/ShareModal.svelte";
   import CourseModuleList from "$lib/components/CourseModuleList.svelte";
+  import CourseHeader from "$lib/components/CourseHeader.svelte";
 
   // Initialize states with null to indicate not loaded yet
   let courseDetails: any = null;
@@ -242,7 +243,7 @@
     // Immediately update UI
     const newBookmarkState = !isBookmarked;
     isBookmarked = newBookmarkState;
-    
+
     try {
       // Update in background
       await toggleBookmark($user.uid, $page.params.id);
@@ -328,31 +329,25 @@
 
     try {
       removing = true;
+
+      // Only remove enrollment, not the course itself
       await removeEnrollment($user.uid, $page.params.id);
-      
-      // Reset local states
+
+      // Update local state
       isEnrolled = false;
-      showProgress = false;
       enrollmentProgress = null;
-      
-      // Clear local storage state
-      if (browser) {
-        localStorage.removeItem(`course_${$page.params.id}_state`);
-      }
+      showProgress = false;
 
-      // Update course details to remove enrollment-specific data
-      courseDetails = {
-        ...courseDetails,
+      // Save updated state
+      saveState({
         isEnrolled: false,
-        progress: null
-      };
+        showProgress: false,
+      });
 
-      // Show success message (optional)
-      // You can add a toast notification here if you have one
-      
+      // Show success message or handle UI updates
+      console.log("Successfully unenrolled from course");
     } catch (error) {
-      console.error('Error removing course enrollment:', error);
-      // Optionally show error message to user
+      console.error("Error removing enrollment:", error);
     } finally {
       removing = false;
     }
@@ -428,7 +423,10 @@
 
           <!-- Course Info Section -->
           <div
-            class=" {$currentModuleStore >= 0 && $currentModuleStore < courseDetails?.Final_Module_Title?.length ? 'mt-[calc(59vw)] lg:mt-[calc(1vw)]' : ''}"
+            class=" {$currentModuleStore >= 0 &&
+            $currentModuleStore < courseDetails?.Final_Module_Title?.length
+              ? 'mt-[calc(59vw)] lg:mt-[calc(1vw)]'
+              : ''}"
             bind:this={contentStartElement}
           >
             <!-- Course Module Title -->
@@ -440,130 +438,28 @@
                   Course Conclusion
                 {:else}
                   <span class="text-h4-medium text-Black2"
-                    >{($currentModuleStore + 1).toString().padStart(2, "0")}</span
+                    >{($currentModuleStore + 1)
+                      .toString()
+                      .padStart(2, "0")}</span
                   >: {courseDetails.Final_Module_Title[$currentModuleStore] ||
                     "Loading module..."}
                 {/if}
               </h4>
             </div>
 
-            <!-- Creator Info with Bookmark Button -->
-            <div class="flex items-center justify-between">
-              <!-- Creator Info -->
-              <div class="flex items-center gap-3">
-                <div>
-                  {#if creatorProfile?.photoURL}
-                    <img
-                      src={creatorProfile.photoURL}
-                      alt="Creator"
-                      class="w-12 h-12 rounded-full object-cover"
-                    />
-                  {:else}
-                    <div
-                      class="w-12 h-12 rounded-full bg-Black/5 flex items-center justify-center"
-                    >
-                      <span class="text-[#2A4D61] font-medium">
-                        {(
-                          creatorProfile?.username?.[0] ||
-                          creatorProfile?.displayName?.[0] ||
-                          "U"
-                        ).toUpperCase()}
-                      </span>
-                    </div>
-                  {/if}
-                </div>
-
-                <div>
-                  <p
-                    class="text-semi-body text-light-text-tertiary dark:text-dark-text-tertiary"
-                  >
-                    <span
-                      class="text-body-semibold text-light-text-primary dark:text-dark-text-primary"
-                      >Creator:</span
-                    >
-                    {creatorProfile?.username ||
-                      creatorProfile?.displayName ||
-                      "Unknown Creator"}
-                  </p>
-                  <div class="self-stretch text-[#a2a2a2] text-mini-body">
-                    {new Date(
-                      courseDetails.createdAt?.toDate?.() ||
-                        courseDetails.createdAt ||
-                        Date.now(),
-                    ).toLocaleDateString("en-US", {
-                      month: "long",
-                      day: "numeric",
-                      year: "numeric",
-                    })}
-                  </div>
-                </div>
-              </div>
-
-              <!-- Bookmark Button -->
-              {#if !isCreator}
-                <div class="block lg:hidden">
-                  <button
-                    class="w-full px-4 py-2 text-semibody-medium flex items-center justify-center gap-2 bg-Black/5 text-Green rounded-full hover:bg-Black/5 transition-colors"
-                    on:click={handleBookmark}
-                  >
-                    <img 
-                      src={isBookmarked ? "/icons/bookmark-filled.svg" : "/icons/bookmark.svg"} 
-                      alt="Bookmark" 
-                      class="w-6 h-[37px]"
-                    />
-                  </button>
-                </div>
-              {/if}
-            </div>
-
-            <!-- Stats Section -->
-            <div class="flex items-center gap-4 mt-4">
-              <!-- Upvotes -->
-              <button
-                class="flex items-center gap-2 bg-Black/5 px-2 py-2 rounded-2xl hover:opacity-80 transition-opacity disabled:opacity-50"
-                on:click={handleLike}
-                disabled={liking}
-              >
-                <img
-                  src={hasLiked
-                    ? "/icons/upvote-filled.svg"
-                    : "/icons/upvote.svg"}
-                  alt="Upvotes"
-                  class="w-5 h-5"
-                />
-                <span
-                  class={hasLiked
-                    ? "text-semibody-medium text-Black"
-                    : "text-semibody text-Black2 hover:text-Black"}
-                >
-                  {formatNumber(courseDetails?.likes || 0)} Upvotes
-                </span>
-              </button>
-
-              <!-- Share Button -->
-              <button
-                class="flex items-center gap-2 bg-Black/5 px-2 py-2 rounded-full hover:opacity-80 transition-opacity"
-                on:click={handleShare}
-              >
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M21 6.5C21 8.15685 19.6569 9.5 18 9.5C16.3431 9.5 15 8.15685 15 6.5C15 4.84315 16.3431 3.5 18 3.5C19.6569 3.5 21 4.84315 21 6.5Z" stroke="#494848" stroke-width="1.5"/>
-                <path d="M9 12C9 13.6569 7.65685 15 6 15C4.34315 15 3 13.6569 3 12C3 10.3431 4.34315 9 6 9C7.65685 9 9 10.3431 9 12Z" stroke="#494848" stroke-width="1.5"/>
-                <path d="M21 17.5C21 19.1569 19.6569 20.5 18 20.5C16.3431 20.5 15 19.1569 15 17.5C15 15.8431 16.3431 14.5 18 14.5C19.6569 14.5 21 15.8431 21 17.5Z" stroke="#494848" stroke-width="1.5"/>
-                <path d="M8.72852 10.7495L15.2285 7.75M8.72852 13.25L15.2285 16.2495" stroke="#494848" stroke-width="1.5"/>
-              </svg>
-                
-              </button>
-
-              <!-- Views -->
-              <div class="flex items-center gap-2">
-                <img src="/icons/view.svg" alt="Views" class="w-5 h-5" />
-                <span class="text-semibody-medium text-light-text-secondary">
-                  {formatNumber(courseDetails?.views || 0)} views
-                </span>
-              </div>
-            </div>
-
-            
+            <!-- Creator Info with Bookmark and Share Button -->
+            <CourseHeader
+              {courseDetails}
+              {creatorProfile}
+              {isCreator}
+              {isBookmarked}
+              {hasLiked}
+              {liking}
+              {showShareModal}
+              on:like={handleLike}
+              on:bookmark={handleBookmark}
+              on:share={() => showShareModal = true}
+            />
 
             <!-- Module Content -->
             <div class="mt-6">
@@ -583,8 +479,12 @@
                   </p>
 
                   <div class="mt-6">
-                    <h3 class="text-h4-medium text-Black mb-4">Course Objective</h3>
-                    <p class="text-body text-light-text-secondary dark:text-dark-text-secondary">
+                    <h3 class="text-h4-medium text-Black mb-4">
+                      Course Objective
+                    </h3>
+                    <p
+                      class="text-body text-light-text-secondary dark:text-dark-text-secondary"
+                    >
                       {courseDetails?.Final_Course_Objective}
                     </p>
                   </div>
@@ -599,14 +499,20 @@
                     </p>
                   </div>
 
-                  <h3 class="text-h4-medium text-Black mb-4">Course Conclusion</h3>
+                  <h3 class="text-h4-medium text-Black mb-4">
+                    Course Conclusion
+                  </h3>
                   <p class="text-body text-light-text-secondary">
                     {courseDetails?.Final_Course_Conclusion}
                   </p>
                   {#if hasCompletedAllModules()}
                     <div class="flex items-center gap-4 mt-4">
                       <div class="flex items-center gap-2">
-                        <img src="/icons/check-circle.svg" alt="Completed" class="w-5 h-5" />
+                        <img
+                          src="/icons/check-circle.svg"
+                          alt="Completed"
+                          class="w-5 h-5"
+                        />
                         <span class="text-semibody-medium text-Black">
                           All {courseDetails.Final_Module_Title.length} modules completed
                         </span>
@@ -626,9 +532,15 @@
 
                   <!-- Module Objective -->
                   <div class="mt-6">
-                    <h3 class="text-h4-medium text-Black mb-4">Module Objective</h3>
-                    <p class="text-body text-light-text-secondary dark:text-dark-text-secondary">
-                      {courseDetails?.Final_Module_Objective[$currentModuleStore] || "Loading module..."}
+                    <h3 class="text-h4-medium text-Black mb-4">
+                      Module Objective
+                    </h3>
+                    <p
+                      class="text-body text-light-text-secondary dark:text-dark-text-secondary"
+                    >
+                      {courseDetails?.Final_Module_Objective[
+                        $currentModuleStore
+                      ] || "Loading module..."}
                     </p>
                   </div>
                 </div>
@@ -677,156 +589,7 @@
               {/if}
 
               <!-- Course Modules for mobile -->
-              <div
-                class="mt-6 border border-light-border dark:border-dark-border rounded-3xl overflow-hidden"
-              >
-                <div>
-                  <h3
-                    class="text-body-semibold text-Black p-2 border-b border-light-border dark:border-dark-border bg-BackgroundRed"
-                  >
-                    Course Module
-                  </h3>
-                </div>
-
-                <div class="p-2">
-                  <!-- Course Modules List -->
-                  <div class="space-y-2.5">
-                    {#if courseDetails?.Final_Module_Title?.length > 0}
-                      <!-- Course Introduction Card -->
-                      <div class="p-2 rounded-2xl border border-light-border hover:bg-Black/5 dark:hover:bg-Black/5 transition-colors duration-200 {activeModuleClass(-1)}">
-                        <button
-                          class="w-full flex items-center gap-4"
-                          on:click={() => {
-                            currentModuleStore.set(-1);
-                            if (typeof currentModule !== "undefined") {
-                              currentModule = -1;
-                            }
-                          }}
-                        >
-                          <!-- Module Info -->
-                          <div class="flex-1 min-w-0 text-center">
-                            <p class="text-body-semibold text-Black2 px-2 py-6 mb-2">
-                              Course Introduction and Objectives
-                            </p>
-                          </div>
-                        </button>
-                      </div>
-
-                      <!-- Regular Module Cards -->
-                      {#each courseDetails.Final_Module_Title as title, index}
-                        <div class="p-2 rounded-2xl border border-light-border hover:bg-Black/5 dark:hover:bg-Black/5 transition-colors duration-200 {activeModuleClass(index)}">
-                          <button
-                            class="w-full flex items-start gap-4"
-                            on:click={() => {
-                              currentModuleStore.set(index);
-                              if (typeof currentModule !== "undefined") {
-                                currentModule = index;
-                              }
-                            }}
-                          >
-                            <!-- Module Info -->
-                            <div class="flex-1 min-w-0 text-left">
-                              <p
-                                class="text-semibody-medium text-Black mb-2 inline-block"
-                              >
-                                <span class="text-semibody-medium text-Black2">
-                                  {(index + 1).toString().padStart(2, "0")}:
-                                </span>
-
-                                {title}
-                              </p>
-                              <p
-                                class="text-mini-body text-light-text-tertiary"
-                              >
-                                {courseDetails?.Final_Module_Video_Duration?.[
-                                  index
-                                ] || "0"} min
-                              </p>
-                            </div>
-
-                            <!-- Thumbnail Container -->
-                            <div
-                              class="relative w-[30%] max-w-[139px] aspect-video flex-shrink-0 rounded-lg overflow-hidden bg-black/5"
-                            >
-                              {#if courseDetails?.Final_Module_Thumbnails?.[index]}
-                                <img
-                                  src={courseDetails.Final_Module_Thumbnails[
-                                    index
-                                  ]}
-                                  alt="Video Thumbnail"
-                                  class="absolute inset-0 w-full h-full object-cover"
-                                />
-                              {:else}
-                                <div
-                                  class="absolute inset-0 flex items-center justify-center bg-black/5"
-                                >
-                                  <img
-                                    src="/icons/youtube.svg"
-                                    alt="Video"
-                                    class="w-8 h-8"
-                                  />
-                                </div>
-                              {/if}
-                              <!-- Play Button Overlay -->
-                              <div
-                                class="absolute inset-0 flex items-center justify-center bg-black/20"
-                              >
-                                <img
-                                  src="/icons/youtube-icon.svg"
-                                  alt="Play"
-                                  class="w-8 h-8"
-                                />
-                              </div>
-                            </div>
-                          </button>
-                        </div>
-                      {/each}
-
-                      <!-- Course Conclusion Card - Only show for enrolled users and creators -->
-                      {#if isEnrolled || isCreator}
-                        <div class="p-2 rounded-2xl border border-light-border hover:bg-Black/5 dark:hover:bg-Black/5 transition-colors duration-200 {activeModuleClass(courseDetails.Final_Module_Title.length)}">
-                          <button
-                            class="w-full flex items-center gap-4"
-                            on:click={() => {
-                              currentModuleStore.set(courseDetails.Final_Module_Title.length);
-                              if (typeof currentModule !== "undefined") {
-                                currentModule = courseDetails.Final_Module_Title.length;
-                              }
-                            }}
-                          >
-                            <!-- Module Info -->
-                            <div class="flex-1 min-w-0 text-center">
-                              <p class="text-body-semibold text-Black2 px-2 py-6 mb-2">
-                                Course Conclusion
-                              </p>
-                            </div>
-                          </button>
-                        </div>
-                      {/if}
-                    {:else}
-                      <div class="p-4 text-center text-light-text-tertiary">
-                        No modules available
-                      </div>
-                    {/if}
-                  </div>
-
-                  <!-- YouTube Playlist Button - Mobile -->
-                  {#if courseDetails?.YouTube_Playlist_URL}
-                    <div class=" mt-2">
-                      <a
-                        href={courseDetails.YouTube_Playlist_URL}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        class="w-full px-4 py-2 flex items-center justify-center gap-2 bg-brand-red hover:bg-ButtonHover text-white rounded-2xl transition-colors"
-                      >
-                        <span class="text-semibody"
-                          >View Playlist on Youtube</span
-                        >
-                      </a>
-                    </div>
-                  {/if}
-                </div>
-              </div>
+              
 
               <!-- Reviews Section for mobile -->
               {#if courseDetails.isPublic}
@@ -841,42 +604,42 @@
               <!-- Desktop Action Buttons -->
               <div class="mt-6 flex flex-col gap-3">
                 <!-- Enroll/Start button -->
-                 {#if !isEnrolled && !isCreator}
-                <button
-                  class="w-full px-4 py-2 flex items-center justify-center text-semibody-medium rounded-2xl transition-colors {
-                    isEnrolled 
-                      ? 'bg-brand-red hover:bg-ButtonHover text-white' 
-                      : 'bg-Green hover:bg-GreenHover text-white'
-                  }"
-                  on:click={isEnrolled ? () => goto(`/course/${$page.params.id}/learn`) : handleEnroll}
-                  disabled={enrolling}
-                >
-                  {#if enrolling}
-                    <span>Enrolling...</span>
-                  {:else}
-                    <span>{isEnrolled ? 'Start Course' : 'Enroll'}</span>
-                    <img
-                      src="/icons/arrow-right-white.svg"
-                      alt={isEnrolled ? 'Start' : 'Enroll'}
-                      class="w-6 h-6 ml-2"
-                    />
-                  {/if}
-                </button>
+                {#if !isEnrolled && !isCreator}
+                  <button
+                    class="w-full px-4 py-2 flex items-center justify-center text-semibody-medium rounded-2xl transition-colors {isEnrolled
+                      ? 'bg-brand-red hover:bg-ButtonHover text-white'
+                      : 'bg-Green hover:bg-GreenHover text-white'}"
+                    on:click={isEnrolled
+                      ? () => goto(`/course/${$page.params.id}/learn`)
+                      : handleEnroll}
+                    disabled={enrolling}
+                  >
+                    {#if enrolling}
+                      <span>Enrolling...</span>
+                    {:else}
+                      <span>{isEnrolled ? "Start Course" : "Enroll"}</span>
+                      <img
+                        src="/icons/arrow-right-white.svg"
+                        alt={isEnrolled ? "Start" : "Enroll"}
+                        class="w-6 h-6 ml-2"
+                      />
+                    {/if}
+                  </button>
                 {/if}
 
                 <!-- Finish Course Button -->
                 {#if (isEnrolled || isCreator) && $currentModuleStore === courseDetails?.Final_Module_Title?.length}
-                <button
-                  class="w-full px-4 py-2 flex items-center justify-center text-semibody-medium rounded-2xl transition-colors {
-                    isEnrolled 
-                      ? 'bg-brand-red hover:bg-ButtonHover text-white' 
-                      : 'bg-Green hover:bg-GreenHover text-white'
-                  }"
-                  on:click={isEnrolled ? () => goto(`/course/${$page.params.id}/learn`) : handleEnroll}
-                  disabled={enrolling}
-                >
-                    <span>{isEnrolled ? 'Finish Course' : 'Completed'}</span>
-                </button>
+                  <button
+                    class="w-full px-4 py-2 flex items-center justify-center text-semibody-medium rounded-2xl transition-colors {isEnrolled
+                      ? 'bg-brand-red hover:bg-ButtonHover text-white'
+                      : 'bg-Green hover:bg-GreenHover text-white'}"
+                    on:click={isEnrolled
+                      ? () => goto(`/course/${$page.params.id}/learn`)
+                      : handleEnroll}
+                    disabled={enrolling}
+                  >
+                    <span>{isEnrolled ? "Finish Course" : "Completed"}</span>
+                  </button>
                 {/if}
 
                 <!-- Bookmark button -->
@@ -884,7 +647,6 @@
                   class="w-full px-4 py-2 text-semibody-medium flex items-center justify-center gap-2 bg-Black/5 text-Green rounded-2xl hover:bg-Black/5 transition-colors"
                   on:click={handleBookmark}
                 >
-                 
                   <span>{isBookmarked ? "Bookmarked" : "Bookmark Course"}</span>
                 </button>
               </div>
@@ -897,7 +659,7 @@
               {/if}
 
               <!-- Remove Course Button - Desktop -->
-              {#if isEnrolled && !isCreator && $user}
+              {#if isEnrolled && $user}
                 <div class="mt-6 col-span-2">
                   <button
                     class="px-4 py-2 flex items-center justify-center gap-2 border border-[#FF0000] hover:bg-[#FF0000]/5 text-[#FF0000] rounded-lg transition-colors disabled:opacity-50"
@@ -912,7 +674,7 @@
                       <span class="text-semibody">Remove Course</span>
                       <img
                         src="/icons/delete.svg"
-                        alt="Remove"
+                        alt="Unenroll"
                         class="w-6 h-6"
                       />
                     {/if}
@@ -980,40 +742,40 @@
 </div>
 
 <!-- Update the Floating Action Button -->
-{#if !isEnrolled && !isCreator}
-  <div
-    class="fixed bottom-0 left-0 right-0 pb-36 pt-4 z-[60] lg:hidden transition-opacity duration-300"
-    class:opacity-0={!showFloatingButton}
-    class:pointer-events-none={!showFloatingButton}
-  >
-    <div class="container mx-auto pl-5">
-      <button
-        class="px-4 py-2 flex items-center justify-center gap-4 text-white rounded-2xl transition-opacity disabled:opacity-50 text-semibody-medium shadow-lg {
-          isEnrolled 
-            ? 'bg-brand-red' 
-            : 'bg-Green'
-        }"
-        on:click={isEnrolled ? () => goto(`/course/${$page.params.id}/learn`) : handleEnroll}
-        disabled={enrolling}
-      >
-        {#if enrolling}
-          <span>Enrolling...</span>
-        {:else}
-          <span>{isEnrolled ? 'Start Course' : 'Enroll'}</span>
-          <img
-            src="/icons/arrow-right-white.svg"
-            alt={isEnrolled ? 'Start' : 'Enroll'}
-            class="w-6 h-6"
-          />
-        {/if}
-      </button>
-    </div>
+<!-- {#if !isEnrolled && !isCreator} -->
+<div
+  class="fixed bottom-0 left-0 right-0 pb-36 pt-4 z-[60] lg:hidden transition-opacity duration-300"
+  class:opacity-0={!showFloatingButton}
+  class:pointer-events-none={!showFloatingButton}
+>
+  <div class="container mx-auto pl-5">
+    <button
+      class="px-8 py-2 flex items-center justify-center gap-2 text-white rounded-2xl transition-opacity disabled:opacity-50 text-semibody-medium shadow-lg {isEnrolled
+        ? 'bg-brand-red'
+        : 'bg-Green'}"
+      on:click={isEnrolled
+        ? () => goto(`/course/${$page.params.id}/learn`)
+        : handleEnroll}
+      disabled={enrolling}
+    >
+      {#if enrolling}
+        <span>Enrolling...</span>
+      {:else}
+        <span>{isEnrolled ? "Continue" : "Enroll"}</span>
+        <img
+          src="/icons/arrow-right-white.svg"
+          alt={isEnrolled ? "Continue" : "Enroll"}
+          class="w-6 h-6"
+        />
+      {/if}
+    </button>
   </div>
-{/if}
+</div>
+<!-- {/if} -->
 
 <!-- Move the mobile version to a conditional render -->
 <!-- Remove Course Button - Mobile -->
-{#if isEnrolled && !isCreator && $user}
+{#if isEnrolled && $user}
   <div class="lg:hidden mt-6 pb-20">
     <button
       class="w-full px-4 py-2 flex items-center justify-center gap-2 border border-[#FF0000] hover:bg-[#FF0000]/5 text-[#FF0000] rounded-2xl transition-colors disabled:opacity-50"
@@ -1021,7 +783,7 @@
       disabled={removing}
     >
       {#if removing}
-        <span class="text-semibody-medium">Removing Course...</span>
+        <span class="text-semibody-medium">Removing Enrollment...</span>
       {:else}
         <span class="text-semibody">Remove Course</span>
         <img src="/icons/delete.svg" alt="Remove" class="w-6 h-6" />
@@ -1031,10 +793,10 @@
 {/if}
 
 <!-- Add the ShareModal component at the bottom of the template, just before the style tag -->
-<ShareModal 
-  show={showShareModal} 
-  courseId={$page.params.id} 
-  onClose={() => showShareModal = false} 
+<ShareModal
+  show={showShareModal}
+  courseId={$page.params.id}
+  onClose={() => (showShareModal = false)}
 />
 
 <style>

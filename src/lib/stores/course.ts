@@ -15,11 +15,11 @@ export const currentModuleStore = createCurrentModuleStore();
 // Course progress store
 export const courseProgressStore: Writable<{
   completedModules: number[];
-  currentModule: number;
+  // currentModule: number;
   totalModules: number;
 }> = writable({
   completedModules: [],
-  currentModule: 0,
+  // currentModule: 0,
   totalModules: 0
 });
 

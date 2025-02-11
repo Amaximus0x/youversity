@@ -10,7 +10,7 @@
   import { fade, fly } from "svelte/transition";
   import { getVideoTranscript } from "$lib/services/transcriptUtils";
   import { auth } from "$lib/firebase";
-  import { saveCourseToFirebase } from "$lib/firebase";
+  import { saveCourseToFirebase, enrollInCourse } from "$lib/firebase";
   import { user, isAuthenticated } from "$lib/stores/auth";
   import CourseGenerationHeader from "$lib/components/CourseGenerationHeader.svelte";
   import CourseGenerationModal from "$lib/components/CourseGenerationModal.svelte";
@@ -190,9 +190,15 @@
         likes: 0,
       });
 
+      // Add this: Automatically enroll the creator in the course
+      loadingState.setStep("Enrolling you in the course...");
+      loadingState.setProgress(95);
+      
+      await enrollInCourse($user.uid, courseId);
+
       loadingState.setStep("Course is ready");
       loadingState.setProgress(100);
-      loadingState.stopLoading(courseId); // Pass courseId to keep track of it
+      loadingState.stopLoading(courseId);
     } catch (err: any) {
       console.error("Error saving course:", err);
       error = err.message;
