@@ -193,39 +193,8 @@
     try {
       enrolling = true;
       await enrollInCourse($user.uid, $page.params.id);
-
-      // Update states and save to localStorage
-      const newState = {
-        isEnrolled: true,
-        showProgress: true,
-        isBookmarked,
-        hasLiked,
-      };
-
-      // Update local states
-      isEnrolled = true;
-      showProgress = true;
-
-      // Save to localStorage
-      if (browser) {
-        localStorage.setItem(
-          `course_${$page.params.id}_state`,
-          JSON.stringify(newState),
-        );
-      }
-
-      // Initialize enrollment progress
-      enrollmentProgress = {
-        userId: $user.uid,
-        courseId: $page.params.id,
-        completedModules: [],
-        moduleProgress: Array(courseDetails?.Final_Module_Title.length).fill(
-          null,
-        ),
-        isCompleted: false,
-        enrolledAt: new Date(),
-        lastAccessedAt: new Date(),
-      };
+      currentModuleStore.set(-1); // Start with introduction
+      goto(`/course/${$page.params.id}/learn`);
     } catch (error) {
       console.error("Error enrolling:", error);
     } finally {
@@ -548,47 +517,23 @@
             </div>
 
             <!-- Move Reviews Section after Course Conclusion for mobile -->
-            <div class="lg:hidden">
+            <div class="lg:hidden mt-6">
+
               <!-- Course Enrollment Progress for mobile -->
-              {#if showProgress && $user && (isCreator || isEnrolled)}
-                <div
-                  class="mt-6 rounded-2xl border border-light-border dark:border-dark-border"
-                >
-                  <h3
-                    class="text-body-semibold border-b border-light-border dark:border-dark-border p-2 text-light-text-primary dark:text-dark-text-primary mb-4"
-                  >
-                    Your Progress
-                  </h3>
-
-                  <div class="flex items-center gap-4 px-2 pb-2">
-                    <div
-                      class="flex-1 h-3 bg-black/[0.05] rounded-[2000px] overflow-hidden"
-                    >
-                      <div
-                        class="h-full bg-brand-turquoise rounded-[200000px] transition-all duration-300"
-                        style="width: {isCreator
-                          ? (moduleProgress.filter((m) => m?.completed).length /
-                              courseDetails.Final_Module_Title.length) *
-                            100
-                          : ((enrollmentProgress?.completedModules?.length ||
-                              0) /
-                              courseDetails.Final_Module_Title.length) *
-                            100}%"
-                      />
-                    </div>
-                    <span
-                      class="text-body text-light-text-primary dark:text-dark-text-primary"
-                    >
-                      {isCreator
-                        ? moduleProgress.filter((m) => m?.completed).length
-                        : enrollmentProgress?.completedModules?.length ||
-                          0}/{courseDetails.Final_Module_Title.length}
-                    </span>
-                  </div>
-                </div>
+               {#if isEnrolled && $currentModuleStore !== -1}
+              <CourseModuleList
+                {courseDetails}
+                {isCreator}
+                {isEnrolled}
+                showProgress={true}
+                completedModules={isCreator
+                  ? moduleProgress
+                      .map((m, i) => (m?.completed ? i : -1))
+                      .filter((i) => i !== -1)
+                  : enrollmentProgress?.completedModules || []}
+                bind:currentModule
+              />
               {/if}
-
-              <!-- Course Modules for mobile -->
 
               <!-- Reviews Section for mobile -->
               {#if courseDetails.isPublic}
@@ -599,6 +544,30 @@
                   />
                 </div>
               {/if}
+
+              <!-- Remove Course Button - Mobile -->
+              {#if isEnrolled && $user}
+                <div class="lg:hidden mt-6 pb-20">
+                  <button
+                    class="w-full px-4 py-2 flex items-center justify-center gap-2 border border-[#FF0000] hover:bg-[#FF0000]/5 text-[#FF0000] rounded-lg transition-colors disabled:opacity-50"
+                    on:click={handleRemoveCourseEnrollment}
+                    disabled={removing}
+                  >
+                    {#if removing}
+                      <span class="text-semibody-medium"
+                        >Removing Enrollment...</span
+                      >
+                    {:else}
+                      <span class="text-semibody">Remove Course</span>
+                      <img
+                        src="/icons/delete.svg"
+                        alt="Remove"
+                        class="w-6 h-6"
+                      />
+                    {/if}
+                  </button>
+                </div>
+              {/if}
             </div>
 
             <!-- Desktop Reviews Section -->
@@ -606,51 +575,34 @@
               <!-- Desktop Action Buttons -->
               <div class="mt-6 flex flex-col gap-3">
                 <!-- Enroll/Start button -->
-                {#if !isEnrolled && !isCreator}
-                  <button
-                    class="w-full px-4 py-2 flex items-center justify-center text-semibody-medium rounded-2xl transition-colors {isEnrolled
-                      ? 'bg-brand-red hover:bg-ButtonHover text-white'
-                      : 'bg-Green hover:bg-GreenHover text-white'}"
-                    on:click={isEnrolled
-                      ? () => goto(`/course/${$page.params.id}/learn`)
-                      : handleEnroll}
-                    disabled={enrolling}
-                  >
-                    {#if enrolling}
-                      <span>Enrolling...</span>
-                    {:else}
-                      <span>{isEnrolled ? "Start Course" : "Enroll"}</span>
-                      <img
-                        src="/icons/arrow-right-white.svg"
-                        alt={isEnrolled ? "Start" : "Enroll"}
-                        class="w-6 h-6 ml-2"
-                      />
-                    {/if}
-                  </button>
-                {/if}
-
-                <!-- Finish Course Button -->
-                {#if (isEnrolled || isCreator) && $currentModuleStore === courseDetails?.Final_Module_Title?.length}
-                  <button
-                    class="w-full px-4 py-2 flex items-center justify-center text-semibody-medium rounded-2xl transition-colors {isEnrolled
-                      ? 'bg-brand-red hover:bg-ButtonHover text-white'
-                      : 'bg-Green hover:bg-GreenHover text-white'}"
-                    on:click={isEnrolled
-                      ? () => goto(`/course/${$page.params.id}/learn`)
-                      : handleEnroll}
-                    disabled={enrolling}
-                  >
-                    <span>{isEnrolled ? "Finish Course" : "Completed"}</span>
-                  </button>
-                {/if}
-
-                <!-- Bookmark button -->
+                <!-- {#if !isEnrolled && !isCreator} -->
                 <button
-                  class="w-full px-4 py-2 text-semibody-medium flex items-center justify-center gap-2 bg-Black/5 text-Green rounded-2xl hover:bg-Black/5 transition-colors"
-                  on:click={handleBookmark}
+                  class="w-full px-4 py-2 flex items-center justify-center text-semibody-medium rounded-2xl transition-colors {isEnrolled
+                    ? 'bg-brand-red hover:bg-ButtonHover text-white'
+                    : 'bg-Green hover:bg-GreenHover text-white'}"
+                  on:click={isEnrolled
+                    ? () => {
+                    // Get last accessed module from enrollment progress
+                    const lastModule = enrollmentProgress?.lastAccessedModule || -1;
+                    currentModuleStore.set(lastModule);
+                    goto(`/course/${$page.params.id}/learn`)}
+                    : handleEnroll}
+                  disabled={enrolling}
                 >
-                  <span>{isBookmarked ? "Bookmarked" : "Bookmark Course"}</span>
+                  {#if enrolling}
+                    <span>Enrolling...</span>
+                  {:else}
+                    <span>{isEnrolled ? "Continue" : "Enroll"}</span>
+                    <img
+                      src="/icons/arrow-right-white.svg"
+                      alt={isEnrolled ? "Start" : "Enroll"}
+                      class="w-6 h-6 ml-2"
+                    />
+                  {/if}
                 </button>
+                <!-- {/if}    -->
+
+                
               </div>
 
               <!-- Reviews Section -->
@@ -692,43 +644,6 @@
 
         <!-- Right Column - Progress and Modules -->
         <div class="hidden lg:block w-full lg:col-span-4">
-          <!-- Progress Section -->
-          <!-- {#if showProgress && $user && (isCreator || isEnrolled)}
-            <div
-              class="mb-4 rounded-2xl border border-light-border dark:border-dark-border"
-            >
-              <h3
-                class="text-body-semibold border-b border-light-border dark:border-dark-border p-2 text-light-text-primary dark:text-dark-text-primary mb-4"
-              >
-                Your Progress
-              </h3>
-
-              <div class="flex items-center gap-4 px-2 pb-2">
-                <div
-                  class="flex-1 h-3 bg-black/[0.05] rounded-[2000px] overflow-hidden"
-                >
-                  <div
-                    class="h-full bg-brand-turquoise rounded-[200000px] transition-all duration-300"
-                    style="width: {isCreator
-                      ? (moduleProgress.filter((m) => m?.completed).length /
-                          courseDetails.Final_Module_Title.length) *
-                        100
-                      : ((enrollmentProgress?.completedModules?.length || 0) /
-                          courseDetails.Final_Module_Title.length) *
-                        100}%"
-                  />
-                </div>
-                <span
-                  class="text-body text-light-text-primary dark:text-dark-text-primary"
-                >
-                  {isCreator
-                    ? moduleProgress.filter((m) => m?.completed).length
-                    : enrollmentProgress?.completedModules?.length ||
-                      0}/{courseDetails.Final_Module_Title.length}
-                </span>
-              </div>
-            </div>
-          {/if} -->
           <!-- Course Modules Section -->
 
           <CourseModuleList
@@ -758,11 +673,16 @@
 >
   <div class="container mx-auto pl-5">
     <button
-      class="px-8 py-2 flex items-center justify-center gap-2 text-white rounded-2xl transition-opacity disabled:opacity-50 text-semibody-medium shadow-lg {isEnrolled
+      class="px-4 py-2 flex items-center justify-center gap-2 text-white rounded-2xl transition-opacity disabled:opacity-50 text-semibody-medium shadow-lg {isEnrolled
         ? 'bg-brand-red'
         : 'bg-Green'}"
       on:click={isEnrolled
-        ? () => goto(`/course/${$page.params.id}/learn`)
+        ? () => {
+            // Get last accessed module from enrollment progress
+            const lastModule = enrollmentProgress?.lastAccessedModule || -1;
+            currentModuleStore.set(lastModule);
+            goto(`/course/${$page.params.id}/learn`);
+          }
         : handleEnroll}
       disabled={enrolling}
     >
@@ -782,23 +702,6 @@
 <!-- {/if} -->
 
 <!-- Move the mobile version to a conditional render -->
-<!-- Remove Course Button - Mobile -->
-{#if isEnrolled && $user}
-  <div class="lg:hidden mt-6 pb-20">
-    <button
-      class="w-full px-4 py-2 flex items-center justify-center gap-2 border border-[#FF0000] hover:bg-[#FF0000]/5 text-[#FF0000] rounded-2xl transition-colors disabled:opacity-50"
-      on:click={handleRemoveCourseEnrollment}
-      disabled={removing}
-    >
-      {#if removing}
-        <span class="text-semibody-medium">Removing Enrollment...</span>
-      {:else}
-        <span class="text-semibody">Remove Course</span>
-        <img src="/icons/delete.svg" alt="Remove" class="w-6 h-6" />
-      {/if}
-    </button>
-  </div>
-{/if}
 
 <!-- Add the ShareModal component at the bottom of the template, just before the style tag -->
 <ShareModal

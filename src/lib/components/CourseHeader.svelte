@@ -78,7 +78,7 @@
     </div>
 
     <!-- Module Button -->
-    <div class="flex items-center">
+    <div class="lg:hidden flex items-center">
         <button
             class="flex items-center"
             on:click={() => {
@@ -164,7 +164,6 @@
     <div class="flex items-center gap-4">
         <!-- Bookmark Button -->
         {#if !isCreator}
-            <div class="block lg:hidden">
                 <button
                     class="w-full px-2 py-2 text-semibody-medium flex items-center justify-center gap-2 bg-Black/5 text-Green rounded-full hover:bg-Black/5 transition-colors"
                     on:click={handleBookmark}
@@ -177,7 +176,6 @@
                         class="w-6 h-6"
                     />
                 </button>
-            </div>
         {/if}
 
         <!-- Share Button -->

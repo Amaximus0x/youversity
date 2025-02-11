@@ -46,7 +46,7 @@
     <!-- Progress Section for web-->
     {#if showProgress && (isCreator || isEnrolled)}
         <div
-            class=" rounded-2xl border border-light-border dark:border-dark-border"
+            class="hidden lg:block rounded-2xl border border-light-border dark:border-dark-border"
         >
             <h3
                 class="text-body-semibold border-b border-light-border dark:border-dark-border p-2 text-light-text-primary dark:text-dark-text-primary mb-4"
@@ -63,11 +63,11 @@
                         style="width: {isCreator
                             ? (moduleProgress.filter((m) => m?.completed)
                                   .length /
-                                  courseDetails.Final_Module_Title.length) *
+                                  10) *
                               100
                             : ((enrollmentProgress?.completedModules?.length ||
                                   0) /
-                                  courseDetails.Final_Module_Title.length) *
+                                  10) *
                               100}%"
                     />
                 </div>
@@ -75,9 +75,8 @@
                     class="text-body text-light-text-primary dark:text-dark-text-primary"
                 >
                     {isCreator
-                        ? moduleProgress.filter((m) => m?.completed).length
-                        : enrollmentProgress?.completedModules?.length ||
-                          0}/{courseDetails.Final_Module_Title.length}
+                        ? Math.round((moduleProgress.filter((m) => m?.completed).length / 10) * 100)
+                        : Math.round(((enrollmentProgress?.completedModules?.length || 0) / 10) * 100)}%
                 </span>
             </div>
         </div>
@@ -89,9 +88,9 @@
         <!-- Progress Section for mobile-->
         {#if showProgress && (isCreator || isEnrolled)}
             <div
-                class="block lg:hidden border-b border-light-border dark:border-dark-border"
+                class="block lg:hidden p-2 border-b border-light-border dark:border-dark-border"
             >
-                <div class="flex items-center gap-4 px-2 pb-2">
+                <div class="flex items-center gap-4 px-2 py-2">
                     <div
                         class="flex-1 h-3 bg-black/[0.05] rounded-[2000px] overflow-hidden"
                     >
@@ -100,11 +99,11 @@
                             style="width: {isCreator
                                 ? (moduleProgress.filter((m) => m?.completed)
                                       .length /
-                                      courseDetails.Final_Module_Title.length) *
+                                      10) *
                                   100
-                                : ((enrollmentProgress?.completedModules
-                                      ?.length || 0) /
-                                      courseDetails.Final_Module_Title.length) *
+                                : ((enrollmentProgress?.completedModules?.length ||
+                                      0) /
+                                      10) *
                                   100}%"
                         />
                     </div>
@@ -112,9 +111,8 @@
                         class="text-body text-light-text-primary dark:text-dark-text-primary"
                     >
                         {isCreator
-                            ? moduleProgress.filter((m) => m?.completed).length
-                            : enrollmentProgress?.completedModules?.length ||
-                              0}/{courseDetails.Final_Module_Title.length}
+                            ? Math.round((moduleProgress.filter((m) => m?.completed).length / 10) * 100)
+                            : Math.round(((enrollmentProgress?.completedModules?.length || 0) / 10) * 100)}%
                     </span>
                 </div>
             </div>
@@ -134,7 +132,7 @@
                 {#if courseDetails?.Final_Module_Title?.length > 0}
                     <!-- Course Introduction Card -->
                     <div
-                        class="p-2 rounded-2xl border border-light-border hover:bg-Black/5 dark:hover:bg-Black/5 transition-colors duration-200 {activeModuleClass(
+                        class="hidden lg:block p-2 rounded-2xl border border-light-border hover:bg-Black/5 dark:hover:bg-Black/5 transition-colors duration-200 {activeModuleClass(
                             -1,
                         )}"
                     >
@@ -233,7 +231,7 @@
                     <!-- Course Conclusion Card - Only show for enrolled users and creators -->
                     {#if isEnrolled || isCreator}
                         <div
-                            class="p-2 rounded-2xl border border-light-border hover:bg-Black/5 dark:hover:bg-Black/5 transition-colors duration-200 {activeModuleClass(
+                            class="hidden lg:block p-2 rounded-2xl border border-light-border hover:bg-Black/5 dark:hover:bg-Black/5 transition-colors duration-200 {activeModuleClass(
                                 courseDetails.Final_Module_Title.length,
                             )}"
                         >
@@ -285,6 +283,29 @@
             {/if}
         </div>
     </div>
+
+    <!-- Course Conclusion Button - Mobile Only -->
+    {#if (isEnrolled || isCreator) && courseDetails?.Final_Module_Title?.length > 0}
+    <div class="block lg:hidden mt-4">
+        <button
+            class="flex items-center text-brand-turquoise"
+            on:click={() => {
+                currentModuleStore.set(courseDetails.Final_Module_Title.length);
+                if (typeof currentModule !== "undefined") {
+                    currentModule = courseDetails.Final_Module_Title.length;
+                }
+                goto(`/course/${$page.params.id}/learn`);
+            }}
+        >
+            <span class="text-body">Course Conclusion</span>
+            <img
+                src="/icons/arrow-right.svg"
+                alt="Conclusion"
+                class="w-6 h-6"
+            />
+        </button>
+    </div>
+{/if}
 </div>
 
 <!-- Enroll Modal -->

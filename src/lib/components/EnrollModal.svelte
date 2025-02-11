@@ -31,38 +31,42 @@
 
 {#if show}
   <div
-    class="fixed inset-0 bg-Black/60 z-50 flex items-center justify-center px-4"
+    class="fixed inset-0 bg-Black/60 z-[56] flex items-center justify-center px-4"
     on:click|self={onClose}
   >
     <div
       class="bg-gradient-light dark:bg-gradient-dark rounded-[32px] p-4 max-w-md w-full"
     >
-    <div class="flex flex-col gap-8">
-      <div class="flex flex-col gap-4">
-        <!-- Logo -->
-        <div class="flex justify-center">
-          <img src="/youversity-logo-small.svg" alt="Youversity" class="h-12" />
+      <div class="flex flex-col gap-8">
+        <div class="flex flex-col gap-4">
+          <!-- Logo -->
+          <div class="flex justify-center">
+            <img
+              src="/youversity-logo-small.svg"
+              alt="Youversity"
+              class="h-12"
+            />
+          </div>
+
+          <!-- Course Description -->
+          <p class="text-center text-semi-body text-Black2">
+            This course exceeded my expectations! The instructor explained
+            motion principles in an engaging
+          </p>
         </div>
 
-        <!-- Course Description -->
-        <p class="text-center text-semi-body text-Black2">
-          This course exceeded my expectations! The instructor explained motion
-          principles in an engaging
-        </p>
-      </div>
-
-      <!-- Enroll Button -->
-      <button
-        class="w-full px-4 py-3 flex items-center justify-center gap-2 bg-Green hover:bg-GreenHover text-white rounded-2xl transition-colors disabled:opacity-50"
-        on:click={handleEnroll}
-        disabled={enrolling}
-      >
-        <span class="text-semibody-medium">
-          {enrolling ? "Enrolling..." : "Enroll"}
-        </span>
-        {#if !enrolling}
-          <img src="/icons/arrow-right-white.svg" alt="" class="w-6 h-6" />
-        {/if}
+        <!-- Enroll Button -->
+        <button
+          class="w-full px-4 py-3 flex items-center justify-center gap-2 bg-Green hover:bg-GreenHover text-white rounded-2xl transition-colors disabled:opacity-50"
+          on:click={handleEnroll}
+          disabled={enrolling}
+        >
+          <span class="text-semibody-medium">
+            {enrolling ? "Enrolling..." : "Enroll"}
+          </span>
+          {#if !enrolling}
+            <img src="/icons/arrow-right-white.svg" alt="" class="w-6 h-6" />
+          {/if}
         </button>
       </div>
     </div>

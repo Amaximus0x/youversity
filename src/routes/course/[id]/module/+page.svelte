@@ -154,12 +154,12 @@
     }
 </script>
 
-<div class="min-h-screen mx-[-20px] mb-[32px]">
+<div class="min-h-screen mx-[-20px]">
     <!-- Tab buttons -->
-    <div class="w-full border-b border-light-border dark:border-dark-border">
+    <div class="w-full bg-BackgroundRed border-b border-light-border dark:border-dark-border fixed top-[86px] lg:top-[96px] left-0 right-0 z-[51]">
         <div class="container mx-auto flex gap-2 px-5 py-2">
             <button
-                class="flex-1 px-4 py-4 text-h4- rounded-lg transition-colors {activeTab ===
+                class="flex-1 px-4 py-3 text-h4- rounded-lg transition-colors {activeTab ===
                 'modules'
                     ? 'bg-Green text-white'
                     : 'text-Green bg-Black/5 hover:bg-Black/10'}"
@@ -168,7 +168,7 @@
                 Course Modules
             </button>
             <button
-                class="flex-1 px-4 py-4 text-semi-body rounded-lg transition-colors {activeTab ===
+                class="flex-1 px-4 py-3 text-semi-body rounded-lg transition-colors {activeTab ===
                 'reviews'
                     ? 'bg-Green text-white'
                     : 'text-Green bg-Black/5 hover:bg-Black/10'}"
@@ -179,9 +179,10 @@
         </div>
     </div>
 
-    <div class="container mx-auto px-5 py-6">
+    <!-- Content with top padding to account for fixed header -->
+    <div class="container mx-auto px-5 pt-[84px] lg:pt-[176px] pb-8">
         {#if loading}
-            <div class="flex justify-center items-center min-h-[200px]">
+            <div class="flex justify-center items-center min-h-screen ">
                 <div
                     class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-brand-turquoise"
                 ></div>
