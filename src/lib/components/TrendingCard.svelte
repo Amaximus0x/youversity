@@ -3,6 +3,7 @@
   import type { FinalCourseStructure } from "$lib/types/course";
   import { user } from "$lib/stores/auth";
   import { currentModuleStore } from "$lib/stores/course";
+  import { getEnrollmentStatus } from "$lib/firebase";
   import { onMount } from "svelte";
   import { getUserProfile } from "$lib/services/profile";
 
@@ -12,10 +13,23 @@
   async function handleNavigateToCourse(courseId: string) {
     try {
       if ($user) {
+        // Check if user is enrolled or creator
+        const { isEnrolled } = await getEnrollmentStatus($user.uid, courseId);
+        const isCreator = course.createdBy === $user.uid;
+        
+        
+        if (isEnrolled || isCreator) {
+          // If enrolled or creator, go to course page
+          await goto(`/course/${courseId}`);
+        } else {
+          // Set to introduction module (-1)
+          currentModuleStore.set(-1);
+          // If not enrolled, go to intro page
+          await goto(`/course/${courseId}/intro`);
+        }
+      } else {
         // Set to introduction module (-1) and navigate
         currentModuleStore.set(-1);
-        await goto(`/course/${courseId}`);
-      } else {
         const returnUrl = `/course/${courseId}`;
         await goto(`/login?redirectTo=${encodeURIComponent(returnUrl)}`);
       }

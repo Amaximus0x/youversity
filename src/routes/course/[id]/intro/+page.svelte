@@ -171,17 +171,7 @@
     }
   });
 
-  // Helper function to check if all modules are completed
-  function hasCompletedAllModules(): boolean {
-    if (!courseDetails || !moduleProgress.length) return false;
 
-    const totalModules = courseDetails.Final_Module_Title.length;
-    const completedModules = isCreator
-      ? moduleProgress.filter((m) => m?.completed).length
-      : enrollmentProgress?.completedModules?.length || 0;
-
-    return completedModules === totalModules;
-  }
 
   // Enrollment handler
   async function handleEnroll() {
@@ -193,8 +183,8 @@
     try {
       enrolling = true;
       await enrollInCourse($user.uid, $page.params.id);
-      currentModuleStore.set(-1); // Start with introduction
-      goto(`/course/${$page.params.id}/learn`);
+      currentModuleStore.set(1); // Start with first video module
+      goto(`/course/${$page.params.id}`);
     } catch (error) {
       console.error("Error enrolling:", error);
     } finally {
@@ -276,53 +266,23 @@
   });
 
   // Update onDestroy
-  onDestroy(() => {
-    // Only cleanup if we're navigating away from the course page
-    if (browser && ($page.url.pathname !== currentPath || $page.url.pathname !== `/course/${$page.params.id}` || $page.url.pathname !== `/course/${$page.params.id}/module`)) {
-      localStorage.removeItem(`course_${$page.params.id}_state`);
-      courseDetails = null;
-      isEnrolled = false;
-      showProgress = false;
-      enrollmentProgress = null;
-      currentModuleStore.reset();
-    }
-  });
+  // onDestroy(() => {
+  //   // Only cleanup if we're navigating away from the course page
+  //   if (browser && ($page.url.pathname !== currentPath || $page.url.pathname !== `/course/${$page.params.id}` || $page.url.pathname !== `/course/${$page.params.id}/module`)) {
+  //     localStorage.removeItem(`course_${$page.params.id}_state`);
+  //     courseDetails = null;
+  //     isEnrolled = false;
+  //     showProgress = false;
+  //     enrollmentProgress = null;
+  //     currentModuleStore.reset();
+  //   }
+  // });
 
   // Update the module card styling
   $: activeModuleClass = (index: number) =>
     $currentModuleStore === index ? "bg-[rgba(66,193,200,0.1)]" : "";
 
-  // Handle enrollment removal
-  async function handleRemoveCourseEnrollment() {
-    if (!$user) return;
 
-    try {
-      removing = true;
-
-      // Only remove enrollment, not the course itself
-      await removeEnrollment($user.uid, $page.params.id);
-
-      // Update local state
-      isEnrolled = false;
-      enrollmentProgress = null;
-      showProgress = false;
-
-      // Save updated state
-      saveState({
-        isEnrolled: false,
-        showProgress: false,
-      });
-      //go to course page
-      goto(`/course/${$page.params.id}/intro`);
-
-      // Show success message or handle UI updates
-      console.log("Successfully unenrolled from course");
-    } catch (error) {
-      console.error("Error removing enrollment:", error);
-    } finally {
-      removing = false;
-    }
-  }
 
   // Add this function with other functions
   function handleShare() {
@@ -547,29 +507,7 @@
                 </div>
               {/if}
 
-              <!-- Remove Course Button - Mobile -->
-              {#if isEnrolled && $user}
-                <div class="lg:hidden mt-6 pb-20">
-                  <button
-                    class="w-full px-4 py-2 flex items-center justify-center gap-2 border border-[#FF0000] hover:bg-[#FF0000]/5 text-[#FF0000] rounded-lg transition-colors disabled:opacity-50"
-                    on:click={handleRemoveCourseEnrollment}
-                    disabled={removing}
-                  >
-                    {#if removing}
-                      <span class="text-semibody-medium"
-                        >Removing Enrollment...</span
-                      >
-                    {:else}
-                      <span class="text-semibody">Remove Course</span>
-                      <img
-                        src="/icons/delete.svg"
-                        alt="Remove"
-                        class="w-6 h-6"
-                      />
-                    {/if}
-                  </button>
-                </div>
-              {/if}
+              
             </div>
 
             <!-- Desktop Reviews Section -->
@@ -587,7 +525,7 @@
                     // Get last accessed module from enrollment progress
                     const lastModule = enrollmentProgress?.lastAccessedModule || -1;
                     currentModuleStore.set(lastModule);
-                    goto(`/course/${$page.params.id}/learn`)}
+                    goto(`/course/${$page.params.id}`)}
                     : handleEnroll}
                   disabled={enrolling}
                 >
@@ -617,29 +555,7 @@
                 </div>
               {/if}
 
-              <!-- Remove Course Button - Desktop -->
-              {#if isEnrolled && $user}
-                <div class="mt-6 col-span-2">
-                  <button
-                    class="px-4 py-2 flex items-center justify-center gap-2 border border-[#FF0000] hover:bg-[#FF0000]/5 text-[#FF0000] rounded-lg transition-colors disabled:opacity-50"
-                    on:click={handleRemoveCourseEnrollment}
-                    disabled={removing}
-                  >
-                    {#if removing}
-                      <span class="text-semibody-medium"
-                        >Removing Course...</span
-                      >
-                    {:else}
-                      <span class="text-semibody">Remove Course</span>
-                      <img
-                        src="/icons/delete.svg"
-                        alt="Unenroll"
-                        class="w-6 h-6"
-                      />
-                    {/if}
-                  </button>
-                </div>
-              {/if}
+              
             </div>
           </div>
         </div>

@@ -66,7 +66,7 @@
   // Add this state variable with other state variables
   let showQuizModal = false;
   let currentQuiz: Quiz | null = null;
-  let quizModuleTitle = '';
+  let quizModuleTitle = "";
 
   // Load saved state from localStorage
   function loadSavedState() {
@@ -323,6 +323,7 @@
 
       // Show success message or handle UI updates
       console.log("Successfully unenrolled from course");
+      goto(`/course/${$page.params.id}/intro`);
     } catch (error) {
       console.error("Error removing enrollment:", error);
     } finally {
@@ -338,7 +339,8 @@
   // Add this helper function
   function hasCompletedModuleQuiz(moduleIndex: number): boolean {
     if (!enrollmentProgress?.quizResults?.moduleQuizzes) return false;
-    const quizResult: QuizResult = enrollmentProgress.quizResults.moduleQuizzes[moduleIndex];
+    const quizResult: QuizResult =
+      enrollmentProgress.quizResults.moduleQuizzes[moduleIndex];
     return quizResult?.completed || false;
   }
 
@@ -349,16 +351,16 @@
   async function handleQuizComplete(score: number, timeSpent: number) {
     try {
       if (!$user) return;
-      
-      const moduleId = currentModuleStore === -1 ? null : $currentModuleStore;
-      
+
+      const moduleId = $currentModuleStore === -1 ? null : $currentModuleStore;
+
       await updateEnrollmentQuizResult(
         $user.uid,
         $page.params.id,
         moduleId,
         score,
         timeSpent,
-        true
+        true,
       );
     } catch (error) {
       console.error("Error updating quiz results:", error);
@@ -443,7 +445,7 @@
                   Course Introduction and Objectives
                 {:else if $currentModuleStore === courseDetails?.Final_Module_Title?.length}
                   Course Conclusion
-                <!-- {:else}
+                  <!-- {:else}
                   <span class="text-h2-mobile-bold text-Black"
                     >{($currentModuleStore + 1)
                       .toString()
@@ -451,30 +453,30 @@
                   >: 
                   {courseDetails.Final_Module_Title[$currentModuleStore] ||
                     "Loading module..."} -->
+                {/if}
+              </h4>
+              {#if $currentModuleStore !== -1 && $currentModuleStore !== courseDetails?.Final_Module_Title?.length}
+              <div class="mt-6">
+                <p class="text-h2-mobile-bold lg:text-h2-bold text-Black">
+                  {courseDetails.Final_Module_Title[$currentModuleStore]}
+                </p>
+              </div>
+              {/if}
 
-                    {/if}
-                  </h4>
-                  <div class="mt-6">
-                    <p class="text-h2-mobile-bold lg:text-h2-bold text-Black">
-                      {courseDetails.Final_Module_Title[$currentModuleStore]}
-                    </p>
-                  </div>
-
-
-                  <!-- <div class="mt-6">
+              <!-- <div class="mt-6">
                     <p class="text-h2-mobile-bold lg:text-h2-bold text-Black">
                       {courseDetails?.Final_Course_Title}
                     </p>
                   </div> -->
             </div>
 
-             <!-- Course Title -->
-             {#if $currentModuleStore === -1}
-             <div class="mt-6">
-              <p class="text-h2-mobile-bold lg:text-h2-bold text-Black">
-                {courseDetails?.Final_Course_Title}
-              </p>
-            </div>
+            <!-- Course Title -->
+            {#if $currentModuleStore === -1}
+              <div class="mt-6">
+                <p class="text-h2-mobile-bold lg:text-h2-bold text-Black">
+                  {courseDetails?.Final_Course_Title}
+                </p>
+              </div>
             {/if}
 
             <!-- Creator Info with Bookmark and Share Button -->
@@ -576,21 +578,20 @@
 
             <!-- Move Reviews Section after Course Conclusion for mobile -->
             <div class="lg:hidden mt-6">
-
               <!-- Course Enrollment Progress for mobile -->
-               {#if isEnrolled && $currentModuleStore !== -1}
-              <CourseModuleList
-                {courseDetails}
-                {isCreator}
-                {isEnrolled}
-                showProgress={true}
-                completedModules={isCreator
-                  ? moduleProgress
-                      .map((m, i) => (m?.completed ? i : -1))
-                      .filter((i) => i !== -1)
-                  : enrollmentProgress?.completedModules || []}
-                bind:currentModule
-              />
+              {#if isEnrolled && $currentModuleStore !== -1}
+                <CourseModuleList
+                  {courseDetails}
+                  {isCreator}
+                  {isEnrolled}
+                  showProgress={true}
+                  completedModules={isCreator
+                    ? moduleProgress
+                        .map((m, i) => (m?.completed ? i : -1))
+                        .filter((i) => i !== -1)
+                    : enrollmentProgress?.completedModules || []}
+                  bind:currentModule
+                />
               {/if}
 
               <!-- Reviews Section for mobile -->
@@ -633,41 +634,47 @@
               <!-- Desktop Action Buttons -->
               <!-- Enroll/Start button -->
               {#if $currentModuleStore === -1}
-              <div class="mt-6 flex flex-col gap-3">
-                <button
-                  class="w-full px-4 py-2 flex items-center justify-center text-semibody-medium rounded-2xl transition-colors {isEnrolled
-                    ? 'bg-brand-red hover:bg-ButtonHover text-white'
-                    : 'bg-Green hover:bg-GreenHover text-white'}"
-                  on:click={isEnrolled
-                    ? () => {
-                    // Get last accessed module from enrollment progress
-                    const lastModule = enrollmentProgress?.lastAccessedModule || -1;
-                    currentModuleStore.set(lastModule);
-                    goto(`/course/${$page.params.id}`)}
-                    : handleEnroll}
-                  disabled={enrolling}
-                >
-                  {#if enrolling}
-                    <span>Enrolling...</span>
-                  {:else}
-                    <span>{isEnrolled ? "Continue" : "Enroll"}</span>
-                    <img
-                      src="/icons/arrow-right-white.svg"
-                      alt={isEnrolled ? "Start" : "Enroll"}
-                      class="w-6 h-6 ml-2"
-                    />
-                  {/if}
-                </button>
-              </div>
+                <div class="mt-6 flex flex-col gap-3">
+                  <button
+                    class="w-full px-4 py-2 flex items-center justify-center text-semibody-medium rounded-2xl transition-colors {isEnrolled
+                      ? 'bg-brand-red hover:bg-ButtonHover text-white'
+                      : 'bg-Green hover:bg-GreenHover text-white'}"
+                    on:click={isEnrolled
+                      ? () => {
+                          // Get last accessed module from enrollment progress
+                          const lastModule =
+                            enrollmentProgress?.lastAccessedModule || -1;
+                          currentModuleStore.set(lastModule);
+                          goto(`/course/${$page.params.id}`);
+                        }
+                      : handleEnroll}
+                    disabled={enrolling}
+                  >
+                    {#if enrolling}
+                      <span>Enrolling...</span>
+                    {:else}
+                      <span>{isEnrolled ? "Continue" : "Enroll"}</span>
+                      <img
+                        src="/icons/arrow-right-white.svg"
+                        alt={isEnrolled ? "Start" : "Enroll"}
+                        class="w-6 h-6 ml-2"
+                      />
+                    {/if}
+                  </button>
+                </div>
               {/if}
 
               <!-- module quiz button -->
-              {#if $currentModuleStore !== -1 && $currentModuleStore !== (courseDetails?.Final_Module_Title?.length)}
+              {#if $currentModuleStore !== -1 && $currentModuleStore !== courseDetails?.Final_Module_Title?.length && courseDetails?.Final_Module_Quiz?.[$currentModuleStore]}
                 <div class="mt-6 flex flex-col gap-3">
-                  <button 
+                  <button
                     on:click={() => {
-                      currentQuiz = courseDetails?.Final_Module_Quiz?.[$currentModuleStore];
-                      quizModuleTitle = courseDetails?.Final_Module_Title?.[$currentModuleStore] || '';
+                      currentQuiz =
+                        courseDetails?.Final_Module_Quiz?.[$currentModuleStore];
+                      quizModuleTitle =
+                        courseDetails?.Final_Module_Title?.[
+                          $currentModuleStore
+                        ] || "";
                       showQuizModal = true;
                     }}
                     class="w-full px-4 py-2 flex items-center justify-center text-semibody-medium rounded-2xl transition-colors bg-Green hover:bg-GreenHover text-white"
@@ -678,12 +685,12 @@
               {/if}
 
               <!-- final quiz button -->
-              {#if $currentModuleStore === (courseDetails?.Final_Module_Title?.length)}
+              {#if $currentModuleStore === courseDetails?.Final_Module_Title?.length && courseDetails?.Final_Course_Quiz}
                 <div class="mt-6 flex flex-col gap-3">
-                  <button 
+                  <button
                     on:click={() => {
                       currentQuiz = courseDetails?.Final_Course_Quiz;
-                      quizModuleTitle = courseDetails?.Final_Course_Title || '';
+                      quizModuleTitle = courseDetails?.Final_Course_Title || "";
                       showQuizModal = true;
                     }}
                     class="w-full px-4 py-2 flex items-center justify-center text-semibody-medium rounded-2xl transition-colors bg-Green hover:bg-GreenHover text-white"
@@ -752,44 +759,6 @@
   {/if}
 </div>
 
-<!-- Update the Floating Action Button -->
-<!-- 
-<div
-  class="fixed bottom-0 left-0 right-0 pb-36 pt-4 z-[60] lg:hidden transition-opacity duration-300"
-  class:opacity-0={!showFloatingButton}
-  class:pointer-events-none={!showFloatingButton}
->
-  <div class="container mx-auto pl-5">
-    <button
-      class="px-4 py-2 flex items-center justify-center gap-2 text-white rounded-2xl transition-opacity disabled:opacity-50 text-semibody-medium shadow-lg {isEnrolled
-        ? 'bg-brand-red'
-        : 'bg-Green'}"
-      on:click={isEnrolled
-        ? () => {
-            // Get last accessed module from enrollment progress
-            const lastModule = enrollmentProgress?.lastAccessedModule || -1;
-            currentModuleStore.set(lastModule);
-            goto(`/course/${$page.params.id}`);
-          }
-        : handleEnroll}
-      disabled={enrolling}
-    >
-      {#if enrolling}
-        <span>Enrolling...</span>
-      {:else}
-        <span>{isEnrolled ? "Continue" : "Enroll"}</span>
-        <img
-          src="/icons/arrow-right-white.svg"
-          alt={isEnrolled ? "Continue" : "Enroll"}
-          class="w-6 h-6"
-        />
-      {/if}
-    </button>
-  </div>
-</div> -->
-
-
-<!-- Move the mobile version to a conditional render -->
 
 <!-- Add the ShareModal component at the bottom of the template, just before the style tag -->
 <ShareModal
@@ -806,7 +775,7 @@
   onClose={() => {
     showQuizModal = false;
     currentQuiz = null;
-    quizModuleTitle = '';
+    quizModuleTitle = "";
   }}
   onSubmit={handleQuizComplete}
 />
