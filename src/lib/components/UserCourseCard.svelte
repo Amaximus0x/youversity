@@ -4,7 +4,8 @@
     import { user } from "$lib/stores/auth";
     import { currentModuleStore } from "$lib/stores/course";
     import { onMount } from "svelte";
-    import { getUserProfile, getEnrollmentProgress } from "$lib/services/profile";
+    import { getUserProfile } from "$lib/services/profile";
+    import { getEnrollmentProgress } from "$lib/firebase";
 
     export let course: FinalCourseStructure & { id: string };
     export let onShare: (courseId: string) => void;

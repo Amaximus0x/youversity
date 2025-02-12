@@ -399,22 +399,37 @@
             bind:this={contentStartElement}
           >
             <!-- Course Module Title -->
-            <!-- <div class="mb-4">
+            <div class="mb-4">
               <h4 class="text-h4-medium text-Black">
                 {#if $currentModuleStore === -1}
                   Course Introduction and Objectives
                 {:else if $currentModuleStore === courseDetails?.Final_Module_Title?.length}
                   Course Conclusion
                 {:else}
-                  <span class="text-h4-medium text-Black2"
+                  <!-- <span class="text-h4-medium text-Black2"
                     >{($currentModuleStore + 1)
                       .toString()
                       .padStart(2, "0")}</span
                   >: {courseDetails.Final_Module_Title[$currentModuleStore] ||
-                    "Loading module..."}
+                    "Loading module..."} -->
+
+                    <div class="mt-6">
+                      <p class="text-h2-mobile lg:text-h2 text-Black">
+                        {courseDetails?.Final_Course_Title}
+                      </p>
+                    </div>
                 {/if}
               </h4>
-            </div> -->
+            </div>
+
+             <!-- Course Title -->
+             {#if $currentModuleStore === -1}
+             <div class="mt-6">
+              <p class="text-h2-mobile lg:text-h2 text-Black">
+                {courseDetails?.Final_Course_Title}
+              </p>
+            </div>
+            {/if}
 
             <!-- Creator Info with Bookmark and Share Button -->
             <CourseHeader
@@ -437,11 +452,11 @@
                 <!-- Course Introduction and Objectives -->
                 <div>
                   <!-- Add Course Title here -->
-                  <div class="mt-6 mb-2">
+                  <!-- <div class="mt-6 mb-2">
                     <p class="text-h2-mobile lg:text-h2 text-Black">
                       {courseDetails?.Final_Course_Title}
                     </p>
-                  </div>
+                  </div> -->
 
                   <!-- <h3 class="text-h4-medium text-Black mb-4">Course Introduction</h3> -->
                   <p class="text-body text-light-text-secondary">
@@ -490,11 +505,11 @@
                 <!-- Regular Module Content -->
                 <div>
                   <!-- Course Title -->
-                  <div class="mt-6">
+                  <!-- <div class="mt-6">
                     <p class="text-h2-mobile lg:text-h2 text-Black">
                       {courseDetails?.Final_Course_Title}
                     </p>
-                  </div>
+                  </div> -->
 
                   <!-- Module Objective -->
                   <div class="mt-6">
@@ -571,8 +586,9 @@
             <div class="hidden lg:block">
               <!-- Desktop Action Buttons -->
               <!-- Enroll/Start button -->
+              {#if $currentModuleStore === -1}
               <div class="mt-6 flex flex-col gap-3">
-                <!-- <button
+                <button
                   class="w-full px-4 py-2 flex items-center justify-center text-semibody-medium rounded-2xl transition-colors {isEnrolled
                     ? 'bg-brand-red hover:bg-ButtonHover text-white'
                     : 'bg-Green hover:bg-GreenHover text-white'}"
@@ -595,9 +611,28 @@
                       class="w-6 h-6 ml-2"
                     />
                   {/if}
-                </button> -->
-                
+                </button>
               </div>
+              {/if}
+
+              <!-- Show module quiz button -->
+              <!-- Show quiz button if the module is not the last module -->
+              {#if $currentModuleStore !== -1 && $currentModuleStore !== (courseDetails?.Final_Module_Title?.length)}
+                <div class="mt-6 flex flex-col gap-3">
+                  <button class="w-full px-4 py-2 flex items-center justify-center text-semibody-medium rounded-2xl transition-colors bg-Green hover:bg-GreenHover text-white">
+                    Take Module Quiz
+                  </button>
+                </div>
+              {/if}
+
+              <!-- Show final module quiz button -->
+              {#if $currentModuleStore === (courseDetails?.Final_Module_Title?.length)}
+                <div class="mt-6 flex flex-col gap-3">
+                  <button class="w-full px-4 py-2 flex items-center justify-center text-semibody-medium rounded-2xl transition-colors bg-Green hover:bg-GreenHover text-white">
+                    Take Final Quiz
+                  </button>
+                </div>
+              {/if}
 
               <!-- Reviews Section -->
               {#if courseDetails.isPublic}

@@ -156,7 +156,7 @@
 
 <div class="min-h-screen mx-[-20px]">
     <!-- Tab buttons -->
-    <div class="w-full bg-BackgroundRed border-b border-light-border dark:border-dark-border fixed top-[86px] lg:top-[96px] left-0 right-0 z-[51]">
+    <div class=" w-full bg-BackgroundRed border-b border-light-border dark:border-dark-border fixed top-[86px] lg:top-[96px] lg:left-[262px] lg:right-[26px] left-0 right-0 z-[51]">
         <div class="container mx-auto flex gap-2 px-5 py-2">
             <button
                 class="flex-1 px-4 py-3 text-h4- rounded-lg transition-colors {activeTab ===

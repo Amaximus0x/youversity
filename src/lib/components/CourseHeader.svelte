@@ -232,7 +232,7 @@
             goto(`/course/${courseDetails.id}`);
           }
         }}
-        disabled={$currentModuleStore <= -1}
+        disabled={$currentModuleStore === -1}
       >
       <svg class=" stroke-Green rotate-180" width="24" height="24"  fill="none" xmlns="http://www.w3.org/2000/svg">
         <path d="M9 6C9 6 15 10.4189 15 12C15 13.5812 9 18 9 18" stroke="" stroke-width="1.5" />
@@ -248,7 +248,7 @@
             goto(`/course/${courseDetails.id}`);
           }
         }}
-        disabled={$currentModuleStore >= (courseDetails?.Final_Module_Title?.length || 0)}
+        disabled={$currentModuleStore === (courseDetails?.Final_Module_Title?.length )}
       >
         Next
         <svg class="w-6 h-6 stroke-Green" xmlns="http://www.w3.org/2000/svg" fill="none">
@@ -265,8 +265,8 @@
         goto(`/course/${courseDetails.id}`);
       }}
     >
-      Course Intro
-      <img src="/icons/arrow-right.svg" alt="Next" class="w-6 h-6" />
+      Course Introduction
+      <img src="/icons/arrow-right.svg" alt="Introduction" class="w-6 h-6" />
     </button>
   </div>
 {/if}

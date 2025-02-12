@@ -164,23 +164,25 @@
                             )}"
                         >
                             <button
-                                class="w-full flex items-start gap-4"
+                                class="w-full flex items-center  gap-4"
                                 on:click={() => handleModuleClick(index)}
                             >
                                 <!-- Module Info -->
                                 <div class="flex-1 min-w-0 text-left">
-                                    <p
-                                        class="text-semibody-medium text-Black mb-2 inline-block"
-                                    >
-                                        <span
-                                            class="text-semibody-medium text-Black2"
+                                    
+                                        <p
+                                            class="text-semibody-medium text-Black mb-2 inline-block"
                                         >
-                                            {(index + 1)
-                                                .toString()
-                                                .padStart(2, "0")}:
-                                        </span>
-                                        {title}
-                                    </p>
+                                            <span
+                                                class="text-semibody-medium text-Black2"
+                                            >
+                                                {(index + 1)
+                                                    .toString()
+                                                    .padStart(2, "0")}:
+                                            </span>
+                                            {title}
+                                        </p>
+                                        <div class="flex items-start justify-between gap-2"> 
                                     <p
                                         class="text-mini-body text-light-text-tertiary"
                                     >
@@ -189,6 +191,15 @@
                                             index
                                         ] || "0"} min
                                     </p>
+
+                                    {#if isModuleCompleted(index)}
+                                            <img 
+                                                src="/images/checkmark-circle.svg" 
+                                                alt="Completed" 
+                                                class="w-3 h-3 flex-shrink-0"
+                                            />
+                                            {/if} 
+                                    </div>
                                 </div>
 
                                 <!-- Thumbnail Container -->
@@ -220,7 +231,7 @@
                                         <img
                                             src="/icons/youtube-icon.svg"
                                             alt="Play"
-                                            class="w-8 h-8"
+                                            class="w-4 h-4"
                                         />
                                     </div>
                                 </div>
