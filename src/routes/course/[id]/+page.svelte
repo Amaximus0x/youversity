@@ -26,6 +26,8 @@
   import ShareModal from "$lib/components/ShareModal.svelte";
   import CourseModuleList from "$lib/components/CourseModuleList.svelte";
   import CourseHeader from "$lib/components/CourseHeader.svelte";
+  import type { FinalCourseStructure } from "$lib/types/course";
+  import type { QuizResult } from "$lib/types/course";
 
   // Initialize states with null to indicate not loaded yet
   let courseDetails: any = null;
@@ -326,6 +328,17 @@
   function handleShare() {
     showShareModal = true;
   }
+
+  // Add this helper function
+  function hasCompletedModuleQuiz(moduleIndex: number): boolean {
+    if (!enrollmentProgress?.quizResults?.moduleQuizzes) return false;
+    const quizResult: QuizResult = enrollmentProgress.quizResults.moduleQuizzes[moduleIndex];
+    return quizResult?.completed || false;
+  }
+
+  function hasTakenFinalQuiz(): boolean {
+    return enrollmentProgress?.quizResults?.finalQuiz?.completed || false;
+  }
 </script>
 
 <!-- Main Container -->
@@ -405,7 +418,7 @@
                   Course Introduction and Objectives
                 {:else if $currentModuleStore === courseDetails?.Final_Module_Title?.length}
                   Course Conclusion
-                {:else}
+                <!-- {:else} -->
                   <!-- <span class="text-h4-medium text-Black2"
                     >{($currentModuleStore + 1)
                       .toString()
@@ -478,11 +491,11 @@
                 <!-- Course Conclusion -->
                 <div>
                   <!-- Add Course Title here too -->
-                  <div class="mt-6 mb-8">
+                  <!-- <div class="mt-6 mb-8">
                     <p class="text-h2-mobile lg:text-h2 text-Black">
                       {courseDetails?.Final_Course_Title}
                     </p>
-                  </div>
+                  </div> -->
                   <p class="text-body text-light-text-secondary">
                     {courseDetails?.Final_Course_Conclusion}
                   </p>
@@ -615,22 +628,49 @@
               </div>
               {/if}
 
-              <!-- Show module quiz button -->
-              <!-- Show quiz button if the module is not the last module -->
+              <!-- module quiz button -->
               {#if $currentModuleStore !== -1 && $currentModuleStore !== (courseDetails?.Final_Module_Title?.length)}
                 <div class="mt-6 flex flex-col gap-3">
-                  <button class="w-full px-4 py-2 flex items-center justify-center text-semibody-medium rounded-2xl transition-colors bg-Green hover:bg-GreenHover text-white">
-                    Take Module Quiz
+                  <button 
+                    on:click={() => goto(`/course/${$page.params.id}/quiz/module/${$currentModuleStore}`)}
+                    class="w-full px-4 py-2 flex items-center justify-center text-semibody-medium rounded-2xl transition-colors {hasCompletedModuleQuiz($currentModuleStore) ? 'bg-brand-turquoise' : 'bg-Green'} hover:bg-GreenHover text-white"
+                  >
+                    {hasCompletedModuleQuiz($currentModuleStore) ? 'Retake Quiz' : 'Take Module Quiz'}
+                    <img
+                      src="/icons/arrow-right-white.svg"
+                      alt="Start Quiz"
+                      class="w-6 h-6 ml-2"
+                    />
                   </button>
+                  {#if hasCompletedModuleQuiz($currentModuleStore)}
+                    <div class="flex items-center justify-center gap-2 text-brand-turquoise">
+                      <img src="/images/checkmark-circle.svg" alt="Completed" class="w-4 h-4" />
+                      <span class="text-semi-body">Quiz Completed</span>
+                    </div>
+                  {/if}
                 </div>
               {/if}
 
-              <!-- Show final module quiz button -->
+              <!-- final quiz button -->
               {#if $currentModuleStore === (courseDetails?.Final_Module_Title?.length)}
                 <div class="mt-6 flex flex-col gap-3">
-                  <button class="w-full px-4 py-2 flex items-center justify-center text-semibody-medium rounded-2xl transition-colors bg-Green hover:bg-GreenHover text-white">
-                    Take Final Quiz
+                  <button 
+                    on:click={() => goto(`/course/${$page.params.id}/quiz/final`)}
+                    class="w-full px-4 py-2 flex items-center justify-center text-semibody-medium rounded-2xl transition-colors {hasTakenFinalQuiz() ? 'bg-brand-turquoise' : 'bg-Green'} hover:bg-GreenHover text-white"
+                  >
+                    {hasTakenFinalQuiz() ? 'Retake Final Quiz' : 'Take Final Quiz'}
+                    <img
+                      src="/icons/arrow-right-white.svg"
+                      alt="Start Final Quiz"
+                      class="w-6 h-6 ml-2"
+                    />
                   </button>
+                  {#if hasTakenFinalQuiz()}
+                    <div class="flex items-center justify-center gap-2 text-brand-turquoise">
+                      <img src="/images/checkmark-circle.svg" alt="Completed" class="w-4 h-4" />
+                      <span class="text-semi-body">Final Quiz Completed</span>
+                    </div>
+                  {/if}
                 </div>
               {/if}
 
