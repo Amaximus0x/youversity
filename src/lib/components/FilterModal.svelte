@@ -32,8 +32,14 @@
 
 {#if show}
   <div 
+    role="dialog"
+    aria-modal="true"
     class="fixed inset-0 bg-black/30 z-[101] flex items-start justify-center pt-20"
     on:click={onClose}
+    on:keydown={(e) => {
+      if (e.key === 'Escape') onClose();
+    }}
+    tabindex="-1"
     transition:fade={{ duration: 200 }}
   >
     <div 
