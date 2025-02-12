@@ -19,7 +19,7 @@
     try {
       enrolling = true;
       await enrollInCourse($user.uid, courseDetails.id);
-      goto(`/course/${courseDetails.id}/learn`);
+      goto(`/course/${courseDetails.id}`);
     } catch (error) {
       console.error("Error enrolling:", error);
     } finally {

@@ -100,11 +100,29 @@ export default {
             textAlign: 'left', // Text alignment
           },
         ],
+        'h2-bold': [
+          '36px', // Font size
+          {
+            lineHeight: '44px', // Line height
+            fontWeight: '700', // Font weight
+            fontFamily: 'Poppins', // Font family
+            textAlign: 'left', // Text alignment
+          },
+        ],
         'h2-mobile': [
           '26px', // Font size
           {
             lineHeight: '36px', // Line height
             fontWeight: '500', // Font weight
+            fontFamily: 'Poppins', // Font family
+            textAlign: 'left', // Text alignment
+          },
+        ],
+        'h2-mobile-bold': [
+          '26px', // Font size
+          {
+            lineHeight: '34px', // Line height
+            fontWeight: '700', // Font weight
             fontFamily: 'Poppins', // Font family
             textAlign: 'left', // Text alignment
           },

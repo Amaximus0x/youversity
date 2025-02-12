@@ -219,9 +219,10 @@
 </div>
 
 <!-- Navigation Buttons - Only for enrolled users and creators -->
-<!-- do not show on module page -->
+
 {#if isEnrolled || isCreator && $currentModuleStore !== -1 && $currentModuleStore !== 0}
   <div class="flex items-center justify-between mt-4">
+  {#if $currentModuleStore !== -1 && $currentModuleStore !== courseDetails?.Final_Module_Title?.length}
     <!-- Prev and Next Buttons -->
     <div class="flex items-center gap-4 ">
       <button
@@ -256,10 +257,13 @@
             </svg>
       </button>
     </div>
+    {/if}
 
-    <!-- Course Intro Button -->
+    <!-- Course Intro Button for desktop -->
+     <div class="hidden lg:flex">
+    {#if $currentModuleStore !== -1 && $currentModuleStore !== courseDetails?.Final_Module_Title?.length}
     <button
-      class="px-4 py-2 text-body text-brand-turquoise hover:text-brand-turquoise/80  flex items-center gap-1"
+      class="lg:flex px-4 py-2 text-body text-brand-turquoise hover:text-brand-turquoise/80  flex items-center gap-1"
       on:click={() => {
         currentModuleStore.set(-1);
         goto(`/course/${courseDetails.id}`);
@@ -268,6 +272,25 @@
       Course Introduction
       <img src="/icons/arrow-right.svg" alt="Introduction" class="w-6 h-6" />
     </button>
+    {/if}
+    </div>
+
+    <!-- Course Intro Button for mobile -->
+      <!-- Course Intro Button for desktop -->
+      <div class="lg:hidden">
+        {#if $currentModuleStore !== -1 && $currentModuleStore !== courseDetails?.Final_Module_Title?.length}
+        <button
+          class="lg:flex px-4 py-2 text-body text-brand-turquoise hover:text-brand-turquoise/80  flex items-center gap-1"
+          on:click={() => {
+            currentModuleStore.set(-1);
+            goto(`/course/${courseDetails.id}`);
+          }}
+        >
+          Course Intro
+          <img src="/icons/arrow-right.svg" alt="Introduction" class="w-6 h-6" />
+        </button>
+        {/if}
+        </div>
   </div>
 {/if}
 
