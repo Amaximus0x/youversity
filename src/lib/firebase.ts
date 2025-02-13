@@ -730,16 +730,23 @@ export async function getEnrollmentStatus(userId: string, courseId: string) {
   try {
     // Check both enrollment document and user's courses collection
     const enrollmentRef = doc(db, 'enrollments', `${userId}_${courseId}`);
-    const enrollmentDoc = await getDoc(enrollmentRef);
-    
     const userCourseRef = doc(db, `users/${userId}/courses/${courseId}`);
-    const userCourseDoc = await getDoc(userCourseRef);
     
-    const isEnrolled = enrollmentDoc.exists() || (userCourseDoc.exists() && userCourseDoc.data().isEnrolled);
+    const [enrollmentDoc, userCourseDoc] = await Promise.all([
+      getDoc(enrollmentRef),
+      getDoc(userCourseRef)
+    ]);
+    
+    // Check enrollment status from both documents
+    const isEnrolledInEnrollments = enrollmentDoc.exists();
+    const isEnrolledInUserCourses = userCourseDoc.exists();
+    
+    const isEnrolled = isEnrolledInEnrollments || isEnrolledInUserCourses;
     
     return {
       isEnrolled,
-      enrollmentData: enrollmentDoc.exists() ? enrollmentDoc.data() : null
+      enrollmentData: isEnrolledInEnrollments ? enrollmentDoc.data() : 
+                     isEnrolledInUserCourses ? userCourseDoc.data() : null
     };
   } catch (error) {
     console.error('Error checking enrollment status:', error);

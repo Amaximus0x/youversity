@@ -76,9 +76,7 @@
       );
       if (savedState) {
         const state = JSON.parse(savedState);
-        // Only load states that can change
-        isEnrolled = state.isEnrolled ?? false;
-        showProgress = state.showProgress ?? false;
+        // Only load non-critical states from localStorage
         isBookmarked = state.isBookmarked ?? false;
         hasLiked = state.hasLiked ?? false;
       }
@@ -95,10 +93,13 @@
         hasLiked,
         ...updates,
       };
-      localStorage.setItem(
-        `course_${$page.params.id}_state`,
-        JSON.stringify(currentState),
-      );
+      // Only save if we have valid enrollment status
+      if (isEnrolled !== null && isEnrolled !== undefined) {
+        localStorage.setItem(
+          `course_${$page.params.id}_state`,
+          JSON.stringify(currentState),
+        );
+      }
     }
   }
 
@@ -106,60 +107,61 @@
   loadSavedState();
 
   // Watch for state changes and save them
-  $: if (isEnrolled !== null && showProgress !== null) {
+  $: if (isEnrolled !== null && isEnrolled !== undefined) {
     saveState();
   }
 
   onMount(async () => {
     try {
       if ($user) {
-        const [courseData, enrollmentStatus] = await Promise.all([
-          getUserCourse($user.uid, $page.params.id),
-          getEnrollmentStatus($user.uid, $page.params.id)
-        ]);
+        // Get enrollment status first
+        const enrollmentStatus = await getEnrollmentStatus($user.uid, $page.params.id);
+        
+        // Set enrollment status immediately
+        isEnrolled = enrollmentStatus.isEnrolled;
+        
+        // Then get course data
+        const courseData = await getUserCourse($user.uid, $page.params.id);
+        if (!courseData) {
+          throw new Error('Course not found');
+        }
 
         courseDetails = courseData;
         isCreator = courseData.isCreator;
-        isEnrolled = enrollmentStatus.isEnrolled;
+        
+        showProgress = enrollmentStatus.isEnrolled || courseData.isCreator;
 
+        // If enrolled, get progress immediately
         if (isEnrolled) {
           const progress = await getEnrollmentProgress($user.uid, $page.params.id);
+          enrollmentProgress = progress;
           enrollmentProgressStore.set(progress);
         }
 
-        // Get current server states
-        const [bookmarkStatus, likeStatus] =
-          await Promise.all([
-            checkBookmarkStatus($user.uid, $page.params.id),
-            hasLikedCourse($user.uid, $page.params.id),
-          ]);
+        // Save initial server state
+        saveState();
 
-        // Set states from server
-        showProgress = isEnrolled || isCreator;
+        // Get current server states
+        const [bookmarkStatus, likeStatus] = await Promise.all([
+          checkBookmarkStatus($user.uid, $page.params.id),
+          hasLikedCourse($user.uid, $page.params.id)
+        ]);
+
         isBookmarked = bookmarkStatus;
         hasLiked = likeStatus;
 
-        // Save initial state
-        saveState();
-
-        // Fetch creator profile
+        // Fetch creator profile if needed
         if (courseDetails?.createdBy) {
-          try {
-            creatorProfile = await getUserProfile(courseDetails.createdBy);
-          } catch (profileError) {
-            console.error("Error fetching creator profile:", profileError);
-          }
+          creatorProfile = await getUserProfile(courseDetails.createdBy);
         }
 
-        // Save the updated state
-        saveState();
       } else {
+        // Handle non-logged-in user
         courseDetails = await getSharedCourse($page.params.id);
-        console.log("Shared Course Details", courseDetails);
         isCreator = false;
         isEnrolled = false;
         showProgress = false;
-        // Set initial module to introduction for non-enrolled users
+        
         if (!initialModuleSet) {
           currentModuleStore.set(-1);
           initialModuleSet = true;
@@ -278,17 +280,10 @@
   });
 
   // Update onDestroy
-  // onDestroy(() => {
-  //   // Only cleanup if we're navigating away from the course page
-  //   if (browser && $page.url.pathname !== currentPath) {
-  //     localStorage.removeItem(`course_${$page.params.id}_state`);
-  //     courseDetails = null;
-  //     isEnrolled = false;
-  //     showProgress = false;
-  //     enrollmentProgress = null;
-  //     currentModuleStore.reset();
-  //   }
-  // });
+  onDestroy(() => {
+    // Reset enrollment progress store when leaving the page
+    // enrollmentProgressStore.set(null);
+  });
 
   // Update the module card styling
   $: activeModuleClass = (index: number) =>
