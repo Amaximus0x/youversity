@@ -3,7 +3,10 @@
   import ModuleVideoGrid from "$lib/components/ModuleVideoGrid.svelte";
   import YoutubeUrlInput from "$lib/components/YoutubeUrlInput.svelte";
   import type { CourseStructure, VideoItem } from "$lib/types/course";
-  import { initialLoadingState, finalLoadingState } from '$lib/stores/loadingState';
+  import {
+    initialLoadingState,
+    finalLoadingState,
+  } from "$lib/stores/loadingState";
   import { page } from "$app/stores";
   import { goto } from "$app/navigation";
   import { Plus } from "lucide-svelte";
@@ -136,7 +139,7 @@
       // Fetch transcripts for all selected videos
       for (let i = 0; i < selectedVideos.length; i++) {
         finalLoadingState.setStep(
-          `Fetching transcript for Module ${i + 1}: ${courseStructure.OG_Module_Title[i]}`
+          `Fetching transcript for Module ${i + 1}: ${courseStructure.OG_Module_Title[i]}`,
         );
 
         const video = moduleVideos[i][selectedVideos[i]];
@@ -188,7 +191,7 @@
 
       finalLoadingState.setStep("Enrolling you in the course...");
       finalLoadingState.setProgress(95);
-      
+
       await enrollInCourse($user.uid, courseId);
 
       finalLoadingState.setStep("Course is ready!");
@@ -236,7 +239,9 @@
           0,
         );
 
-        initialLoadingState.setTotalModules(courseStructure.OG_Module_Title.length);
+        initialLoadingState.setTotalModules(
+          courseStructure.OG_Module_Title.length,
+        );
         initialLoadingState.setStep("Course structure generated successfully!");
         initialLoadingState.setProgress(20); // Initial course structure generation is exactly 20%
       } else {
@@ -283,18 +288,50 @@
   });
 </script>
 
-<div class="min-h-screen bg-transparent">
-  <div class="container mx-auto">
-    <CourseGenerationHeader />
-
-    {#if error}
-      <div class="max-w-2xl mx-auto text-center">
-        <div class="text-red-500 mb-4">{error}</div>
-        <a href="/" class="text-blue-600 hover:text-blue-800">
-          Return to Home Page
-        </a>
+<div
+  class="min-h-screen bg-light-background-secondary md:bg-light-background-secondary"
+>
+  <!-- Fixed Header Section for Mobile -->
+  <div
+    class="md:hidden fixed top-14 left-0 right-0 z-40 pt-safe-top bg-BackgroundRed"
+  >
+    <div class=" pt-4 pb-4">
+      <div class="px-4">
+        <CourseGenerationHeader />
       </div>
-    {:else if courseStructure}
+
+      {#if courseStructure}
+        <div class="px-4">
+          <h1 class="text-h2-mobile-bold mt-4 mb-2">
+            {courseStructure.OG_Course_Title}
+          </h1>
+        <p class="text-semi-body mb-4 opacity-80">
+          {courseStructure.OG_Course_Objective}
+        </p>
+        </div>
+
+        <!-- Module Navigation -->
+        <div class="flex gap-2 overflow-x-auto whitespace-nowrap pl-4 pb-2 scrollbar-hide">
+          {#each courseStructure.OG_Module_Title as moduleTitle, index}
+            <button
+              class="px-4 py-2 rounded-lg whitespace-nowrap transition-all duration-200 {currentModuleIndex ===
+              index
+                ? 'text-body-semibold bg-Green text-white'
+                : 'text-body bg-Black/5 text-Green hover:bg-gray-200'}"
+              on:click={() => (currentModuleIndex = index)}
+            >
+              Module {index + 1}
+            </button>
+          {/each}
+        </div>
+      {/if}
+    </div>
+  </div>
+
+  <!-- Desktop Layout -->
+  <div class="hidden md:block container mx-auto px-4 py-8">
+    <CourseGenerationHeader />
+    {#if courseStructure}
       <div class="space-y-8">
         <!-- Course Title and Objective -->
         <div>
@@ -324,7 +361,7 @@
         <!-- Current Module Content -->
         <div>
           <div class="flex items-center gap-8 lg:justify-between mb-6">
-            <div class="flex items-center justify-center gap-2 lg:gap-4 ">
+            <div class="flex items-center justify-center gap-2 lg:gap-4">
               <h2
                 class="text-body-semibold lg:text-h4-medium text-Black dark:text-White"
               >
@@ -352,7 +389,7 @@
               </button>
             </div>
             <button
-              class="text-nowrap bg-brand-red hover:bg-ButtonHover text-mini-body lg:text-semi-body text-white px-2 py-2  rounded-lg flex items-center gap-2 transition-colors duration-200"
+              class="text-nowrap bg-brand-red hover:bg-ButtonHover text-mini-body lg:text-semi-body text-white px-2 py-2 rounded-lg flex items-center gap-2 transition-colors duration-200"
               on:click={() => (showCustomUrlInput = true)}
             >
               Add Custom Video
@@ -381,8 +418,9 @@
       </div>
 
       <!-- Generate Complete Course Button -->
+      <!-- Desktop Generate Course Button -->
       <div
-        class="relative flex justify-left mt-4 mb-10 w-auto h-[54px]"
+        class="hidden md:flex justify-left mt-4 mb-10 w-auto h-[54px]"
         in:fly={{ y: 20, duration: 500, delay: 200 }}
         out:fade
       >
@@ -423,6 +461,107 @@
         </div>
       </div>
     {/if}
+  </div>
+
+  <!-- Mobile Scrollable Content -->
+  <div
+    class="md:hidden mt-[calc(100px+env(safe-area-inset-top)+294px)]  pb-32"
+  >
+    {#if courseStructure}
+      <div class="space-y-6">
+        <!-- Module Content -->
+        <div class=" rounded-xl ">
+          <div class="flex items-center gap-8 lg:justify-between mb-6">
+            <div class="flex items-center justify-center gap-2 lg:gap-4">
+              <h2
+                class="text-body-semibold lg:text-h4-medium text-Black dark:text-White"
+              >
+                Module {currentModuleIndex + 1}: {courseStructure
+                  .OG_Module_Title[currentModuleIndex]}
+              </h2>
+              <button
+                class=" text-[#42C1C8] hover:text-[#2A4D61] rounded-full transition-colors duration-200"
+                on:click={() =>
+                  handleRegenerateModuleVideos(currentModuleIndex)}
+              >
+                <svg
+                  class="w-5 h-5"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M15.1667 1L15.7646 2.11777C16.1689 2.87346 16.371 3.25131 16.2374 3.41313C16.1037 3.57495 15.6635 3.44426 14.7831 3.18288C13.9029 2.92155 12.9684 2.78095 12 2.78095C6.75329 2.78095 2.5 6.90846 2.5 12C2.5 13.6791 2.96262 15.2535 3.77093 16.6095M8.83333 23L8.23536 21.8822C7.83108 21.1265 7.62894 20.7486 7.7626 20.5868C7.89627 20.425 8.33649 20.5557 9.21689 20.8171C10.0971 21.0784 11.0316 21.219 12 21.219C17.2467 21.219 21.5 17.0915 21.5 12C21.5 10.3208 21.0374 8.74647 20.2291 7.39047"
+                  />
+                </svg>
+              </button>
+            </div>
+            <button
+              class="text-nowrap bg-brand-red hover:bg-ButtonHover text-mini-body lg:text-semi-body text-white px-2 py-2 rounded-lg flex items-center gap-2 transition-colors duration-200"
+              on:click={() => (showCustomUrlInput = true)}
+            >
+              Add Custom Video
+              <Plus class="w-4 h-4 lg:w-6 lg:h-6" />
+            </button>
+          </div>
+
+          {#if showCustomUrlInput}
+            <div class="mb-6">
+              <YoutubeUrlInput
+                moduleIndex={currentModuleIndex}
+                onVideoAdd={handleCustomVideoAdd}
+                class="w-full"
+              />
+            </div>
+          {/if}
+
+          <ModuleVideoGrid
+            {courseStructure}
+            bind:moduleVideos
+            bind:selectedVideos
+            {currentModuleIndex}
+            {error}
+          />
+        </div>
+      </div>
+    {/if}
+  </div>
+
+  <!-- Mobile Generate Course Button -->
+  <div class="fixed md:hidden bottom-[8.5rem] z-50">
+    <button
+      class="px-4 py-3 rounded-full shadow-lg flex items-center justify-center transition-all duration-200 gap-2 {!allModulesLoaded ||
+      !courseStructure?.OG_Module_Title.every(
+        (_, index) => selectedVideos[index] !== undefined,
+      )
+        ? 'bg-Black/5 cursor-not-allowed text-Grey'
+        : 'bg-brand-red hover:bg-ButtonHover text-white'}"
+      on:click={handleSaveCourse}
+      disabled={!allModulesLoaded ||
+        !courseStructure?.OG_Module_Title.every(
+          (_, index) => selectedVideos[index] !== undefined,
+        )}
+    >
+      <div class="flex items-center gap-2">
+        <span class="text-body">Generate Course</span>
+        <svg
+          class="w-5 h-5 {!allModulesLoaded ? 'fill-Grey' : ''}"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M14 5l7 7m0 0l-7 7m7-7H3"
+          />
+        </svg>
+      </div>
+    </button>
   </div>
 </div>
 

@@ -142,7 +142,7 @@
                             <!-- Module Info -->
                             <div class="flex-1 min-w-0 text-center">
                                 <p
-                                    class="text-body-semibold text-Black2 px-2 py-6 mb-2"
+                                    class="text-wrap text-body-semibold text-Black2 px-2 py-6 mb-2"
                                 >
                                     Course Introduction and Objectives
                                 </p>
