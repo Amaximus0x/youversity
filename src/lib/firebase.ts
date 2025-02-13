@@ -801,11 +801,11 @@ export async function getUserBookmarks(userId: string): Promise<BookmarkedCourse
 
 export async function getEnrollmentProgress(userId: string, courseId: string) {
   try {
-    const userCourseRef = doc(db, `users/${userId}/courses/${courseId}`);
-    const userCourseDoc = await getDoc(userCourseRef);
+    const enrollmentRef = doc(db, `enrollments/${userId}_${courseId}`);
+    const enrollmentDoc = await getDoc(enrollmentRef);
     
     // Return default progress object if not enrolled
-    if (!userCourseDoc.exists()) {
+    if (!enrollmentDoc.exists()) {
       return {
         moduleProgress: [],
         lastAccessedModule: 0,
@@ -818,8 +818,8 @@ export async function getEnrollmentProgress(userId: string, courseId: string) {
       };
     }
     
-    const data = userCourseDoc.data();
-    return data.progress || {
+    const data = enrollmentDoc.data();
+    return data || {
       moduleProgress: [],
       lastAccessedModule: 0,
       completedModules: [],
@@ -831,88 +831,44 @@ export async function getEnrollmentProgress(userId: string, courseId: string) {
     };
   } catch (error) {
     console.error('Error getting enrollment progress:', error);
-    // Return default progress object instead of throwing error
-    return {
-      moduleProgress: [],
-      lastAccessedModule: 0,
-      completedModules: [],
-      quizResults: {
-        moduleQuizzes: {}
-      },
-      startDate: new Date(),
-      lastAccessDate: new Date()
-    };
+    throw error;
   }
 }
 
 export async function updateEnrollmentQuizResult(
   userId: string,
   courseId: string,
-  moduleIndex: number | null,
-  score: number,
-  completed: boolean,
-  timeTaken: number
+  moduleIndex: number,
+  quizResult: QuizResult
 ) {
   try {
-    const userCourseRef = doc(db, `users/${userId}/courses/${courseId}`);
-    const userCourseDoc = await getDoc(userCourseRef);
+    const enrollmentRef = doc(db, `enrollments/${userId}_${courseId}`);
+    const enrollmentDoc = await getDoc(enrollmentRef);
+
+    if (!enrollmentDoc.exists()) {
+      throw new Error('Enrollment not found');
+    }
+
+    const enrollment = enrollmentDoc.data() as EnrollmentProgress;
     
-    if (!userCourseDoc.exists()) {
-      throw new Error('Not enrolled in this course');
+    // Create a new array of completed modules if it doesn't exist
+    const completedModules = enrollment.completedModules || [];
+    
+    // Add the module to completed modules if quiz was passed and not already completed
+    if (quizResult.completed && !completedModules.includes(moduleIndex)) {
+      completedModules.push(moduleIndex);
     }
 
-    const currentData = userCourseDoc.data();
-    const currentProgress = currentData.progress || {
-      moduleProgress: [],
-      lastAccessedModule: 0,
-      completedModules: [],
-      quizResults: {
-        moduleQuizzes: {}
-      },
-      startDate: Timestamp.fromDate(new Date()),
-      lastAccessDate: Timestamp.fromDate(new Date())
-    };
+    await updateDoc(enrollmentRef, {
+      [`quizResults.moduleQuizzes.${moduleIndex}`]: quizResult,
+      completedModules: completedModules,
+      lastAccessedAt: serverTimestamp()
+    });
 
-    if (moduleIndex !== null) {
-      // Module quiz update
-      const currentModuleQuiz = currentProgress.quizResults.moduleQuizzes[moduleIndex] || {
-        attempts: 0,
-        bestScore: 0,
-        completed: false
-      };
+    // Return the updated enrollment progress
+    const updatedDoc = await getDoc(enrollmentRef);
+    return updatedDoc.data() as EnrollmentProgress;
 
-      currentProgress.quizResults.moduleQuizzes[moduleIndex] = {
-        attempts: currentModuleQuiz.attempts + 1,
-        bestScore: Math.max(currentModuleQuiz.bestScore, score),
-        lastAttemptDate: Timestamp.fromDate(new Date()),
-        completed: completed || currentModuleQuiz.completed,
-        timeTaken
-      };
-
-      // Update completed modules if passed
-      if (completed && !currentProgress.completedModules.includes(moduleIndex)) {
-        currentProgress.completedModules.push(moduleIndex);
-      }
-    } else {
-      // Final quiz update
-      const currentFinalQuiz = currentProgress.quizResults.finalQuiz || {
-        attempts: 0,
-        bestScore: 0,
-        completed: false
-      };
-
-      currentProgress.quizResults.finalQuiz = {
-        attempts: currentFinalQuiz.attempts + 1,
-        bestScore: Math.max(currentFinalQuiz.bestScore, score),
-        lastAttemptDate: Timestamp.fromDate(new Date()),
-        completed: completed || currentFinalQuiz.completed,
-        timeTaken
-      };
-    }
-
-    currentProgress.lastAccessDate = Timestamp.fromDate(new Date());
-    await updateDoc(userCourseRef, { progress: currentProgress });
-    return currentProgress;
   } catch (error) {
     console.error('Error updating quiz result:', error);
     throw error;

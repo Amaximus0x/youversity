@@ -1,25 +1,18 @@
 <script lang="ts">
-    import { currentModuleStore } from "$lib/stores/course";
+    import { currentModuleStore, enrollmentProgressStore } from "$lib/stores/course";
     import { goto } from "$app/navigation";
     import { page } from "$app/stores";
     import type { FinalCourseStructure } from "$lib/types/course";
     import EnrollModal from "./EnrollModal.svelte";
 
     export let courseDetails: FinalCourseStructure;
-    export let isCreator = false;
-    export let isEnrolled = false;
-
-    // Simplify to just accept completed modules
-    export let completedModules: number[] = [];
-
+    export let isCreator: boolean = false;
+    export let isEnrolled: boolean = false;
     export let showProgress: boolean = false;
-    export let moduleProgress: { completed?: boolean }[] = [];
-    export let enrollmentProgress: any = null;
-
-    export let currentModule: number | undefined;
+    export let currentModule: number | undefined = undefined;
 
     let showEnrollModal = false;
-    let selectedModule: number | undefined;
+    $: completedModules = $enrollmentProgressStore?.completedModules || [];
 
     // Helper function to check if a module is completed
     function isModuleCompleted(index: number): boolean {
@@ -32,14 +25,15 @@
 
     // Function to handle module navigation
     function handleModuleClick(index: number) {
-        if (!isEnrolled && !isCreator && index !== -1) {
+        if (!isEnrolled && !isCreator) {
             showEnrollModal = true;
-            selectedModule = index;
             return;
         }
         currentModuleStore.set(index);
         goto(`/course/${$page.params.id}`);
     }
+
+    $: progress = $enrollmentProgressStore?.moduleProgress || [];
 </script>
 
 <div class="flex flex-col gap-4">
@@ -61,11 +55,11 @@
                     <div
                         class="h-full bg-brand-turquoise rounded-[200000px] transition-all duration-300"
                         style="width: {isCreator
-                            ? (moduleProgress.filter((m) => m?.completed)
+                            ? (progress.filter((m) => m?.completed)
                                   .length /
                                   10) *
                               100
-                            : ((enrollmentProgress?.completedModules?.length ||
+                            : ((completedModules.length ||
                                   0) /
                                   10) *
                               100}%"
@@ -75,8 +69,8 @@
                     class="text-body text-light-text-primary dark:text-dark-text-primary"
                 >
                     {isCreator
-                        ? Math.round((moduleProgress.filter((m) => m?.completed).length / 10) * 100)
-                        : Math.round(((enrollmentProgress?.completedModules?.length || 0) / 10) * 100)}%
+                        ? Math.round((progress.filter((m) => m?.completed).length / 10) * 100)
+                        : Math.round(((completedModules.length || 0) / 10) * 100)}%
                 </span>
             </div>
         </div>
@@ -97,11 +91,11 @@
                         <div
                             class="h-full bg-brand-turquoise rounded-[200000px] transition-all duration-300"
                             style="width: {isCreator
-                                ? (moduleProgress.filter((m) => m?.completed)
+                                ? (progress.filter((m) => m?.completed)
                                       .length /
                                       10) *
                                   100
-                                : ((enrollmentProgress?.completedModules?.length ||
+                                : ((completedModules.length ||
                                       0) /
                                       10) *
                                   100}%"
@@ -111,8 +105,8 @@
                         class="text-body text-light-text-primary dark:text-dark-text-primary"
                     >
                         {isCreator
-                            ? Math.round((moduleProgress.filter((m) => m?.completed).length / 10) * 100)
-                            : Math.round(((enrollmentProgress?.completedModules?.length || 0) / 10) * 100)}%
+                            ? Math.round((progress.filter((m) => m?.completed).length / 10) * 100)
+                            : Math.round(((completedModules.length || 0) / 10) * 100)}%
                     </span>
                 </div>
             </div>
@@ -325,6 +319,5 @@
     {courseDetails}
     onClose={() => {
         showEnrollModal = false;
-        selectedModule = undefined;
     }}
 />

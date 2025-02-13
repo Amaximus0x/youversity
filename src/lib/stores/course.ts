@@ -1,4 +1,5 @@
-import { writable, type Writable } from 'svelte/store';
+import { writable, type Writable, derived } from 'svelte/store';
+import type { EnrollmentProgress } from '$lib/types/course';
 
 function createCurrentModuleStore() {
   const { subscribe, set, update } = writable(0);
@@ -12,16 +13,19 @@ function createCurrentModuleStore() {
 
 export const currentModuleStore = createCurrentModuleStore();
 
-// Course progress store
-export const courseProgressStore: Writable<{
-  completedModules: number[];
-  // currentModule: number;
-  totalModules: number;
-}> = writable({
-  completedModules: [],
-  // currentModule: 0,
-  totalModules: 0
-});
+// Create a store for enrollment progress
+export const enrollmentProgressStore: Writable<EnrollmentProgress | null> = writable(null);
+
+// Derived store for progress percentage
+export const courseProgressPercentage = derived(
+  enrollmentProgressStore,
+  ($progress) => {
+    if (!$progress?.completedModules || !$progress.moduleProgress) return 0;
+    return Math.round(
+      ($progress.completedModules.length / $progress.moduleProgress.length) * 100
+    );
+  }
+);
 
 // Enrollment status store
 export const enrollmentStatusStore: Writable<boolean> = writable(false);

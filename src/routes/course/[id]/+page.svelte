@@ -3,7 +3,7 @@
   import { onMount, onDestroy } from "svelte";
   import { user } from "$lib/stores/auth";
   import { goto } from "$app/navigation";
-  import { currentModuleStore } from "$lib/stores/course";
+  import { currentModuleStore, enrollmentProgressStore } from "$lib/stores/course";
   import { getUserProfile } from "$lib/services/profile";
   import CourseRatings from "$lib/components/CourseRatings.svelte";
   import {
@@ -113,40 +113,34 @@
   onMount(async () => {
     try {
       if ($user) {
-        // Get course data first
-        const courseData = await getUserCourse($user.uid, $page.params.id);
-        courseDetails = courseData;
-        console.log("User Course Details", courseDetails);
+        const [courseData, enrollmentStatus] = await Promise.all([
+          getUserCourse($user.uid, $page.params.id),
+          getEnrollmentStatus($user.uid, $page.params.id)
+        ]);
 
-        // Set creator status once (won't change)
-        isCreator = Boolean(courseData.isCreator);
+        courseDetails = courseData;
+        isCreator = courseData.isCreator;
+        isEnrolled = enrollmentStatus.isEnrolled;
+
+        if (isEnrolled) {
+          const progress = await getEnrollmentProgress($user.uid, $page.params.id);
+          enrollmentProgressStore.set(progress);
+        }
 
         // Get current server states
-        const [enrollmentStatus, bookmarkStatus, likeStatus] =
+        const [bookmarkStatus, likeStatus] =
           await Promise.all([
-            getEnrollmentStatus($user.uid, $page.params.id),
             checkBookmarkStatus($user.uid, $page.params.id),
             hasLikedCourse($user.uid, $page.params.id),
           ]);
 
         // Set states from server
-        isEnrolled = enrollmentStatus.isEnrolled;
         showProgress = isEnrolled || isCreator;
         isBookmarked = bookmarkStatus;
         hasLiked = likeStatus;
 
         // Save initial state
         saveState();
-
-        // Get enrollment progress if needed
-        if (enrollmentStatus.enrollmentData) {
-          enrollmentProgress = enrollmentStatus.enrollmentData;
-        } else if (isEnrolled) {
-          enrollmentProgress = await getEnrollmentProgress(
-            $user.uid,
-            $page.params.id,
-          );
-        }
 
         // Fetch creator profile
         if (courseDetails?.createdBy) {
@@ -284,17 +278,17 @@
   });
 
   // Update onDestroy
-  onDestroy(() => {
-    // Only cleanup if we're navigating away from the course page
-    if (browser && $page.url.pathname !== currentPath) {
-      localStorage.removeItem(`course_${$page.params.id}_state`);
-      courseDetails = null;
-      isEnrolled = false;
-      showProgress = false;
-      enrollmentProgress = null;
-      currentModuleStore.reset();
-    }
-  });
+  // onDestroy(() => {
+  //   // Only cleanup if we're navigating away from the course page
+  //   if (browser && $page.url.pathname !== currentPath) {
+  //     localStorage.removeItem(`course_${$page.params.id}_state`);
+  //     courseDetails = null;
+  //     isEnrolled = false;
+  //     showProgress = false;
+  //     enrollmentProgress = null;
+  //     currentModuleStore.reset();
+  //   }
+  // });
 
   // Update the module card styling
   $: activeModuleClass = (index: number) =>
@@ -349,23 +343,42 @@
   }
 
   async function handleQuizComplete(score: number, timeSpent: number) {
+    if (!$user || !courseDetails) return;
+
     try {
-      if (!$user) return;
-
-      const moduleId = $currentModuleStore === -1 ? null : $currentModuleStore;
-
-      await updateEnrollmentQuizResult(
+      const moduleId = $currentModuleStore;
+      const updatedProgress = await updateEnrollmentQuizResult(
         $user.uid,
-        $page.params.id,
+        courseDetails.id,
         moduleId,
-        score,
-        timeSpent,
-        true,
+        {
+          attempts: 1,
+          bestScore: score,
+          lastAttemptDate: new Date(),
+          completed: score >= 70,
+          timeTaken: timeSpent
+        }
       );
+
+      // Update the store with new progress
+      enrollmentProgressStore.set(updatedProgress);
+      
+      showQuizModal = false;
+      currentQuiz = null;
+      quizModuleTitle = "";
+
     } catch (error) {
-      console.error("Error updating quiz results:", error);
+      console.error("Error updating quiz result:", error);
     }
   }
+
+  // Subscribe to enrollment progress updates
+  onMount(async () => {
+    if ($user && courseDetails) {
+      const progress = await getEnrollmentProgress($user.uid, courseDetails.id);
+      enrollmentProgressStore.set(progress);
+    }
+  });
 </script>
 
 <!-- Main Container -->
