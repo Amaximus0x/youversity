@@ -1,25 +1,25 @@
 <script lang="ts">
-  import { fade, fly } from 'svelte/transition';
-  import { finalLoadingState } from '$lib/stores/loadingState';
-  import { modalState } from '$lib/stores/modalState';
-  import { goto } from '$app/navigation';
-  import { onMount } from 'svelte';
-  import { page } from '$app/stores';
-  import { browser } from '$app/environment';
+  import { fade, fly } from "svelte/transition";
+  import { finalLoadingState } from "$lib/stores/loadingState";
+  import { modalState } from "$lib/stores/modalState";
+  import { goto } from "$app/navigation";
+  import { onMount } from "svelte";
+  import { page } from "$app/stores";
+  import { browser } from "$app/environment";
 
   // Add debugging logs
-  $: console.log('Modal Debug State:', {
+  $: console.log("Modal Debug State:", {
     isLoading: $finalLoadingState.isLoading,
     isInitialBuild: $finalLoadingState.isInitialBuild,
     courseId: $finalLoadingState.courseId,
     courseTitle: $finalLoadingState.courseTitle,
     isMinimized: $modalState.isMinimized,
     currentPage: $page.url.pathname,
-    shouldShowModal: ($finalLoadingState.isCreateCourse && !$finalLoadingState.isInitialBuild) || 
-                    ($finalLoadingState.courseId && $modalState.isMinimized)
+    shouldShowModal:
+      ($finalLoadingState.isCreateCourse &&
+        !$finalLoadingState.isInitialBuild) ||
+      ($finalLoadingState.courseId && $modalState.isMinimized),
   });
-
-
 
   function getGenerationStep($loadingState: any) {
     if ($loadingState.currentStep) {
@@ -39,18 +39,18 @@
   async function handleViewCourse() {
     if ($finalLoadingState.courseId) {
       const courseId = $finalLoadingState.courseId;
-      
+
       // Navigate first
       await goto(`/course/${courseId}`);
-      
+
       // Then clear states
       finalLoadingState.clearState();
       modalState.reset();
-      
+
       // Force remove from localStorage
       if (browser) {
-        localStorage.removeItem('finalLoadingState');
-        localStorage.removeItem('modalState');
+        localStorage.removeItem("finalLoadingState");
+        localStorage.removeItem("modalState");
       }
     }
   }
@@ -62,19 +62,19 @@
 
   function handleRetry() {
     finalLoadingState.clearError();
-    goto('/create-course');
+    goto("/create-course");
   }
 
   onMount(() => {
     if (browser) {
       // Log initial state on mount
-      console.log('Modal Mounted:', {
-        storedLoadingState: localStorage.getItem('finalLoadingState'),
-        storedModalState: localStorage.getItem('modalState')
+      console.log("Modal Mounted:", {
+        storedLoadingState: localStorage.getItem("finalLoadingState"),
+        storedModalState: localStorage.getItem("modalState"),
       });
 
       // Restore minimized state from localStorage if needed
-      const storedModalState = localStorage.getItem('modalState');
+      const storedModalState = localStorage.getItem("modalState");
       if (storedModalState) {
         const { isMinimized } = JSON.parse(storedModalState);
         modalState.setMinimized(isMinimized);
@@ -82,9 +82,10 @@
     }
   });
 
-  $: shouldShowModal = $finalLoadingState.isLoading || 
-                      $finalLoadingState.courseId || 
-                      $modalState.isMinimized;
+  $: shouldShowModal =
+    $finalLoadingState.isLoading ||
+    $finalLoadingState.courseId ||
+    $modalState.isMinimized;
 
   $: isComplete = $finalLoadingState.progress === 100;
 </script>
@@ -92,12 +93,12 @@
 {#if shouldShowModal}
   {#if $modalState.isMinimized}
     <!-- Minimized version in top-right corner -->
-    <div 
+    <div
       class="modal-content fixed top-28 right-4 z-50 w-[400px]"
       in:fly={{ x: 50, duration: 300 }}
       out:fade
     >
-      <div 
+      <div
         class="bg-white dark:bg-dark-background-primary rounded-2xl shadow-lg border border-[rgba(0,0,0,0.05)] px-4 pt-2 pb-4 cursor-pointer relative"
         on:click={handleMaximize}
       >
@@ -107,16 +108,26 @@
           </h2>
           <div class="flex items-center p-2">
             {#if isComplete}
-              <img src="/images/checkmark-circle.svg" alt="Success" class="w-4 h-4"/>
+              <img
+                src="/images/checkmark-circle.svg"
+                alt="Success"
+                class="w-4 h-4"
+              />
             {:else}
-              <img src="/images/loading-spin.gif" alt="Loading" class="w-4 h-4"/>
+              <img
+                src="/images/loading-spin.gif"
+                alt="Loading"
+                class="w-4 h-4"
+              />
             {/if}
           </div>
         </div>
 
         {#if !isComplete}
-          <div class="relative h-3 bg-Black/5 rounded-full overflow-hidden mb-4">
-            <div 
+          <div
+            class="relative h-3 bg-Black/5 rounded-full overflow-hidden mb-4"
+          >
+            <div
               class="absolute left-0 top-0 h-full bg-[#42C1C8] rounded-full transition-all duration-300 ease-out"
               style="width: {$finalLoadingState.progress}%"
             />
@@ -143,12 +154,12 @@
     </div>
   {:else}
     <!-- Full screen modal with popup styling -->
-    <div 
+    <div
       class="modal-content fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50"
       transition:fade={{ duration: 200 }}
       on:click={handleOutsideClick}
     >
-      <div 
+      <div
         class="bg-white dark:bg-dark-background-primary rounded-3xl shadow-lg w-[500px] p-8 relative"
         on:click|stopPropagation
         in:fly={{ y: 20, duration: 300 }}
@@ -156,13 +167,27 @@
         {#if $finalLoadingState.error}
           <div class="text-center">
             <div class="text-red-500 mb-6">
-              <svg class="w-12 h-12 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              <svg
+                class="w-12 h-12 mx-auto mb-2"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                />
               </svg>
-              <h3 class="text-lg font-semibold mb-2">Course Generation Failed</h3>
-              <p class="text-sm text-gray-600 mb-4">{$finalLoadingState.error}</p>
+              <h3 class="text-lg font-semibold mb-2">
+                Course Generation Failed
+              </h3>
+              <p class="text-sm text-gray-600 mb-4">
+                {$finalLoadingState.error}
+              </p>
             </div>
-            
+
             <div class="flex gap-3 justify-center">
               <button
                 class="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-medium transition-colors"
@@ -183,9 +208,17 @@
           <div class="text-center">
             <div class="flex items-center justify-center mb-6">
               {#if isComplete}
-                <img src="/images/checkmark-circle.svg" alt="Success" class="w-12 h-12"/>
+                <img
+                  src="/images/checkmark-circle.svg"
+                  alt="Success"
+                  class="w-12 h-12"
+                />
               {:else}
-                <img src="/images/loading-spin.gif" alt="Loading" class="w-12 h-12"/>
+                <img
+                  src="/images/loading-spin.gif"
+                  alt="Loading"
+                  class="w-12 h-12"
+                />
               {/if}
             </div>
 
@@ -198,8 +231,10 @@
                 Setting things up for smooth learning experience
               </p>
 
-              <div class="relative h-3 bg-Black/5 rounded-full overflow-hidden mb-8">
-                <div 
+              <div
+                class="relative h-3 bg-Black/5 rounded-full overflow-hidden mb-8"
+              >
+                <div
                   class="absolute left-0 top-0 h-full bg-[#42C1C8] rounded-full transition-all duration-300 ease-out"
                   style="width: {$finalLoadingState.progress}%"
                 />
@@ -231,4 +266,4 @@
     transform: scale(1.02);
     transition: transform 0.2s ease-in-out;
   }
-</style> 
+</style>
