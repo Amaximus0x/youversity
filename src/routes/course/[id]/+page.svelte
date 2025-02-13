@@ -526,11 +526,11 @@
                 <!-- Course Conclusion -->
                 <div>
                   <!-- Add Course Title here too -->
-                  <!-- <div class="mt-6 mb-8">
+                  <div class="mt-6 mb-8">
                     <p class="text-h2-mobile-bold lg:text-h2-bold text-Black">
                       {courseDetails?.Final_Course_Title}
                     </p>
-                  </div> -->
+                  </div>
                   <p class="text-body text-light-text-secondary">
                     {courseDetails?.Final_Course_Conclusion}
                   </p>
