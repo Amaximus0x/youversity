@@ -99,7 +99,7 @@
       out:fade
     >
       <div
-        class="bg-white dark:bg-dark-background-primary rounded-2xl shadow-lg border border-[rgba(0,0,0,0.05)] px-4 pt-2 pb-4 cursor-pointer relative"
+        class="bg-BackgroundRed dark:bg-dark-background-primary rounded-2xl shadow-lg border border-[rgba(0,0,0,0.05)] px-4 pt-2 pb-4 cursor-pointer relative"
         on:click={handleMaximize}
       >
         <div class="flex items-center justify-between mb-2">
@@ -155,12 +155,12 @@
   {:else}
     <!-- Full screen modal with popup styling -->
     <div
-      class="modal-content fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50"
+      class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50"
       transition:fade={{ duration: 200 }}
       on:click={handleOutsideClick}
     >
       <div
-        class="bg-white dark:bg-dark-background-primary rounded-3xl shadow-lg w-[500px] p-8 relative"
+        class="bg-BackgroundRed dark:bg-dark-background-primary rounded-2xl shadow-lg w-[390px] p-4 relative"
         on:click|stopPropagation
         in:fly={{ y: 20, duration: 300 }}
       >
@@ -204,48 +204,49 @@
             </div>
           </div>
         {:else}
-          <!-- Success/Loading State -->
-          <div class="text-center">
-            <div class="flex items-center justify-center mb-6">
-              {#if isComplete}
-                <img
-                  src="/images/checkmark-circle.svg"
-                  alt="Success"
-                  class="w-12 h-12"
-                />
-              {:else}
-                <img
-                  src="/images/loading-spin.gif"
-                  alt="Loading"
-                  class="w-12 h-12"
-                />
+          <div class="flex flex-col gap-4">
+            <div class="flex flex-col gap-4">
+              <div class="flex items-center justify-between">
+                <h2 class="text-body-semibold text-Black dark:text-White">
+                  {isComplete ? "Course is ready" : "Getting your Course Ready"}
+                </h2>
+                <div class="flex items-center">
+                  {#if isComplete}
+                    <img
+                      src="/images/checkmark-circle.svg"
+                      alt="Success"
+                      class="w-[51px] h-[51px]"
+                    />
+                  {:else}
+                    <img
+                      src="/images/loading-spin.gif"
+                      alt="Loading"
+                      class="w-[51px] h-[51px]"
+                    />
+                  {/if}
+                </div>
+              </div>
+
+              {#if !isComplete}
+                <div
+                  class="relative h-3 bg-Black/5 rounded-full overflow-hidden"
+                >
+                  <div
+                    class="absolute left-0 top-0 h-full bg-brand-turquoise rounded-full transition-all duration-300 ease-out"
+                    style="width: {$finalLoadingState.progress}%"
+                  />
+                </div>
               {/if}
             </div>
 
-            <h2 class="text-h2 text-Black dark:text-White mb-4">
-              {isComplete ? "Course is ready" : "Getting your Course Ready"}
-            </h2>
-
             {#if !isComplete}
-              <p class="text-body text-Black2 dark:text-White mb-6">
+              <p class="text-semi-body text-Black dark:text-White">
                 Setting things up for smooth learning experience
               </p>
-
-              <div
-                class="relative h-3 bg-Black/5 rounded-full overflow-hidden mb-8"
-              >
-                <div
-                  class="absolute left-0 top-0 h-full bg-[#42C1C8] rounded-full transition-all duration-300 ease-out"
-                  style="width: {$finalLoadingState.progress}%"
-                />
-              </div>
             {:else}
-              <p class="text-h4 text-Black dark:text-White mb-8">
+              <p class="text-semi-body text-Black dark:text-White mb-4">
                 {$finalLoadingState.courseTitle}
               </p>
-            {/if}
-
-            {#if isComplete}
               <button
                 class="w-full bg-brand-navy hover:bg-brand-darkBlue text-white rounded-xl py-4 text-body-semibold transition-colors duration-200"
                 on:click={handleViewCourse}

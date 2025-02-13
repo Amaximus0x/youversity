@@ -72,54 +72,50 @@
       on:scroll={updateArrows}
     >
       {#each moduleVideos[currentModuleIndex] as video, videoIndex}
-
-        <div class="flex-shrink-0 w-[340px] h-[230px]">
-          <div
-            class="group relative rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer border border-gray-100"
+        <!-- Video Card Container -->
+        <div class="flex-shrink-0 w-[341px]">
+          <!-- Video Card with Selection Highlight -->
+          <div 
+            class="group relative p-2 rounded-2xl overflow-hidden transition-all duration-200 cursor-pointer border "
             class:ring-2={selectedVideos[currentModuleIndex] === videoIndex}
-            class:ring-brand-red={selectedVideos[currentModuleIndex] ===
-              videoIndex}
-            class:ring-offset-2={selectedVideos[currentModuleIndex] ===
-              videoIndex}
+            class:ring-brand-red={selectedVideos[currentModuleIndex] === videoIndex}
+            class:ring-offset-2={selectedVideos[currentModuleIndex] === videoIndex}
             on:click={() => selectVideo(videoIndex)}
           >
-            <div class="flex flex-col">
-              <!-- Title and Duration -->
-              <div class=" flex items-start justify-between">
-                <div class="p-2">
-                  <h3
-                    class="text-semibody-medium text-Black dark:text-White line-clamp-2 mb-1"
-                  >
+            <div class="flex flex-col gap-2">
+              <!-- Title and Duration Section -->
+              <div class="h-[62px] flex flex-col">
+                <!-- Video Title -->
+                <div class="flex gap-1">
+                  <span class="text-semibody-medium text-light-text-secondary line-clamp-2 break-words">
+                    {String(videoIndex + 1).padStart(2, '0')}: {video.title}
+                  </span>
+                  <!-- <span class="text-semibody-medium text-light-text-primary line-clamp-2">
                     {video.title}
-                  </h3>
-                  <span class="text-mini-body text-Grey">
+                  </span> -->
+                </div>
+                <!-- Duration -->
+                <div class="flex items-center">
+                  <span class="text-mini-body text-light-text-tertiary">
                     {video.length} min
                   </span>
                 </div>
-                <!-- <button class="text-[#42C1C8] p-1 hover:text-[#2A4D61] transition-colors duration-200">
-                  <Edit2 class="w-5 h-5" />
-                </button> -->
               </div>
 
-              <!-- Thumbnail with Play Button -->
-              <div
-                class="relative aspect-video rounded-lg overflow-hidden px-2 pb-2"
-              >
+              <!-- Thumbnail Container -->
+              <div class="relative aspect-video rounded-lg overflow-hidden">
                 <img
                   src={video.thumbnailUrl}
                   alt={video.title}
-                  class="w-full h-full object-cover rounded-lg overflow-hidden"
+                  class="w-full h-full object-cover rounded-lg"
                 />
+                <!-- Play Button Overlay -->
                 <div class="absolute inset-0 bg-black/20 hover:bg-black/30 transition-all duration-200 flex items-center justify-center">
                   <button
                     class="text-white hover:scale-110 transform transition-transform duration-200"
                     on:click|stopPropagation={(e) => handlePlayVideo(video, e)}
                   >
-                    <img
-                      src="/icons/youtube-icon.svg"
-                      alt="Play"
-                      class="w-4 h-4"
-                    />
+                    <img src="/icons/youtube-icon.svg" alt="Play" class="w-4 h-4" />
                   </button>
                 </div>
               </div>

@@ -323,8 +323,8 @@
 
         <!-- Current Module Content -->
         <div>
-          <div class="flex items-center justify-between mb-6">
-            <div class="flex items-center gap-2">
+          <div class="flex items-center gap-8 lg:justify-between mb-6">
+            <div class="flex items-center justify-center gap-2 lg:gap-4 ">
               <h2
                 class="text-body-semibold lg:text-h4-medium text-Black dark:text-White"
               >
@@ -332,7 +332,7 @@
                   .OG_Module_Title[currentModuleIndex]}
               </h2>
               <button
-                class="p-2 text-[#42C1C8] hover:text-[#2A4D61] rounded-full transition-colors duration-200"
+                class=" text-[#42C1C8] hover:text-[#2A4D61] rounded-full transition-colors duration-200"
                 on:click={() =>
                   handleRegenerateModuleVideos(currentModuleIndex)}
               >
@@ -352,7 +352,7 @@
               </button>
             </div>
             <button
-              class="bg-brand-red hover:bg-ButtonHover text-mini-body lg:text-semi-body text-white px-2 py-2 rounded-lg flex items-center gap-2 transition-colors duration-200"
+              class="text-nowrap bg-brand-red hover:bg-ButtonHover text-mini-body lg:text-semi-body text-white px-2 py-2  rounded-lg flex items-center gap-2 transition-colors duration-200"
               on:click={() => (showCustomUrlInput = true)}
             >
               Add Custom Video
