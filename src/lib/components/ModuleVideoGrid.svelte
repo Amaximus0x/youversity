@@ -55,7 +55,7 @@
   }
 </script>
 
-<div class="relative p-2">
+<div class="relative">
   {#if moduleVideos[currentModuleIndex]?.length}
     {#if showLeftArrow}
       <button
@@ -68,42 +68,75 @@
 
     <div
       bind:this={sliderRef}
-      class="flex gap-6 overflow-x-auto scrollbar-hide pb-16 px-2 pt-2"
+      class="flex flex-col md:flex-row gap-6 overflow-y-auto md:overflow-x-auto scrollbar-hide pb-16 px-2 pt-2"
       on:scroll={updateArrows}
     >
       {#each moduleVideos[currentModuleIndex] as video, videoIndex}
         <!-- Video Card Container -->
-        <div class="flex-shrink-0 w-[341px]">
+        <div class="flex-shrink-0 w-full md:w-[341px]">
           <!-- Video Card with Selection Highlight -->
           <div 
-            class="group relative p-2 rounded-2xl overflow-hidden transition-all duration-200 cursor-pointer border "
+            class="group relative p-2 rounded-2xl overflow-hidden transition-all duration-200 cursor-pointer border flex md:block gap-4 "
             class:ring-2={selectedVideos[currentModuleIndex] === videoIndex}
             class:ring-brand-red={selectedVideos[currentModuleIndex] === videoIndex}
             class:ring-offset-2={selectedVideos[currentModuleIndex] === videoIndex}
             on:click={() => selectVideo(videoIndex)}
           >
-            <div class="flex flex-col gap-2">
-              <!-- Title and Duration Section -->
-              <div class="h-[62px] flex flex-col">
-                <!-- Video Title -->
-                <div class="flex gap-1">
-                  <span class="text-semibody-medium text-light-text-secondary line-clamp-2 break-words">
-                    {String(videoIndex + 1).padStart(2, '0')}: {video.title}
-                  </span>
-                  <!-- <span class="text-semibody-medium text-light-text-primary line-clamp-2">
-                    {video.title}
-                  </span> -->
+            <!-- Thumbnail Container - Hidden on mobile, shown on md+ -->
+            <div class="hidden md:block">
+              <div class="flex flex-col gap-2">
+                <!-- Title and Duration Section -->
+                <div class="h-[62px] flex flex-col">
+                  <!-- Video Title -->
+                  <div class="flex gap-1">
+                    <span class="text-semibody-medium  line-clamp-2 break-words">
+                      <span class="text-light-text-secondary">{String(videoIndex + 1).padStart(2, '0')}: </span>
+                      <span class="text-light-text-primary"> {video.title}</span>
+                    </span>
+                  </div>
+                  <!-- Duration -->
+                  <div class="flex items-center">
+                    <span class="text-mini-body text-light-text-tertiary">
+                      {video.length} min
+                    </span>
+                  </div>
                 </div>
-                <!-- Duration -->
-                <div class="flex items-center">
-                  <span class="text-mini-body text-light-text-tertiary">
-                    {video.length} min
-                  </span>
+
+                <!-- Thumbnail -->
+                <div class="relative aspect-video rounded-lg overflow-hidden">
+                  <img
+                    src={video.thumbnailUrl}
+                    alt={video.title}
+                    class="w-full h-full object-cover rounded-lg"
+                  />
+                  <!-- Play Button Overlay -->
+                  <div class="absolute inset-0 bg-black/20 hover:bg-black/30 transition-all duration-200 flex items-center justify-center">
+                    <button
+                      class="text-white hover:scale-110 transform transition-transform duration-200"
+                      on:click|stopPropagation={(e) => handlePlayVideo(video, e)}
+                    >
+                      <img src="/icons/youtube-icon.svg" alt="Play" class="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
               </div>
+            </div>
 
-              <!-- Thumbnail Container -->
-              <div class="relative aspect-video rounded-lg overflow-hidden">
+            <!-- Mobile Layout - Hidden on md+ screens -->
+            <div class="flex md:hidden items-center w-full">
+              <!-- Left side: Title and Duration -->
+              <div class="flex-1 min-w-0 flex flex-col justify-between mr-4">
+                <span class="text-semibody-medium text-light-text-secondary line-clamp-2">
+                  <span class="text-light-text-secondary">{String(videoIndex + 1).padStart(2, '0')}: </span>
+                  <span class="text-light-text-primary"> {video.title}</span>
+                </span>
+                <span class="text-mini-body text-light-text-tertiary">
+                  {video.length} min
+                </span>
+              </div>
+              
+              <!-- Right side: Thumbnail -->
+              <div class="w-[165px] h-[78px] relative rounded-lg overflow-hidden shrink-0">
                 <img
                   src={video.thumbnailUrl}
                   alt={video.title}
@@ -120,6 +153,7 @@
                 </div>
               </div>
             </div>
+
           </div>
         </div>
       {/each}
