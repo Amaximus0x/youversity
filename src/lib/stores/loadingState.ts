@@ -153,4 +153,146 @@ function createLoadingStore() {
   };
 }
 
-export const loadingState = createLoadingStore(); 
+export const loadingState = createLoadingStore();
+
+// Split into two separate stores
+function createInitialLoadingStore() {
+  const { subscribe, set, update } = writable<InitialLoadingState>({
+    isLoading: false,
+    currentModule: 0,
+    totalModules: 10,
+    currentStep: '',
+    progress: 0,
+    error: null
+  });
+
+  return {
+    subscribe,
+    startLoading: () => update(state => ({
+      ...state,
+      isLoading: true,
+      progress: 0
+    })),
+    stopLoading: () => update(state => ({
+      ...state,
+      isLoading: false
+    })),
+    setCurrentModule: (module: number) => 
+      update(state => ({ ...state, currentModule: module })),
+    setStep: (step: string) =>
+      update(state => ({ ...state, currentStep: step })),
+    setProgress: (progress: number) =>
+      update(state => ({
+        ...state,
+        progress: Math.min(Math.max(progress, 0), 100)
+      })),
+    setTotalModules: (total: number) => 
+      update(state => ({ ...state, totalModules: total })),
+    setError: (error: string | null) => update(state => ({ 
+      ...state, 
+      error,
+      isLoading: false
+    })),
+    clearError: () => update(state => ({ 
+      ...state, 
+      error: null,
+      isLoading: false
+    }))
+  };
+}
+
+function createFinalLoadingStore() {
+  const { subscribe, set, update } = writable<FinalLoadingState>({
+    isLoading: false,
+    currentStep: '',
+    progress: 0,
+    courseTitle: '',
+    minimized: false,
+    courseId: null,
+    error: null,
+    notification: {
+      show: false,
+      type: null,
+      message: ''
+    }
+  });
+
+  if (browser) {
+    subscribe(state => {
+      if (state.courseId || state.minimized || state.isLoading) {
+        localStorage.setItem('finalLoadingState', JSON.stringify(state));
+      } else {
+        localStorage.removeItem('finalLoadingState');
+      }
+    });
+  }
+
+  return {
+    subscribe,
+    startLoading: (title: string) => update(state => ({
+      ...state,
+      isLoading: true,
+      courseTitle: title,
+      progress: 0,
+      minimized: false
+    })),
+    stopLoading: (courseId?: string) => update(state => ({
+      ...state,
+      courseId: courseId || null,
+      isLoading: false
+    })),
+    setStep: (step: string) => update(state => ({
+      ...state,
+      currentStep: step
+    })),
+    setProgress: (progress: number) => update(state => ({
+      ...state,
+      progress: Math.min(Math.max(progress, 0), 100)
+    })),
+    setMinimized: (minimized: boolean) => update(state => ({ ...state, minimized })),
+    setCourseTitle: (title: string) => update(state => ({ ...state, courseTitle: title })),
+    setError: (error: string | null) => update(state => ({ 
+      ...state, 
+      error,
+      isLoading: false
+    })),
+    clearError: () => update(state => ({ 
+      ...state, 
+      error: null,
+      isLoading: false
+    })),
+    clearState: () => {
+      const freshState = {
+        isLoading: false,
+        currentStep: '',
+        progress: 0,
+        courseTitle: '',
+        minimized: false,
+        courseId: null,
+        error: null,
+        notification: {
+          show: false,
+          type: null,
+          message: ''
+        }
+      };
+      set(freshState);
+      if (browser) {
+        localStorage.removeItem('finalLoadingState');
+      }
+    },
+    setCourseId: (courseId: string | null) => update(state => ({
+      ...state,
+      courseId,
+      isLoading: true // Keep loading true so modal stays open
+    })),
+    stopLoading: (courseId?: string) => update(state => ({
+      ...state,
+      courseId: courseId || null,
+      isLoading: false
+    })),
+  };
+}
+
+export const initialLoadingState = createInitialLoadingStore();
+export const finalLoadingState = createFinalLoadingStore(); 

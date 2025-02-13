@@ -3,7 +3,7 @@
   import ModuleVideoGrid from "$lib/components/ModuleVideoGrid.svelte";
   import YoutubeUrlInput from "$lib/components/YoutubeUrlInput.svelte";
   import type { CourseStructure, VideoItem } from "$lib/types/course";
-  import { loadingState } from "$lib/stores/loadingState";
+  import { initialLoadingState, finalLoadingState } from '$lib/stores/loadingState';
   import { page } from "$app/stores";
   import { goto } from "$app/navigation";
   import { Plus } from "lucide-svelte";
@@ -52,8 +52,8 @@
     if (!courseStructure) return;
 
     const moduleTitle = courseStructure.OG_Module_Title[moduleIndex];
-    loadingState.setCurrentModule(moduleIndex + 1, moduleTitle);
-    loadingState.setStep(
+    initialLoadingState.setCurrentModule(moduleIndex + 1, moduleTitle);
+    initialLoadingState.setStep(
       `Searching videos for Module ${moduleIndex + 1}: ${moduleTitle}`,
     );
     const maxRetries = 3;
@@ -91,12 +91,12 @@
       const moduleProgress =
         (moduleIndex + 1) / courseStructure.OG_Module_Title.length;
       const totalProgress = 20 + moduleProgress * 80;
-      loadingState.setProgress(totalProgress);
+      initialLoadingState.setProgress(totalProgress);
     } catch (err: any) {
       console.error(`Error in module ${moduleIndex + 1}:`, err);
       error = err.message;
-      loadingState.setError(error);
-      loadingState.stopLoading();
+      initialLoadingState.setError(error);
+      initialLoadingState.stopLoading();
     }
   }
 
@@ -123,9 +123,10 @@
 
     if (!courseStructure) return;
 
-    // Start loading with modal
-    loadingState.startLoading(courseStructure.OG_Course_Title, false, false);
-    loadingState.setProgress(0);
+    // Start final course generation process
+    finalLoadingState.startLoading(courseStructure.OG_Course_Title);
+    finalLoadingState.setStep("Starting course generation...");
+    finalLoadingState.setProgress(0);
 
     try {
       loading = true;
@@ -134,8 +135,8 @@
 
       // Fetch transcripts for all selected videos
       for (let i = 0; i < selectedVideos.length; i++) {
-        loadingState.setStep(
-          `Fetching transcript for Module ${i + 1}: ${courseStructure.OG_Module_Title[i]}`,
+        finalLoadingState.setStep(
+          `Fetching transcript for Module ${i + 1}: ${courseStructure.OG_Module_Title[i]}`
         );
 
         const video = moduleVideos[i][selectedVideos[i]];
@@ -143,11 +144,11 @@
         moduleTranscripts[i] = transcript;
 
         const progress = ((i + 1) / selectedVideos.length) * 40; // First 40% for transcripts
-        loadingState.setProgress(progress);
+        finalLoadingState.setProgress(progress);
       }
 
-      loadingState.setStep("Generating course content and quizzes...");
-      loadingState.setProgress(60);
+      finalLoadingState.setStep("Generating course content and quizzes...");
+      finalLoadingState.setProgress(60);
 
       const selectedVideosList = moduleVideos.map((videos, index) => ({
         ...videos[selectedVideos[index]],
@@ -165,20 +166,15 @@
         }),
       });
 
-      loadingState.setProgress(80);
-      loadingState.setStep("Processing course content...");
+      finalLoadingState.setProgress(80);
+      finalLoadingState.setStep("Processing course content...");
 
       const data = await response.json();
       if (!data.success)
         throw new Error(data.error || "Failed to create final course");
 
-      // Update course title
-      if (courseStructure) {
-        loadingState.startLoading(courseStructure.OG_Course_Title, true, false);
-      }
-
-      loadingState.setStep("Saving your course...");
-      loadingState.setProgress(90);
+      finalLoadingState.setStep("Saving your course...");
+      finalLoadingState.setProgress(90);
 
       // Save to Firebase
       const courseId = await saveCourseToFirebase($user.uid, {
@@ -190,27 +186,26 @@
         likes: 0,
       });
 
-      // Add this: Automatically enroll the creator in the course
-      loadingState.setStep("Enrolling you in the course...");
-      loadingState.setProgress(95);
+      finalLoadingState.setStep("Enrolling you in the course...");
+      finalLoadingState.setProgress(95);
       
       await enrollInCourse($user.uid, courseId);
 
-      loadingState.setStep("Course is ready");
-      loadingState.setProgress(100);
-      loadingState.stopLoading(courseId);
+      finalLoadingState.setStep("Course is ready!");
+      finalLoadingState.setProgress(100);
+      finalLoadingState.setCourseId(courseId);
     } catch (err: any) {
       console.error("Error saving course:", err);
       error = err.message;
-      loadingState.setError(error);
+      finalLoadingState.setError(error);
     } finally {
       loading = false;
     }
   }
 
   async function handleBuildCourse() {
-    loadingState.startLoading("", true, true); // Explicitly set isInitialBuild to true
-    loadingState.setStep("Analyzing your course objective...");
+    initialLoadingState.startLoading();
+    initialLoadingState.setStep("Analyzing your course objective...");
     error = null;
     moduleVideos = [];
     selectedVideos = [];
@@ -241,9 +236,9 @@
           0,
         );
 
-        loadingState.setTotalModules(courseStructure.OG_Module_Title.length);
-        loadingState.setStep("Course structure generated successfully!");
-        loadingState.setProgress(20); // Initial course structure generation is exactly 20%
+        initialLoadingState.setTotalModules(courseStructure.OG_Module_Title.length);
+        initialLoadingState.setStep("Course structure generated successfully!");
+        initialLoadingState.setProgress(20); // Initial course structure generation is exactly 20%
       } else {
         throw new Error("Invalid course structure received");
       }
@@ -251,8 +246,8 @@
       console.error("Error building course:", err);
       error = err.message;
       courseStructure = null;
-      loadingState.setError(error);
-      loadingState.stopLoading();
+      initialLoadingState.setError(error);
+      initialLoadingState.stopLoading();
     }
   }
 
@@ -263,8 +258,8 @@
       courseObjective = decodeURIComponent(urlObjective);
 
       // Start loading state for course generation
-      loadingState.startLoading("", true, true);
-      loadingState.setStep("Analyzing your course objective...");
+      initialLoadingState.startLoading();
+      initialLoadingState.setStep("Analyzing your course objective...");
 
       await handleBuildCourse();
 
@@ -283,7 +278,7 @@
 
     // Cleanup function to clear loading state when component is destroyed
     return () => {
-      loadingState.clearState();
+      initialLoadingState.clearState();
     };
   });
 </script>

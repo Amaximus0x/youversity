@@ -1,6 +1,6 @@
 <script lang="ts">
   import { fade, fly } from 'svelte/transition';
-  import { loadingState } from '$lib/stores/loadingState';
+  import { finalLoadingState } from '$lib/stores/loadingState';
   import { modalState } from '$lib/stores/modalState';
   import { goto } from '$app/navigation';
   import { onMount } from 'svelte';
@@ -9,14 +9,14 @@
 
   // Add debugging logs
   $: console.log('Modal Debug State:', {
-    isLoading: $loadingState.isLoading,
-    isInitialBuild: $loadingState.isInitialBuild,
-    courseId: $loadingState.courseId,
-    courseTitle: $loadingState.courseTitle,
+    isLoading: $finalLoadingState.isLoading,
+    isInitialBuild: $finalLoadingState.isInitialBuild,
+    courseId: $finalLoadingState.courseId,
+    courseTitle: $finalLoadingState.courseTitle,
     isMinimized: $modalState.isMinimized,
     currentPage: $page.url.pathname,
-    shouldShowModal: ($loadingState.isCreateCourse && !$loadingState.isInitialBuild) || 
-                    ($loadingState.courseId && $modalState.isMinimized)
+    shouldShowModal: ($finalLoadingState.isCreateCourse && !$finalLoadingState.isInitialBuild) || 
+                    ($finalLoadingState.courseId && $modalState.isMinimized)
   });
 
 
@@ -25,16 +25,7 @@
     if ($loadingState.currentStep) {
       return $loadingState.currentStep;
     }
-
-    if ($loadingState.currentModule === 0) {
-      return "Preparing course content...";
-    }
-
-    if ($loadingState.currentModule <= $loadingState.totalModules) {
-      return `Processing Module ${$loadingState.currentModule}: ${$loadingState.currentModuleTitle}`;
-    }
-
-    return "Finalizing your course...";
+    return "Generating your complete course...";
   }
 
   function handleOutsideClick() {
@@ -46,31 +37,31 @@
   }
 
   async function handleViewCourse() {
-    if ($loadingState.courseId) {
-      const courseId = $loadingState.courseId;
+    if ($finalLoadingState.courseId) {
+      const courseId = $finalLoadingState.courseId;
       
-      // First clear both states completely
-      loadingState.clearState();
+      // Navigate first
+      await goto(`/course/${courseId}`);
+      
+      // Then clear states
+      finalLoadingState.clearState();
       modalState.reset();
       
       // Force remove from localStorage
       if (browser) {
-        localStorage.removeItem('loadingState');
+        localStorage.removeItem('finalLoadingState');
         localStorage.removeItem('modalState');
       }
-      
-      // Then navigate
-      await goto(`/course/${courseId}`);
     }
   }
 
   function handleDismiss() {
     modalState.reset();
-    loadingState.clearState();
+    finalLoadingState.clearState();
   }
 
   function handleRetry() {
-    loadingState.clearError();
+    finalLoadingState.clearError();
     goto('/create-course');
   }
 
@@ -78,7 +69,7 @@
     if (browser) {
       // Log initial state on mount
       console.log('Modal Mounted:', {
-        storedLoadingState: localStorage.getItem('loadingState'),
+        storedLoadingState: localStorage.getItem('finalLoadingState'),
         storedModalState: localStorage.getItem('modalState')
       });
 
@@ -91,10 +82,11 @@
     }
   });
 
-  $: shouldShowModal = ($loadingState.isCreateCourse && !$loadingState.isInitialBuild) || 
-                      ($loadingState.courseId && $modalState.isMinimized);
+  $: shouldShowModal = $finalLoadingState.isLoading || 
+                      $finalLoadingState.courseId || 
+                      $modalState.isMinimized;
 
-  $: isComplete = $loadingState.progress === 100;
+  $: isComplete = $finalLoadingState.progress === 100;
 </script>
 
 {#if shouldShowModal}
@@ -109,38 +101,15 @@
         class="bg-white dark:bg-dark-background-primary rounded-2xl shadow-lg border border-[rgba(0,0,0,0.05)] px-4 pt-2 pb-4 cursor-pointer relative"
         on:click={handleMaximize}
       >
-        <!-- Add close button for error state -->
-        {#if $loadingState.error}
-          <button
-            class="absolute top-2 right-2 p-1 hover:bg-gray-100 rounded-full"
-            on:click|stopPropagation={handleDismiss}
-          >
-            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        {/if}
-
-        <div class="flex items-center justify-between">
-          <div>
-            <h2 class="text-body-semibold text-Black dark:text-White">
-              {isComplete ? "Course is ready" : "Generating Complete Course"}
-            </h2>
-          </div>
-
-          <div class="flex items-end p-3.5">
+        <div class="flex items-center justify-between mb-2">
+          <h2 class="text-body-semibold text-Black dark:text-White">
+            {isComplete ? "Course is ready" : "Generating Complete Course"}
+          </h2>
+          <div class="flex items-center p-2">
             {#if isComplete}
-              <img 
-                src="/images/checkmark-circle.svg" 
-                alt="Success" 
-                class="w-4 h-4"
-              />
+              <img src="/images/checkmark-circle.svg" alt="Success" class="w-4 h-4"/>
             {:else}
-              <img 
-                src="/images/loading-spin.gif" 
-                alt="Loading" 
-                class="w-4 h-4"
-              />
+              <img src="/images/loading-spin.gif" alt="Loading" class="w-4 h-4"/>
             {/if}
           </div>
         </div>
@@ -149,16 +118,16 @@
           <div class="relative h-3 bg-Black/5 rounded-full overflow-hidden mb-4">
             <div 
               class="absolute left-0 top-0 h-full bg-[#42C1C8] rounded-full transition-all duration-300 ease-out"
-              style="width: {$loadingState.progress}%"
+              style="width: {$finalLoadingState.progress}%"
             />
           </div>
         {/if}
 
-        <p class="text-semi-body text-Black dark:text-White truncate mb-2">
+        <p class="text-semi-body text-Black dark:text-White mb-4">
           {#if isComplete}
-            {$loadingState.courseTitle}
+            {$finalLoadingState.courseTitle}
           {:else}
-            {getGenerationStep($loadingState)}
+            {getGenerationStep($finalLoadingState)}
           {/if}
         </p>
 
@@ -173,25 +142,25 @@
       </div>
     </div>
   {:else}
-    <!-- Full screen modal -->
+    <!-- Full screen modal with popup styling -->
     <div 
       class="modal-content fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50"
       transition:fade={{ duration: 200 }}
       on:click={handleOutsideClick}
     >
       <div 
-        class="bg-white dark:bg-dark-background-primary rounded-2xl shadow-lg max-w-lg w-full mx-4 p-6 relative"
+        class="bg-white dark:bg-dark-background-primary rounded-3xl shadow-lg w-[500px] p-8 relative"
         on:click|stopPropagation
+        in:fly={{ y: 20, duration: 300 }}
       >
-        <!-- Error State -->
-        {#if $loadingState.error}
+        {#if $finalLoadingState.error}
           <div class="text-center">
             <div class="text-red-500 mb-6">
               <svg class="w-12 h-12 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
               </svg>
               <h3 class="text-lg font-semibold mb-2">Course Generation Failed</h3>
-              <p class="text-sm text-gray-600 mb-4">{$loadingState.error}</p>
+              <p class="text-sm text-gray-600 mb-4">{$finalLoadingState.error}</p>
             </div>
             
             <div class="flex gap-3 justify-center">
@@ -211,53 +180,45 @@
           </div>
         {:else}
           <!-- Success/Loading State -->
-          <div class="flex items-center justify-between mb-6">
-            <h2 class="text-body-semibold text-Black dark:text-White">
-              {isComplete ? "Course is ready" : "Generating Complete Course"}
-            </h2>
-            
-            <div class="flex items-end p-3.5">
+          <div class="text-center">
+            <div class="flex items-center justify-center mb-6">
               {#if isComplete}
-                <img 
-                  src="/images/checkmark-circle.svg" 
-                  alt="Success" 
-                  class="w-4 h-4"
-                />
+                <img src="/images/checkmark-circle.svg" alt="Success" class="w-12 h-12"/>
               {:else}
-                <img 
-                  src="/images/loading-spin.gif" 
-                  alt="Loading" 
-                  class="w-4 h-4"
-                />
+                <img src="/images/loading-spin.gif" alt="Loading" class="w-12 h-12"/>
               {/if}
             </div>
-          </div>
 
-          {#if !isComplete}
-            <div class="relative h-3 bg-Black/5 rounded-full overflow-hidden mb-4">
-              <div 
-                class="absolute left-0 top-0 h-full bg-[#42C1C8] rounded-full transition-all duration-300 ease-out"
-                style="width: {$loadingState.progress}%"
-              />
-            </div>
-          {/if}
+            <h2 class="text-h2 text-Black dark:text-White mb-4">
+              {isComplete ? "Course is ready" : "Getting your Course Ready"}
+            </h2>
 
-          <p class="text-semi-body text-Black dark:text-White mb-4">
-            {#if isComplete}
-              {$loadingState.courseTitle}
+            {#if !isComplete}
+              <p class="text-body text-Black2 dark:text-White mb-6">
+                Setting things up for smooth learning experience
+              </p>
+
+              <div class="relative h-3 bg-Black/5 rounded-full overflow-hidden mb-8">
+                <div 
+                  class="absolute left-0 top-0 h-full bg-[#42C1C8] rounded-full transition-all duration-300 ease-out"
+                  style="width: {$finalLoadingState.progress}%"
+                />
+              </div>
             {:else}
-              {getGenerationStep($loadingState)}
+              <p class="text-h4 text-Black dark:text-White mb-8">
+                {$finalLoadingState.courseTitle}
+              </p>
             {/if}
-          </p>
 
-          {#if isComplete}
-            <button
-              class="w-full bg-brand-navy hover:bg-brand-darkBlue text-white rounded-xl py-3 text-body transition-colors duration-200"
-              on:click={handleViewCourse}
-            >
-              View Course
-            </button>
-          {/if}
+            {#if isComplete}
+              <button
+                class="w-full bg-brand-navy hover:bg-brand-darkBlue text-white rounded-xl py-4 text-body-semibold transition-colors duration-200"
+                on:click={handleViewCourse}
+              >
+                View Course
+              </button>
+            {/if}
+          </div>
         {/if}
       </div>
     </div>

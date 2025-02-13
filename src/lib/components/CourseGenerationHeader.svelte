@@ -1,21 +1,18 @@
 <script lang="ts">
-  import { loadingState } from '$lib/stores/loadingState';
+  import { initialLoadingState } from '$lib/stores/loadingState';
   import { fade } from 'svelte/transition';
 
   function getProgressMessage($loadingState: any) {
     if ($loadingState.progress === 100) {
-      return "Course modules are ready.";
+      return "Course structure is ready.";
     }
     if ($loadingState.currentStep) {
       return $loadingState.currentStep;
     }
-    if ($loadingState.currentModule > 0) {
-      return `Compiling Module ${$loadingState.currentModule} videos`;
-    }
     return "Analyzing your course objective...";
   }
 
-  $: isComplete = $loadingState.progress === 100;
+  $: isComplete = $initialLoadingState.progress === 100;
 </script>
 
 <div 
@@ -52,9 +49,9 @@
   <div class="relative h-3 bg-Black/5 rounded-full overflow-hidden mb-4">
     <div 
       class="absolute left-0 top-0 h-full bg-[#42C1C8] rounded-full transition-all duration-300 ease-out"
-      style="width: {$loadingState.progress}%"
+      style="width: {$initialLoadingState.progress}%"
     />
   </div>
 
-  <p class="text-semi-body text-Black dark:text-White">{getProgressMessage($loadingState)}</p>
+  <p class="text-semi-body text-Black dark:text-White">{getProgressMessage($initialLoadingState)}</p>
 </div> 
