@@ -191,7 +191,7 @@
 
       finalLoadingState.setStep("Enrolling you in the course...");
       finalLoadingState.setProgress(95);
-
+      
       await enrollInCourse($user.uid, courseId);
 
       finalLoadingState.setStep("Course is ready!");
@@ -293,11 +293,11 @@
 >
   <!-- Fixed Header Section for Mobile -->
   <div
-    class="md:hidden fixed top-14 left-0 right-0 z-40 pt-safe-top bg-BackgroundRed"
+    class="md:hidden fixed top-14 left-0 right-0 z-40 pt-safe-top bg-light-bg-secondary dark:bg-dark-bg-secondary"
   >
     <div class=" pt-4 pb-4">
       <div class="px-4">
-        <CourseGenerationHeader />
+    <CourseGenerationHeader />
       </div>
 
       {#if courseStructure}
@@ -327,9 +327,76 @@
       {/if}
     </div>
   </div>
+  <!-- Mobile Scrollable Content -->
+  <div
+    class="md:hidden mt-[calc(140px+env(safe-area-inset-top)+294px)]  pb-32"
+  >
+  
+    {#if courseStructure}
+      <div class="space-y-6">
+        <!-- Module Content -->
+        <div class=" rounded-xl ">
+          <div class="flex items-center gap-8 lg:justify-between mb-6">
+            <div class="flex items-center justify-center gap-2 lg:gap-4">
+              <h2
+                class="text-body-semibold lg:text-h4-medium text-Black dark:text-White"
+              >
+                Module {currentModuleIndex + 1}: {courseStructure
+                  .OG_Module_Title[currentModuleIndex]}
+              </h2>
+              <button
+                class=" text-[#42C1C8] hover:text-[#2A4D61] rounded-full transition-colors duration-200"
+                on:click={() =>
+                  handleRegenerateModuleVideos(currentModuleIndex)}
+              >
+                <svg
+                  class="w-5 h-5"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M15.1667 1L15.7646 2.11777C16.1689 2.87346 16.371 3.25131 16.2374 3.41313C16.1037 3.57495 15.6635 3.44426 14.7831 3.18288C13.9029 2.92155 12.9684 2.78095 12 2.78095C6.75329 2.78095 2.5 6.90846 2.5 12C2.5 13.6791 2.96262 15.2535 3.77093 16.6095M8.83333 23L8.23536 21.8822C7.83108 21.1265 7.62894 20.7486 7.7626 20.5868C7.89627 20.425 8.33649 20.5557 9.21689 20.8171C10.0971 21.0784 11.0316 21.219 12 21.219C17.2467 21.219 21.5 17.0915 21.5 12C21.5 10.3208 21.0374 8.74647 20.2291 7.39047"
+                  />
+                </svg>
+              </button>
+            </div>
+            <button
+              class="text-nowrap bg-brand-red hover:bg-ButtonHover text-mini-body lg:text-semi-body text-white px-2 py-2 rounded-lg flex items-center gap-2 transition-colors duration-200"
+              on:click={() => (showCustomUrlInput = true)}
+            >
+              Add Custom Video
+              <Plus class="w-4 h-4 lg:w-6 lg:h-6" />
+            </button>
+          </div>
+
+          {#if showCustomUrlInput}
+            <div class="mb-6">
+              <YoutubeUrlInput
+                moduleIndex={currentModuleIndex}
+                onVideoAdd={handleCustomVideoAdd}
+                class="w-full"
+              />
+            </div>
+          {/if}
+
+          <ModuleVideoGrid
+            {courseStructure}
+            bind:moduleVideos
+            bind:selectedVideos
+            {currentModuleIndex}
+            {error}
+          />
+        </div>
+      </div>
+    {/if}
+  </div>
 
   <!-- Desktop Layout -->
-  <div class="hidden md:block container mx-auto px-4 py-8">
+  <div class="hidden md:block container mx-auto">
     <CourseGenerationHeader />
     {#if courseStructure}
       <div class="space-y-8">
@@ -463,77 +530,12 @@
     {/if}
   </div>
 
-  <!-- Mobile Scrollable Content -->
-  <div
-    class="md:hidden mt-[calc(100px+env(safe-area-inset-top)+294px)]  pb-32"
-  >
-    {#if courseStructure}
-      <div class="space-y-6">
-        <!-- Module Content -->
-        <div class=" rounded-xl ">
-          <div class="flex items-center gap-8 lg:justify-between mb-6">
-            <div class="flex items-center justify-center gap-2 lg:gap-4">
-              <h2
-                class="text-body-semibold lg:text-h4-medium text-Black dark:text-White"
-              >
-                Module {currentModuleIndex + 1}: {courseStructure
-                  .OG_Module_Title[currentModuleIndex]}
-              </h2>
-              <button
-                class=" text-[#42C1C8] hover:text-[#2A4D61] rounded-full transition-colors duration-200"
-                on:click={() =>
-                  handleRegenerateModuleVideos(currentModuleIndex)}
-              >
-                <svg
-                  class="w-5 h-5"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    d="M15.1667 1L15.7646 2.11777C16.1689 2.87346 16.371 3.25131 16.2374 3.41313C16.1037 3.57495 15.6635 3.44426 14.7831 3.18288C13.9029 2.92155 12.9684 2.78095 12 2.78095C6.75329 2.78095 2.5 6.90846 2.5 12C2.5 13.6791 2.96262 15.2535 3.77093 16.6095M8.83333 23L8.23536 21.8822C7.83108 21.1265 7.62894 20.7486 7.7626 20.5868C7.89627 20.425 8.33649 20.5557 9.21689 20.8171C10.0971 21.0784 11.0316 21.219 12 21.219C17.2467 21.219 21.5 17.0915 21.5 12C21.5 10.3208 21.0374 8.74647 20.2291 7.39047"
-                  />
-                </svg>
-              </button>
-            </div>
-            <button
-              class="text-nowrap bg-brand-red hover:bg-ButtonHover text-mini-body lg:text-semi-body text-white px-2 py-2 rounded-lg flex items-center gap-2 transition-colors duration-200"
-              on:click={() => (showCustomUrlInput = true)}
-            >
-              Add Custom Video
-              <Plus class="w-4 h-4 lg:w-6 lg:h-6" />
-            </button>
-          </div>
-
-          {#if showCustomUrlInput}
-            <div class="mb-6">
-              <YoutubeUrlInput
-                moduleIndex={currentModuleIndex}
-                onVideoAdd={handleCustomVideoAdd}
-                class="w-full"
-              />
-            </div>
-          {/if}
-
-          <ModuleVideoGrid
-            {courseStructure}
-            bind:moduleVideos
-            bind:selectedVideos
-            {currentModuleIndex}
-            {error}
-          />
-        </div>
-      </div>
-    {/if}
-  </div>
+  
 
   <!-- Mobile Generate Course Button -->
   <div class="fixed md:hidden bottom-[8.5rem] z-50">
     <button
-      class="px-4 py-3 rounded-full shadow-lg flex items-center justify-center transition-all duration-200 gap-2 {!allModulesLoaded ||
+      class="px-4 py-3 rounded-lg shadow-lg flex items-center justify-center transition-all duration-200 gap-2 {!allModulesLoaded ||
       !courseStructure?.OG_Module_Title.every(
         (_, index) => selectedVideos[index] !== undefined,
       )
