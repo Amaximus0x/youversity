@@ -46,7 +46,8 @@
 
       // Separate courses into enrolled and created
       enrolledCourses = coursesWithProgress.filter(
-        course => !course.isCreator && course.isEnrolled
+        course => course.isEnrolled
+        // course => !course.isCreator && course.isEnrolled
       );
       
       createdCourses = coursesWithProgress.filter(

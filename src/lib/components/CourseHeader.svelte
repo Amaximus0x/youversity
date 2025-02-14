@@ -11,7 +11,7 @@
     export let isBookmarked: boolean = false;
     export let hasLiked: boolean = false;
     export let liking: boolean = false;
-    export let showShareModal: boolean = false;
+    export const showShareModal: boolean = false;
     export let isEnrolled: boolean = false;
 
     // Check if we're on the module page
@@ -166,7 +166,7 @@
 
     <div class="flex items-center gap-4">
         <!-- Bookmark Button -->
-        {#if !isCreator}
+        {#if !isCreator || $currentModuleStore !== -1 || $currentModuleStore !== courseDetails?.Final_Module_Title?.length}
                 <button
                     class="w-full px-2 py-2 text-semibody-medium flex items-center justify-center gap-2 bg-Black/5 text-Green rounded-full hover:bg-Black/5 transition-colors"
                     on:click={handleBookmark}
@@ -182,6 +182,7 @@
         {/if}
 
         <!-- Share Button -->
+        {#if $currentModuleStore === -1 || $currentModuleStore === courseDetails?.Final_Module_Title?.length}
         <button
             class="flex items-center gap-2 bg-Black/5 px-2 py-2 rounded-full hover:opacity-80 transition-opacity"
             on:click={handleShare}
@@ -215,6 +216,7 @@
                 />
             </svg>
         </button>
+        {/if}
     </div>
 </div>
 

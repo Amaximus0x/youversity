@@ -122,6 +122,7 @@
         
         // Then get course data
         const courseData = await getUserCourse($user.uid, $page.params.id);
+        console.log("courseData", courseData);
         if (!courseData) {
           throw new Error('Course not found');
         }
