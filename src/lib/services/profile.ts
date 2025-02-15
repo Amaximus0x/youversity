@@ -1,5 +1,5 @@
 import { db } from '$lib/firebase';
-import { doc, getDoc, setDoc, updateDoc, serverTimestamp, deleteDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc, serverTimestamp, deleteDoc, query, getDocs, collection, where, limit } from 'firebase/firestore';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { app } from '$lib/firebase';
 import { generateUsername } from '$lib/utils/username';
@@ -144,5 +144,30 @@ export async function uploadProfileImage(userId: string, file: File): Promise<st
   } catch (error) {
     console.error('Error uploading profile image:', error);
     throw new Error('Failed to upload profile image');
+  }
+}
+
+export async function getUserProfileByUsername(username: string) {
+  try {
+    const q = query(
+      collection(db, 'users'),
+      where('username', '==', username),
+      limit(1)
+    );
+    
+    const querySnapshot = await getDocs(q);
+    
+    if (querySnapshot.empty) {
+      return null;
+    }
+    
+    const userDoc = querySnapshot.docs[0];
+    return {
+      uid: userDoc.id,
+      ...userDoc.data()
+    };
+  } catch (error) {
+    console.error('Error fetching user profile by username:', error);
+    return null;
   }
 } 

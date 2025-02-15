@@ -1078,3 +1078,57 @@ export async function removeEnrollment(userId: string, courseId: string) {
     throw new Error('Failed to remove course enrollment');
   }
 }
+
+export async function getPublicCoursesByCreator(creatorId: string) {
+  try {
+    // First get all public courses by the creator
+    const q = query(
+      collection(db, 'courses'),
+      where('createdBy', '==', creatorId),
+      // where('isPublic', '==', true)
+    );
+    
+    const querySnapshot = await getDocs(q);
+    
+    const courses = querySnapshot.docs.map(doc => {
+      const data = doc.data();
+      const course: FinalCourseStructure = {
+        Final_Course_Title: data.Final_Course_Title || '',
+        Final_Course_Objective: data.Final_Course_Objective || '',
+        Final_Course_Introduction: data.Final_Course_Introduction || '',
+        Final_Module_Title: data.Final_Module_Title || [],
+        Final_Module_Objective: data.Final_Module_Objective || [],
+        Final_Module_YouTube_Video_URL: data.Final_Module_YouTube_Video_URL || [],
+        Final_Module_Quiz: data.Final_Module_Quiz || [],
+        Final_Course_Quiz: data.Final_Course_Quiz || null,
+        Final_Course_Conclusion: data.Final_Course_Conclusion || '',
+        YouTube_Playlist_URL: data.YouTube_Playlist_URL || '',
+        Final_Course_Thumbnail: data.Final_Course_Thumbnail || '',
+        isPublic: data.isPublic || false,
+        createdBy: data.createdBy || '',
+        createdAt: data.createdAt?.toDate?.() || new Date(),
+        likes: data.likes || 0,
+        views: data.views || 0,
+        totalRatings: data.totalRatings || 0,
+        Final_Module_Video_Duration: data.Final_Module_Video_Duration || [],
+        Final_Module_Thumbnails: data.Final_Module_Thumbnails || [],
+        Final_Course_Duration: data.Final_Course_Duration || 0
+      };
+
+      return {
+        ...course,
+        id: doc.id // Add the id field
+      };
+    });
+    
+    // Sort in memory
+    return courses.sort((a, b) => {
+      const dateA = a.createdAt instanceof Date ? a.createdAt : new Date(a.createdAt);
+      const dateB = b.createdAt instanceof Date ? b.createdAt : new Date(b.createdAt);
+      return dateB.getTime() - dateA.getTime();
+    });
+  } catch (error) {
+    console.error('Error fetching creator courses:', error);
+    throw new Error('Failed to fetch creator courses');
+  }
+}
