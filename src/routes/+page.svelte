@@ -264,7 +264,7 @@
             placeholder="Enter what you want to learn..."
             on:focus={() => isInputFocused = true}
             on:blur={() => isInputFocused = false}
-            class="w-full text-body pl-12 pr-32 h-[52px] rounded-2xl border-[1.5px] border-light-border dark:border-dark-border focus:pl-4 focus:outline-none focus:border-brand-red bg-light-bg-primary dark:bg-dark-bg-primary text-light-text-primary dark:text-dark-text-primary placeholder:text-light-text-tertiary dark:placeholder:text-dark-text-tertiary transition-colors duration-300 ease-in-out"
+            class="w-full text-body pl-12 pr-3 h-[52px] rounded-2xl border-[1.5px] border-light-border dark:border-dark-border focus:pl-4 focus:outline-none focus:border-brand-red bg-light-bg-primary dark:bg-dark-bg-primary text-light-text-primary dark:text-dark-text-primary placeholder:text-light-text-tertiary dark:placeholder:text-dark-text-tertiary transition-colors duration-300 ease-in-out"
           />
         </div>
       </form>
