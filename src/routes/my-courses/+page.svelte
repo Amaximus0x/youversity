@@ -44,18 +44,34 @@
         };
       }));
 
-      // Separate courses into enrolled and created
-      enrolledCourses = coursesWithProgress.filter(
-        course => course.isEnrolled
-        // course => !course.isCreator && course.isEnrolled
-      );
-      
+      // Get created courses
       createdCourses = coursesWithProgress.filter(
         course => course.isCreator || course.createdBy === $user!.uid
       );
       
-      // All courses combines both enrolled and created
-      allCourses = [...enrolledCourses, ...createdCourses];
+      // Get enrolled courses (including created courses if they're enrolled)
+      enrolledCourses = coursesWithProgress.filter(
+        course => course.isEnrolled
+      );
+      
+      // All courses should show both created and enrolled courses without duplicates
+      // Use a Map to deduplicate by course ID
+      const uniqueCourses = new Map();
+      
+      // Add created courses first
+      createdCourses.forEach(course => {
+        uniqueCourses.set(course.id, course);
+      });
+      
+      // Add enrolled courses that aren't already in the map
+      enrolledCourses.forEach(course => {
+        if (!uniqueCourses.has(course.id)) {
+          uniqueCourses.set(course.id, course);
+        }
+      });
+      
+      // Convert Map back to array
+      allCourses = Array.from(uniqueCourses.values());
       
     } catch (error) {
       console.error('Error loading courses:', error);
