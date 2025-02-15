@@ -151,7 +151,7 @@
                 {/if}
             </div>
 
-            <div>
+            <div >
                 <p
                     class="text-semi-body text-light-text-tertiary dark:text-dark-text-tertiary"
                 >
@@ -163,7 +163,7 @@
                         creatorProfile?.displayName ||
                         "Unknown Creator"}
                 </p>
-                <div class="self-stretch text-[#a2a2a2] text-mini-body">
+                <div class="self-stretch text-mini-body text-light-text-tertiary dark:text-dark-text-tertiary text-left">
                     {new Date(
                         courseDetails.createdAt?.toDate?.() ||
                             courseDetails.createdAt ||

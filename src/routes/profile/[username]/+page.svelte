@@ -1,128 +1,248 @@
 <script lang="ts">
-  import { page } from "$app/stores";
-  import { onMount } from "svelte";
-  import { getUserProfileByUsername, getUserProfile } from "$lib/services/profile";
-  import { getPublicCoursesByCreator } from "$lib/firebase";
-  import type { FinalCourseStructure } from "$lib/types/course";
+    import { page } from "$app/stores";
+    import { onMount } from "svelte";
+    import {
+        getUserProfileByUsername,
+        getUserProfile,
+    } from "$lib/services/profile";
+    import { getPublicCoursesByCreator } from "$lib/firebase";
+    import type { FinalCourseStructure } from "$lib/types/course";
+    import TrendingCard from "$lib/components/TrendingCard.svelte";
 
-  let loading = true;
-  let error: string | null = null;
-  let profile: any = null;
-  let courses: FinalCourseStructure[] = [];
+    let loading = true;
+    let error: string | null = null;
+    let profile: any = null;
+    let courses: FinalCourseStructure[] = [];
 
-  onMount(async () => {
-    try {
-      const username = $page.params.username;
-      
-      // Try to get profile by username first
-      profile = await getUserProfileByUsername(username);
-      
-      // If not found, try getting by uid
-      if (!profile) {
-        profile = await getUserProfile(username);
-      }
-      
-      if (!profile) {
-        throw new Error('Profile not found');
-      }
-
-      // Get creator's courses
-      courses = await getPublicCoursesByCreator(profile.uid);
-    } catch (err) {
-      console.error("Error:", err);
-      error = err instanceof Error ? err.message : "An error occurred";
-    } finally {
-      loading = false;
+    // Add share handler function
+    function handleShare(courseId: string) {
+        // You can implement share functionality here
+        console.log("Share course:", courseId);
     }
-  });
+
+    onMount(async () => {
+        try {
+            const username = $page.params.username;
+
+            // Try to get profile by username first
+            profile = await getUserProfileByUsername(username);
+            console.log(profile);
+
+            // If not found, try getting by uid
+            if (!profile) {
+                profile = await getUserProfile(username);
+            }
+
+            if (!profile) {
+                throw new Error("Profile not found");
+            }
+
+            // Get creator's courses
+            courses = await getPublicCoursesByCreator(profile.uid);
+        } catch (err) {
+            console.error("Error:", err);
+            error = err instanceof Error ? err.message : "An error occurred";
+        } finally {
+            loading = false;
+        }
+    });
 </script>
 
-<div class="w-full min-h-screen bg-light-background-primary dark:bg-dark-background-primary">
-  {#if loading}
-    <div class="flex justify-center items-center min-h-screen">
-      <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-brand-turquoise"></div>
-    </div>
-  {:else if error}
-    <div class="text-brand-red text-center p-4">{error}</div>
-  {:else}
-    <div class="container mx-auto px-4 py-8">
-      <!-- Profile Header -->
-      <div class="flex flex-col lg:flex-row items-start lg:items-center gap-6 mb-8">
-        <div class="w-24 h-24 lg:w-32 lg:h-32">
-          {#if profile.photoURL}
-            <img
-              src={profile.photoURL}
-              alt={profile.displayName}
-              class="w-full h-full rounded-full object-cover"
-            />
-          {:else}
-            <div class="w-full h-full rounded-full bg-Black/5 flex items-center justify-center">
-              <span class="text-[#2A4D61] text-h2 font-medium">
-                {(profile.username?.[0] || profile.displayName?.[0] || "U").toUpperCase()}
-              </span>
+<div
+    class="w-full min-h-screen bg-light-background-primary dark:bg-dark-background-primary"
+>
+    {#if loading}
+        <div class="flex justify-center items-center min-h-screen">
+            <div
+                class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-brand-turquoise"
+            ></div>
+        </div>
+    {:else if error}
+        <div class="text-brand-red text-center p-4">{error}</div>
+    {:else}
+        <!-- <div class="container mx-auto pt-1"> -->
+        <div class="w-full pt-1 pb-2 lg:grid lg:grid-cols-12 lg:gap-8">
+            <!-- back button and share button for small screen -->
+            <div class="flex justify-between items-center mb-2 lg:hidden">
+                <button
+                    class="text-light-text-primary dark:text-dark-text-primary"
+                >
+                    <img
+                        src="/icons/arrow-left.svg"
+                        alt="Back"
+                        class="w-6 h-6"
+                    />
+                </button>
+                <button
+                    class="text-light-text-primary dark:text-dark-text-primary"
+                >
+                    <svg
+                        class="w-6 h-6 text-light-text-primary dark:text-dark-text-primary"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                    >
+                        <path
+                            d="M21 6.5C21 8.15685 19.6569 9.5 18 9.5C16.3431 9.5 15 8.15685 15 6.5C15 4.84315 16.3431 3.5 18 3.5C19.6569 3.5 21 4.84315 21 6.5Z"
+                            stroke="currentColor"
+                            stroke-width="1.5"
+                        />
+                        <path
+                            d="M9 12C9 13.6569 7.65685 15 6 15C4.34315 15 3 13.6569 3 12C3 10.3431 4.34315 9 6 9C7.65685 9 9 10.3431 9 12Z"
+                            stroke="currentColor"
+                            stroke-width="1.5"
+                        />
+                        <path
+                            d="M21 17.5C21 19.1569 19.6569 20.5 18 20.5C16.3431 20.5 15 19.1569 15 17.5C15 15.8431 16.3431 14.5 18 14.5C19.6569 14.5 21 15.8431 21 17.5Z"
+                            stroke="currentColor"
+                            stroke-width="1.5"
+                        />
+                        <path
+                            d="M8.72852 10.7495L15.2285 7.75M8.72852 13.25L15.2285 16.2495"
+                            stroke="currentColor"
+                            stroke-width="1.5"
+                        />
+                    </svg>
+                </button>
             </div>
-          {/if}
-        </div>
-        
-        <div>
-          <h1 class="text-h4-medium lg:text-h2 text-light-text-primary dark:text-dark-text-primary">
-            {profile.displayName || profile.username}
-          </h1>
-          <p class="text-body text-light-text-secondary dark:text-dark-text-secondary mt-2">
-            {profile.bio || "No bio available"}
-          </p>
-        </div>
-      </div>
 
-      <!-- Courses Section -->
-      <div>
-        <h2 class="text-h4-medium mb-6 text-light-text-primary dark:text-dark-text-primary">
-          Courses Created
-        </h2>
-        
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {#if courses.length === 0}
-            <p class="text-body text-light-text-secondary dark:text-dark-text-secondary">
-              No courses created yet
-            </p>
-          {:else}
-            {#each courses as course}
-              <a 
-                href={`/course/${course.id}`}
-                class="bg-white dark:bg-dark-background-secondary rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow"
-              >
-                <img
-                  src={course.Final_Course_Thumbnail || "/placeholder-course.jpg"}
-                  alt={course.Final_Course_Title}
-                  class="w-full h-48 object-cover"
-                />
-                <div class="p-4">
-                  <h3 class="text-h4-medium text-light-text-primary dark:text-dark-text-primary mb-2">
-                    {course.Final_Course_Title}
-                  </h3>
-                  <p class="text-semi-body text-light-text-secondary dark:text-dark-text-secondary line-clamp-2">
-                    {course.Final_Course_Introduction}
-                  </p>
-                  <div class="flex items-center gap-4 mt-4">
-                    <div class="flex items-center gap-2">
-                      <img src="/icons/view.svg" alt="Views" class="w-5 h-5" />
-                      <span class="text-mini-body text-light-text-secondary">
-                        {course.views || 0} views
-                      </span>
+            <div class="col-span-12 lg:col-span-4">
+                <!-- Profile Card -->
+                <div
+                    class="flex flex-col items-center p-4 gap-4 border border-light-border-primary dark:border-dark-border-primary rounded-[32px] overflow-hidden shadow-lg"
+                >
+                    <!-- Share button -->
+                    <!-- <div class=" absolute ">
+                        <button
+                            class="text-light-text-primary dark:text-dark-text-primary absolute top-2 right-2 hover:text-gray-600 transition-colors"
+                        >
+                            <svg
+                                class="w-6 h-6 text-light-text-primary dark:text-dark-text-primary"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                xmlns="http://www.w3.org/2000/svg"
+                            >
+                                <path
+                                    d="M21 6.5C21 8.15685 19.6569 9.5 18 9.5C16.3431 9.5 15 8.15685 15 6.5C15 4.84315 16.3431 3.5 18 3.5C19.6569 3.5 21 4.84315 21 6.5Z"
+                                    stroke="currentColor"
+                                    stroke-width="1.5"
+                                />
+                                <path
+                                    d="M9 12C9 13.6569 7.65685 15 6 15C4.34315 15 3 13.6569 3 12C3 10.3431 4.34315 9 6 9C7.65685 9 9 10.3431 9 12Z"
+                                    stroke="currentColor"
+                                    stroke-width="1.5"
+                                />
+                                <path
+                                    d="M21 17.5C21 19.1569 19.6569 20.5 18 20.5C16.3431 20.5 15 19.1569 15 17.5C15 15.8431 16.3431 14.5 18 14.5C19.6569 14.5 21 15.8431 21 17.5Z"
+                                    stroke="currentColor"
+                                    stroke-width="1.5"
+                                />
+                                <path
+                                    d="M8.72852 10.7495L15.2285 7.75M8.72852 13.25L15.2285 16.2495"
+                                    stroke="currentColor"
+                                    stroke-width="1.5"
+                                />
+                            </svg>
+                        </button>
+                    </div> -->
+
+                    <!-- Profile Image -->
+                    <div class="w-[130px] h-[130px] lg:w-[247px] lg:h-[247px]">
+                        {#if profile.photoURL}
+                            <img
+                                src={profile.photoURL}
+                                alt={profile.displayName}
+                                class="w-full h-full rounded-full object-cover"
+                            />
+                        {:else}
+                            <div
+                                class="w-full h-full rounded-full bg-Black/5 flex items-center justify-center"
+                            >
+                                <span
+                                    class="text-[#2A4D61] text-h2 font-medium"
+                                >
+                                    {(
+                                        profile.username?.[0] ||
+                                        profile.displayName?.[0] ||
+                                        "U"
+                                    ).toUpperCase()}
+                                </span>
+                            </div>
+                        {/if}
                     </div>
-                    <div class="flex items-center gap-2">
-                      <img src="/icons/upvote.svg" alt="Likes" class="w-5 h-5" />
-                      <span class="text-mini-body text-light-text-secondary">
-                        {course.likes || 0} likes
-                      </span>
+
+                    <div class="flex flex-col items-center gap-2">
+                        <h1
+                            class="text-h4-medium text-[28px] lg:text-h2 lg:text-[32px] text-light-text-primary dark:text-dark-text-primary "
+                        >
+                            {profile.username}
+                        </h1>
+                        <span
+                            class="flex gap-2 text-semi-body-medium text-light-text-primary dark:text-dark-text-primary"
+                            >JOINED:
+                            <p
+                                class="text-semi-body text-light-text-secondary dark:text-dark-text-secondary"
+                            >
+                                {new Date(
+                                    profile.createdAt?.toDate?.() ||
+                                        profile.createdAt ||
+                                        Date.now(),
+                                ).toLocaleDateString("en-US", {
+                                    month: "long",
+                                    day: "numeric",
+                                    year: "numeric",
+                                })}
+                            </p>
+                        </span>
                     </div>
-                  </div>
                 </div>
-              </a>
-            {/each}
-          {/if}
+
+                <!-- About Card -->
+                <div
+                    class="mt-4 flex flex-col items-start lg:p-4 gap-4 lg:border border-light-border-primary dark:border-dark-border-primary rounded-[32px]"
+                >
+                    <h2
+                        class="text-h4-medium text-light-text-primary dark:text-dark-text-primary"
+                    >
+                        About
+                    </h2>
+                    <p
+                        class="text-body text-light-text-secondary dark:text-dark-text-secondary break-words"
+                    >
+                        <!-- {profile.bio || "No bio available"} -->
+                        Lorem ipsum dolor sit amet consectetur adipisicing elit.
+                        Quisquam, quos. Lorem ipsum dolor sit amet consectetur adipisicing
+                        elit. Quisquam, quos. Lorem ipsum dolor sit amet consectetur
+                        adipisicing elit. Quisquam, quos. Lorem ipsum dolor sit amet
+                        consectetur adipisicing elit. Quisquam, quos. Lorem ipsum
+                        dolor sit amet consectetur adipisicing elit. Quisquam, quos.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Courses Section -->
+            <div class="mt-6 col-span-12 lg:col-span-8 lg:mt-0">
+                <h2
+                    class="text-h4-medium mb-4 text-light-text-primary dark:text-dark-text-primary"
+                >
+                    Courses Created
+                </h2>
+                <div
+                    class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
+                >
+                    {#if courses.length === 0}
+                        <p
+                            class="text-body text-light-text-secondary dark:text-dark-text-secondary"
+                        >
+                            No courses created yet
+                        </p>
+                    {:else}
+                        {#each courses as course}
+                            <TrendingCard {course} onShare={handleShare} />
+                        {/each}
+                    {/if}
+                </div>
+            </div>
         </div>
-      </div>
-    </div>
-  {/if}
-</div> 
+    {/if}
+</div>
