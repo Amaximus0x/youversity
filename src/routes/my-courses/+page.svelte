@@ -49,9 +49,9 @@
         course => course.isCreator || course.createdBy === $user!.uid
       );
       
-      // Get enrolled courses (including created courses if they're enrolled)
+      // Get enrolled courses that are not created by the user
       enrolledCourses = coursesWithProgress.filter(
-        course => course.isEnrolled
+        course => course.isEnrolled && !course.isCreator && course.createdBy !== $user!.uid
       );
       
       // All courses should show both created and enrolled courses without duplicates
