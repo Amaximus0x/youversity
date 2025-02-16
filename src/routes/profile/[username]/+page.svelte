@@ -122,10 +122,10 @@
             <!-- Desktop Layout Container -->
             <div class="w-full h-full lg:flex lg:gap-8 lg:px-4 lg:py-4">
                 <!-- Left Column - Fixed -->
-                <div class="w-full lg:w-[30%] lg:max-w-[400px] lg:min-w-[320px] lg:fixed lg:left-[280px]">
+                <div class="w-full lg:w-[400px] lg:fixed">
                     <!-- Profile Card -->
                     <div
-                        class="flex flex-col items-center p-4 gap-4 border border-light-border-primary dark:border-dark-border-primary rounded-[32px] overflow-hidden shadow-lg"
+                        class="flex flex-col items-center p-4 gap-4 border border-light-border-primary dark:border-dark-border-primary rounded-[32px] overflow-hidden"
                     >
                         <!-- Profile Image -->
                         <div
@@ -238,7 +238,7 @@
                 </div>
 
                 <!-- Right Column - Scrollable -->
-                <div class="w-full lg:w-[70%] lg:ml-[calc(30%+280px)] xl:ml-[calc(25%+280px)]">
+                <div class="w-full lg:ml-[428px]">
                     <h2
                         class="text-h4-medium mb-4 text-light-text-primary dark:text-dark-text-primary"
                     >
@@ -282,20 +282,10 @@
 
         /* Ensure the fixed column stays within viewport */
         .lg\:fixed {
-            height: calc(100vh - 96px);
+            height: calc(100vh - 96px); /* Adjust based on header height */
             overflow-y: auto;
             scrollbar-width: thin;
             scrollbar-color: rgba(66, 193, 200, 0.5) transparent;
-        }
-
-        /* Add responsive container width adjustments */
-        @media (min-width: 1536px) {
-            .lg\:w-[30%] {
-                width: 25%;
-            }
-            .lg\:max-w-[400px] {
-                max-width: 450px;
-            }
         }
 
         /* Webkit scrollbar styling */
