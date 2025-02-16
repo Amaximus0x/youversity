@@ -15,14 +15,21 @@
     let profile: any = null;
     let courses: FinalCourseStructure[] = [];
     let showShareModal = false;
-
-    function handleShare() {
+    let selectedCourseId = '';
+    let shareType = 'profile';      
+    // Share profile
+    function handleProfileShare() {
+        shareType = 'profile';
         showShareModal = true;
     }
-
     function handleCourseShare(courseId: string) {
+        selectedCourseId = courseId;
+        shareType = 'course';
+        showShareModal = true;
         console.log("Share course:", courseId);
     }
+
+   
 
     onMount(async () => {
         try {
@@ -80,7 +87,7 @@
                 </button>
                 <button
                     class="text-light-text-primary dark:text-dark-text-primary"
-                    on:click={handleShare}
+                    on:click={handleProfileShare}
                 >
                     <svg
                         class="w-6 h-6 text-light-text-primary dark:text-dark-text-primary"
@@ -115,7 +122,7 @@
             <!-- Desktop Layout Container -->
             <div class="w-full h-full lg:flex lg:gap-8 lg:px-4 lg:py-4">
                 <!-- Left Column - Fixed -->
-                <div class="w-full lg:w-[400px] lg:fixed">
+                <div class="w-full lg:w-[30%] lg:max-w-[400px] lg:min-w-[320px] lg:fixed lg:left-[280px]">
                     <!-- Profile Card -->
                     <div
                         class="flex flex-col items-center p-4 gap-4 border border-light-border-primary dark:border-dark-border-primary rounded-[32px] overflow-hidden shadow-lg"
@@ -171,10 +178,10 @@
                                 </p>
                             </span>
                         </div>
-                        <!-- Share Button -->
+                        <!-- ProfileShare Button -->
                         <button
-                            class="absolute top-4 right-4 p-2 rounded-full justify-start items-center gap-2.5 hover:bg-black/10 z-10"
-                            on:click={handleShare}
+                            class="hidden lg:flex absolute top-4 right-4 p-2 rounded-full justify-start items-center gap-2.5 hover:bg-black/10 z-10"
+                            on:click={handleProfileShare}
                         >
                             <svg
                                 class="w-6 h-6 text-light-text-primary dark:text-dark-text-primary"
@@ -231,13 +238,13 @@
                 </div>
 
                 <!-- Right Column - Scrollable -->
-                <div class="w-full lg:ml-[428px]">
+                <div class="w-full lg:w-[70%] lg:ml-[calc(30%+280px)] xl:ml-[calc(25%+280px)]">
                     <h2
                         class="text-h4-medium mb-4 text-light-text-primary dark:text-dark-text-primary"
                     >
                         Courses Created
                     </h2>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="sm:grid grid-cols-1 md:grid-cols-2 gap-4">
                         {#if courses.length === 0}
                             <p
                                 class="text-body text-light-text-secondary dark:text-dark-text-secondary"
@@ -261,8 +268,9 @@
 
 <ShareModal
     show={showShareModal}
-    shareType="profile"
+    shareType={shareType}
     id={profile?.username || profile?.uid}
+    courseId={selectedCourseId}
     onClose={() => (showShareModal = false)}
 />
 
@@ -274,10 +282,20 @@
 
         /* Ensure the fixed column stays within viewport */
         .lg\:fixed {
-            height: calc(100vh - 96px); /* Adjust based on header height */
+            height: calc(100vh - 96px);
             overflow-y: auto;
             scrollbar-width: thin;
             scrollbar-color: rgba(66, 193, 200, 0.5) transparent;
+        }
+
+        /* Add responsive container width adjustments */
+        @media (min-width: 1536px) {
+            .lg\:w-[30%] {
+                width: 25%;
+            }
+            .lg\:max-w-[400px] {
+                max-width: 450px;
+            }
         }
 
         /* Webkit scrollbar styling */
