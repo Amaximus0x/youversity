@@ -16,8 +16,7 @@
         // Check if user is enrolled or creator
         const { isEnrolled } = await getEnrollmentStatus($user.uid, courseId);
         const isCreator = course.createdBy === $user.uid;
-        
-        
+
         if (isEnrolled || isCreator) {
           // If enrolled or creator, go to course page
           await goto(`/course/${courseId}`);
@@ -223,7 +222,6 @@
           <img src="/icons/time-quarter.svg" alt="Duration" class="w-4 h-4" />
         </div>
       </div>
-
     </div>
 
     <!-- View Course Button -->
