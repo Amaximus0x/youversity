@@ -4,11 +4,20 @@
   import { browser } from '$app/environment';
 
   export let show = false;
+  export let shareType: 'course' | 'profile' = 'course';
+  export let id: string; // This can be courseId or username
   export let courseId: string;
   export let onClose: () => void;
 
   let copied = false;
-  $: shareUrl = browser ? `${window.location.origin}/course/${courseId}` : '';
+  $: shareUrl = browser 
+  ? `${window.location.origin}${shareType === 'course' ? `/course/${courseId}` : `/profile/${id}`}`
+  : '';
+
+
+  $: shareText = shareType === 'course' 
+    ? 'Check out this course'
+    : 'Check out this profile';
 
   async function copyToClipboard() {
     try {
@@ -22,24 +31,18 @@
     }
   }
 
-  function shareToSocial(platform: string) {
-    const text = `Check out this course: ${shareUrl}`;
+  function shareToSocial(platform: 'whatsapp' | 'facebook' | 'twitter' | 'email') {
+    const text = `${shareText}: ${shareUrl}`;
     const encodedText = encodeURIComponent(text);
     
     const urls = {
       whatsapp: `https://wa.me/?text=${encodedText}`,
       facebook: `https://www.facebook.com/share.php?u=${encodeURIComponent(shareUrl)}`,
-      twitter: `https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent('Check out this course:')}`,
-      email: `mailto:?subject=${encodeURIComponent('Check out this course')}&body=${encodedText}`
+      twitter: `https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`,
+      email: `mailto:?subject=${encodeURIComponent(shareText)}&body=${encodedText}`
     };
 
-  //   if (platform === 'facebook') {
-  //   // Open Facebook in a new tab without size constraints
-  //   window.open(urls[platform], '_blank');
-  // } else {
-    // Keep popup behavior for other platforms
     window.open(urls[platform], '_blank', 'width=600,height=400');
-  // }
   }
 </script>
 
@@ -65,7 +68,9 @@
         <X class="w-5 h-5" />
       </button>
 
-      <h2 class="text-xl font-semibold mb-4 text-[#2A4D61]">Share Course</h2>
+      <h2 class="text-xl font-semibold mb-4 text-[#2A4D61]">
+        Share {shareType === 'course' ? 'Course' : 'Profile'}
+      </h2>
       
       <div class="flex items-center gap-2 bg-gray-50 p-3 rounded-lg mb-4">
         <input
