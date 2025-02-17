@@ -102,7 +102,7 @@
         <div class="w-full pt-1 pb-2 lg:grid lg:grid-cols-12 lg:gap-8">
             <!-- Left Column -->
             <div
-                class="col-span-12 lg:col-span-4 lg:pb-40 lg:fixed lg:w-[30%] lg:h-screen lg:overflow-y-auto"
+                class="col-span-12 lg:col-span-4 lg:pl-4 lg:pt-4 lg:pb-40 lg:fixed lg:w-[25%] lg:h-screen lg:overflow-y-auto"
             >
                 <!-- Profile Card -->
                 <div
@@ -219,7 +219,7 @@
 
             <!-- Right Column (adjusted) -->
             <div
-                class="mt-6 col-span-12 lg:col-span-8 lg:mt-0 lg:ml-[60.333%] lg:pl-6 lg:w-[94%] lg:overflow-y-auto lg:h-screen"
+                class="mt-6 col-span-12 lg:col-span-8 lg:mt-0 lg:ml-[46.333%] lg:pl-10 lg:w-[100%] lg:overflow-y-auto lg:h-screen"
             >
                 <h2
                     class="text-h4-medium mb-4 text-light-text-primary dark:text-dark-text-primary"

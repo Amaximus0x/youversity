@@ -769,6 +769,40 @@
 </div>
 
 
+<!-- Update the Floating Action Button -->
+<!-- only show on intro Page -->
+ {#if $currentModuleStore === -1}
+<div
+  class="fixed bottom-0 left-0 right-0 pb-36 pt-4 z-[60] lg:hidden transition-opacity duration-300"
+  class:opacity-0={!showFloatingButton}
+  class:pointer-events-none={!showFloatingButton}
+>
+  <div class="container mx-auto pl-5">
+    <button
+      class="px-4 py-2 flex items-center justify-center gap-2 text-white rounded-2xl transition-opacity disabled:opacity-50 text-semibody-medium shadow-lg {isEnrolled
+        ? 'bg-brand-red'
+        : 'bg-Green'}"
+      on:click={() => {
+            // Get last accessed module from enrollment progress
+            const lastModule = enrollmentProgress?.lastAccessedModule || 1;
+            currentModuleStore.set(lastModule);
+            goto(`/course/${$page.params.id}`);
+          }
+          }
+    >
+     
+        <span>Continue</span>
+        <img
+          src="/icons/arrow-right-white.svg"
+          alt=Continue
+          class="w-6 h-6"
+        />
+    </button>
+  </div>
+</div>
+{/if}
+
+
 <!-- Add the ShareModal component at the bottom of the template, just before the style tag -->
 <ShareModal
   show={showShareModal}

@@ -183,7 +183,7 @@
     try {
       enrolling = true;
       await enrollInCourse($user.uid, $page.params.id);
-      currentModuleStore.set(1); // Start with first video module
+      currentModuleStore.set(-1); // Start with first video module
       goto(`/course/${$page.params.id}`);
     } catch (error) {
       console.error("Error enrolling:", error);

@@ -6,9 +6,13 @@
   import { getEnrollmentStatus } from "$lib/firebase";
   import { onMount } from "svelte";
   import { getUserProfile } from "$lib/services/profile";
+  import { createEventDispatcher } from 'svelte';
 
   export let course: FinalCourseStructure & { id: string };
   export let onShare: (courseId: string) => void;
+  export let isShowBookmarkButton: boolean = false;
+
+  const dispatch = createEventDispatcher();
 
   async function handleNavigateToCourse(courseId: string) {
     try {
@@ -135,7 +139,7 @@
 
   <!-- Content Section -->
   <div
-    class="flex-1 w-full p-4 flex flex-col items-start justify-between gap-4"
+    class="flex-1 w-full p-4 flex flex-col gap-4"
   >
     <div>
       <!-- Course Title -->
@@ -144,6 +148,7 @@
       >
         {course.Final_Course_Title}
       </h3>
+      </div>
 
       <div class="flex flex-col gap-2">
         <!-- Creator Info & Views -->
@@ -226,7 +231,7 @@
           </div>
         </div>
       </div>
-    </div>
+    
     <div class="w-full">
       <!-- View Course Button -->
       <button
@@ -237,4 +242,21 @@
       </button>
     </div>
   </div>
+  <!-- remove bookmark button -->
+  {#if isShowBookmarkButton}
+    <div class="w-full px-4 py-2.5">
+      <button 
+        class="w-full p-2 border border-Grey rounded-lg justify-center items-center gap-2 transition-colors duration-200 hover:bg-light-bg-secondary dark:hover:bg-dark-bg-secondary"
+        on:click|stopPropagation={(e) => {
+          e.preventDefault();
+          dispatch('removeBookmark');
+        }}
+      >
+        <div class="flex items-center justify-center gap-4">
+          <span class="text-[#FF0000] text-semi-body">Remove from Bookmark</span>
+          <img src="/icons/delete.svg" alt="Remove" class="w-6 h-6" />
+        </div>
+      </button>
+    </div>
+  {/if}
 </div>
