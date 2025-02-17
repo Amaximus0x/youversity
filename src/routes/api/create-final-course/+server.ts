@@ -56,7 +56,7 @@ async function makeOpenAIRequest(prompt: string, retries = 2) {
               "Authorization": `Bearer ${env.OPENAI_API_KEY}`,
               "Content-Type": "application/json"
             },
-            timeout: 30000,
+            timeout: 60000,
             transformResponse: [(data) => {
               // Remove XSSI prefix if present
               const cleanData = typeof data === 'string' ? data.replace(/^\)\]\}\'/, '') : data;

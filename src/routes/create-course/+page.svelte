@@ -180,23 +180,24 @@
       finalLoadingState.setProgress(90);
 
       // Save to Firebase
-      const courseId = await saveCourseToFirebase($user.uid, {
-        ...data.course,
-        isPublic: false,
-        createdBy: $user.uid,
-        createdAt: new Date(),
-        views: 0,
-        likes: 0,
-      });
+      // const courseId = await saveCourseToFirebase($user.uid, {
+      //   ...data.course,
+      //   isPublic: false,
+      //   createdBy: $user.uid,
+      //   createdAt: new Date(),
+      //   views: 0,
+      //   likes: 0,
+      // });
 
       finalLoadingState.setStep("Enrolling you in the course...");
       finalLoadingState.setProgress(95);
       
-      await enrollInCourse($user.uid, courseId);
+      // await enrollInCourse($user.uid, courseId);
 
       finalLoadingState.setStep("Course is ready!");
       finalLoadingState.setProgress(100);
-      finalLoadingState.setCourseId(courseId);
+      finalLoadingState.setCourseId('complete');
+      // finalLoadingState.setCourseId(courseId);
     } catch (err: any) {
       console.error("Error saving course:", err);
       error = err.message;

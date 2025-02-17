@@ -98,13 +98,13 @@
       in:fly={{ x: 50, duration: 300 }}
       out:fade
     >
-      <div
+      <button
         class="bg-BackgroundRed dark:bg-dark-background-primary rounded-2xl shadow-lg border border-[rgba(0,0,0,0.05)] px-4 pt-2 pb-4 cursor-pointer relative"
         on:click={handleMaximize}
       >
         <div class="flex items-center justify-between mb-2">
           <h2 class="text-body-semibold text-Black dark:text-White">
-            {isComplete ? "Course is ready" : "Generating Complete Course"}
+            {isComplete ? "Course is ready" : "Getting your course ready"}
           </h2>
           <div class="flex items-center p-2">
             {#if isComplete}
@@ -150,16 +150,16 @@
             View Course
           </button>
         {/if}
-      </div>
+      </button>
     </div>
   {:else}
     <!-- Full screen modal with popup styling -->
-    <div
+    <button
       class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50"
       transition:fade={{ duration: 200 }}
       on:click={handleOutsideClick}
     >
-      <div
+      <button
         class="bg-BackgroundRed dark:bg-dark-background-primary rounded-2xl shadow-lg w-[390px] p-4 relative"
         on:click|stopPropagation
         in:fly={{ y: 20, duration: 300 }}
@@ -241,8 +241,11 @@
 
             {#if !isComplete}
               <p class="text-semi-body text-Black dark:text-White">
-                Setting things up for smooth learning experience
+                {getGenerationStep($finalLoadingState)}
               </p>
+              <!-- <p class="text-semi-body text-Black dark:text-White">
+                Setting things up for smooth learning experience
+              </p> -->
             {:else}
               <p class="text-semi-body text-Black dark:text-White mb-4">
                 {$finalLoadingState.courseTitle}
@@ -256,8 +259,8 @@
             {/if}
           </div>
         {/if}
-      </div>
-    </div>
+      </button>
+    </button>
   {/if}
 {/if}
 
