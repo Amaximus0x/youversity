@@ -641,7 +641,7 @@
           </nav>
 
           <!-- youversity.io tag -->
-          <div
+          <!-- <div
             class="flex items-center justify-center w-full h-[45px] py-[6px] pb-[10px] bg-white/10 backdrop-blur-[35px]"
           >
             <div class="flex items-center gap-2">
@@ -656,7 +656,7 @@
                 >youversity.io</span
               >
             </div>
-          </div>
+          </div> -->
         </div>
       </main>
     {:else}
