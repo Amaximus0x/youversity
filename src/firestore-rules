@@ -108,5 +108,26 @@ service cloud.firestore {
       allow read: if true;  // Allow public read access to search recommendations
       allow write: if false;  // Only allow writes through admin/server
     }
+
+    // Search history collection
+    match /searchHistory/{docId} {
+      // Allow read if authenticated
+      allow read: if request.auth != null;
+      
+      // Allow create if authenticated and userId matches
+      allow create: if request.auth != null && 
+        request.resource.data.userId == request.auth.uid &&
+        request.resource.data.keys().hasAll(['query', 'userId', 'timestamp']) &&
+        request.resource.data.query is string &&
+        request.resource.data.userId is string &&
+        request.resource.data.timestamp is timestamp;
+      
+      // Allow delete if authenticated and userId matches
+      allow delete: if request.auth != null && 
+        resource.data.userId == request.auth.uid;
+      
+      // Allow list queries for user's searches only
+      allow list: if request.auth != null;
+    }
   }
 }

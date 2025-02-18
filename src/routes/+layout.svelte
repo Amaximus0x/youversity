@@ -36,7 +36,7 @@
   let prevPath = "";
 
   // Initialize search-related arrays
-  let recentSearches: Array<{ query: string; timestamp: number }> = [];
+  let recentSearches: Array<{ id: string; query: string; timestamp: Date }> = [];
   let recommendations: string[] = [];
 
   // Sidebar items configuration
@@ -97,15 +97,17 @@
     window.addEventListener("offline", updateOnlineStatus);
 
     // Load recent searches
-    recentSearches = getRecentSearches();
+    if ($user) {
+      recentSearches = await getRecentSearches($user.uid);
+    }
 
     // Load recommendations
-    try {
-      recommendations = await getSearchRecommendations();
-    } catch (error) {
-      console.error("Error loading recommendations:", error);
-      recommendations = [];
-    }
+    // try {
+    //   recommendations = await getSearchRecommendations();
+    // } catch (error) {
+    //   console.error("Error loading recommendations:", error);
+    //   recommendations = [];
+    // }
 
     // Register service worker
     if ("serviceWorker" in navigator) {
@@ -158,19 +160,23 @@
     }
     // Clear search if navigating away from search page
     if (prevPath === "/search" && $page.url.pathname !== "/search") {
-      searchQuery = "";
-      showMobileSearch = false;
+      if (!$page.url.pathname.startsWith("/search")) {
+        searchQuery = "";
+        showMobileSearch = false;
+      }
     }
     prevPath = $page.url.pathname;
+    console.log('URL changed:', {
+      current: $page.url.pathname,
+      previous: prevPath,
+      searchQuery,
+      recentSearches: recentSearches.length
+    });
   }
 
   // Event handlers
   function updateOnlineStatus() {
     isOnline = navigator.onLine;
-  }
-
-  function updateRecentSearches() {
-    recentSearches = getRecentSearches();
   }
 
   function toggleMenu() {
@@ -194,24 +200,30 @@
     goto("/create-course");
   }
 
-  async function handleSearch(e: Event) {
+  async function handleMobileSearch(e: Event) {
     e.preventDefault();
     if (searchQuery.trim()) {
-      saveRecentSearch(searchQuery);
-      updateRecentSearches();
-      isSearchFocused = false;
-      await goto(
+      if ($user) {
+        await saveRecentSearch(searchQuery, $user.uid);
+        recentSearches = await getRecentSearches($user.uid);
+      }
+      showMobileSearch = false;
+      goto(
         `/search?q=${encodeURIComponent(searchQuery)}&filter=${currentFilter}`,
       );
     }
   }
 
-  function handleMobileSearch(e: Event) {
-    e.preventDefault();
+  async function handleSearch(e: Event) {
     if (searchQuery.trim()) {
-      saveRecentSearch(searchQuery);
-      updateRecentSearches();
-      showMobileSearch = false;
+      console.log('Desktop search initiated:', searchQuery);
+      if ($user) {
+        await saveRecentSearch(searchQuery, $user.uid);
+        console.log('Search saved, fetching recent searches');
+        recentSearches = await getRecentSearches($user.uid);
+        console.log('Recent searches updated:', recentSearches);
+      }
+      isSearchFocused = false;
       goto(
         `/search?q=${encodeURIComponent(searchQuery)}&filter=${currentFilter}`,
       );
@@ -232,9 +244,15 @@
     }
   }
 
-  function handleClearRecentSearches() {
-    clearRecentSearches();
-    recentSearches = [];
+  async function handleClearRecentSearches() {
+    try {
+      if ($user) {
+        await clearRecentSearches($user.uid);
+        recentSearches = [];
+      }
+    } catch (error) {
+      console.error('Error clearing recent searches:', error);
+    }
   }
 </script>
 
@@ -426,7 +444,7 @@
           >
             <!-- search bar -->
             <div class="flex-1 max-w-[611px] mx-0">
-              <form on:submit={handleSearch} class="relative flex-1 w-full">
+              <form on:submit|preventDefault={handleSearch} class="relative flex-1 w-full">
                 <div
                   class="flex items-center bg-white dark:bg-dark-bg-primary border-[1.5px] border-light-border dark:border-dark-border hover:border-brand-red focus-within:border-brand-red rounded-2xl py-2 pl-4 pr-2 h-12 gap-2 transition-all duration-300"
                 >
@@ -443,7 +461,7 @@
                     type="text"
                     placeholder="Search courses..."
                     bind:value={searchQuery}
-                    on:focus={() => (isSearchFocused = true)}
+                    on:focus|stopPropagation={() => (isSearchFocused = true)}
                     on:blur={() => !searchQuery && (isSearchFocused = false)}
                     class="flex-1 w-full pl-8 focus:pl-0 bg-transparent border-none outline-none focus:outline-none text-body text-light-text-primary dark:text-dark-text-primary placeholder:text-light-text-secondary dark:placeholder:text-dark-text-secondary transition-all duration-300"
                   />
@@ -478,7 +496,7 @@
                   </button>
                 </div>
 
-                <!-- Search Suggestions Dropdown -->
+                <!-- Recent Searches Dropdown -->
                 {#if isSearchFocused && recentSearches.length > 0}
                   <div
                     class="absolute top-full left-0 right-[80px] mt-2 bg-white dark:bg-dark-bg-primary rounded-2xl border border-light-border dark:border-dark-border shadow-lg z-50"
@@ -486,78 +504,42 @@
                   >
                     <div class="p-6">
                       <!-- Recent Searches -->
-                      {#if recentSearches.length > 0}
-                        <div class="mb-8">
-                          <div
-                            class="flex justify-between items-center mb-4 border-b border-light-border dark:border-dark-border pb-2"
-                          >
-                            <h2
-                              class="text-h4-medium text-light-text-primary dark:text-dark-text-primary"
-                            >
-                              Recent Search
-                            </h2>
-                            <button
-                              class="text-brand-red text-body"
-                              on:click={handleClearRecentSearches}
-                            >
-                              Clear
-                            </button>
-                          </div>
-                          <div class="flex flex-col">
-                            {#each recentSearches as search}
-                              <button
-                                class="flex items-center gap-2 py-2 text-light-text-primary dark:text-dark-text-primary hover:bg-Black/5 dark:hover:bg-White/5 transition-colors"
-                                on:click={() => {
-                                  searchQuery = search.query;
-                                  isSearchFocused = false;
-                                  handleSearch(new Event("submit"));
-                                }}
-                              >
-                                <img
-                                  src="/icons/time-quarter-pass.svg"
-                                  alt="Recent"
-                                  class="w-5 h-5 opacity-60"
-                                />
-                                <span class="text-semi-body-medium"
-                                  >{search.query}</span
-                                >
-                              </button>
-                            {/each}
-                          </div>
-                        </div>
-                      {/if}
-
-                      <!-- Try searching for -->
-                      {#if recommendations.length > 0}
-                        <div>
+                      <div class="mb-8">
+                        <div
+                          class="flex justify-between items-center mb-4 border-b border-light-border dark:border-dark-border pb-2"
+                        >
                           <h2
-                            class="text-h4-medium mb-4 text-light-text-primary dark:text-dark-text-primary"
+                            class="text-h4-medium text-light-text-primary dark:text-dark-text-primary"
                           >
-                            Try searching for
+                            Recent Search
                           </h2>
-                          <div class="flex flex-col gap-4">
-                            {#each recommendations as recommendation}
-                              <button
-                                class="flex items-center gap-2 text-light-text-primary dark:text-dark-text-primary hover:text-brand-red transition-colors"
-                                on:click={() => {
-                                  searchQuery = recommendation;
-                                  isSearchFocused = false;
-                                  handleSearch(new Event("submit"));
-                                }}
-                              >
-                                <img
-                                  src="/icons/search.svg"
-                                  alt="Search"
-                                  class="w-5 h-5 opacity-60"
-                                />
-                                <span class="text-semi-body"
-                                  >{recommendation}</span
-                                >
-                              </button>
-                            {/each}
-                          </div>
+                          <button
+                            class="text-brand-red text-body"
+                            on:click|stopPropagation|preventDefault={handleClearRecentSearches}
+                          >
+                            Clear
+                          </button>
                         </div>
-                      {/if}
+                        <div class="flex flex-col">
+                          {#each recentSearches as search}
+                            <button
+                              class="flex items-center gap-2 py-2 text-light-text-primary dark:text-dark-text-primary hover:bg-Black/5 dark:hover:bg-White/5 transition-colors"
+                              on:click={() => {
+                                searchQuery = search.query;
+                                isSearchFocused = false;
+                                handleSearch(new Event("submit"));
+                              }}
+                            >
+                              <img
+                                src="/icons/time-quarter-pass.svg"
+                                alt="Recent"
+                                class="w-5 h-5 opacity-60"
+                              />
+                              <span class="text-semi-body-medium">{search.query}</span>
+                            </button>
+                          {/each}
+                        </div>
+                      </div>
                     </div>
                   </div>
                 {/if}

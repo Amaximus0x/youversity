@@ -50,7 +50,7 @@
 
   async function handleSignIn() {
     try {
-      const redirectTo = $page.url.searchParams.get('redirectTo') || '/create-course';
+      const redirectTo = $page.url.searchParams.get('redirectTo') || '/';
       await signInWithGoogle(redirectTo);
     } catch (err) {
       console.error('Sign in error:', err);
@@ -77,7 +77,7 @@
 
     error = null;
     try {
-      const redirectTo = $page.url.searchParams.get('redirectTo') || '/create-course';
+      const redirectTo = $page.url.searchParams.get('redirectTo') || '/';
       if (isRegistering) {
         try {
           await registerWithEmail(email, password, redirectTo, { firstName, lastName });

@@ -1,4 +1,4 @@
-import { collection, query, where, getDocs, orderBy, limit, type Query, type QuerySnapshot, type DocumentData } from 'firebase/firestore';
+import { collection, query, where, getDocs, orderBy, limit, type Query, type QuerySnapshot, type DocumentData, addDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '$lib/firebase';
 import type { FinalCourseStructure } from '$lib/types/course';
 
@@ -9,9 +9,12 @@ interface SearchResult {
   total: number;
 }
 
-interface RecentSearch {
+
+interface SearchHistoryItem {
+  id: string;
   query: string;
-  timestamp: number;
+  userId: string;
+  timestamp: Date;
 }
 
 const RECENT_SEARCHES_KEY = 'recent_searches';
@@ -160,38 +163,70 @@ function calculateRelevanceScore(
 }
 
 // Recent searches management
-export function saveRecentSearch(query: string): void {
-  if (!query.trim()) return;
+export async function saveRecentSearch(searchQuery: string, userId: string): Promise<void> {
+  if (!searchQuery.trim() || !userId) return;
 
-  const searches = getRecentSearches();
-  const newSearch: RecentSearch = {
-    query: query.trim(),
-    timestamp: Date.now()
-  };
-
-  // Remove duplicate if exists
-  const uniqueSearches = searches.filter(s => s.query !== newSearch.query);
-  
-  // Add new search at the beginning
-  uniqueSearches.unshift(newSearch);
-  
-  // Keep only the most recent searches
-  const limitedSearches = uniqueSearches.slice(0, MAX_RECENT_SEARCHES);
-
-  localStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(limitedSearches));
-}
-
-export function getRecentSearches(): RecentSearch[] {
   try {
-    const searches = localStorage.getItem(RECENT_SEARCHES_KEY);
-    return searches ? JSON.parse(searches) : [];
-  } catch {
-    return [];
+    console.log('Saving search:', { searchQuery, userId });
+    const searchHistoryRef = collection(db, 'searchHistory');
+    
+    // Check if we already have too many searches
+    const q = query(
+      searchHistoryRef,
+      where('userId', '==', userId),
+      orderBy('timestamp', 'desc')
+    );
+    
+    const snapshot = await getDocs(q);
+    const searches = snapshot.docs;
+    
+    // If we have more than MAX_RECENT_SEARCHES, delete the oldest one
+    // if (searches.length >= MAX_RECENT_SEARCHES) {
+    //   const oldestSearch = searches[searches.length - 1];
+    //   await deleteDoc(oldestSearch.ref);
+    // }
+    
+    // Add new search
+    const docRef = await addDoc(searchHistoryRef, {
+      query: searchQuery.trim(),
+      userId,
+      timestamp: new Date()
+    });
+    
+    console.log('Search saved successfully with ID:', docRef.id);
+  } catch (error) {
+    console.error('Error saving recent search:', error);
   }
 }
 
-export function clearRecentSearches(): void {
-  localStorage.removeItem(RECENT_SEARCHES_KEY);
+export async function getRecentSearches(userId: string): Promise<SearchHistoryItem[]> {
+  if (!userId) return [];
+
+  try {
+    console.log('Fetching searches for user:', userId);
+    const searchHistoryRef = collection(db, 'searchHistory');
+    const q = query(
+      searchHistoryRef,
+      where('userId', '==', userId),
+      orderBy('timestamp', 'desc'),
+      limit(MAX_RECENT_SEARCHES)
+    );
+
+    const snapshot = await getDocs(q);
+    console.log('Found searches:', snapshot.docs.length);
+    
+    return snapshot.docs.map(doc => ({
+      id: doc.id,
+      query: doc.data().query,
+      userId: doc.data().userId,
+      timestamp: doc.data().timestamp instanceof Date 
+        ? doc.data().timestamp 
+        : new Date(doc.data().timestamp)
+    }));
+  } catch (error) {
+    console.error('Error fetching recent searches:', error);
+    return [];
+  }
 }
 
 // Get popular search recommendations
@@ -201,4 +236,29 @@ export async function getSearchRecommendations(): Promise<string[]> {
   
   const snapshot = await getDocs(q);
   return snapshot.docs.map(doc => doc.data().query as string);
+}
+
+export async function clearRecentSearches(userId: string): Promise<void> {
+  if (!userId) return;
+
+  try {
+    console.log('Clearing searches for user:', userId);
+    const searchHistoryRef = collection(db, 'searchHistory');
+    const q = query(
+      searchHistoryRef,
+      where('userId', '==', userId),
+      orderBy('timestamp', 'desc')
+    );
+    
+    const snapshot = await getDocs(q);
+    
+    // Delete each document one by one
+    for (const doc of snapshot.docs) {
+      await deleteDoc(doc.ref);
+    }
+    
+    console.log('Successfully cleared search history');
+  } catch (error) {
+    console.error('Error clearing recent searches:', error);
+  }
 } 
