@@ -739,7 +739,7 @@
                 }}
               >
                 <img
-                  src="/icons/clock.svg"
+                  src="/icons/time-quarter-pass.svg"
                   alt="Recent"
                   class="w-5 h-5 opacity-60"
                 />

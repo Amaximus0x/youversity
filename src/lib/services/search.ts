@@ -170,7 +170,7 @@ export async function saveRecentSearch(searchQuery: string, userId: string): Pro
     console.log('Saving search:', { searchQuery, userId });
     const searchHistoryRef = collection(db, 'searchHistory');
     
-    // Check if we already have too many searches
+    // Get existing searches to check for duplicates
     const q = query(
       searchHistoryRef,
       where('userId', '==', userId),
@@ -180,18 +180,32 @@ export async function saveRecentSearch(searchQuery: string, userId: string): Pro
     const snapshot = await getDocs(q);
     const searches = snapshot.docs;
     
-    // If we have more than MAX_RECENT_SEARCHES, delete the oldest one
-    // if (searches.length >= MAX_RECENT_SEARCHES) {
-    //   const oldestSearch = searches[searches.length - 1];
-    //   await deleteDoc(oldestSearch.ref);
-    // }
+    // Check for duplicate and remove it if exists
+    const duplicateDoc = searches.find(doc => 
+      doc.data().query.toLowerCase() === searchQuery.trim().toLowerCase()
+    );
     
-    // Add new search
+    if (duplicateDoc) {
+      console.log('Found duplicate, removing:', duplicateDoc.id);
+      await deleteDoc(duplicateDoc.ref);
+    }
+    
+    // Add new search at the top
     const docRef = await addDoc(searchHistoryRef, {
       query: searchQuery.trim(),
       userId,
-      timestamp: new Date()
+      timestamp: serverTimestamp()
     });
+    
+    // If we have more than MAX_RECENT_SEARCHES after adding the new one
+    if (searches.length >= MAX_RECENT_SEARCHES) {
+      // Get the oldest search (excluding the one we just deleted if there was a duplicate)
+      const remainingSearches = searches.filter(doc => doc.id !== duplicateDoc?.id);
+      if (remainingSearches.length >= MAX_RECENT_SEARCHES) {
+        const oldestSearch = remainingSearches[remainingSearches.length - 1];
+        await deleteDoc(oldestSearch.ref);
+      }
+    }
     
     console.log('Search saved successfully with ID:', docRef.id);
   } catch (error) {
@@ -215,14 +229,15 @@ export async function getRecentSearches(userId: string): Promise<SearchHistoryIt
     const snapshot = await getDocs(q);
     console.log('Found searches:', snapshot.docs.length);
     
-    return snapshot.docs.map(doc => ({
-      id: doc.id,
-      query: doc.data().query,
-      userId: doc.data().userId,
-      timestamp: doc.data().timestamp instanceof Date 
-        ? doc.data().timestamp 
-        : new Date(doc.data().timestamp)
-    }));
+    return snapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        query: data.query,
+        userId: data.userId,
+        timestamp: data.timestamp?.toDate() || new Date()
+      };
+    });
   } catch (error) {
     console.error('Error fetching recent searches:', error);
     return [];
