@@ -1,67 +1,106 @@
 <script lang="ts">
-  import ThemeToggle from '$lib/components/ThemeToggle.svelte';
-  import { user } from '$lib/stores/auth';
+  import ProfileTab from "./components/ProfileTab.svelte";
+  import ThemeTab from "./components/ThemeTab.svelte";
+  import AppInfoTab from "./components/AppInfoTab.svelte";
+  import ContactTab from "./components/ContactTab.svelte";
+
+  // Define available tabs with both mobile and desktop labels
+  const tabs = [
+    { 
+      id: 'profile', 
+      label: 'Profile',
+      mobileLabel: 'Profile',
+      component: ProfileTab
+    },
+    { 
+      id: 'theme', 
+      label: 'Theme',
+      mobileLabel: 'Theme',
+      component: ThemeTab
+    },
+    { 
+      id: 'app-info', 
+      label: 'App Information',
+      mobileLabel: 'App Info',
+      component: AppInfoTab
+    },
+    { 
+      id: 'contact', 
+      label: 'Contact support',
+      mobileLabel: 'Contact Info',
+      component: ContactTab
+    }
+  ];
+
+  // Active tab state
+  let activeTab = 'profile';
+
+  // Handle tab change
+  function handleTabChange(tabId: string) {
+    activeTab = tabId;
+  }
 </script>
 
-<div class="max-w-3xl mx-auto">
-  <h1 class="text-4xl font-normal text-light-text-primary dark:text-dark-text-primary mb-8">Settings</h1>
+<div class="w-full min-h-screen">
+ 
 
-  <!-- Theme Settings -->
-  <div class="mb-8">
-    <h2 class="text-2xl font-normal text-light-text-primary dark:text-dark-text-primary mb-4">Appearance</h2>
-    <div class="p-6 rounded-2xl border border-light-border dark:border-dark-border">
-      <div class="flex items-center justify-between">
-        <div>
-          <h3 class="text-lg font-medium text-light-text-primary dark:text-dark-text-primary mb-1">Theme</h3>
-          <p class="text-light-text-secondary dark:text-dark-text-secondary text-sm">Choose your preferred theme</p>
-        </div>
-        <div class="relative w-12 h-12 flex items-center justify-center border border-light-border dark:border-dark-border rounded-full">
-          <ThemeToggle />
-        </div>
-      </div>
-    </div>
+  <!--  Header -->
+  <div class="w-full px-5 py-4">
+    <h1 class="text-h2-mobile leading-[32px] lg:text-h2 text-light-text-primary dark:text-dark-text-primary">
+      Settings
+    </h1>
   </div>
 
-  <!-- Account Settings -->
-  {#if $user}
-    <div class="mb-8">
-      <h2 class="text-2xl font-normal text-light-text-primary dark:text-dark-text-primary mb-4">Account</h2>
-      <div class="p-6 rounded-2xl border border-light-border dark:border-dark-border">
-        <div class="flex items-center gap-4 mb-6">
-          <div class="w-16 h-16 rounded-full overflow-hidden border border-light-border dark:border-dark-border">
-            <img 
-              src={$user.photoURL || ''} 
-              alt={$user.displayName || 'User'} 
-              class="w-full h-full object-cover"
-            />
-          </div>
-          <div>
-            <h3 class="text-lg font-medium text-light-text-primary dark:text-dark-text-primary">{$user.displayName}</h3>
-            <p class="text-light-text-secondary dark:text-dark-text-secondary text-sm">{$user.email}</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  {/if}
+  <!-- Tabs Navigation -->
+  <div class="w-full overflow-x-auto scrollbar-hide">
 
-  <!-- Help & Support -->
-  <div class="mb-8">
-    <h2 class="text-2xl font-normal text-light-text-primary dark:text-dark-text-primary mb-4">Help & Support</h2>
-    <div class="p-6 rounded-2xl border border-light-border dark:border-dark-border">
-      <a 
-        href="/help"
-        class="flex items-center justify-between group"
-      >
-        <div>
-          <h3 class="text-lg font-medium text-light-text-primary dark:text-dark-text-primary group-hover:text-brand-red transition-colors">Help Center</h3>
-          <p class="text-light-text-secondary dark:text-dark-text-secondary text-sm">Get help with Youversity</p>
-        </div>
-        <img 
-          src="/icons/arrow-right.svg" 
-          alt="Go to help center" 
-          class="w-6 h-6 opacity-60 group-hover:opacity-100 transition-opacity"
-        />
-      </a>
-    </div>
+      <div class="flex gap-4 min-w-max">
+        {#each tabs as tab}
+          <button
+            class="relative px-4 py-4 whitespace-nowrap transition-colors"
+            class:text-body-semibold={activeTab === tab.id}
+            class:text-body={activeTab !== tab.id}
+            class:text-brand-navy={activeTab === tab.id}
+            class:text-light-text-tertiary={activeTab !== tab.id}
+            class:dark:text-brand-turquoise={activeTab == tab.id}
+            class:dark:text-Grey3={activeTab !== tab.id}
+            on:click={() => handleTabChange(tab.id)}
+          >
+            <!-- Mobile label -->
+            <span class="lg:hidden">
+              {tab.mobileLabel}
+            </span>
+            <!-- Desktop label -->
+            <span class="hidden lg:inline">
+              {tab.label}
+            </span>
+            {#if activeTab === tab.id}
+              <div class="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-navy dark:bg-brand-turquoise"></div>
+            {/if}
+          </button>
+        {/each}
+      </div>
   </div>
-</div> 
+
+  <!-- Tab Content -->
+  <div class="py-6">
+    {#each tabs as tab}
+      {#if activeTab === tab.id}
+        <svelte:component this={tab.component} />
+      {/if}
+    {/each}
+  </div>
+</div>
+
+<style>
+  /* Hide scrollbar but keep functionality */
+  .scrollbar-hide {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+  
+  /* Hide scrollbar for Chrome, Safari and Opera */
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+</style>
