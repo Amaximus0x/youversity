@@ -107,14 +107,14 @@
         
         <!-- Sort Dropdown -->
         <div class="relative">
-          <button class="flex items-center gap-2 px-4 py-2 text-semibody-medium rounded-lg bg-light-bg-secondary dark:bg-dark-bg-secondary text-light-text-primary dark:text-dark-text-primary">
-            <span class="text-semibody-medium">Sort by</span>
+          <button class="flex items-center gap-2 px-2 py-4 text-semibody-medium rounded-lg bg-Black/5 dark:bg-dark-bg-secondary ">
+            <span class=" text-light-text-tertiary dark:text-dark-text-tertiary">Sort by</span>
             <select
               bind:value={sortBy}
               class="bg-transparent outline-none cursor-pointer"
             >
-              <option value="newest">Newest</option>
-              <option value="oldest">Oldest</option>
+              <option class="text-light-text-primary dark:text-dark-text-primary" value="newest">Newest</option>
+              <option class="text-light-text-primary dark:text-dark-text-primary" value="oldest">Oldest</option>
             </select>
           </button>
         </div>
