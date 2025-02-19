@@ -444,7 +444,10 @@
           >
             <!-- search bar -->
             <div class="flex-1 max-w-[611px] mx-0">
-              <form on:submit|preventDefault={handleSearch} class="relative flex-1 w-full">
+              <form
+                on:submit|preventDefault={handleSearch}
+                class="relative flex-1 w-full"
+              >
                 <div
                   class="flex items-center bg-white dark:bg-dark-bg-primary border-[1.5px] border-light-border dark:border-dark-border hover:border-brand-red focus-within:border-brand-red rounded-2xl py-2 pl-4 pr-2 h-12 gap-2 transition-all duration-300"
                 >
@@ -461,8 +464,19 @@
                     type="text"
                     placeholder="Search courses..."
                     bind:value={searchQuery}
-                    on:focus|stopPropagation={() => (isSearchFocused = true)}
-                    on:blur={() => !searchQuery && (isSearchFocused = false)}
+                    on:focus|stopPropagation={() => {
+                      isSearchFocused = true;
+                      console.log('Search focused');
+                    }}
+                    on:blur={() => {
+                      // Only hide dropdown if clicked outside search area
+                      setTimeout(() => {
+                        if (!document.activeElement?.closest('form')) {
+                          isSearchFocused = false;
+                          console.log('Search blurred');
+                        }
+                      }, 200);
+                    }}
                     class="flex-1 w-full pl-8 focus:pl-0 bg-transparent border-none outline-none focus:outline-none text-body text-light-text-primary dark:text-dark-text-primary placeholder:text-light-text-secondary dark:placeholder:text-dark-text-secondary transition-all duration-300"
                   />
                   <button
@@ -500,6 +514,7 @@
                 {#if isSearchFocused && recentSearches.length > 0}
                   <div
                     class="absolute top-full left-0 right-[80px] mt-2 bg-white dark:bg-dark-bg-primary rounded-2xl border border-light-border dark:border-dark-border shadow-lg z-50"
+                    on:mousedown|stopPropagation
                     on:click|stopPropagation
                   >
                     <div class="p-6">
@@ -515,7 +530,7 @@
                           </h2>
                           <button
                             class="text-brand-red text-body"
-                            on:click|stopPropagation|preventDefault={handleClearRecentSearches}
+                            on:mousedown|stopPropagation|preventDefault={handleClearRecentSearches}
                           >
                             Clear
                           </button>
@@ -524,7 +539,7 @@
                           {#each recentSearches as search}
                             <button
                               class="flex items-center gap-2 py-2 text-light-text-primary dark:text-dark-text-primary hover:bg-Black/5 dark:hover:bg-White/5 transition-colors"
-                              on:click={() => {
+                              on:mousedown|preventDefault|stopPropagation={() => {
                                 searchQuery = search.query;
                                 isSearchFocused = false;
                                 handleSearch(new Event("submit"));
