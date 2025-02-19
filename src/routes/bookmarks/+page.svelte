@@ -6,7 +6,8 @@
   import { user } from '$lib/stores/auth';
   import { goto } from '$app/navigation';
 
-  let bookmarkedCourses: (FinalCourseStructure & { id: string })[] = [];
+  let bookmarkedCourses: (FinalCourseStructure & { id: string; bookmarkedAt: Date })[] = [];
+  let sortedCourses: (FinalCourseStructure & { id: string; bookmarkedAt: Date })[] = [];
   let loading = true;
   let sortBy = 'newest';
 
@@ -59,17 +60,35 @@
     }
   }
 
-  function sortCourses(courses: (FinalCourseStructure & { id: string })[]) {
-    return [...courses].sort((a, b) => {
-      const dateA = a.createdAt instanceof Date ? a.createdAt : new Date(a.createdAt);
-      const dateB = b.createdAt instanceof Date ? b.createdAt : new Date(b.createdAt);
-      return sortBy === 'newest' 
-        ? dateB.getTime() - dateA.getTime()
-        : dateA.getTime() - dateB.getTime();
+  function sortCourses(courses: (FinalCourseStructure & { id: string; bookmarkedAt: Date })[]) {
+    if (!courses?.length) return [];
+    
+    console.log('Sorting by:', sortBy); // Debug log
+    console.log('Before sort:', courses.map(c => ({ id: c.id, date: c.bookmarkedAt }))); // Debug log
+    
+    const sorted = [...courses].sort((a, b) => {
+      const dateA = a.bookmarkedAt instanceof Date ? a.bookmarkedAt : new Date(a.bookmarkedAt);
+      const dateB = b.bookmarkedAt instanceof Date ? b.bookmarkedAt : new Date(b.bookmarkedAt);
+      
+      const result = sortBy === 'newest' 
+        ? dateB.getTime() - dateA.getTime()  // Newest first
+        : dateA.getTime() - dateB.getTime(); // Oldest first
+        
+      console.log(`Comparing ${dateA} with ${dateB}, result: ${result}`); // Debug log
+      return result;
     });
+    
+    console.log('After sort:', sorted.map(c => ({ id: c.id, date: c.bookmarkedAt }))); // Debug log
+    return sorted;
   }
 
-  $: sortedCourses = sortCourses(bookmarkedCourses);
+  // Create two reactive statements to ensure proper updates
+  $: {
+    console.log('Sort by changed to:', sortBy); // Debug log
+    if (bookmarkedCourses.length > 0) {
+      sortedCourses = sortCourses(bookmarkedCourses);
+    }
+  }
 </script>
 
 <div class="min-h-screen">
@@ -88,13 +107,11 @@
         
         <!-- Sort Dropdown -->
         <div class="relative">
-          <button 
-            class="flex items-center gap-2 px-4 py-2 rounded-lg bg-light-bg-secondary dark:bg-dark-bg-secondary text-light-text-primary dark:text-dark-text-primary"
-          >
-            <span class="text-semi-body">Sort by</span>
+          <button class="flex items-center gap-2 px-4 py-2 text-semibody-medium rounded-lg bg-light-bg-secondary dark:bg-dark-bg-secondary text-light-text-primary dark:text-dark-text-primary">
+            <span class="text-semibody-medium">Sort by</span>
             <select
               bind:value={sortBy}
-              class="bg-transparent outline-none"
+              class="bg-transparent outline-none cursor-pointer"
             >
               <option value="newest">Newest</option>
               <option value="oldest">Oldest</option>
@@ -118,7 +135,7 @@
         </p>
         <a
           href="/trending"
-          class="px-4 py-2 bg-Green hover:bg-GreenHover text-white rounded-lg transition-colors"
+          class="px-4 py-2 bg-brand-red hover:bg-ButtonHover text-white rounded-lg transition-colors"
         >
           Explore Courses
         </a>

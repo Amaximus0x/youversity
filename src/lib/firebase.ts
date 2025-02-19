@@ -882,26 +882,35 @@ export async function updateEnrollmentQuizResult(
   }
 }
 
-export async function getBookmarkedCourses(userId: string): Promise<(FinalCourseStructure & { id: string })[]> {
+export async function getBookmarkedCourses(userId: string): Promise<(FinalCourseStructure & { id: string; bookmarkedAt: Date })[]> {
   try {
     const userBookmarksRef = collection(db, 'users', userId, 'bookmarks');
     const bookmarksSnapshot = await getDocs(userBookmarksRef);
+    
+    console.log('Raw bookmarks data:', bookmarksSnapshot.docs.map(doc => ({
+      id: doc.id,
+      createdAt: doc.data().createdAt
+    }))); // Debug log
     
     const bookmarkedCourses = await Promise.all(
       bookmarksSnapshot.docs.map(async (doc) => {
         const courseRef = doc.data().courseRef;
         const courseDoc = await getDoc(courseRef);
         if (courseDoc.exists()) {
+          const bookmarkedAt = doc.data().createdAt?.toDate() || new Date();
+          console.log(`Course ${courseDoc.id} bookmarked at:`, bookmarkedAt); // Debug log
+          
           return {
             ...(courseDoc.data() as FinalCourseStructure),
-            id: courseDoc.id
+            id: courseDoc.id,
+            bookmarkedAt
           };
         }
         return null;
       })
     );
 
-    return bookmarkedCourses.filter((course): course is FinalCourseStructure & { id: string } => 
+    return bookmarkedCourses.filter((course): course is FinalCourseStructure & { id: string; bookmarkedAt: Date } => 
       course !== null
     );
   } catch (error) {
