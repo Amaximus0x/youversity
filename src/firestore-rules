@@ -17,8 +17,8 @@ service cloud.firestore {
       allow update: if request.auth != null && 
         request.auth.uid == userId &&
         request.resource.data.diff(resource.data).affectedKeys()
-          .hasOnly(['displayName', 'photoURL', 'dateOfBirth', 'gender', 
-                   'country', 'updatedAt', 'email', 'phoneNumber']);
+          .hasOnly(['displayName', 'photoURL', 'username', 'email', 'updatedAt', 
+                    'about',]);
     }
 
     // Usernames collection for username reservation
