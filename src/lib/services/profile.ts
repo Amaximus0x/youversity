@@ -9,10 +9,7 @@ export interface UserProfile {
   displayName: string;
   email: string;
   photoURL: string;
-  dateOfBirth?: string;
-  gender?: string;
-  country?: string;
-  phoneNumber?: string;
+  about?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -30,10 +27,7 @@ export async function createUserProfile(userId: string, initialData: Partial<Use
       displayName: initialData.displayName || '',
       email: initialData.email || '',
       photoURL: initialData.photoURL || '',
-      dateOfBirth: initialData.dateOfBirth || '',
-      gender: initialData.gender || '',
-      country: initialData.country || '',
-      phoneNumber: initialData.phoneNumber || '',
+      about: initialData.about || '',
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp()
     };
@@ -86,41 +80,32 @@ export async function getUserProfile(userId: string) {
   }
 }
 
-export async function updateUserProfile(userId: string, updates: Partial<UserProfile>) {
+export async function updateUserProfile(userId: string, data: Partial<UserProfile>) {
   try {
-    if (!userId) {
-      throw new Error('User ID is required');
-    }
-
     const userRef = doc(db, 'users', userId);
-    const userDoc = await getDoc(userRef);
-
-    const updateData: Partial<UserProfile> & { updatedAt: Date } = {
-      ...updates,
-      updatedAt: new Date()
+    
+    // Only include fields that are allowed in Firestore rules
+    const allowedData = {
+      displayName: data.displayName,
+      photoURL: data.photoURL,
+      username: data.username,
+      about: data.about,
+      email: data.email,
+      updatedAt: new Date(),
+      // Remove fields not in rules: gender, country, phoneNumber
     };
 
-    if (!userDoc.exists()) {
-      // If document doesn't exist, create it
-      await setDoc(userRef, {
-        ...updateData,
-        createdAt: new Date(),
-        email: updates.email || '',
-        displayName: updates.displayName || '',
-        photoURL: updates.photoURL || ''
+    // Update the user document
+    await updateDoc(userRef, allowedData);
+    
+    // Also update the username document if username is being changed
+    if (data.username) {
+      const usernameRef = doc(db, 'usernames', data.username);
+      await setDoc(usernameRef, {
+        userId: userId,
+        createdAt: new Date()
       });
-    } else {
-      // Remove undefined values
-      Object.keys(updateData).forEach(key => {
-        if (updateData[key] === undefined) {
-          delete updateData[key];
-        }
-      });
-
-      await updateDoc(userRef, updateData);
     }
-
-    return updateData;
   } catch (error) {
     console.error('Error updating user profile:', error);
     throw new Error('Failed to update user profile');

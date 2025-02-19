@@ -36,7 +36,8 @@
   let prevPath = "";
 
   // Initialize search-related arrays
-  let recentSearches: Array<{ id: string; query: string; timestamp: Date }> = [];
+  let recentSearches: Array<{ id: string; query: string; timestamp: Date }> =
+    [];
   let recommendations: string[] = [];
 
   // Sidebar items configuration
@@ -81,6 +82,20 @@
     { icon: "/icons/settings-02.svg", label: "Settings", href: "/settings" },
   ];
 
+  // Add new state for profile modal
+  let showProfileModal = false;
+
+  // Toggle profile modal
+  function toggleProfileModal() {
+    showProfileModal = !showProfileModal;
+  }
+
+  // Handle profile click
+  function handleProfileClick() {
+    toggleProfileModal();
+    goto("/settings");
+  }
+
   // Add this function to handle clicks outside the search area
   function handleClickOutside(event: MouseEvent) {
     const target = event.target as HTMLElement;
@@ -97,6 +112,7 @@
     window.addEventListener("offline", updateOnlineStatus);
 
     // Load recent searches
+    console.log("User:", $user);
     if ($user) {
       recentSearches = await getRecentSearches($user.uid);
     }
@@ -166,11 +182,11 @@
       }
     }
     prevPath = $page.url.pathname;
-    console.log('URL changed:', {
+    console.log("URL changed:", {
       current: $page.url.pathname,
       previous: prevPath,
       searchQuery,
-      recentSearches: recentSearches.length
+      recentSearches: recentSearches.length,
     });
   }
 
@@ -188,6 +204,7 @@
   }
 
   async function handleAuth() {
+    toggleProfileModal();
     if ($user) {
       await signOutUser();
     } else {
@@ -207,17 +224,19 @@
       goto(
         `/search?q=${encodeURIComponent(searchQuery)}&filter=${currentFilter}`,
       );
-      
+
       // Save search history asynchronously
       if ($user) {
         Promise.all([
           saveRecentSearch(searchQuery, $user.uid),
-          getRecentSearches($user.uid)
-        ]).then(([_, searches]) => {
-          recentSearches = searches;
-        }).catch(error => {
-          console.error('Error handling search history:', error);
-        });
+          getRecentSearches($user.uid),
+        ])
+          .then(([_, searches]) => {
+            recentSearches = searches;
+          })
+          .catch((error) => {
+            console.error("Error handling search history:", error);
+          });
       }
     }
   }
@@ -225,22 +244,24 @@
   async function handleSearch(e: Event) {
     e.preventDefault();
     if (searchQuery.trim()) {
-      console.log('Desktop search initiated:', searchQuery);
+      console.log("Desktop search initiated:", searchQuery);
       isSearchFocused = false;
       goto(
         `/search?q=${encodeURIComponent(searchQuery)}&filter=${currentFilter}`,
       );
-      
+
       // Save search history asynchronously
       if ($user) {
         Promise.all([
           saveRecentSearch(searchQuery, $user.uid),
-          getRecentSearches($user.uid)
-        ]).then(([_, searches]) => {
-          recentSearches = searches;
-        }).catch(error => {
-          console.error('Error handling search history:', error);
-        });
+          getRecentSearches($user.uid),
+        ])
+          .then(([_, searches]) => {
+            recentSearches = searches;
+          })
+          .catch((error) => {
+            console.error("Error handling search history:", error);
+          });
       }
     }
   }
@@ -266,8 +287,22 @@
         recentSearches = [];
       }
     } catch (error) {
-      console.error('Error clearing recent searches:', error);
+      console.error("Error clearing recent searches:", error);
     }
+  }
+
+  // Add near the top of the script section
+  $: if ($user) {
+    console.log("Auth state changed:", {
+      user: $user,
+      isAuthenticated: $isAuthenticated,
+    });
+    console.log("User data:", {
+      username: $user.username,
+      displayName: $user.displayName,
+      email: $user.email,
+      uid: $user.uid,
+    });
   }
 </script>
 
@@ -466,9 +501,11 @@
                 <div
                   class="flex items-center bg-white dark:bg-dark-bg-primary border-[1.5px] border-light-border dark:border-dark-border hover:border-brand-red focus-within:border-brand-red rounded-2xl py-2 pl-4 pr-2 h-12 gap-2 transition-all duration-300"
                 >
-                  <div class="absolute left-4 top-1/2 -translate-y-1/2 transition-all duration-300 ease-in-out {
-                    isSearchFocused ? 'opacity-0 -translate-x-2' : 'opacity-60 translate-x-0'
-                  }">
+                  <div
+                    class="absolute left-4 top-1/2 -translate-y-1/2 transition-all duration-300 ease-in-out {isSearchFocused
+                      ? 'opacity-0 -translate-x-2'
+                      : 'opacity-60 translate-x-0'}"
+                  >
                     <img
                       src="/icons/search-01.svg"
                       alt="Search"
@@ -481,14 +518,14 @@
                     bind:value={searchQuery}
                     on:focus|stopPropagation={() => {
                       isSearchFocused = true;
-                      console.log('Search focused');
+                      console.log("Search focused");
                     }}
                     on:blur={() => {
                       // Only hide dropdown if clicked outside search area
                       setTimeout(() => {
-                        if (!document.activeElement?.closest('form')) {
+                        if (!document.activeElement?.closest("form")) {
                           isSearchFocused = false;
-                          console.log('Search blurred');
+                          console.log("Search blurred");
                         }
                       }, 200);
                     }}
@@ -565,7 +602,9 @@
                                 alt="Recent"
                                 class="w-5 h-5 opacity-60"
                               />
-                              <span class="text-semi-body-medium">{search.query}</span>
+                              <span class="text-semi-body-medium"
+                                >{search.query}</span
+                              >
                             </button>
                           {/each}
                         </div>
@@ -590,24 +629,40 @@
               {#if $user}
                 <div
                   class="w-12 h-12 rounded-full bg-light-bg-primary dark:bg-dark-bg-primary border border-light-border dark:border-dark-border overflow-hidden cursor-pointer hover:opacity-90 transition-opacity"
-                  on:click={() => goto("/profile")}
-                  on:keydown={(e) => e.key === "Enter" && goto("/profile")}
+                  on:click={toggleProfileModal}
+                  on:keydown={(e) => e.key === "Enter" && toggleProfileModal()}
                   role="button"
                   tabindex="0"
                 >
-                  <img
-                    src={$user.photoURL || ""}
-                    alt={$user.displayName || "User"}
-                    class="w-full h-full object-cover"
-                  />
+                  {#if $user.photoURL}
+                    <img
+                      src={$user.photoURL}
+                      alt={$user.displayName || "User"}
+                      class="w-full h-full object-cover"
+                    />
+                  {:else}
+                    <div
+                      class="w-full h-full flex items-center justify-center bg-[#F5F5F5]"
+                    >
+                      <span class="text-[#2A4D61] font-medium">
+                        {(
+                          $user.displayName?.[0] ||
+                          $user.email?.[0] ||
+                          "U"
+                        ).toUpperCase()}
+                      </span>
+                    </div>
+                  {/if}
                 </div>
               {:else}
                 <div
-                  class="w-12 h-12 rounded-full bg-[#F5F5F5] flex items-center justify-center"
+                  class="w-12 h-12 rounded-full bg-[#F5F5F5] flex items-center justify-center cursor-pointer"
+                  on:click={() => goto("/login")}
+                  on:keydown={(e) => e.key === "Enter" && goto("/login")}
+                  role="button"
+                  tabindex="0"
                 >
-                  <span class="text-[#2A4D61] font-medium">
-                    {$user?.username[0].toUpperCase() || ""}
-                  </span>
+                  <span class="text-[#2A4D61] font-medium">U</span>
                 </div>
               {/if}
             </div>
@@ -735,7 +790,9 @@
       <!-- Recent Searches -->
       {#if recentSearches.length > 0}
         <div class="mb-8">
-          <div class="flex justify-between items-center pb-2 border-b border-light-border dark:border-dark-border mb-2">
+          <div
+            class="flex justify-between items-center pb-2 border-b border-light-border dark:border-dark-border mb-2"
+          >
             <h2 class="text-h4-medium">Recent Search</h2>
             <button
               class="text-brand-red text-body"
@@ -797,6 +854,123 @@
 <div class="fixed-overlay">
   <CourseGenerationModal />
 </div>
+
+<!-- Add Profile Modal -->
+{#if showProfileModal}
+  <button
+    class="fixed top-24 right-8 z-50"
+    transition:fade={{ duration: 200 }}
+    on:click|stopPropagation
+  >
+    <div
+      class="w-[325px] flex flex-col p-2 gap-4 bg-light-bg-secondary dark:bg-dark-bg-secondary rounded-xl overflow-hidden shadow-lg"
+    >
+      <!-- Profile Section -->
+      <button
+        class="w-full p-2 flex items-center gap-2 border bg-Black/5 dark:bg-White/5 border-Grey dark:border-Grey rounded-lg"
+        on:click={handleProfileClick}
+      >
+        <div class="items-start">
+          {#if $user?.photoURL}
+            <img
+              src={$user.photoURL}
+              alt={$user.displayName || "User"}
+              class="w-[48px] h-[48px] rounded-full object-cover"
+            />
+          {:else}
+            <div
+              class="w-[48px] h-[48px] rounded-full bg-[#F5F5F5] flex items-center justify-center"
+            >
+              <span class="text-[#2A4D61] font-medium">
+                {(
+                  $user?.displayName?.[0] ||
+                  $user?.username?.[0] ||
+                  "U"
+                ).toUpperCase()}
+              </span>
+            </div>
+          {/if}
+        </div>
+        <div>
+        <div class="w-[203px] flex flex-col items-start">
+          <span
+            class="text-h4-medium text-light-text-primary dark:text-dark-text-primary"
+          >
+            {$user?.displayName || "User"}
+          </span>
+          <span
+            class="text-semi-body text-light-text-secondary dark:text-dark-text-secondary"
+          >
+            {$user?.username || ""}
+          </span>
+          </div>
+        </div>
+
+        <div>
+        <svg
+          class="w-6 h-6 text-brand-turquoise"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M15.5 12C15.5 13.933 13.933 15.5 12 15.5C10.067 15.5 8.5 13.933 8.5 12C8.5 10.067 10.067 8.5 12 8.5C13.933 8.5 15.5 10.067 15.5 12Z"
+            stroke="currentColor"
+            stroke-width="1.5"
+          />
+          <path
+            d="M21.011 14.0966C21.5329 13.9559 21.7939 13.8855 21.8969 13.7509C22 13.6164 22 13.3999 22 12.967V11.0333C22 10.6004 22 10.3839 21.8969 10.2494C21.7938 10.1148 21.5329 10.0444 21.011 9.90365C19.0606 9.37766 17.8399 7.33858 18.3433 5.40094C18.4817 4.86806 18.5509 4.60163 18.4848 4.44536C18.4187 4.28909 18.2291 4.18141 17.8497 3.96603L16.125 2.9868C15.7528 2.77546 15.5667 2.66979 15.3997 2.69229C15.2326 2.71479 15.0442 2.9028 14.6672 3.2788C13.208 4.73455 10.7936 4.73449 9.33434 3.27871C8.95743 2.9027 8.76898 2.7147 8.60193 2.69219C8.43489 2.66969 8.24877 2.77536 7.87653 2.9867L6.15184 3.96594C5.77253 4.1813 5.58287 4.28898 5.51678 4.44522C5.45068 4.60147 5.51987 4.86794 5.65825 5.40087C6.16137 7.33857 4.93972 9.3777 2.98902 9.90367C2.46712 10.0444 2.20617 10.1148 2.10308 10.2493C2 10.3839 2 10.6004 2 11.0333V12.967C2 13.3999 2 13.6164 2.10308 13.7509C2.20615 13.8855 2.46711 13.9559 2.98902 14.0966C4.9394 14.6226 6.16008 16.6617 5.65672 18.5993C5.51829 19.1322 5.44907 19.3986 5.51516 19.5549C5.58126 19.7112 5.77092 19.8189 6.15025 20.0342L7.87495 21.0135C8.24721 21.2248 8.43334 21.3305 8.6004 21.308C8.76746 21.2855 8.95588 21.0974 9.33271 20.7214C10.7927 19.2645 13.2088 19.2644 14.6689 20.7213C15.0457 21.0974 15.2341 21.2854 15.4012 21.3079C15.5682 21.3304 15.7544 21.2247 16.1266 21.0134L17.8513 20.0341C18.2307 19.8188 18.4204 19.7111 18.4864 19.5548C18.5525 19.3985 18.4833 19.1321 18.3448 18.5992C17.8412 16.6617 19.0609 14.6227 21.011 14.0966Z"
+            stroke="currentColor"
+            stroke-width="1.5"
+            stroke-linecap="round"
+          />
+        </svg>
+        </div>
+      </button>
+
+      <!-- Logout Button -->
+      <button
+        class="w-full p-2 flex items-center justify-center gap-4 text-light-text-primary dark:text-dark-text-primary hover:bg-light-bg-secondary dark:hover:bg-dark-bg-secondary border border-Grey dark:border-Grey rounded-lg transition-colors"
+        on:click={handleAuth}
+      >
+        <!-- <div class="flex items-center justify-center gap-4"> -->
+        <span class="text-semi-body">Logout</span>
+        <svg
+          class="w-6 h-6 text-brand-red"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <g id="logout-03">
+            <path
+              id="Vector"
+              d="M15.5 17.625C15.4264 19.4769 13.8831 21.0494 11.8156 20.9988C11.3346 20.987 10.7401 20.8194 9.55112 20.484C6.68961 19.6768 4.20555 18.3203 3.60956 15.2815C3.5 14.723 3.5 14.0944 3.5 12.8373V11.1627C3.5 9.90561 3.5 9.27705 3.60956 8.71846C4.20555 5.67965 6.68961 4.32316 9.55112 3.51603C10.7401 3.18064 11.3346 3.01295 11.8156 3.00119C13.8831 2.95061 15.4264 4.52307 15.5 6.37501"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+            />
+            <path
+              id="Vector_2"
+              d="M21.5 12H10.5M21.5 12C21.5 11.2998 19.5057 9.99153 19 9.5M21.5 12C21.5 12.7002 19.5057 14.0085 19 14.5"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </g>
+        </svg>
+        <!-- </div> -->
+      </button>
+    </div>
+  </button>
+
+  <!-- Backdrop -->
+  <div
+    class="fixed inset-0 z-40 bg-black/5 dark:bg-white/5"
+    on:click={toggleProfileModal}
+    on:keydown={(e) => e.key === "Enter" && toggleProfileModal()}
+    role="button"
+    tabindex="0"
+  />
+{/if}
 
 <style>
   :global(body) {

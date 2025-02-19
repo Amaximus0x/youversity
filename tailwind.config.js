@@ -73,6 +73,7 @@ export default {
         "Grey": "#A3A3A3",
         "TransparentWhite 1": "#FFFFFF",
         "Grey2": "#EBEBEB",
+        "Grey3": "#797979",
         "Black2dark":"#DDDADA",
         "TransparentGreen2": "#41C1CB",
         "blackTransparent": "#000000",
