@@ -203,30 +203,45 @@
   async function handleMobileSearch(e: Event) {
     e.preventDefault();
     if (searchQuery.trim()) {
-      if ($user) {
-        await saveRecentSearch(searchQuery, $user.uid);
-        recentSearches = await getRecentSearches($user.uid);
-      }
       showMobileSearch = false;
       goto(
         `/search?q=${encodeURIComponent(searchQuery)}&filter=${currentFilter}`,
       );
+      
+      // Save search history asynchronously
+      if ($user) {
+        Promise.all([
+          saveRecentSearch(searchQuery, $user.uid),
+          getRecentSearches($user.uid)
+        ]).then(([_, searches]) => {
+          recentSearches = searches;
+        }).catch(error => {
+          console.error('Error handling search history:', error);
+        });
+      }
     }
   }
 
   async function handleSearch(e: Event) {
+    e.preventDefault();
     if (searchQuery.trim()) {
       console.log('Desktop search initiated:', searchQuery);
-      if ($user) {
-        await saveRecentSearch(searchQuery, $user.uid);
-        console.log('Search saved, fetching recent searches');
-        recentSearches = await getRecentSearches($user.uid);
-        console.log('Recent searches updated:', recentSearches);
-      }
       isSearchFocused = false;
       goto(
         `/search?q=${encodeURIComponent(searchQuery)}&filter=${currentFilter}`,
       );
+      
+      // Save search history asynchronously
+      if ($user) {
+        Promise.all([
+          saveRecentSearch(searchQuery, $user.uid),
+          getRecentSearches($user.uid)
+        ]).then(([_, searches]) => {
+          recentSearches = searches;
+        }).catch(error => {
+          console.error('Error handling search history:', error);
+        });
+      }
     }
   }
 

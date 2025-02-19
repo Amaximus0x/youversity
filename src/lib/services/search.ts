@@ -170,40 +170,43 @@ export async function saveRecentSearch(searchQuery: string, userId: string): Pro
     console.log('Saving search:', { searchQuery, userId });
     const searchHistoryRef = collection(db, 'searchHistory');
     
-    // Get existing searches to check for duplicates
-    const q = query(
+    // First check for existing duplicates
+    const duplicateQuery = query(
       searchHistoryRef,
       where('userId', '==', userId),
-      orderBy('timestamp', 'desc')
+      where('query', '==', searchQuery.trim())
     );
     
-    const snapshot = await getDocs(q);
-    const searches = snapshot.docs;
+    const duplicateSnapshot = await getDocs(duplicateQuery);
     
-    // Check for duplicate and remove it if exists
-    const duplicateDoc = searches.find(doc => 
-      doc.data().query.toLowerCase() === searchQuery.trim().toLowerCase()
-    );
-    
-    if (duplicateDoc) {
-      console.log('Found duplicate, removing:', duplicateDoc.id);
-      await deleteDoc(duplicateDoc.ref);
+    // Delete any existing duplicates first
+    for (const doc of duplicateSnapshot.docs) {
+      await deleteDoc(doc.ref);
     }
     
-    // Add new search at the top
+    // Add new search
     const docRef = await addDoc(searchHistoryRef, {
       query: searchQuery.trim(),
       userId,
       timestamp: serverTimestamp()
     });
     
-    // If we have more than MAX_RECENT_SEARCHES after adding the new one
-    if (searches.length >= MAX_RECENT_SEARCHES) {
-      // Get the oldest search (excluding the one we just deleted if there was a duplicate)
-      const remainingSearches = searches.filter(doc => doc.id !== duplicateDoc?.id);
-      if (remainingSearches.length >= MAX_RECENT_SEARCHES) {
-        const oldestSearch = remainingSearches[remainingSearches.length - 1];
-        await deleteDoc(oldestSearch.ref);
+    // Cleanup old searches if we have too many
+    const allSearchesQuery = query(
+      searchHistoryRef,
+      where('userId', '==', userId),
+      orderBy('timestamp', 'desc')
+    );
+    
+    const allSearches = await getDocs(allSearchesQuery);
+    
+    if (allSearches.docs.length > MAX_RECENT_SEARCHES) {
+      // Get searches to remove (oldest ones beyond the limit)
+      const searchesToRemove = allSearches.docs.slice(MAX_RECENT_SEARCHES);
+      
+      // Delete old searches
+      for (const doc of searchesToRemove) {
+        await deleteDoc(doc.ref);
       }
     }
     
@@ -229,7 +232,8 @@ export async function getRecentSearches(userId: string): Promise<SearchHistoryIt
     const snapshot = await getDocs(q);
     console.log('Found searches:', snapshot.docs.length);
     
-    return snapshot.docs.map(doc => {
+    // Map and deduplicate the searches
+    const searches = snapshot.docs.map(doc => {
       const data = doc.data();
       return {
         id: doc.id,
@@ -238,6 +242,19 @@ export async function getRecentSearches(userId: string): Promise<SearchHistoryIt
         timestamp: data.timestamp?.toDate() || new Date()
       };
     });
+    
+    // Remove any remaining duplicates (keeping the most recent)
+    const uniqueSearches = searches.reduce((acc, current) => {
+      const exists = acc.find(item => 
+        item.query.toLowerCase() === current.query.toLowerCase()
+      );
+      if (!exists) {
+        acc.push(current);
+      }
+      return acc;
+    }, [] as SearchHistoryItem[]);
+    
+    return uniqueSearches;
   } catch (error) {
     console.error('Error fetching recent searches:', error);
     return [];
