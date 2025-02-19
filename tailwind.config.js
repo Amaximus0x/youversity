@@ -56,7 +56,7 @@ export default {
           },
           'text': {
             'primary': '#FFFFFF',
-            'secondary': '#E8EAED',
+            'secondary': '#DDDADA',
             'tertiary': '#A3A3A3'
           },
           'border': 'rgba(255, 255, 255, 0.05)'
@@ -73,7 +73,7 @@ export default {
         "Grey": "#A3A3A3",
         "TransparentWhite 1": "#FFFFFF",
         "Grey2": "#EBEBEB",
-
+        "Black2dark":"#DDDADA",
         "TransparentGreen2": "#41C1CB",
         "blackTransparent": "#000000",
         "GreenHover": "#1E3443",

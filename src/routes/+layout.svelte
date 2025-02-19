@@ -521,7 +521,7 @@
                       <!-- Recent Searches -->
                       <div class="mb-8">
                         <div
-                          class="flex justify-between items-center mb-4 border-b border-light-border dark:border-dark-border pb-2"
+                          class="flex justify-between items-center mb-2 border-b border-light-border dark:border-dark-border pb-2"
                         >
                           <h2
                             class="text-h4-medium text-light-text-primary dark:text-dark-text-primary"
@@ -538,7 +538,7 @@
                         <div class="flex flex-col">
                           {#each recentSearches as search}
                             <button
-                              class="flex items-center gap-2 py-2 text-light-text-primary dark:text-dark-text-primary hover:bg-Black/5 dark:hover:bg-White/5 transition-colors"
+                              class="flex items-center gap-2 py-2 text-light-text-secondary dark:text-dark-text-secondary hover:bg-Black/5 dark:hover:bg-White/5 transition-colors"
                               on:mousedown|preventDefault|stopPropagation={() => {
                                 searchQuery = search.query;
                                 isSearchFocused = false;
@@ -720,10 +720,10 @@
       <!-- Recent Searches -->
       {#if recentSearches.length > 0}
         <div class="mb-8">
-          <div class="flex justify-between items-center mb-4">
+          <div class="flex justify-between items-center pb-2 border-b border-light-border dark:border-dark-border mb-2">
             <h2 class="text-h4-medium">Recent Search</h2>
             <button
-              class="text-brand-red text-semi-body"
+              class="text-brand-red text-body"
               on:click={handleClearRecentSearches}
             >
               Clear
@@ -732,7 +732,7 @@
           <div class="flex flex-col gap-4">
             {#each recentSearches as search}
               <button
-                class="flex items-center gap-2 text-light-text-primary dark:text-dark-text-primary"
+                class="flex items-center gap-2 text-light-text-secondary dark:text-dark-text-secondary"
                 on:click={() => {
                   searchQuery = search.query;
                   handleMobileSearch(new Event("submit"));
@@ -743,7 +743,7 @@
                   alt="Recent"
                   class="w-5 h-5 opacity-60"
                 />
-                <span class="text-semi-body">{search.query}</span>
+                <span class="text-semibody-medium">{search.query}</span>
               </button>
             {/each}
           </div>
@@ -757,7 +757,7 @@
           <div class="flex flex-col gap-4">
             {#each recommendations as recommendation}
               <button
-                class="flex items-center gap-2 text-light-text-primary dark:text-dark-text-primary"
+                class="flex items-center gap-2 text-light-text-primary dark:text-dark-text-primary hover:bg-black/10"
                 on:click={() => {
                   searchQuery = recommendation;
                   handleMobileSearch(new Event("submit"));
@@ -768,7 +768,7 @@
                   alt="Search"
                   class="w-5 h-5 opacity-60"
                 />
-                <span class="text-semi-body">{recommendation}</span>
+                <span class="text-semibody-medium">{recommendation}</span>
               </button>
             {/each}
           </div>
