@@ -1,9 +1,9 @@
-import { GoogleAuthProvider, signInWithPopup, signOut, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail, updateProfile } from 'firebase/auth';
+import { GoogleAuthProvider, signInWithPopup, signOut, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail, updateProfile, EmailAuthProvider, reauthenticateWithCredential, reauthenticateWithPopup } from 'firebase/auth';
 import { auth, db } from '$lib/firebase';
 import { goto } from '$app/navigation';
 import { createUserProfile, getUserProfile } from './profile';
 import type { UserProfile } from './profile';
-import { doc, deleteDoc, collection, query, where, getDocs } from 'firebase/firestore';
+import { doc, deleteDoc, collection, query, where, getDocs, writeBatch } from 'firebase/firestore';
 
 const provider = new GoogleAuthProvider();
 
@@ -123,4 +123,107 @@ export const resetPassword = async (email: string) => {
     throw error;
   }
 };
+
+// Add this function to handle re-authentication
+export async function reauthenticateUser(password?: string) {
+  const user = auth.currentUser;
+  if (!user) throw new Error('No user found');
+
+  try {
+    if (user.providerData[0]?.providerId === 'google.com') {
+      // Re-authenticate with Google
+      const provider = new GoogleAuthProvider();
+      await reauthenticateWithPopup(user, provider);
+    } else {
+      // Re-authenticate with email/password
+      if (!password) throw new Error('Password required');
+      const credential = EmailAuthProvider.credential(user.email!, password);
+      await reauthenticateWithCredential(user, credential);
+    }
+    return true;
+  } catch (error) {
+    console.error('Re-authentication error:', error);
+    throw error;
+  }
+}
+
+// Update the deleteUserAccount function
+export async function deleteUserAccount(userId: string, password?: string) {
+  try {
+    // First re-authenticate the user
+    await reauthenticateUser(password);
+
+    const batch = writeBatch(db);
+    
+    // Delete user profile
+    const userRef = doc(db, 'users', userId);
+    batch.delete(userRef);
+
+    // Delete user's courses
+    const userCoursesRef = collection(db, `users/${userId}/courses`);
+    const userCoursesSnapshot = await getDocs(userCoursesRef);
+    userCoursesSnapshot.forEach((doc) => {
+      batch.delete(doc.ref);
+    });
+
+    // Delete user's bookmarks
+    const userBookmarksRef = collection(db, `users/${userId}/bookmarks`);
+    const userBookmarksSnapshot = await getDocs(userBookmarksRef);
+    userBookmarksSnapshot.forEach((doc) => {
+      batch.delete(doc.ref);
+    });
+
+    // Delete user's likes
+    const userLikesRef = collection(db, `users/${userId}/likes`);
+    const userLikesSnapshot = await getDocs(userLikesRef);
+    userLikesSnapshot.forEach((doc) => {
+      batch.delete(doc.ref);
+    });
+
+    // Delete enrollments
+    const enrollmentsQuery = query(
+      collection(db, 'enrollments'),
+      where('userId', '==', userId)
+    );
+    const enrollmentsSnapshot = await getDocs(enrollmentsQuery);
+    enrollmentsSnapshot.forEach((doc) => {
+      batch.delete(doc.ref);
+    });
+
+    // Delete username reservation
+    const usernameQuery = query(
+      collection(db, 'usernames'),
+      where('userId', '==', userId)
+    );
+    const usernameSnapshot = await getDocs(usernameQuery);
+    usernameSnapshot.forEach((doc) => {
+      batch.delete(doc.ref);
+    });
+
+    // Delete search history
+    const searchHistoryQuery = query(
+      collection(db, 'searchHistory'),
+      where('userId', '==', userId)
+    );
+    const searchHistorySnapshot = await getDocs(searchHistoryQuery);
+    searchHistorySnapshot.forEach((doc) => {
+      batch.delete(doc.ref);
+    });
+    
+
+    // Commit the batch
+    await batch.commit();
+
+    // Delete the Firebase Auth account
+    const currentUser = auth.currentUser;
+    if (currentUser) {
+      await currentUser.delete();
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Error deleting user account:', error);
+    throw new Error('Failed to delete account');
+  }
+}
 

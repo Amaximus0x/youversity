@@ -1,4 +1,4 @@
-import { writable } from 'svelte/store';
+import { writable, derived } from 'svelte/store';
 import type { User } from 'firebase/auth';
 import { auth } from '$lib/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
@@ -13,43 +13,61 @@ export interface ExtendedUser extends User {
   uid: string;
 }
 
-// Create stores
-export const user = writable<ExtendedUser | null>(null);
-export const isAuthenticated = writable<boolean>(false);
+function createUserStore() {
+  const { subscribe, set, update } = writable<ExtendedUser | null>(null);
+
+  return {
+    subscribe,
+    set,
+    update,
+    // Add a method to refresh the user data
+    async refresh() {
+      const currentUser = auth.currentUser;
+      if (currentUser) {
+        try {
+          // Force reload the current user first
+          await currentUser.reload();
+          
+          const userProfile = await getUserProfile(currentUser.uid);
+          console.log('Refreshing user store with profile:', userProfile);
+          
+          // Get the latest user data after reload
+          const freshUser = auth.currentUser;
+          
+          const extendedUser: ExtendedUser = {
+            ...(freshUser || currentUser),
+            username: userProfile?.username || '',
+            displayName: userProfile?.displayName || freshUser?.displayName || '',
+            photoURL: userProfile?.photoURL || freshUser?.photoURL || '',
+            email: freshUser?.email || currentUser.email || '',
+            uid: currentUser.uid
+          };
+          
+          console.log('Setting user store with extended user:', extendedUser);
+          set(extendedUser);
+
+          return extendedUser;
+        } catch (error) {
+          console.error('Error refreshing user profile:', error);
+          set(currentUser as ExtendedUser);
+        }
+      } else {
+        set(null);
+      }
+    }
+  };
+}
+
+export const user = createUserStore();
+export const isAuthenticated = derived(user, $user => $user !== null);
 
 // Initialize auth state listener
 if (typeof window !== 'undefined') {
   onAuthStateChanged(auth, async (firebaseUser) => {
     if (firebaseUser) {
-      try {
-        // Fetch the user's profile from Firestore
-        const userProfile = await getUserProfile(firebaseUser.uid);
-        
-        // Cast the Firebase user to our ExtendedUser type and include Firestore profile data
-        const extendedUser: ExtendedUser = {
-          ...firebaseUser,
-          username: userProfile?.username || '',
-          displayName: userProfile?.displayName || firebaseUser.displayName,
-          photoURL: userProfile?.photoURL || firebaseUser.photoURL,
-        };
-        
-        user.set(extendedUser);
-        isAuthenticated.set(true);
-        
-        console.log('User profile loaded:', {
-          username: extendedUser.username,
-          displayName: extendedUser.displayName,
-          email: extendedUser.email
-        });
-      } catch (error) {
-        console.error('Error loading user profile:', error);
-        // Still set the basic Firebase user if profile fetch fails
-        user.set(firebaseUser as ExtendedUser);
-        isAuthenticated.set(true);
-      }
+      await user.refresh();
     } else {
       user.set(null);
-      isAuthenticated.set(false);
     }
   });
 } 
