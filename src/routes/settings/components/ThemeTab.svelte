@@ -25,7 +25,7 @@
   <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
     <!-- Dark Theme Card -->
     <button
-      class="relative rounded-2xl border transition-all duration-200 hover:border-brand-red
+      class="relative rounded-2xl bg-Black/5 dark:bg-White/10 border transition-all duration-200 hover:border-brand-red
       {selectedTheme === 'dark' ? 'border-brand-red' : 'border-Grey dark:border-Grey3'}"
       on:click={() => handleThemeChange('dark')}
     >
@@ -67,7 +67,7 @@
 
     <!-- Light Theme Card -->
     <button
-    class="relative rounded-2xl border transition-all duration-200 hover:border-brand-red
+    class="relative rounded-2xl border transition-all bg-Black/5 dark:bg-White/10 duration-200 hover:border-brand-red
     {selectedTheme === 'light' ? 'border-brand-red' : 'border-Grey dark:border-Grey3'}"
     on:click={() => handleThemeChange('light')}
   >
@@ -109,7 +109,7 @@
 
     <!-- Auto Theme Card -->
     <button
-    class="relative rounded-2xl border transition-all duration-200 hover:border-brand-red
+    class="relative rounded-2xl border transition-all bg-Black/5 dark:bg-White/10 duration-200 hover:border-brand-red
     {selectedTheme === 'auto' ? 'border-brand-red' : 'border-Grey dark:border-Grey3'}"
     on:click={() => handleThemeChange('auto')}
   >

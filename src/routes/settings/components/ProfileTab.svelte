@@ -389,14 +389,14 @@
             </div>
             <div class="flex items-center justify-center gap-2 lg:gap-4">
                 <button
-                    class="px-4 py-2 bg-brand-navy text-white rounded-lg text-semibody-medium"
+                    class="px-2 py-1 bg-brand-navy text-white rounded-lg text-semibody-medium"
                     on:click={handleChangePicture}
                     disabled={loading}
                 >
                     Change picture
                 </button>
                 <button
-                    class="px-4 py-2 bg-Black/5 text-[#FF0000] rounded-lg text-semibody-medium"
+                    class="px-2 py-1 bg-Black/5 text-[#FF0000] rounded-lg text-semibody-medium"
                     on:click={handleDeletePicture}
                     disabled={loading}
                 >
