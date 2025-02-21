@@ -11,6 +11,7 @@ export interface ExtendedUser extends User {
   email: string | null;
   photoURL: string | null;
   uid: string;
+  about?: string;
 }
 
 function createUserStore() {
@@ -40,6 +41,7 @@ function createUserStore() {
             displayName: userProfile?.displayName || freshUser?.displayName || '',
             photoURL: userProfile?.photoURL || freshUser?.photoURL || '',
             email: freshUser?.email || currentUser.email || '',
+            about: userProfile?.about || '',
             uid: currentUser.uid
           };
           

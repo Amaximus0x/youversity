@@ -11,6 +11,17 @@
     import { onMount, onDestroy } from "svelte";
     import { goto } from "$app/navigation";
 
+    // First, update the interface at the top of the file
+    interface UserProfile {
+        displayName: string;
+        username: string;
+        email: string;
+        photoURL: string;
+        about?: string;
+        createdAt: Date;
+        updatedAt: Date;
+    }
+
     // Form data
     let firstName = "";
     let lastName = "";
@@ -327,10 +338,14 @@
         if (!email) {
             email = $user.email || "";
         }
+        if (!about && $user.about) {
+            about = $user.about;
+        }
         if (!photoURL || photoURL !== $user.photoURL) {
             photoURL = $user.photoURL || "";
             previewURL = $user.photoURL || "";
         }
+        console.log("User store updated, refreshing UI with:", $user);
     }
 
     // Add this near the top of your script section
@@ -440,7 +455,7 @@
         </div>
 
         <!-- Username -->
-        <div class="grid grid-cols-2  gap-4">
+        <div class="grid grid-cols-2 gap-4">
             <div class="flex flex-col gap-2">
                 <label
                     class="text-semibody-medium text-light-text-primary dark:text-dark-text-primary"
@@ -449,9 +464,10 @@
                 </label>
                 <input
                     type="text"
-                    bind:value={username}
-                    class="w-full px-4 py-3 bg-white dark:bg-dark-bg-primary border-2 border-light-border dark:border-dark-border rounded-2xl text-mini-body text-light-text-primary dark:text-dark-text-primary"
+                    value={username}
+                    class="w-full px-4 py-3 bg-white/50 dark:bg-dark-bg-primary/50 border-2 border-light-border dark:border-dark-border rounded-2xl text-mini-body text-light-text-tertiary dark:text-dark-text-tertiary cursor-not-allowed"
                     placeholder="@username"
+                    disabled
                 />
             </div>
 
@@ -464,9 +480,10 @@
                 </label>
                 <input
                     type="email"
-                    bind:value={email}
-                    class="w-full px-4 py-3 bg-white dark:bg-dark-bg-primary border-2 border-light-border dark:border-dark-border rounded-2xl text-mini-body text-light-text-primary dark:text-dark-text-primary"
+                    value={email}
+                    class="w-full px-4 py-3 bg-white/50 dark:bg-dark-bg-primary/50 border-2 border-light-border dark:border-dark-border rounded-2xl text-mini-body text-light-text-tertiary dark:text-dark-text-tertiary cursor-not-allowed"
                     placeholder="email"
+                    disabled
                 />
             </div>
         </div>
@@ -496,12 +513,13 @@
 
         <!-- Save Changes Button -->
         <div class="mt-6 md:mt-5 md:flex md:justify-end">
-        <button
-            class="w-fit px-4 py-2 bg-Black/5 text-Grey rounded-lg text-semibody-medium"
-            on:click={handleSaveChanges}
-            disabled={loading}
-        >
-                {loading ? "Saving..." : "Save changes"}
+            <button
+                class="w-fit px-6 py-3 bg-brand-navy hover:bg-GreenHover text-white rounded-2xl text-semibody-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                on:click={handleSaveChanges}
+                disabled={loading}
+            >
+                Save changes
+                <!-- {loading ? "Saving..." : "Save changes"} -->
             </button>
         </div>
 
