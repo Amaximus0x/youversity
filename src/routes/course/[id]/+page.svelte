@@ -26,9 +26,9 @@
   import ShareModal from "$lib/components/ShareModal.svelte";
   import CourseModuleList from "$lib/components/CourseModuleList.svelte";
   import CourseHeader from "$lib/components/CourseHeader.svelte";
-  import type { FinalCourseStructure } from "$lib/types/course";
-  import type { QuizResult } from "$lib/types/course";
-  import QuizModal from "$lib/components/QuizModal.svelte";
+  import type { FinalCourseStructure, Quiz, QuizResult, EnrollmentProgress } from "$lib/types/course";
+  import ModuleQuizPage from '$lib/components/ModuleQuizPage.svelte';
+  import QuizResultModal from '$lib/components/QuizResultModal.svelte';
 
   // Initialize states with null to indicate not loaded yet
   let courseDetails: FinalCourseStructure | null = null;
@@ -64,9 +64,11 @@
   let showShareModal = false;
 
   // Add this state variable with other state variables
-  let showQuizModal = false;
+  let showNewQuizPage = false;
+  let showQuizResult = false;
   let currentQuiz: Quiz | null = null;
   let quizModuleTitle = "";
+  let quizScore = 0;
 
   // Load saved state from localStorage
   function loadSavedState() {
@@ -127,7 +129,7 @@
           throw new Error('Course not found');
         }
 
-        courseDetails = courseData;
+        courseDetails = courseData as FinalCourseStructure;
         isCreator = courseData.isCreator;
         
         showProgress = enrollmentStatus.isEnrolled || courseData.isCreator;
@@ -135,8 +137,8 @@
         // If enrolled, get progress immediately
         if (isEnrolled) {
           const progress = await getEnrollmentProgress($user.uid, $page.params.id);
-          enrollmentProgress = progress;
-          enrollmentProgressStore.set(progress);
+          enrollmentProgress = progress as EnrollmentProgress;
+          enrollmentProgressStore.set(progress as EnrollmentProgress);
         }
 
         // Save initial server state
@@ -338,41 +340,52 @@
     return enrollmentProgress?.quizResults?.finalQuiz?.completed || false;
   }
 
+  // Update quiz completion handler
   async function handleQuizComplete(score: number, timeSpent: number) {
     if (!$user || !courseDetails) return;
 
+    const moduleId = $currentModuleStore;
     try {
-      const moduleId = $currentModuleStore;
       const updatedProgress = await updateEnrollmentQuizResult(
         $user.uid,
         courseDetails.id,
         moduleId,
         {
           attempts: 1,
-          bestScore: score,
-          lastAttemptDate: new Date(),
-          completed: score >= 70,
-          timeTaken: timeSpent
+          score,
+          timeSpent,
+          completedAt: new Date(),
         }
       );
 
       // Update the store with new progress
-      enrollmentProgressStore.set(updatedProgress);
+      enrollmentProgressStore.set(updatedProgress as EnrollmentProgress);
       
-      showQuizModal = false;
-      currentQuiz = null;
-      quizModuleTitle = "";
-
+      // Close quiz modal and show result modal
+      showNewQuizPage = false;
+      quizScore = score;
+      showQuizResult = true;
+      
     } catch (error) {
-      console.error("Error updating quiz result:", error);
+      console.error('Error updating quiz result:', error);
     }
+  }
+
+  // Add handlers for result modal
+  function handleQuizRetake() {
+    showQuizResult = false;
+    showNewQuizPage = true;
+  }
+
+  function handleQuizReview() {
+    // Add review logic
   }
 
   // Subscribe to enrollment progress updates
   onMount(async () => {
     if ($user && courseDetails) {
       const progress = await getEnrollmentProgress($user.uid, courseDetails.id);
-      enrollmentProgressStore.set(progress);
+      enrollmentProgressStore.set(progress as EnrollmentProgress);
     }
   });
 </script>
@@ -557,6 +570,16 @@
                       </div>
                     </div>
                   {/if}
+                  <div class="mt-6">
+                  <button
+                    on:click={() => {
+                      goto(`/course/${$page.params.id}/quiz`);
+                    }}
+                    class="w-full px-4 py-2 flex items-center justify-center text-semibody-medium rounded-2xl transition-colors bg-Green hover:bg-GreenHover text-white"
+                  >
+                    Take Final Quiz
+                    </button>
+                  </div>
                 </div>
               {:else}
                 <!-- Regular Module Content -->
@@ -587,31 +610,45 @@
 
             <!-- Move Reviews Section after Course Conclusion for mobile -->
             <div class="lg:hidden mt-6">
+              <!-- module quiz button -->
+              {#if $currentModuleStore !== -1 && $currentModuleStore !== courseDetails?.Final_Module_Title?.length && courseDetails?.Final_Module_Quiz?.[$currentModuleStore]}
+                <div class="mt-6 flex flex-col gap-3">
+                  <button
+                    on:click={() => {
+                      currentQuiz = courseDetails?.Final_Module_Quiz?.[$currentModuleStore];
+                      quizModuleTitle = courseDetails?.Final_Module_Title?.[$currentModuleStore] || "";
+                      showNewQuizPage = true;
+                    }}
+                    class="w-full px-4 py-2 flex items-center justify-center text-semibody-medium rounded-2xl transition-colors bg-Green hover:bg-GreenHover text-white"
+                  >
+                    Take Module Quiz
+                  </button>
+                </div>
+              {/if}
+
+
               <!-- Course Enrollment Progress for mobile -->
               {#if isEnrolled && $currentModuleStore !== -1}
+              <div class="mt-6">
                 <CourseModuleList
                   {courseDetails}
                   {isCreator}
                   {isEnrolled}
                   showProgress={true}
-                  completedModules={isCreator
-                    ? moduleProgress
-                        .map((m, i) => (m?.completed ? i : -1))
-                        .filter((i) => i !== -1)
-                    : enrollmentProgress?.completedModules || []}
                   bind:currentModule
                 />
+              </div>
               {/if}
 
               <!-- Reviews Section for mobile -->
-              {#if courseDetails.isPublic}
+              <!-- {#if courseDetails.isPublic}
                 <div class="w-full mt-6">
                   <CourseRatings
                     courseId={$page.params.id}
                     showReadAll={true}
                   />
                 </div>
-              {/if}
+              {/if} -->
 
               <!-- Remove Course Button - Mobile -->
               {#if isEnrolled && $user}
@@ -678,13 +715,9 @@
                 <div class="mt-6 flex flex-col gap-3">
                   <button
                     on:click={() => {
-                      currentQuiz =
-                        courseDetails?.Final_Module_Quiz?.[$currentModuleStore];
-                      quizModuleTitle =
-                        courseDetails?.Final_Module_Title?.[
-                          $currentModuleStore
-                        ] || "";
-                      showQuizModal = true;
+                      currentQuiz = courseDetails?.Final_Module_Quiz?.[$currentModuleStore];
+                      quizModuleTitle = courseDetails?.Final_Module_Title?.[$currentModuleStore] || "";
+                      showNewQuizPage = true;
                     }}
                     class="w-full px-4 py-2 flex items-center justify-center text-semibody-medium rounded-2xl transition-colors bg-Green hover:bg-GreenHover text-white"
                   >
@@ -696,11 +729,19 @@
               <!-- final quiz button -->
               {#if $currentModuleStore === courseDetails?.Final_Module_Title?.length && courseDetails?.Final_Course_Quiz}
                 <div class="mt-6 flex flex-col gap-3">
-                  <button
+                  <!-- <button
                     on:click={() => {
                       currentQuiz = courseDetails?.Final_Course_Quiz;
                       quizModuleTitle = courseDetails?.Final_Course_Title || "";
-                      showQuizModal = true;
+                      showNewQuizPage = true;
+                    }}
+                    class="w-full px-4 py-2 flex items-center justify-center text-semibody-medium rounded-2xl transition-colors bg-Green hover:bg-GreenHover text-white"
+                  >
+                    Take Final Quiz
+                  </button> -->
+                  <button
+                    on:click={() => {
+                      goto(`/course/${$page.params.id}/quiz`);
                     }}
                     class="w-full px-4 py-2 flex items-center justify-center text-semibody-medium rounded-2xl transition-colors bg-Green hover:bg-GreenHover text-white"
                   >
@@ -755,11 +796,6 @@
             {isCreator}
             {isEnrolled}
             showProgress={true}
-            completedModules={isCreator
-              ? moduleProgress
-                  .map((m, i) => (m?.completed ? i : -1))
-                  .filter((i) => i !== -1)
-              : enrollmentProgress?.completedModules || []}
             bind:currentModule
           />
         </div>
@@ -810,18 +846,47 @@
   onClose={() => (showShareModal = false)}
 />
 
-<!-- Quiz Modal -->
-<QuizModal
-  show={showQuizModal}
-  quiz={currentQuiz}
-  moduleTitle={quizModuleTitle}
-  onClose={() => {
-    showQuizModal = false;
-    currentQuiz = null;
-    quizModuleTitle = "";
-  }}
-  onSubmit={handleQuizComplete}
-/>
+<!-- Add the new ModuleQuizPage component -->
+{#if showNewQuizPage && currentQuiz}
+  <div class="fixed inset-0 z-[100] lg:flex lg:items-center lg:justify-center {showNewQuizPage ? 'opacity-100' : 'opacity-0 pointer-events-none'}">
+    <div class="lg:fixed inset-0 bg-black/50"></div>
+    <div class="relative w-full lg:max-w-[808px] lg:max-h-[652px] lg:overflow-hidden">
+      <ModuleQuizPage
+        quiz={currentQuiz}
+        moduleTitle={quizModuleTitle}
+        moduleIndex={$currentModuleStore}
+        onClose={() => {
+          showNewQuizPage = false;
+          currentQuiz = null;
+          quizModuleTitle = "";
+        }}
+        onSubmit={handleQuizComplete}
+        courseId={$page.params.id}
+      />
+    </div>
+  </div>
+{/if}
+
+<!-- Add the QuizResultModal -->
+{#if showQuizResult}
+  <div class="fixed inset-0 z-[100] lg:flex lg:items-center lg:justify-center">
+    <div class="lg:fixed inset-0 bg-black/50"></div>
+    <div class="relative w-full lg:max-w-[808px] lg:max-h-[652px] lg:overflow-hidden">
+      <QuizResultModal
+        score={quizScore}
+        moduleIndex={$currentModuleStore}
+        courseId={$page.params.id}
+        onRetake={handleQuizRetake}
+        onReview={handleQuizReview}
+        onClose={() => {
+          showQuizResult = false;
+          currentQuiz = null;
+          quizModuleTitle = "";
+        }}
+      />
+    </div>
+  </div>
+{/if}
 
 <style>
   .video-container {
