@@ -3,6 +3,7 @@
     import { goto } from "$app/navigation";
     import { onMount } from "svelte";
     import { user } from "$lib/stores/auth";
+    import QuizResult from './QuizResult.svelte';
 
     // Static quiz data for now
     const quiz = {
@@ -65,6 +66,8 @@
     };
 
     let selectedAnswers: { [key: number]: string | string[] } = {};
+    let showQuizResult = false;
+    let quizScore = 55; // This will come from your quiz logic
 
     function handleOptionSelect(questionId: number, option: string) {
         selectedAnswers[questionId] = option;
@@ -75,9 +78,17 @@
     }
 
     function handleSubmit() {
-        // Handle quiz submission
-        // For now, just navigate back to course page
-        goto(`/course/${$page.params.id}`);
+        // Calculate score and show result
+        showQuizResult = true;
+    }
+
+    function handleQuizRetake() {
+        showQuizResult = false;
+        // Reset quiz state
+    }
+
+    function handleQuizReview() {
+        // Implement review logic
     }
 
     onMount(() => {
@@ -275,6 +286,16 @@
         </div>
     </div>
 </div>
+
+{#if showQuizResult}
+  <QuizResult
+    score={quizScore}
+    courseId={$page.params.id}
+    on:retake={handleQuizRetake}
+    on:review={handleQuizReview}
+    on:close={() => showQuizResult = false}
+  />
+{/if}
 
 <style>
   .radio-circle {
