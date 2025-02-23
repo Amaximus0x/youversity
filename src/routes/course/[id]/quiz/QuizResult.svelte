@@ -1,11 +1,14 @@
 <script lang="ts">
     import { goto } from "$app/navigation";
     import { createEventDispatcher } from "svelte";
+    import { quizStore } from "$lib/stores/quiz";
 
     const dispatch = createEventDispatcher();
 
-    export let score: number = 100;
+    export let score: number = 0;
     export let courseId: string;
+    export let quizData: any;
+    export let selectedAnswers: any;
 
     let message = getScoreMessage(score);
 
@@ -17,7 +20,7 @@
         if (score === 100) {
             return {
                 title: "Perfect Score!  \nYou Mastered This Course!  🔥",
-                description: "You scored 100%. That’s an outstanding achievement! You’ve completed the course with top marks.",
+                description: "You scored 100%. That's an outstanding achievement! You've completed the course with top marks.",
             };
         } else if (score >= 70) {
             return {
@@ -25,7 +28,7 @@
                 description:
                     "You scored " +
                     score +
-                    "%, which means you’ve successfully completed the course. Well done!",
+                    "%, which means you've successfully completed the course. Well done!",
             };
         } else {
             return {
@@ -43,7 +46,11 @@
     }
 
     function handleReview() {
-        dispatch("review");
+        // Store the quiz data before navigation
+        quizStore.setQuizData(quizData);
+        quizStore.setSelectedAnswers(selectedAnswers);
+        handleClose();
+        goto(`/course/${courseId}/quiz/answers`);
     }
 
     function handleRevisit() {
@@ -56,12 +63,17 @@
 </script>
 
 <div class="fixed inset-0 z-[100] flex items-center justify-center">
-    <!-- Backdrop -->
-    <div class="absolute inset-0 bg-black/50"></div>
+    <!-- Backdrop - Add on:click handler -->
+    <div 
+        class="absolute inset-0 bg-black/50" 
+        on:click={handleClose}
+        on:keydown={(e) => e.key === 'Escape' && handleClose()}
+    ></div>
 
-    <!-- Modal -->
+    <!-- Modal - Add stopPropagation to prevent closing when clicking inside -->
     <div
         class="relative w-full max-w-[390px] lg:max-w-[808px] pb-4 bg-white dark:bg-dark-background-primary rounded-2xl lg:rounded-2xl overflow-hidden"
+        on:click|stopPropagation={() => {}}
     >
         <!-- Header -->
         <div

@@ -77,7 +77,7 @@
 
     let selectedAnswers: { [key: number]: string | string[] } = {};
     let showQuizResult = false;
-    let quizScore = 100; // This will come from your quiz logic
+    let quizScore = 60; // This will come from your quiz logic
 
     // Track if all questions are answered
     $: isAllAnswered =
@@ -307,6 +307,8 @@
   <QuizResult
     score={quizScore}
     courseId={$page.params.id}
+    quizData={quiz}
+    selectedAnswers={selectedAnswers}
     on:retake={handleQuizRetake}
     on:review={handleQuizReview}
     on:close={() => showQuizResult = false}
