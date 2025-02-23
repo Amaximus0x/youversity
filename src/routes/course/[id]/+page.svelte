@@ -628,7 +628,7 @@
 
 
               <!-- Course Enrollment Progress for mobile -->
-              {#if isEnrolled && $currentModuleStore !== -1}
+              {#if isEnrolled && ($currentModuleStore !== -1 && $currentModuleStore !== courseDetails?.Final_Module_Title?.length)}
               <div class="mt-6">
                 <CourseModuleList
                   {courseDetails}
@@ -739,14 +739,14 @@
                   >
                     Take Final Quiz
                   </button> -->
-                  <button
+                  <!-- <button
                     on:click={() => {
                       goto(`/course/${$page.params.id}/quiz`);
                     }}
                     class="w-full px-4 py-2 flex items-center justify-center text-semibody-medium rounded-2xl transition-colors bg-Green hover:bg-GreenHover text-white"
                   >
                     Take Final Quiz
-                  </button>
+                  </button> -->
                 </div>
               {/if}
 

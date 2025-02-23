@@ -8,58 +8,68 @@
     // Static quiz data for now
     const quiz = {
         title: "Mastering motion design: From concept to creation",
-        questions: [
+        quiz: [
             {
                 id: 1,
                 question:
                     "How can principles of motion design enhance storytelling and user engagement across different media?",
-                options: [
-                    "Guide attention with smooth transitions.",
-                    "Establish hierarchy and emphasize key elements.",
-                    "Evoke emotions through timing and pacing.",
-                    "Ensure consistency in branding and visuals.",
-                ],
+                answer: 'a',
+                options: {
+                   a: "Guide attention with smooth transitions.",
+                   b: "Establish hierarchy and emphasize key elements.",
+                   c: "Evoke emotions through timing and pacing.",
+                   d: "Ensure consistency in branding and visuals.",
+                },
+                type: "checkbox",
             },
             {
                 id: 2,
                 question:
                     "What are the key steps in transforming a static concept into a dynamic motion design project?",
-                options: ["True", "False"],
+                answer: 'a',
+                options: {
+                   a: "True",
+                   b: "False",
+                },
+                type: "radio",
             },
             {
                 id: 3,
                 question:
                     "How do timing, easing, and transitions improve motion design?",
-                options: [
-                    "Guide attention with smooth transitions.",
-                    "Establish hierarchy and emphasize key elements.",
-                    "Evoke emotions through timing and pacing.",
-                    "Ensure consistency in branding and visuals.",
-                ],
+                answer: 'c',
+                options: {
+                   a: "Guide attention with smooth transitions.",
+                   b: "Establish hierarchy and emphasize key elements.",
+                   c: "Evoke emotions through timing and pacing.",
+                   d: "Ensure consistency in branding and visuals.",
+                },
                 type: "checkbox",
             },
             {
                 id: 4,
                 question:
                     "How do timing, easing, and transitions improve motion design?",
-                options: [
-                    "Guide attention with smooth transitions.",
-                    "Establish hierarchy and emphasize key elements.",
-                    "Evoke emotions through timing and pacing.",
-                    "Ensure consistency in branding and visuals.",
-                ],
+                answer: 'b',
+                options: {
+                   a: "Guide attention with smooth transitions.",
+                   b: "Establish hierarchy and emphasize key elements.",
+                   c: "Evoke emotions through timing and pacing.",
+                   d: "Ensure consistency in branding and visuals.",
+                },
                 type: "checkbox",
             },
             {
                 id: 5,
                 question:
                     "How do timing, easing, and transitions improve motion design?",
-                options: [
-                    "Guide attention with smooth transitions.",
-                    "Establish hierarchy and emphasize key elements.",
-                    "Evoke emotions through timing and pacing.",
-                    "Ensure consistency in branding and visuals.",
-                ],
+                answer: 'a',
+                options: {
+                   a: "Guide attention with smooth transitions.",
+                   b: "Establish hierarchy and emphasize key elements.",
+                   c: "Evoke emotions through timing and pacing.",
+                   d: "Ensure consistency in branding and visuals.",
+                },
                 type: "checkbox",
             },
         ],
@@ -68,6 +78,11 @@
     let selectedAnswers: { [key: number]: string | string[] } = {};
     let showQuizResult = false;
     let quizScore = 100; // This will come from your quiz logic
+
+    // Track if all questions are answered
+    $: isAllAnswered =
+        quiz?.quiz.every((q) => selectedAnswers[q.id] !== undefined) ||
+        false;
 
     function handleOptionSelect(questionId: number, option: string) {
         selectedAnswers[questionId] = option;
@@ -135,18 +150,18 @@
         <div class="mt-[23px] pl-5 flex-1 pb-8">
             <!-- Questions -->
             <div class="space-y-8">
-                {#each quiz.questions as question, index}
+                {#each quiz.quiz as question, index}
                     <div class="flex flex-col gap-4 text-body-semibold">
                         <div class="flex items-start gap-2">
-                            <p >
+                            <p>
                                 {index + 1}. 
                             </p>
-                            <p >
+                            <p>
                                 {question.question}
                             </p>
                         </div>
                         <div class="space-y-4">
-                            {#each question.options as option}
+                            {#each Object.entries(question.options) as [key, value]}
                                 <label
                                     class="flex items-center gap-3 cursor-pointer group"
                                 >
@@ -154,13 +169,9 @@
                                         <input
                                             type="radio"
                                             name={`question-${question.id}`}
-                                            value={option}
-                                            checked={isOptionSelected(
-                                                question.id,
-                                                option,
-                                            )}
-                                            on:change={() =>
-                                                handleOptionSelect(question.id, option)}
+                                            value={key}
+                                            checked={isOptionSelected(question.id, key)}
+                                            on:change={() => handleOptionSelect(question.id, key)}
                                             class="absolute opacity-0 w-6 h-6 cursor-pointer"
                                         />
                                         <div class="radio-circle w-6 h-6 flex items-center justify-center">
@@ -173,10 +184,9 @@
                                             </svg>
                                         </div>
                                     </div>
-                                    <span
-                                        class="text-semi-body text-Black group-hover:opacity-90"
-                                        >{option}</span
-                                    >
+                                    <span class="text-semi-body text-Black group-hover:opacity-90">
+                                        {value}
+                                    </span>
                                 </label>
                             {/each}
                         </div>
@@ -187,11 +197,19 @@
             <!-- Mobile submit button -->
             <div class="mt-8">
                 <button
-                    class="w-full px-6 py-3 bg-brand-red hover:bg-ButtonHover text-white rounded-2xl text-semibody-medium transition-colors flex items-center justify-center gap-2"
+                    class="w-full px-6 py-3 rounded-2xl text-semibody-medium transition-colors flex items-center justify-center gap-2 {isAllAnswered 
+                        ? 'bg-brand-red hover:bg-ButtonHover text-white' 
+                        : 'bg-Black/5 text-light-text-tertiary'}"
+                    disabled={!isAllAnswered}
                     on:click={handleSubmit}
                 >
                     Submit
-                    <img src="/icons/arrow-right-white.svg" alt="Submit" class="w-6 h-6" />
+                    <svg width="25" height="24" viewBox="0 0 25 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <g id="arrow-right">
+                        <path id="Vector" d="M20.5 12H4.50002" stroke={isAllAnswered ? "white" : "Grey"} stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path id="Vector_2" d="M15.5 17C15.5 17 20.5 13.3176 20.5 12C20.5 10.6824 15.5 7 15.5 7" stroke={isAllAnswered ? "white" : "Grey"} stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </g>
+                </svg>
                 </button>
             </div>
         </div>
@@ -211,18 +229,18 @@
         <div class="flex-1 overflow-hidden relative ">
             <div class="absolute inset-0 overflow-y-auto custom-scrollbar pl-5 pr-8">
                 <div class="space-y-8 pb-8">
-                    {#each quiz.questions as question, index}
+                    {#each quiz.quiz as question, index}
                         <div class="flex flex-col gap-4 text-body-semibold">
                             <div class="flex items-start gap-2">
-                                <p >
+                                <p>
                                     {index + 1}. 
                                 </p>
-                                <p >
+                                <p>
                                     {question.question}
                                 </p>
                             </div>
                             <div class="space-y-4">
-                                {#each question.options as option}
+                                {#each Object.entries(question.options) as [key, value]}
                                     <label
                                         class="flex items-center gap-3 cursor-pointer group"
                                     >
@@ -230,13 +248,9 @@
                                             <input
                                                 type="radio"
                                                 name={`question-${question.id}`}
-                                                value={option}
-                                                checked={isOptionSelected(
-                                                    question.id,
-                                                    option,
-                                                )}
-                                                on:change={() =>
-                                                    handleOptionSelect(question.id, option)}
+                                                value={key}
+                                                checked={isOptionSelected(question.id, key)}
+                                                on:change={() => handleOptionSelect(question.id, key)}
                                                 class="absolute opacity-0 w-6 h-6 cursor-pointer"
                                             />
                                             <div class="radio-circle w-6 h-6 flex items-center justify-center">
@@ -249,10 +263,9 @@
                                                 </svg>
                                             </div>
                                         </div>
-                                        <span
-                                            class="text-semi-body text-Black group-hover:opacity-90"
-                                            >{option}</span
-                                        >
+                                        <span class="text-semi-body text-Black group-hover:opacity-90">
+                                            {value}
+                                        </span>
                                     </label>
                                 {/each}
                             </div>
@@ -268,20 +281,23 @@
                 class="flex items-center gap-2 px-4 py-2 text-brand-red text-semi-body bg-Black/5 rounded-lg border border-light-border dark:border-dark-border"
                 on:click={() => goto(`/course/${$page.params.id}`)}
             >
-            Leave Quiz
-            <img src="/icons/logout-03.svg" alt="Leave" class="w-6 h-6" />
+                Leave Quiz
+                <img src="/icons/logout-03.svg" alt="Leave" class="w-6 h-6" />
             </button>
             <button
-                class="px-4 py-2 bg-Black/5 text-light-text-tertiary dark:text-dark-text-tertiary rounded-lg text-semibody-medium transition-colors flex items-center justify-center gap-2 "
+                class="px-4 py-2 rounded-lg text-semibody-medium transition-colors flex items-center justify-center gap-2 {isAllAnswered 
+                    ? 'bg-brand-red hover:bg-ButtonHover text-white' 
+                    : 'bg-Black/5 text-light-text-tertiary'}"
+                disabled={!isAllAnswered}
                 on:click={handleSubmit}
             >
                 Submit
                 <svg width="25" height="24" viewBox="0 0 25 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <g id="arrow-right">
-                    <path id="Vector" d="M20.5 12H4.50002" stroke="Grey" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path id="Vector_2" d="M15.5 17C15.5 17 20.5 13.3176 20.5 12C20.5 10.6824 15.5 7 15.5 7" stroke="Grey" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path id="Vector" d="M20.5 12H4.50002" stroke={isAllAnswered ? "white" : "Grey"} stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path id="Vector_2" d="M15.5 17C15.5 17 20.5 13.3176 20.5 12C20.5 10.6824 15.5 7 15.5 7" stroke={isAllAnswered ? "white" : "Grey"} stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                     </g>
-                    </svg>
+                </svg>
             </button>
         </div>
     </div>
