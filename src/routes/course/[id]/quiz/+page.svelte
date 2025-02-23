@@ -67,7 +67,7 @@
 
     let selectedAnswers: { [key: number]: string | string[] } = {};
     let showQuizResult = false;
-    let quizScore = 55; // This will come from your quiz logic
+    let quizScore = 100; // This will come from your quiz logic
 
     function handleOptionSelect(questionId: number, option: string) {
         selectedAnswers[questionId] = option;
