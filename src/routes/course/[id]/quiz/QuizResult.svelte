@@ -90,7 +90,7 @@
                 on:click={handleClose}
             >
                 <img
-                    src="/images/cancel-circle.svg"
+                    src="/icons/cancel-circle.svg"
                     alt="Close"
                     class="w-6 h-6"
                 />

@@ -64,7 +64,7 @@
                 </div>
             </div>
         </div>
-
+        <!-- mobile content -->
         <!-- Questions with Answers -->
         <div class="mt-[23px] pl-5 flex-1 pb-8">
             <div class="space-y-8">
@@ -98,7 +98,7 @@
                 {/each}
             </div>
 
-            <!-- Done Button -->
+            <!-- Done Button mobile -->
             <div class="mt-8">
                 <button
                     class="w-full px-6 py-3 bg-brand-red hover:bg-ButtonHover text-white rounded-2xl text-semibody-medium transition-colors flex items-center justify-center gap-2"
@@ -118,6 +118,72 @@
 
     <!-- Desktop Layout - Similar to mobile but with fixed header and footer -->
     <!-- ... Desktop layout code similar to quiz page ... -->
+    <div class="hidden lg:flex lg:flex-col lg:h-[calc(100vh-118px)] lg:fixed lg:w-[calc(100%-284px)] lg:top-[116px] bg-light-background dark:bg-dark-background">
+        <!-- Desktop Header - Fixed -->
+        <div class="flex-shrink-0 pl-5 pb-6 ">
+            <div class="p-4 flex gap-6 items-center justify-between border border-light-border dark:border-dark-border rounded-2xl">
+                <p class="text-Black text-h4 font-bold">{quizData.title}</p>
+                <h1 class="text-light-text-secondary dark:text-dark-text-secondary text-h4-medium text-nowrap">Final Quiz</h1>
+            </div>
+        </div>
+
+        <!-- Questions Container - Scrollable -->
+        <div class="flex-1 overflow-hidden relative ">
+            <div class="absolute inset-0 overflow-y-auto custom-scrollbar pl-5 pr-8">
+                <div class="space-y-8 pb-8">
+                    {#each quizData.quiz as question, index}
+                        <div class="flex flex-col gap-4 text-body-semibold">
+                            <div class="flex items-start gap-2">
+                                <p>
+                                    {index + 1}. 
+                                </p>
+                                <p>
+                                    {question.question}
+                                </p>
+                            </div>
+                            <div class="space-y-4">
+                                {#each Object.entries(question.options) as [key, value]}
+                                <div class="flex items-center gap-3">
+                                    <div class="relative flex items-center">
+                                        <div class="radio-circle w-6 h-6 flex items-center justify-center {getOptionClass(question.id, key)}">
+                                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                <path 
+                                                    d="M12 20C16.4183 20 20 16.4183 20 12C20 7.58172 16.4183 4 12 4C7.58172 4 4 7.58172 4 12C4 16.4183 7.58172 20 12 20Z" 
+                                                    stroke="currentColor" 
+                                                    stroke-width="1.5"
+                                                />
+                                            </svg>
+                                        </div>
+                                    </div>
+                                    <span class="radio-text text-semi-body text-Black {getOptionClass(question.id, key)}">
+                                        {value}
+                                    </span>
+                                </div>
+                                {/each}
+                            </div>
+                        </div>
+                    {/each}
+                </div>
+            </div>
+        </div>
+
+        <!-- Desktop Footer - Fixed -->
+        <div class="flex-shrink-0 flex justify-end items-center px-5 pr-8 py-5 pt-8 mb-8 border-t border-light-border">
+            
+            <button
+                class="px-4 py-2 rounded-lg text-semibody-medium transition-colors flex items-center justify-center gap-2 bg-brand-red hover:bg-ButtonHover text-white"
+                on:click={() => goto(`/course/${$page.params.id}`)}
+            >
+                Done
+                <svg width="25" height="24" viewBox="0 0 25 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <g id="arrow-right">
+                        <path id="Vector" d="M20.5 12H4.50002" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path id="Vector_2" d="M15.5 17C15.5 17 20.5 13.3176 20.5 12C20.5 10.6824 15.5 7 15.5 7" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </g>
+                </svg>
+            </button>
+        </div>
+    </div>
 </div>
 
 <style>

@@ -1,222 +1,370 @@
 <script lang="ts">
   import { page } from "$app/stores";
-  import { onMount } from "svelte";
   import { goto } from "$app/navigation";
+  import { onMount } from "svelte";
   import { user } from "$lib/stores/auth";
-  import { getUserCourse, updateEnrollmentQuizResult } from "$lib/firebase";
-  import QuizTimer from "$lib/components/QuizTimer.svelte";
-  import type { FinalCourseStructure } from "$lib/types/course";
+  // import QuizResult from './QuizResult.svelte';
 
-  let courseDetails: FinalCourseStructure | null = null;
-  let loading = true;
-  let error: string | null = null;
-  let currentQuestionIndex = 0;
-  let selectedAnswer: string | null = null;
-  let quizQuestions: any[] = [];
-  let userAnswers: string[] = [];
-  let quizStarted = false;
-  let quizCompleted = false;
-  let score = 0;
-  let timeSpent = 0;
+  // Static quiz data for now
+  const quiz = {
+      title: "Mastering motion design: From concept to creation",
+      quiz: [
+          {
+              id: 1,
+              question:
+                  "How can principles of motion design enhance storytelling and user engagement across different media?",
+              answer: 'a',
+              options: {
+                 a: "Guide attention with smooth transitions.",
+                 b: "Establish hierarchy and emphasize key elements.",
+                 c: "Evoke emotions through timing and pacing.",
+                 d: "Ensure consistency in branding and visuals.",
+              },
+              type: "checkbox",
+          },
+          {
+              id: 2,
+              question:
+                  "What are the key steps in transforming a static concept into a dynamic motion design project?",
+              answer: 'a',
+              options: {
+                 a: "True",
+                 b: "False",
+              },
+              type: "radio",
+          },
+          {
+              id: 3,
+              question:
+                  "How do timing, easing, and transitions improve motion design?",
+              answer: 'c',
+              options: {
+                 a: "Guide attention with smooth transitions.",
+                 b: "Establish hierarchy and emphasize key elements.",
+                 c: "Evoke emotions through timing and pacing.",
+                 d: "Ensure consistency in branding and visuals.",
+              },
+              type: "checkbox",
+          },
+          {
+              id: 4,
+              question:
+                  "How do timing, easing, and transitions improve motion design?",
+              answer: 'b',
+              options: {
+                 a: "Guide attention with smooth transitions.",
+                 b: "Establish hierarchy and emphasize key elements.",
+                 c: "Evoke emotions through timing and pacing.",
+                 d: "Ensure consistency in branding and visuals.",
+              },
+              type: "checkbox",
+          },
+          {
+              id: 5,
+              question:
+                  "How do timing, easing, and transitions improve motion design?",
+              answer: 'a',
+              options: {
+                 a: "Guide attention with smooth transitions.",
+                 b: "Establish hierarchy and emphasize key elements.",
+                 c: "Evoke emotions through timing and pacing.",
+                 d: "Ensure consistency in branding and visuals.",
+              },
+              type: "checkbox",
+          },
+      ],
+  };
 
-  $: isModuleQuiz = $page.params.type === 'module';
-  $: moduleId = parseInt($page.params.moduleId);
-  $: progress = ((currentQuestionIndex + 1) / quizQuestions.length) * 100;
-  $: questionsRemaining = quizQuestions.length - (currentQuestionIndex + 1);
+  let selectedAnswers: { [key: number]: string | string[] } = {};
+  let showQuizResult = false;
+  let quizScore = 60; // This will come from your quiz logic
 
-  onMount(async () => {
-    try {
-      if (!$user) {
-        goto("/login");
-        return;
-      }
+  // Track if all questions are answered
+  $: isAllAnswered =
+      quiz?.quiz.every((q) => selectedAnswers[q.id] !== undefined) ||
+      false;
 
-      const courseData = await getUserCourse($user.uid, $page.params.id);
-      if (!courseData) {
-        error = "Course not found";
-        return;
-      }
+  function handleOptionSelect(questionId: number, option: string) {
+      selectedAnswers[questionId] = option;
+  }
 
-      // Extract course details from the response
-      courseDetails = courseData.course as FinalCourseStructure;
-      
-      // Get quiz questions based on type
-      if (isModuleQuiz && courseDetails?.Final_Module_Quiz?.[moduleId]?.quiz) {
-        quizQuestions = courseDetails.Final_Module_Quiz[moduleId].quiz;
-      } else if (courseDetails?.Final_Course_Quiz?.quiz) {
-        quizQuestions = courseDetails.Final_Course_Quiz.quiz;
-      }
+  function isOptionSelected(questionId: number, option: string): boolean {
+      return selectedAnswers[questionId] === option;
+  }
 
-      if (!quizQuestions.length) {
-        error = "No quiz questions found";
-        return;
-      }
+  function handleSubmit() {
+      // Calculate score and show result
+      showQuizResult = true;
+  }
 
-      loading = false;
-    } catch (err) {
-      console.error("Error loading quiz:", err);
-      error = err instanceof Error ? err.message : "Failed to load quiz";
-    }
+  function handleQuizRetake() {
+      showQuizResult = false;
+      // Reset quiz state
+  }
+
+  function handleQuizReview() {
+      // Implement review logic
+  }
+
+  onMount(() => {
+      // if (!$user) {
+      //   goto('/login');
+      // }
   });
-
-  function startQuiz() {
-    quizStarted = true;
-    userAnswers = new Array(quizQuestions.length).fill(null);
-  }
-
-  function handleAnswerSelect(answer: string) {
-    selectedAnswer = answer;
-    userAnswers[currentQuestionIndex] = answer;
-  }
-
-  function nextQuestion() {
-    if (currentQuestionIndex < quizQuestions.length - 1) {
-      currentQuestionIndex++;
-      selectedAnswer = userAnswers[currentQuestionIndex];
-    } else {
-      completeQuiz();
-    }
-  }
-
-  async function completeQuiz() {
-    // Calculate score
-    score = userAnswers.reduce((acc, answer, index) => {
-      return answer === quizQuestions[index].answer ? acc + 1 : acc;
-    }, 0);
-
-    const scorePercentage = (score / quizQuestions.length) * 100;
-
-    // Update quiz results in Firebase
-    try {
-      await updateEnrollmentQuizResult(
-        $user!.uid,
-        $page.params.id,
-        isModuleQuiz ? moduleId : null,
-        scorePercentage,
-        timeSpent,
-        true // completed parameter
-      );
-    } catch (error) {
-      console.error("Error updating quiz results:", error);
-    }
-
-    quizCompleted = true;
-  }
-
-  function handleLeaveQuiz() {
-    goto(`/course/${$page.params.id}`);
-  }
 </script>
 
-<div class="min-h-screen bg-white dark:bg-dark-bg-primary">
-  {#if loading}
-    <div class="flex justify-center items-center min-h-screen">
-      <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-brand-turquoise" />
-    </div>
-  {:else if error}
-    <div class="text-brand-red text-center p-4">{error}</div>
-  {:else}
-    <div class="container mx-auto px-5 py-8">
-      <!-- Quiz Header -->
-      <div class="flex items-center justify-between mb-8">
-        <div>
-          <h1 class="text-h4-medium text-Black dark:text-White">
-            {isModuleQuiz && courseDetails?.Final_Module_Title?.[moduleId] 
-              ? courseDetails.Final_Module_Title[moduleId] 
-              : courseDetails?.Final_Course_Title || 'Quiz'}
-          </h1>
-          <p class="text-semi-body text-Black2">Quiz</p>
-        </div>
-        <button
-          class="flex items-center gap-2 text-semi-body text-Black2 hover:text-Black"
-          on:click={handleLeaveQuiz}
-        >
-          <img src="/icons/close.svg" alt="Leave" class="w-6 h-6" />
-          Leave Quiz
-        </button>
+<div class="w-full -mx-5 min-h-[calc(100vh-85px)] flex flex-col">
+  <!-- Mobile Layout -->
+  <div class="lg:hidden flex flex-col min-h-[calc(100vh-85px)]">
+      <!-- Mobile header -->
+      <div class="w-[calc(100%+40px)] -mr-5 sticky top-[85px] z-40 bg-BackgroundRed">
+          <div class="px-5 pt-1 pb-4">
+              <div class="flex flex-col gap-4 items-start">
+                  <!-- back button -->
+                  <button
+                      class="flex items-center gap-2 text-Black hover:opacity-70"
+                      on:click={() => goto(`/course/${$page.params.id}`)}
+                  >
+                      <img
+                          src="/icons/arrow-left.svg"
+                          alt="Back"
+                          class="w-6 h-6"
+                      />
+                  </button>
+                  <!-- quiz title -->
+                  <div
+                      class="w-full flex flex-col gap-6 bg-BackgroundRed border border-light-border dark:border-dark-border rounded-2xl p-4"
+                  >
+                      <h1 class="text-light-text-secondary dark:text-dark-text-secondary text-h4-medium">
+                          Final Quiz
+                      </h1>
+                      <p class="text-light-text-primary dark:text-dark-text-primary text-h4 font-bold">
+                          {quiz.title}
+                      </p>
+                  </div>
+              </div>
+          </div>
       </div>
 
-      {#if !quizStarted}
-        <!-- Quiz Start Screen -->
-        <div class="max-w-2xl mx-auto text-center">
-          <p class="text-body text-Black2 mb-4">
-            This assessment evaluates the learner's basic understanding of motion design, principles, and tools.
-          </p>
-          <p class="text-semi-body text-Black2 mb-8">
-            {quizQuestions.length} Questions
-          </p>
-          <button
-            class="px-8 py-3 bg-Green hover:bg-GreenHover text-white rounded-2xl transition-colors"
-            on:click={startQuiz}
-          >
-            Start Quiz
-          </button>
-        </div>
-      {:else if quizCompleted}
-        <!-- Quiz Results -->
-        <div class="max-w-2xl mx-auto text-center">
-          <h2 class="text-h2 text-Black mb-4">Quiz Completed!</h2>
-          <p class="text-h4 text-Black2 mb-8">Your Score: {score}/{quizQuestions.length}</p>
-          <button
-            class="px-8 py-3 bg-Green hover:bg-GreenHover text-white rounded-2xl transition-colors"
-            on:click={handleLeaveQuiz}
-          >
-            Return to Course
-          </button>
-        </div>
-      {:else}
-        <!-- Quiz Progress -->
-        <div class="max-w-2xl mx-auto mb-8">
-          <div class="flex items-center justify-between mb-2">
-            <span class="text-semi-body text-Black2">Question {currentQuestionIndex + 1}/{quizQuestions.length}</span>
-            <QuizTimer bind:timeSpent />
-          </div>
-          <div class="w-full h-2 bg-Black/5 rounded-full overflow-hidden">
-            <div
-              class="h-full bg-brand-red transition-all duration-300"
-              style="width: {progress}%"
-            />
-          </div>
-        </div>
-
-        <!-- Question Card -->
-        <div class="max-w-2xl mx-auto">
-          <div class="bg-white dark:bg-dark-bg-primary rounded-2xl p-6 shadow-sm">
-            <h3 class="text-h4-medium text-Black mb-8">
-              {quizQuestions[currentQuestionIndex].question}
-            </h3>
-
-            <!-- Answer Options -->
-            <div class="space-y-4">
-              {#each Object.entries(quizQuestions[currentQuestionIndex].options) as [key, value]}
-                <button
-                  class="w-full p-4 flex items-center gap-4 rounded-xl border {selectedAnswer === key ? 'border-brand-red bg-brand-red/5' : 'border-Black/5 hover:border-brand-red hover:bg-brand-red/5'} transition-colors"
-                  on:click={() => handleAnswerSelect(key)}
-                >
-                  <span class="w-8 h-8 flex items-center justify-center rounded-full border border-current {selectedAnswer === key ? 'text-brand-red' : 'text-Black2'}">
-                    {key.toUpperCase()}
-                  </span>
-                  <span class="text-body text-Black">{value}</span>
-                </button>
+      <!-- Mobile content -->
+      <div class="mt-[23px] pl-5 flex-1 pb-8">
+          <!-- Questions -->
+          <div class="space-y-8">
+              {#each quiz.quiz as question, index}
+                  <div class="flex flex-col gap-4 text-body-semibold">
+                      <div class="flex items-start gap-2">
+                          <p>
+                              {index + 1}. 
+                          </p>
+                          <p>
+                              {question.question}
+                          </p>
+                      </div>
+                      <div class="space-y-4">
+                          {#each Object.entries(question.options) as [key, value]}
+                              <label
+                                  class="flex items-center gap-3 cursor-pointer group"
+                              >
+                                  <div class="relative flex items-center">
+                                      <input
+                                          type="radio"
+                                          name={`question-${question.id}`}
+                                          value={key}
+                                          checked={isOptionSelected(question.id, key)}
+                                          on:change={() => handleOptionSelect(question.id, key)}
+                                          class="absolute opacity-0 w-6 h-6 cursor-pointer"
+                                      />
+                                      <div class="radio-circle w-6 h-6 flex items-center justify-center">
+                                          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                              <path 
+                                                  d="M12 20C16.4183 20 20 16.4183 20 12C20 7.58172 16.4183 4 12 4C7.58172 4 4 7.58172 4 12C4 16.4183 7.58172 20 12 20Z" 
+                                                  stroke="currentColor" 
+                                                  stroke-width="1.5"
+                                              />
+                                          </svg>
+                                      </div>
+                                  </div>
+                                  <span class="text-semi-body text-Black group-hover:opacity-90">
+                                      {value}
+                                  </span>
+                              </label>
+                          {/each}
+                      </div>
+                  </div>
               {/each}
-            </div>
-
-            <!-- Navigation -->
-            <div class="flex justify-between mt-8">
-              <span class="text-semi-body text-Black2">
-                {questionsRemaining} questions remaining
-              </span>
-              <button
-                class="px-6 py-2 bg-Green hover:bg-GreenHover text-white rounded-xl transition-colors disabled:opacity-50"
-                on:click={nextQuestion}
-                disabled={!selectedAnswer}
-              >
-                {currentQuestionIndex === quizQuestions.length - 1 ? 'Finish' : 'Next'}
-              </button>
-            </div>
           </div>
-        </div>
-      {/if}
-    </div>
-  {/if}
-</div> 
+
+          <!-- Mobile submit button -->
+          <div class="mt-8">
+              <button
+                  class="w-full px-6 py-3 rounded-2xl text-semibody-medium transition-colors flex items-center justify-center gap-2 {isAllAnswered 
+                      ? 'bg-brand-red hover:bg-ButtonHover text-white' 
+                      : 'bg-Black/5 text-light-text-tertiary'}"
+                  disabled={!isAllAnswered}
+                  on:click={handleSubmit}
+              >
+                  Submit
+                  <svg width="25" height="24" viewBox="0 0 25 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <g id="arrow-right">
+                      <path id="Vector" d="M20.5 12H4.50002" stroke={isAllAnswered ? "white" : "Grey"} stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                      <path id="Vector_2" d="M15.5 17C15.5 17 20.5 13.3176 20.5 12C20.5 10.6824 15.5 7 15.5 7" stroke={isAllAnswered ? "white" : "Grey"} stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                  </g>
+              </svg>
+              </button>
+          </div>
+      </div>
+  </div>
+
+  <!-- Desktop Layout -->
+  <div class="hidden lg:flex lg:flex-col lg:h-[calc(100vh-118px)] lg:fixed lg:w-[calc(100%-284px)] lg:top-[116px] bg-light-background dark:bg-dark-background">
+      <!-- Desktop Header - Fixed -->
+      <div class="flex-shrink-0 pl-5 pb-6 ">
+          <div class="p-4 flex gap-6 items-center justify-between border border-light-border dark:border-dark-border rounded-2xl">
+              <p class="text-Black text-h4 font-bold">{quiz.title}</p>
+              <h1 class="text-light-text-secondary dark:text-dark-text-secondary text-h4-medium text-nowrap">Final Quiz</h1>
+          </div>
+      </div>
+
+      <!-- Questions Container - Scrollable -->
+      <div class="flex-1 overflow-hidden relative ">
+          <div class="absolute inset-0 overflow-y-auto custom-scrollbar pl-5 pr-8">
+              <div class="space-y-8 pb-8">
+                  {#each quiz.quiz as question, index}
+                      <div class="flex flex-col gap-4 text-body-semibold">
+                          <div class="flex items-start gap-2">
+                              <p>
+                                  {index + 1}. 
+                              </p>
+                              <p>
+                                  {question.question}
+                              </p>
+                          </div>
+                          <div class="space-y-4">
+                              {#each Object.entries(question.options) as [key, value]}
+                                  <label
+                                      class="flex items-center gap-3 cursor-pointer group"
+                                  >
+                                      <div class="relative flex items-center">
+                                          <input
+                                              type="radio"
+                                              name={`question-${question.id}`}
+                                              value={key}
+                                              checked={isOptionSelected(question.id, key)}
+                                              on:change={() => handleOptionSelect(question.id, key)}
+                                              class="absolute opacity-0 w-6 h-6 cursor-pointer"
+                                          />
+                                          <div class="radio-circle w-6 h-6 flex items-center justify-center">
+                                              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                  <path 
+                                                      d="M12 20C16.4183 20 20 16.4183 20 12C20 7.58172 16.4183 4 12 4C7.58172 4 4 7.58172 4 12C4 16.4183 7.58172 20 12 20Z" 
+                                                      stroke="currentColor" 
+                                                      stroke-width="1.5"
+                                                  />
+                                              </svg>
+                                          </div>
+                                      </div>
+                                      <span class="text-semi-body text-Black group-hover:opacity-90">
+                                          {value}
+                                      </span>
+                                  </label>
+                              {/each}
+                          </div>
+                      </div>
+                  {/each}
+              </div>
+          </div>
+      </div>
+
+      <!-- Desktop Footer - Fixed -->
+      <div class="flex-shrink-0 flex justify-between items-center px-5 pr-8 py-5 pt-8 border-t border-light-border">
+          <button 
+              class="flex items-center gap-2 px-4 py-2 text-brand-red text-semi-body bg-Black/5 rounded-lg border border-light-border dark:border-dark-border"
+              on:click={() => goto(`/course/${$page.params.id}`)}
+          >
+              Leave Quiz
+              <img src="/icons/logout-03.svg" alt="Leave" class="w-6 h-6" />
+          </button>
+          <button
+              class="px-4 py-2 rounded-lg text-semibody-medium transition-colors flex items-center justify-center gap-2 {isAllAnswered 
+                  ? 'bg-brand-red hover:bg-ButtonHover text-white' 
+                  : 'bg-Black/5 text-light-text-tertiary'}"
+              disabled={!isAllAnswered}
+              on:click={handleSubmit}
+          >
+              Submit
+              <svg width="25" height="24" viewBox="0 0 25 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <g id="arrow-right">
+                      <path id="Vector" d="M20.5 12H4.50002" stroke={isAllAnswered ? "white" : "Grey"} stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                      <path id="Vector_2" d="M15.5 17C15.5 17 20.5 13.3176 20.5 12C20.5 10.6824 15.5 7 15.5 7" stroke={isAllAnswered ? "white" : "Grey"} stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                  </g>
+              </svg>
+          </button>
+      </div>
+  </div>
+</div>
+
+<!-- {#if showQuizResult}
+<QuizResult
+  score={quizScore}
+  courseId={$page.params.id}
+  quizData={quiz}
+  selectedAnswers={selectedAnswers}
+  on:retake={handleQuizRetake}
+  on:review={handleQuizReview}
+  on:close={() => showQuizResult = false}
+/>
+{/if} -->
+
+<style>
+.radio-circle {
+  color: rgba(0, 0, 0, 0.2);
+  transition: all 0.2s ease-in-out;
+}
+
+input[type="radio"]:checked + .radio-circle {
+  color: #EE434A;  /* brand-red color */
+}
+
+input[type="radio"]:checked + .radio-circle::after {
+  content: '';
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  background-color: #EE434A;
+  border-radius: 50%;
+}
+
+input[type="radio"]:hover:not(:checked) + .radio-circle {
+  color: rgba(0, 0, 0, 0.4);
+}
+
+/* Remove focus outline */
+input[type="radio"]:focus {
+  outline: none;
+}
+
+input[type="radio"]:focus + .radio-circle {
+  outline: none;
+}
+
+/* Custom scrollbar styles */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #EE434A #FFF2F3;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #FFF2F3;
+  border-radius: 20px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #EE434A;
+  border-radius: 20px;
+  border: none;
+}
+</style>
