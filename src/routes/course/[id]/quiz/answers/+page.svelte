@@ -6,15 +6,18 @@
 
     let quizData: any;
     let selectedAnswers: Record<number, string>;
+    let score: number;
 
     // Subscribe to the store
     quizStore.subscribe(store => {
         quizData = store.quizData;
         selectedAnswers = store.selectedAnswers;
+        score = store.score;
     });
 
     function isAnswerCorrect(questionId: number, optionKey: string): boolean {
-        return quizData.quiz.find((q: any) => q.id === questionId)?.answer === optionKey;
+        const question = quizData.quiz.find((q: any) => q.id === questionId);
+        return question?.answer === optionKey;
     }
 
     function wasOptionSelected(questionId: number, optionKey: string): boolean {
@@ -27,14 +30,17 @@
         
         if (isCorrect) return 'correct';
         if (wasSelected && !isCorrect) return 'incorrect';
-        return '';
+        return 'default';
     }
 
-    // Clean up store on component unmount
     onMount(() => {
-        // return () => {
-        //     quizStore.reset();
-        // };
+        // If no quiz data is available, go back to the course page
+        if (!quizData?.quiz) {
+            goto(`/course/${$page.params.id}`);
+        }
+        return () => {
+            quizStore.reset();
+        };
     });
 </script>
 
@@ -195,10 +201,10 @@
 
     /* Selected and Correct */
     .radio-circle.correct {
-        color: #4CAF50;  /* Green for correct answers */
+        color: #4CAF50 !important;  /* Green for correct answers */
     }
     .radio-text.correct {
-        color: #4CAF50;  /* Green for correct answers */
+        color: #4CAF50 !important;  /* Green for correct answers */
     }
     .radio-circle.correct::after {
         content: '';
@@ -207,14 +213,17 @@
         height: 12px;
         background-color: #4CAF50;
         border-radius: 50%;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
     }
 
     /* Selected but Incorrect */
     .radio-circle.incorrect {
-        color: #EE434A;  /* Red for incorrect answers */
+        color: #EE434A !important;  /* Red for incorrect answers */
     }
     .radio-text.incorrect {
-        color: #EE434A;  /* Red for incorrect answers */
+        color: #EE434A !important;  /* Red for incorrect answers */
     }
     .radio-circle.incorrect::after {
         content: '';
@@ -223,6 +232,34 @@
         height: 12px;
         background-color: #EE434A;
         border-radius: 50%;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+    }
+
+    /* Default unselected state */
+    .radio-circle.default {
+        color: rgba(0, 0, 0, 0.2);
+    }
+
+    /* Add checkmark for correct answers */
+    .radio-circle.correct svg {
+        position: relative;
+        z-index: 1;
+    }
+
+    .radio-circle.correct::before {
+        content: '';
+        position: absolute;
+        width: 8px;
+        height: 8px;
+        border: 2px solid #4CAF50;
+        border-top: 0;
+        border-left: 0;
+        transform: rotate(45deg);
+        left: 8px;
+        top: 6px;
+        z-index: 2;
     }
 
     /* Custom scrollbar styles remain the same */

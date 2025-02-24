@@ -16,7 +16,6 @@
         title: string;
         description: string;
     } {
-        console.log(score);
         if (score === 100) {
             return {
                 title: "Perfect Score!  \nYou Mastered This Course!  🔥",
@@ -25,30 +24,42 @@
         } else if (score >= 70) {
             return {
                 title: "Great Job!\nYou Completed the Course",
-                description:
-                    "You scored " +
-                    score +
-                    "%, which means you've successfully completed the course. Well done!",
+                description: `You scored ${score}%, which means you've successfully completed the course. Well done!`,
             };
         } else {
             return {
                 title: "You're Almost there,\nKeep going!",
-                description:
-                    "You scored " +
-                    score +
-                    "%, which means you didn't pass this time. That's okay, learning is a journey!",
+                description: `You scored ${score}%, which means you didn't pass this time. That's okay, learning is a journey!`,
             };
         }
     }
 
     function handleRetake() {
+        // Clear the quiz store first
+        quizStore.reset();
+        // Reset parent's selected answers
+        selectedAnswers = {};
+        // Dispatch retake event to parent component
         dispatch("retake");
+        // Close the modal last
+        handleClose();
     }
 
     function handleReview() {
-        // Store the quiz data before navigation
-        quizStore.setQuizData(quizData);
-        quizStore.setSelectedAnswers(selectedAnswers);
+        // Store the quiz data and selected answers in the store
+        quizStore.update(store => ({
+            ...store,
+            quizData: {
+                title: quizData.title,
+                quiz: quizData.quiz.map((q: any, index: number) => ({
+                    ...q,
+                    id: q.id || index + 1
+                }))
+            },
+            selectedAnswers,
+            score
+        }));
+        
         handleClose();
         goto(`/course/${courseId}/quiz/answers`);
     }
@@ -64,6 +75,7 @@
 
 <div class="fixed inset-0 z-[100] flex items-center justify-center">
     <!-- Backdrop - Add on:click handler -->
+    <!-- svelte-ignore a11y-no-static-element-interactions -->
     <div 
         class="absolute inset-0 bg-black/50" 
         on:click={handleClose}
@@ -71,9 +83,12 @@
     ></div>
 
     <!-- Modal - Add stopPropagation to prevent closing when clicking inside -->
+    <!-- svelte-ignore a11y-click-events-have-key-events -->
+    <!-- svelte-ignore a11y-no-static-element-interactions -->
     <div
-        class="relative w-full max-w-[390px] lg:max-w-[808px] pb-4 bg-white dark:bg-dark-background-primary rounded-2xl lg:rounded-2xl overflow-hidden"
+        class="relative w-full max-w-[390px] lg:max-w-[808px] pb-4 bg-gradient-light dark:bg-gradient-dark rounded-2xl lg:rounded-2xl overflow-hidden"
         on:click|stopPropagation={() => {}}
+        
     >
         <!-- Header -->
         <div

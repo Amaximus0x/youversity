@@ -5,55 +5,71 @@
 
   const dispatch = createEventDispatcher();
 
-  export let score: number = 0;
   export let courseId: string;
-  export let quizData: any;
-  export let selectedAnswers: any;
   export let moduleIndex: number;
-  let message = getScoreMessage(score);
+  export let quiz: any;
+
+  // Subscribe to the quiz store
+  let score: number;
+  let quizData: any;
+  
+  quizStore.subscribe(store => {
+      score = store.score;
+      quizData = store.quizData;
+      console.log('QuizResultModal store data:', { score, quizData });
+  });
+
+  $: message = getScoreMessage(score);
 
   function getScoreMessage(score: number): {
       title: string;
       description: string;
   } {
-      console.log(score);
+      console.log('Calculating message for score:', score);
       if (score === 100) {
           return {
               title: "Perfect Score! You're on fire! 🔥",
-              description: "You scored 100% on this quiz. Amazing work! You’ve mastered this module. You can review your answers, retake the quiz for fun, or move on to the next module.",
+              description: "You scored 100% on this quiz. Amazing work! You've mastered this module. You can review your answers, retake the quiz for fun, or move on to the next module.",
           };
       } else if (score >= 70) {
           return {
               title: "Great job, you passed!",
               description:
-                  "You scored " +
-                  score +
-                  "% on this quiz. Keep up the momentum! You can review your answers, retake the quiz for a better score, or move on to the next module.",
+                  `You scored ${score}% on this quiz. Keep up the momentum! You can review your answers, retake the quiz for a better score, or move on to the next module.`,
           };
       } else {
           return {
               title: "You're Almost there,\nKeep going!",
               description:
-                  "You scored " +
-                  score +
-                  "% on this quiz. No worries! You can review your answers, try again, or move on to the next module. Learning is all about progress!",
+                  `You scored ${score}% on this quiz. No worries! You can review your answers, try again, or move on to the next module. Learning is all about progress!`,
           };
       }
   }
 
   function handleRetake() {
-      dispatch("retake");
+      const quizToRetake = quiz || quizData;
+      console.log('Retaking quiz with data:', quizToRetake);
+      
+      if (!quizToRetake) {
+          console.error('No quiz data available for retake');
+          return;
+      }
+
+      // First dispatch the retake event with the quiz data
+      dispatch("retake", { quiz: quizToRetake });
+      
+      // Then close modal and reset store
+      handleClose();
+      quizStore.reset();
   }
 
   function handleReview() {
       // Store the quiz data before navigation
-      quizStore.setQuizData(quizData);
-      quizStore.setSelectedAnswers(selectedAnswers);
-      handleClose();
       goto(`/course/${courseId}/quiz/answers`);
   }
 
-  function handleRevisit() {
+  function handleContinue() {
+      handleClose();
       goto(`/course/${courseId}`);
   }
 
@@ -64,6 +80,7 @@
 
 <div class="fixed inset-0 z-[100] flex items-center justify-center">
   <!-- Backdrop - Add on:click handler -->
+  <!-- svelte-ignore a11y-no-static-element-interactions -->
   <div 
       class="absolute inset-0 bg-black/50" 
       on:click={handleClose}
@@ -71,8 +88,10 @@
   ></div>
 
   <!-- Modal - Add stopPropagation to prevent closing when clicking inside -->
+  <!-- svelte-ignore a11y-no-static-element-interactions -->
+  <!-- svelte-ignore a11y-click-events-have-key-events -->
   <div
-      class="relative w-full max-w-[390px] lg:max-w-[808px] pb-4 bg-white dark:bg-dark-background-primary rounded-2xl lg:rounded-2xl overflow-hidden"
+      class="relative w-full max-w-[390px] lg:max-w-[808px] pb-4 bg-gradient-light dark:bg-gradient-dark rounded-2xl lg:rounded-2xl overflow-hidden"
       on:click|stopPropagation={() => {}}
   >
       <!-- Header -->
@@ -82,12 +101,13 @@
           <div class="w-full flex items-center justify-center">
               <span
                   class=" text-h4-medium text-light-text-primary dark:text-dark-text-primary"
-                  >Module {moduleIndex + 1} Quiz</span
+                  >Not using it Module {moduleIndex + 1} Quiz</span
               >
           </div>
           <button
               class="items-end justify-end p-2 border border-light-border dark:border-dark-border rounded-full"
               on:click={handleClose}
+              on:keydown={(e) => e.key === 'Enter' && handleClose()}
           >
               <img
                   src="/icons/cancel-circle.svg"
@@ -158,26 +178,23 @@
       >
           <!-- quiz passed footer -->
           {#if score >= 70}
-              <div class="flex flex-col gap-2.5">
-                  <button
-                      class="flex items-center justify-center gap-2 w-full lg:w-[300px] px-4 py-2 bg-Black/5 text-Green rounded-2xl text-semi-body transition-colors"
-                      on:click={handleRetake}
-                      >
-                      Share achievements
-                      <svg class="w-6 h-6 text-Green" fill="none" xmlns="http://www.w3.org/2000/svg">
-                          <path d="M21 6.5C21 8.15685 19.6569 9.5 18 9.5C16.3431 9.5 15 8.15685 15 6.5C15 4.84315 16.3431 3.5 18 3.5C19.6569 3.5 21 4.84315 21 6.5Z" stroke="currentColor" stroke-width="1.5"/>
-                          <path d="M9 12C9 13.6569 7.65685 15 6 15C4.34315 15 3 13.6569 3 12C3 10.3431 4.34315 9 6 9C7.65685 9 9 10.3431 9 12Z" stroke="currentColor" stroke-width="1.5"/>
-                          <path d="M21 17.5C21 19.1569 19.6569 20.5 18 20.5C16.3431 20.5 15 19.1569 15 17.5C15 15.8431 16.3431 14.5 18 14.5C19.6569 14.5 21 15.8431 21 17.5Z" stroke="currentColor" stroke-width="1.5"/>
-                          <path d="M8.72852 10.7495L15.2285 7.75M8.72852 13.25L15.2285 16.2495" stroke="currentColor" stroke-width="1.5"/>
-                          </svg>
-                  </button>
-
-                  <button
-                      class="w-full lg:w-[300px] px-4 py-2 bg-Green text-dark-text-primary dark:text-dark-text-primary rounded-2xl text-semi-body transition-colors"
-                      on:click={handleReview}
-                      >Explore more courses
-                  </button>
-              </div>
+          <div class="flex flex-col gap-2.5">
+            <button
+                class="w-full lg:w-[300px] px-4 py-2 bg-brand-red hover:bg-ButtonHover text-white rounded-2xl text-semi-body transition-colors"
+                on:click={handleContinue}
+                >Continue to module {moduleIndex + 2}
+            </button>
+            <button
+                class="w-full lg:w-[300px] px-4 py-2 bg-Green text-dark-text-primary dark:text-dark-text-primary rounded-2xl text-semi-body transition-colors"
+                on:click={handleReview}
+                >Review answers
+            </button>
+            <button
+                class="w-full lg:w-[300px] px-4 py-2 text-brand-turquoise rounded-2xl text-semi-body transition-colors"
+                on:click={handleRetake}
+                >Retake quiz
+            </button>
+        </div>
           {/if}
 
           <!-- quiz faild footer -->
@@ -195,8 +212,8 @@
                   </button>
                   <button
                       class="w-full lg:w-[300px] px-4 py-2 text-brand-turquoise rounded-2xl text-semi-body transition-colors"
-                      on:click={handleRevisit}
-                      >Continue to module 2
+                      on:click={handleContinue}
+                      >Continue to module {moduleIndex + 2}
                   </button>
               </div>
           {/if}

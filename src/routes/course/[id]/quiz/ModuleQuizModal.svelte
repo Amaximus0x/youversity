@@ -294,55 +294,55 @@
                 </div>
             </div>
         {:else}
-            <!-- Header -->
+        <!-- Header -->
             <div
                 class="p-4 pt-8 flex items-center justify-center border-b border-light-border dark:border-dark-border"
             >
                 <h1
                     class="w-full text-center text-h4-medium text-light-text-primary dark:text-dark-text-primary"
                 >
-                    Module {moduleIndex + 1} Quiz
-                </h1>
-                <button
-                    class="p-2 border border-light-border dark:border-dark-border rounded-full"
-                    on:click={onClose}
-                >
+                Module {moduleIndex + 1} Quiz
+            </h1>
+            <button
+                class="p-2 border border-light-border dark:border-dark-border rounded-full"
+                on:click={onClose}
+            >
                     <img
                         src="/icons/cancel-circle.svg"
                         alt="Close"
                         class="w-6 h-6"
                     />
-                </button>
-            </div>
+            </button>
+        </div>
 
             {#if !showResult}
-                <!-- Quiz Content -->
-                <div class="h-[652px] flex flex-col p-4">
-                    <!-- Questions Container - Scrollable -->
+        <!-- Quiz Content -->
+        <div class="h-[652px] flex flex-col p-4">
+            <!-- Questions Container - Scrollable -->
                     <div
                         class="flex-1 overflow-y-auto custom-scrollbar px-4 py-4"
                     >
-                        <div class="space-y-8">
+                <div class="space-y-8">
                             {#each quiz.quiz as question, index}
                                 <div
                                     class="flex flex-col gap-4 text-body-semibold"
                                 >
-                                    <div class="flex items-start gap-2">
-                                        <p>{index + 1}.</p>
-                                        <p>{question.question}</p>
-                                    </div>
-                                    <div class="space-y-4">
-                                        {#each Object.entries(question.options) as [key, value]}
+                            <div class="flex items-start gap-2">
+                                <p>{index + 1}.</p>
+                                <p>{question.question}</p>
+                            </div>
+                            <div class="space-y-4">
+                                {#each Object.entries(question.options) as [key, value]}
                                             <label
                                                 class="flex items-center gap-3 cursor-pointer group"
                                             >
                                                 <div
                                                     class="relative flex items-center"
                                                 >
-                                                    <input
-                                                        type="radio"
+                                            <input
+                                                type="radio"
                                                         name={`question-${question.id || index + 1}`}
-                                                        value={key}
+                                                value={key}
                                                         checked={isOptionSelected(
                                                             question.id ||
                                                                 index + 1,
@@ -354,8 +354,8 @@
                                                                     index + 1,
                                                                 key,
                                                             )}
-                                                        class="absolute opacity-0 w-6 h-6 cursor-pointer"
-                                                    />
+                                                class="absolute opacity-0 w-6 h-6 cursor-pointer"
+                                            />
                                                     <div
                                                         class="radio-circle w-6 h-6 flex items-center justify-center"
                                                     >
@@ -366,39 +366,39 @@
                                                             fill="none"
                                                             xmlns="http://www.w3.org/2000/svg"
                                                         >
-                                                            <path
-                                                                d="M12 20C16.4183 20 20 16.4183 20 12C20 7.58172 16.4183 4 12 4C7.58172 4 4 7.58172 4 12C4 16.4183 7.58172 20 12 20Z"
-                                                                stroke="currentColor"
-                                                                stroke-width="1.5"
-                                                            />
-                                                        </svg>
-                                                    </div>
-                                                </div>
+                                                    <path 
+                                                        d="M12 20C16.4183 20 20 16.4183 20 12C20 7.58172 16.4183 4 12 4C7.58172 4 4 7.58172 4 12C4 16.4183 7.58172 20 12 20Z" 
+                                                        stroke="currentColor" 
+                                                        stroke-width="1.5"
+                                                    />
+                                                </svg>
+                                            </div>
+                                        </div>
                                                 <span
                                                     class="text-semi-body text-Black group-hover:opacity-90"
                                                 >
-                                                    {value}
-                                                </span>
-                                            </label>
-                                        {/each}
-                                    </div>
-                                </div>
-                            {/each}
+                                            {value}
+                                        </span>
+                                    </label>
+                                {/each}
+                            </div>
                         </div>
-                    </div>
+                    {/each}
+                </div>
+            </div>
 
                     <!-- Footer with Submit Button -->
                     <div
                         class="flex-shrink-0 flex justify-end items-center px-2.5 py-4 border-t border-light-border dark:border-dark-border"
                     >
-                        <button
-                            class="px-4 py-2 rounded-lg text-semibody-medium transition-colors flex items-center justify-center gap-2 {isAllAnswered
-                                ? 'bg-brand-red hover:bg-ButtonHover text-white'
-                                : 'bg-Black/5 text-light-text-tertiary'}"
-                            disabled={!isAllAnswered}
-                            on:click={handleSubmit}
-                        >
-                            Submit
+                <button
+                    class="px-4 py-2 rounded-lg text-semibody-medium transition-colors flex items-center justify-center gap-2 {isAllAnswered 
+                        ? 'bg-brand-red hover:bg-ButtonHover text-white' 
+                        : 'bg-Black/5 text-light-text-tertiary'}"
+                    disabled={!isAllAnswered}
+                    on:click={handleSubmit}
+                >
+                    Submit
                             <svg
                                 width="25"
                                 height="24"
@@ -406,7 +406,7 @@
                                 fill="none"
                                 xmlns="http://www.w3.org/2000/svg"
                             >
-                                <g id="arrow-right">
+                        <g id="arrow-right">
                                     <path
                                         id="Vector"
                                         d="M20.5 12H4.50002"
@@ -427,11 +427,11 @@
                                         stroke-linecap="round"
                                         stroke-linejoin="round"
                                     />
-                                </g>
-                            </svg>
-                        </button>
-                    </div>
-                </div>
+                        </g>
+                    </svg>
+                </button>
+            </div>
+        </div>
             {:else}
                 <!-- Quiz Result Content -->
                 <div
