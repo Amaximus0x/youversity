@@ -34,6 +34,8 @@
     }
 
     $: progress = $enrollmentProgressStore?.moduleProgress || [];
+
+  
 </script>
 
 <div class="flex flex-col gap-4">
@@ -54,12 +56,7 @@
                 >
                     <div
                         class="h-full bg-brand-turquoise rounded-[200000px] transition-all duration-300"
-                        style="width: {isCreator
-                            ? (progress.filter((m) => m?.completed)
-                                  .length /
-                                  10) *
-                              100
-                            : ((completedModules.length ||
+                        style="width: {((completedModules.length ||
                                   0) /
                                   10) *
                               100}%"
@@ -68,9 +65,7 @@
                 <span
                     class="text-body text-light-text-primary dark:text-dark-text-primary"
                 >
-                    {isCreator
-                        ? Math.round((progress.filter((m) => m?.completed).length / 10) * 100)
-                        : Math.round(((completedModules.length || 0) / 10) * 100)}%
+                    {Math.round(((completedModules.length || 0) / 10) * 100)}%
                 </span>
             </div>
         </div>
@@ -90,12 +85,7 @@
                     >
                         <div
                             class="h-full bg-brand-turquoise rounded-[200000px] transition-all duration-300"
-                            style="width: {isCreator
-                                ? (progress.filter((m) => m?.completed)
-                                      .length /
-                                      10) *
-                                  100
-                                : ((completedModules.length ||
+                            style="width: {((completedModules.length ||
                                       0) /
                                       10) *
                                   100}%"
@@ -104,9 +94,7 @@
                     <span
                         class="text-body text-light-text-primary dark:text-dark-text-primary"
                     >
-                        {isCreator
-                            ? Math.round((progress.filter((m) => m?.completed).length / 10) * 100)
-                            : Math.round(((completedModules.length || 0) / 10) * 100)}%
+                        {Math.round(((completedModules.length || 0) / 10) * 100)}%
                     </span>
                 </div>
             </div>
@@ -186,6 +174,7 @@
                                         ] || "0"} min
                                     </p>
 
+                                    <!-- {#if getModuleStatus(index)} -->
                                     {#if isModuleCompleted(index)}
                                             <img 
                                                 src="/images/checkmark-circle.svg" 

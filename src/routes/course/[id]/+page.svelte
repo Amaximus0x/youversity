@@ -27,7 +27,6 @@
   import CourseModuleList from "$lib/components/CourseModuleList.svelte";
   import CourseHeader from "$lib/components/CourseHeader.svelte";
   import type { FinalCourseStructure, Quiz, QuizResult, EnrollmentProgress } from "$lib/types/course";
-  import QuizResultModal from './quiz/QuizResultModal.svelte';
   import ModuleQuizModal from "./quiz/ModuleQuizModal.svelte";
   import { quizStore } from "$lib/stores/quiz";
 
@@ -66,10 +65,8 @@
 
   // Add this state variable with other state variables
   let showNewQuizPage = false;
-  let showQuizResult = false;
   let currentQuiz: Quiz | null = null;
   let quizModuleTitle = "";
-  let quizScore = 0;
 
   let isMobile = false;
 
@@ -345,60 +342,50 @@
 
   // Subscribe to quiz store
   quizStore.subscribe(store => {
-    showQuizResult = store.showResult;
+    showNewQuizPage = store.showResult;
   });
 
+  // Update the quiz completion handler
   async function handleQuizComplete(score: number, timeSpent: number) {
     if (!$user || !courseDetails) return;
 
     const moduleId = $currentModuleStore;
     try {
-      // Update enrollment progress
-      const updatedProgress = await updateEnrollmentQuizResult(
-        $user.uid,
-        courseDetails.id,
-        moduleId,
-        {
-          attempts: 1,
-          score,
-          timeSpent,
-          completedAt: new Date(),
+        // Update enrollment progress with quiz result
+        const updatedProgress = await updateEnrollmentQuizResult(
+            $user.uid,
+            courseDetails.id!,
+            moduleId,
+            {
+                attempts: 1,
+                score,
+                timeSpent,
+                completedAt: new Date(),
+                completed: score >= 70, // Mark as completed if score is 70% or higher
+                passed: score >= 70
+            }
+        );
+
+        // Update module progress to mark it as completed
+        if (score >= 70) {
+            await updateModuleProgress($user.uid, courseDetails.id!, moduleId, {
+                completed: true,
+                completedAt: new Date()
+            });
         }
-      );
 
-      // Update the store with new progress
-      enrollmentProgressStore.set(updatedProgress as EnrollmentProgress);
-      
-      // Quiz result modal will be shown automatically through store
-      showNewQuizPage = false;
-      
+        // Update the store with new progress
+        enrollmentProgressStore.set(updatedProgress as EnrollmentProgress);
+
+        // Update local module progress state
+        moduleProgress = moduleProgress.map((module, index) => 
+            index === moduleId ? { ...module, completed: score >= 70 } : module
+        );
+
     } catch (error) {
-      console.error('Error updating quiz result:', error);
+        console.error('Error updating quiz result:', error);
     }
   }
-
-  function handleQuizResultClose() {
-    quizStore.setShowResult(false);
-    quizStore.reset();
-  }
-
-  // Add handlers for result modal
-  function handleQuizRetake() {
-    showQuizResult = false;
-    showNewQuizPage = true;
-  }
-
-  function handleQuizReview() {
-    // Add review logic
-  }
-
-  // Subscribe to enrollment progress updates
-  onMount(async () => {
-    if ($user && courseDetails) {
-      const progress = await getEnrollmentProgress($user.uid, courseDetails.id);
-      enrollmentProgressStore.set(progress as EnrollmentProgress);
-    }
-  });
 
   function handleResize() {
     isMobile = window.innerWidth < 1024;
@@ -901,45 +888,16 @@
 
 <!-- Add the new ModuleQuizPage component -->
 {#if showNewQuizPage && currentQuiz}
-  <div class="fixed inset-0 z-[100] lg:flex lg:items-center lg:justify-center {showNewQuizPage ? 'opacity-100' : 'opacity-0 pointer-events-none'}">
-    <div class="lg:fixed inset-0 bg-black/50"></div>
-    <div class="relative w-full lg:max-w-[808px] lg:max-h-[652px] lg:overflow-hidden">
-      <ModuleQuizModal
+    <ModuleQuizModal
         quiz={currentQuiz}
-        moduleTitle={quizModuleTitle}
         moduleIndex={$currentModuleStore}
         onClose={() => {
-          showNewQuizPage = false;
-          currentQuiz = null;
-          quizModuleTitle = "";
+            showNewQuizPage = false;
+            currentQuiz = null;
         }}
         onSubmit={handleQuizComplete}
-        courseId={$page.params.id}
-      />
-    </div>
-  </div>
-{/if}
-<!-- score={quizScore} -->
-<!-- selectedAnswers={selectedAnswers} -->
-{#if showQuizResult}
-  <QuizResultModal
-    moduleIndex={$currentModuleStore}
-    score={quizScore}
-    courseId={$page.params.id}
-    quizData={currentQuiz}
-    on:retake={handleQuizRetake}
-    on:review={handleQuizReview}
-    on:close={() => quizStore.setShowResult(false)}
-  />
-{/if}
-
-<!-- Add the QuizResultModal -->
-<!-- {#if showQuizResult}
-    <QuizResultModal
-        courseId={$page.params.id}
-        on:close={handleQuizResultClose}
     />
-{/if} -->
+{/if}
 
 <style>
   .video-container {

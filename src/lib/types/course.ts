@@ -76,10 +76,7 @@ export interface VideoItem {
 
 export interface ModuleProgress {
   completed: boolean;
-  quizAttempts: number;
-  bestScore: number;
-  lastAttemptDate: Timestamp;
-  timeTaken?: number;
+  completedAt: Date;
 }
 
 export interface CourseProgress {
@@ -108,25 +105,17 @@ export interface CourseEnrollment {
 
 export interface QuizResult {
   attempts: number;
-  bestScore: number;
-  lastAttemptDate: Timestamp;
+  score: number;
+  timeSpent: number;
+  completedAt: Date;
   completed: boolean;
-  timeTaken?: number;
+  passed: boolean;
 }
 
 export interface EnrollmentProgress {
-  userId: string;
-  courseId: string;
-  enrolledAt: Date;
-  lastAccessedAt: Date;
-  moduleProgress: ModuleProgress[];
-  completedModules: number[];
   quizResults: {
-    moduleQuizzes: {
-      [moduleIndex: number]: QuizResult;
-    };
+    moduleQuizzes: Record<number, QuizResult>;
     finalQuiz?: QuizResult;
   };
-  startDate: Timestamp;
-  lastAccessDate: Timestamp;
+  moduleProgress: Record<number, ModuleProgress>;
 }

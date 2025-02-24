@@ -27,12 +27,22 @@
       onClose();
     }
   }
+
+  function handleKeydown(event: KeyboardEvent) {
+    if (event.key === "Escape") {
+      onClose();
+    }
+  }
 </script>
 
 {#if show}
   <div
     class="fixed inset-0 bg-Black/60 z-[56] flex items-center justify-center px-4"
     on:click|self={onClose}
+    on:keydown={handleKeydown}
+    role="button"
+    tabindex="0"
+    aria-label="Close modal"
   >
     <div
       class="bg-gradient-light dark:bg-gradient-dark rounded-[32px] p-4 max-w-md w-full"
