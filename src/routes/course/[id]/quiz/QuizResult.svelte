@@ -15,6 +15,34 @@
     export let selectedAnswers: any;
 
     let message = getScoreMessage(score);
+    let isSharing = false;
+
+    async function handleShare() {
+        try {
+            isSharing = true;
+            const courseTitle = quizData?.title || 'Course';
+            const shareData = {
+                title: 'Course Completion Achievement',
+                text: `I just completed "${courseTitle}" with a score of ${score}%! 🎉`,
+                url: `${window.location.origin}/course/${courseId}`
+            };
+
+            if (navigator.share && navigator.canShare(shareData)) {
+                // Use native sharing if available
+                await navigator.share(shareData);
+            } else {
+                // Fallback to clipboard copy
+                const shareText = `${shareData.text}\nCheck out the course here: ${shareData.url}`;
+                await navigator.clipboard.writeText(shareText);
+                alert('Achievement link copied to clipboard!');
+            }
+        } catch (error) {
+            console.error('Error sharing achievement:', error);
+            alert('Failed to share achievement. Please try again.');
+        } finally {
+            isSharing = false;
+        }
+    }
 
     // Save quiz result to database
     async function saveQuizResult() {
@@ -238,9 +266,18 @@
             {#if score >= 80}
                 <div class="flex flex-col gap-2.5">
                     <button
-                        class="flex items-center justify-center gap-2 w-full lg:w-[300px] px-4 py-2 bg-Black/5 text-Green rounded-2xl text-semi-body transition-colors"
-                        on:click={handleRetake}
+                        class="flex items-center justify-center gap-2 w-full lg:w-[300px] px-4 py-2 bg-Black/5 text-Green rounded-2xl text-semi-body transition-colors relative"
+                        on:click={handleShare}
+                        disabled={isSharing}
                     >
+                        {#if isSharing}
+                            <div class="absolute inset-0 flex items-center justify-center bg-Black/5 rounded-2xl">
+                                <svg class="animate-spin h-5 w-5 text-Green" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                            </div>
+                        {/if}
                         Share achievements
                         <svg
                             class="w-6 h-6 text-Green"
