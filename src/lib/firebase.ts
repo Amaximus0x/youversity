@@ -2,7 +2,7 @@ import { initializeApp } from 'firebase/app';
 import { getFirestore, collection, addDoc, query, where, getDocs, doc, getDoc, updateDoc, setDoc, serverTimestamp, orderBy, limit, deleteDoc, Timestamp } from 'firebase/firestore';
 import { getAuth, setPersistence, browserLocalPersistence, signInWithPopup, GoogleAuthProvider, signOut } from 'firebase/auth';
 import { getStorage } from 'firebase/storage';
-import type { CourseEnrollment, EnrollmentProgress, FinalCourseStructure, ModuleProgress, CourseRating } from './types/course';
+import type { CourseEnrollment, EnrollmentProgress, FinalCourseStructure, ModuleProgress, CourseRating, QuizResult } from './types/course';
 import { getUserProfile } from '$lib/services/profile';
 
 const firebaseConfig = {
@@ -849,32 +849,46 @@ export async function updateEnrollmentQuizResult(
   quizResult: QuizResult
 ) {
   try {
-    const enrollmentRef = doc(db, `enrollments/${userId}_${courseId}`);
+    const enrollmentId = `${userId}_${courseId}`;
+    const enrollmentRef = doc(db, 'enrollments', enrollmentId);
     const enrollmentDoc = await getDoc(enrollmentRef);
 
     if (!enrollmentDoc.exists()) {
       throw new Error('Enrollment not found');
     }
 
-    const enrollment = enrollmentDoc.data() as EnrollmentProgress;
-    
-    // Create a new array of completed modules if it doesn't exist
-    const completedModules = enrollment.completedModules || [];
-    
-    // Add the module to completed modules if quiz was passed and not already completed
-    if (quizResult.completed && !completedModules.includes(moduleIndex)) {
-      completedModules.push(moduleIndex);
+    const enrollmentData = enrollmentDoc.data();
+    const updatedQuizResults = {
+      ...enrollmentData.quizResults || {},
+    };
+
+    // Handle final quiz result
+    if (moduleIndex === -1) {
+      updatedQuizResults.finalQuiz = quizResult;
+      
+      // If the quiz is passed (score >= 80), mark the course as completed
+      if (quizResult.passed) {
+        await updateDoc(enrollmentRef, {
+          quizResults: updatedQuizResults,
+          completedAt: new Date(),
+          isCompleted: true,
+          lastAccessedAt: new Date()
+        });
+        return;
+      }
+    } else {
+      // Handle module quiz results
+      if (!updatedQuizResults.moduleQuizzes) {
+        updatedQuizResults.moduleQuizzes = {};
+      }
+      updatedQuizResults.moduleQuizzes[moduleIndex] = quizResult;
     }
 
+    // Update the enrollment document
     await updateDoc(enrollmentRef, {
-      [`quizResults.moduleQuizzes.${moduleIndex}`]: quizResult,
-      completedModules: completedModules,
-      lastAccessedAt: serverTimestamp()
+      quizResults: updatedQuizResults,
+      lastAccessedAt: new Date()
     });
-
-    // Return the updated enrollment progress
-    const updatedDoc = await getDoc(enrollmentRef);
-    return updatedDoc.data() as EnrollmentProgress;
 
   } catch (error) {
     console.error('Error updating quiz result:', error);

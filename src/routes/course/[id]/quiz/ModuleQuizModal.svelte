@@ -115,7 +115,7 @@
                 description:
                     "You scored 100% on this quiz. Amazing work! You've mastered this module. You can review your answers, retake the quiz for fun, or move on to the next module.",
             };
-        } else if (score >= 70) {
+        } else if (score >= 80) {
             return {
                 title: "Great job, you passed!",
                 description: `You scored ${score}% on this quiz. Keep up the momentum! You can review your answers, retake the quiz for a better score, or move on to the next module.`,
@@ -160,14 +160,14 @@
 <div class="fixed inset-0 z-[100] lg:flex lg:items-center lg:justify-center">
     <div class="lg:fixed inset-0 bg-black/50"></div>
     <div
-        class="relative w-full lg:max-w-[808px] bg-gradient-light dark:bg-gradient-dark rounded-[32px] overflow-hidden pb-4"
+        class="relative w-full max-w-[390px] lg:max-w-[808px] bg-gradient-light dark:bg-gradient-dark rounded-[32px] overflow-hidden pb-4"
     >
         {#if showReviewAnswers}
             <!-- Review Answers Content -->
             <div>
                 <!-- Header -->
                 <div
-                    class="p-4 pt-8 flex items-center justify-center border-b border-light-border dark:border-dark-border"
+                    class="hidden lg:flex p-4 pt-8  items-center justify-center border-b border-light-border dark:border-dark-border"
                 >
                     <h1
                         class="w-full text-center text-h4-medium text-light-text-primary dark:text-dark-text-primary"
