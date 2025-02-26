@@ -444,7 +444,7 @@
                                 src="/images/quiz-perfect.gif"
                                 alt="Perfect Score"
                             />
-                        {:else if quizScore >= 70}
+                        {:else if quizScore >= 80}
                             <img
                                 src="/images/quiz-passed.gif"
                                 alt="Quiz Passed"
@@ -491,7 +491,7 @@
                     <div
                         class="w-full mt-4 px-4 lg:px-2.5 py-4 flex flex-col gap-2.5 items-center justify-center border-t border-light-border dark:border-dark-border"
                     >
-                        {#if quizScore >= 70}
+                        {#if quizScore >= 80}
                             <div class="flex flex-col gap-2.5">
                                 <button
                                     class="w-full lg:w-[300px] px-4 py-2 bg-brand-red hover:bg-ButtonHover text-white rounded-2xl text-semi-body transition-colors"

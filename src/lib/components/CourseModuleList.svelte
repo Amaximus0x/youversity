@@ -15,6 +15,7 @@
 
     let showEnrollModal = false;
     let lastCompletedModules: number[] = [];
+    let forceUpdate = 0;
     
     // Make completedModules more reactive by directly using the store
     $: completedModules = $enrollmentProgressStore?.completedModules || [];
@@ -25,15 +26,22 @@
         if (JSON.stringify(completedModules) !== JSON.stringify(lastCompletedModules)) {
             lastCompletedModules = [...completedModules];
             console.log('Completed modules changed, forcing update');
+            forceUpdate++; // Force a reactive update
         }
     }
 
     // Helper function to check if a module is completed
     function isModuleCompleted(index: number): boolean {
         const isCompleted = completedModules.includes(index);
-        console.log(`Checking completion for module ${index}:`, isCompleted, 'Current completedModules:', completedModules);
+        console.log(`Checking completion for module ${index}:`, isCompleted, 'Current completedModules:', completedModules, 'Force update:', forceUpdate);
         return isCompleted;
     }
+
+    // Make the module completion check reactive
+    $: moduleCompletionStatus = completedModules.reduce((acc, moduleIndex) => {
+        acc[moduleIndex] = true;
+        return acc;
+    }, {} as Record<number, boolean>);
 
     // Update the module card styling
     $: activeModuleClass = (index: number) =>
@@ -60,8 +68,10 @@
     onMount(() => {
         const unsubscribe = enrollmentProgressStore.subscribe(progress => {
             console.log('CourseModuleList - Progress store updated:', progress);
-            // Force component update
-            completedModules = progress?.completedModules || [];
+            if (progress?.completedModules) {
+                completedModules = [...progress.completedModules];
+                forceUpdate++; // Force a reactive update
+            }
         });
 
         return () => {
@@ -71,7 +81,7 @@
 
     // After each update, check if we need to force a re-render
     afterUpdate(() => {
-        console.log('CourseModuleList - After update, completedModules:', completedModules);
+        console.log('CourseModuleList - After update, completedModules:', completedModules, 'Force update:', forceUpdate);
     });
 </script>
 
@@ -193,7 +203,7 @@
                                             {courseDetails?.Final_Module_Video_Duration?.[index] || "0"} min
                                         </p>
 
-                                        {#if isModuleCompleted(index)}
+                                        {#if moduleCompletionStatus[index] || (forceUpdate && completedModules.includes(index))}
                                             <img 
                                                 src="/images/checkmark-circle.svg" 
                                                 alt="Completed" 
