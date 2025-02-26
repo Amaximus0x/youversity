@@ -3,12 +3,10 @@
   import { fade } from 'svelte/transition';
   import { browser } from '$app/environment';
 
-  export default {};
-
   export let show = false;
   export let shareType: 'course' | 'profile' = 'course';
-  export let id: string; // This can be courseId or username
-  export let courseId: string;
+  export let id = ''; // This can be courseId or username
+  export let courseId = '';
   export let onClose: () => void;
 
   let copied = false;

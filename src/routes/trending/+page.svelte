@@ -4,12 +4,15 @@
   import type { FinalCourseStructure } from '$lib/types/course';
   import TrendingCard from '$lib/components/TrendingCard.svelte';
   import ShareModal from '$lib/components/ShareModal.svelte';
+  import { user } from '$lib/stores/auth';
+  import { get } from 'svelte/store';
 
   let trendingCourses: (FinalCourseStructure & { id: string })[] = [];
   let loading = true;
   let error: string | null = null;
   let showShareModal = false;
   let selectedCourseId = '';
+  let initialLoad = true;
 
   // Sort by views and likes (engagement score)
   $: filteredCourses = [...trendingCourses].sort((a, b) => {
@@ -23,15 +26,47 @@
     showShareModal = true;
   }
 
-  onMount(async () => {
+  async function loadTrendingCourses() {
     try {
+      console.log('Loading trending courses...');
       const courses = await getPublicCourses();
+      console.log('Loaded trending courses:', courses);
       trendingCourses = courses;
     } catch (err) {
       console.error('Error loading trending courses:', err);
       error = (err as Error).message;
     } finally {
       loading = false;
+    }
+  }
+
+  // Subscribe to auth state changes
+  user.subscribe(async (userData) => {
+    console.log('Auth state changed in trending page:', { userData });
+    if (userData) {
+      if (initialLoad || !loading) {
+        initialLoad = false;
+        await loadTrendingCourses();
+      }
+    } else {
+      // Clear courses when user logs out
+      trendingCourses = [];
+      if (!initialLoad) {
+        // Only clear if this isn't the initial page load
+        error = 'Please log in to view trending courses';
+      }
+    }
+  });
+
+  onMount(async () => {
+    console.log('Trending page mounted');
+    initialLoad = true;
+    // Get initial user state
+    const userData = get(user);
+    if (userData) {
+      await loadTrendingCourses();
+    } else {
+      console.log('No user data on mount, waiting for auth state');
     }
   });
 </script>
@@ -76,6 +111,8 @@
 {#if showShareModal}
   <ShareModal 
     show={showShareModal}
+    shareType="course"
+    id={selectedCourseId}
     courseId={selectedCourseId}
     onClose={() => showShareModal = false}
   />
