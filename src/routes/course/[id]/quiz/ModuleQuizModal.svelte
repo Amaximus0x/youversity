@@ -4,6 +4,7 @@
     import { onMount } from "svelte";
     import { user } from "$lib/stores/auth";
     import { quizStore } from "$lib/stores/quiz";
+    import { currentModuleStore } from "$lib/stores/course";
 
     export let quiz: {
         quiz: Array<{
@@ -17,8 +18,8 @@
     // export let moduleTitle: string;
     export let onClose: () => void;
     export let onSubmit: (score: number, timeSpent: number) => void;
-    // export let courseId: string;
     export let moduleIndex: number;
+    export let courseId: string;
 
     let selectedAnswers: { [key: number]: string } = {};
     let showResult = false;
@@ -101,8 +102,10 @@
     }
 
     function handleContinue() {
+        // Set the next module as active
+        currentModuleStore.set(moduleIndex + 1);
         onClose();
-        goto(`/course/${$page.params.id}`);
+        goto(`/course/${courseId}`);
     }
 
     function getScoreMessage(score: number): {

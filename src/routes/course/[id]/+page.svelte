@@ -926,6 +926,7 @@
             currentQuiz = null;
         }}
         onSubmit={handleQuizComplete}
+        courseId={$page.params.id}
     />
 {/if}
 
