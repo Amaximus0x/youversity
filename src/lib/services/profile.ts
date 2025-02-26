@@ -69,22 +69,29 @@ export async function createUserProfile(userId: string, initialData: Partial<Use
   }
 }
 
-export async function getUserProfile(userId: string) {
+export async function getUserProfile(userId: string): Promise<UserProfile | null> {
   try {
-    const userDoc = await getDoc(doc(db, 'users', userId));
-    if (userDoc.exists()) {
-      // Convert Firestore Timestamp to Date and ensure all fields are present
-      const data = userDoc.data();
-      return {
-        ...data,
-        photoURL: data.photoURL || '',  // Ensure photoURL is always returned
-        createdAt: data.createdAt?.toDate() || new Date(),
-        updatedAt: data.updatedAt?.toDate() || new Date()
-      };
+    const userRef = doc(db, 'users', userId);
+    const userDoc = await getDoc(userRef);
+    
+    if (!userDoc.exists()) {
+      return null;
     }
-    return null;
+
+    const data = userDoc.data();
+    return {
+      username: data.username || '',
+      displayName: data.displayName || '',
+      email: data.email || '',
+      photoURL: data.photoURL || '',
+      about: data.about || '',
+      firstName: data.firstName || '',
+      lastName: data.lastName || '',
+      createdAt: data.createdAt?.toDate() || new Date(),
+      updatedAt: data.updatedAt?.toDate() || new Date()
+    };
   } catch (error) {
-    console.error('Error fetching user profile:', error);
+    console.error('Error getting user profile:', error);
     return null;
   }
 }

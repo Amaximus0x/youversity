@@ -12,13 +12,13 @@
     export let showProgress: boolean = false;
     export let currentModule: number | undefined = undefined;
     
-
     let showEnrollModal = false;
     let lastCompletedModules: number[] = [];
     let forceUpdate = 0;
+    let localProgress: EnrollmentProgress | null = null;
     
     // Make completedModules more reactive by directly using the store
-    $: completedModules = $enrollmentProgressStore?.completedModules || [];
+    $: completedModules = localProgress?.completedModules || [];
     
     // Debug logging for state changes
     $: if (completedModules) {
@@ -62,15 +62,26 @@
         ? Math.round((completedModules.length / courseDetails.Final_Module_Title.length) * 100)
         : 0;
 
-    $: progress = $enrollmentProgressStore?.moduleProgress || [];
+    $: progress = localProgress?.moduleProgress || $enrollmentProgressStore?.moduleProgress || {};
 
     // Subscribe to store changes and force component update
     onMount(() => {
         const unsubscribe = enrollmentProgressStore.subscribe(progress => {
             console.log('CourseModuleList - Progress store updated:', progress);
-            if (progress?.completedModules) {
-                completedModules = [...progress.completedModules];
+            if (progress) {
+                // Ensure progress has all required fields
+                const typedProgress: EnrollmentProgress = {
+                    quizResults: progress.quizResults || { moduleQuizzes: {} },
+                    moduleProgress: progress.moduleProgress || {},
+                    completedModules: Array.isArray(progress.completedModules) 
+                        ? [...progress.completedModules] 
+                        : [],
+                    lastAccessedModule: progress.lastAccessedModule || 0
+                };
+                localProgress = typedProgress;
                 forceUpdate++; // Force a reactive update
+            } else {
+                localProgress = null;
             }
         });
 
@@ -81,7 +92,11 @@
 
     // After each update, check if we need to force a re-render
     afterUpdate(() => {
-        console.log('CourseModuleList - After update, completedModules:', completedModules, 'Force update:', forceUpdate);
+        console.log('CourseModuleList - After update:', {
+            completedModules,
+            localProgress,
+            forceUpdate
+        });
     });
 </script>
 

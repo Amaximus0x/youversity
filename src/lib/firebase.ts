@@ -206,14 +206,17 @@ function generatePlaylistUrl(videoUrls: string[], courseTitle: string = ''): str
 
 export async function getUserCourse(userId: string, courseId: string) {
   try {
+    console.debug('[getUserCourse] Fetching course:', { userId, courseId });
     const courseRef = doc(db, 'courses', courseId);
     const courseDoc = await getDoc(courseRef);
     
     if (!courseDoc.exists()) {
+      console.error('[getUserCourse] Course not found');
       throw new Error('Course not found');
     }
 
     const courseData = courseDoc.data();
+    console.debug('[getUserCourse] Raw course data:', courseData);
     
     // Generate playlist URL if missing but has video URLs
     if (!courseData.YouTube_Playlist_URL && courseData.Final_Module_YouTube_Video_URL?.length > 0) {
@@ -228,7 +231,7 @@ export async function getUserCourse(userId: string, courseId: string) {
           YouTube_Playlist_URL: courseData.YouTube_Playlist_URL
         });
       } catch (error) {
-        console.error('Error updating playlist URL:', error);
+        console.error('[getUserCourse] Error updating playlist URL:', error);
         // Continue even if update fails
       }
     }
@@ -248,18 +251,52 @@ export async function getUserCourse(userId: string, courseId: string) {
 
     // If not creator or enrolled, check if course is public
     if (!isCreator && !isEnrolled && !courseData.isPublic) {
+      console.error('[getUserCourse] Unauthorized access to course');
       throw new Error('Unauthorized access to course');
     }
 
-    return {
+    // Ensure all required fields are present with proper types
+    const enrichedCourseData: FinalCourseStructure = {
       id: courseId,
-      ...courseData,
+      Final_Course_Title: courseData.Final_Course_Title || '',
+      Final_Course_Objective: courseData.Final_Course_Objective || '',
+      Final_Course_Introduction: courseData.Final_Course_Introduction || '',
+      Final_Module_Title: courseData.Final_Module_Title || [],
+      Final_Module_Objective: courseData.Final_Module_Objective || [],
+      Final_Module_YouTube_Video_URL: courseData.Final_Module_YouTube_Video_URL || [],
+      Final_Module_Quiz: courseData.Final_Module_Quiz || [],
+      Final_Course_Quiz: courseData.Final_Course_Quiz || { quiz: [] },
+      Final_Course_Conclusion: courseData.Final_Course_Conclusion || '',
+      YouTube_Playlist_URL: courseData.YouTube_Playlist_URL || '',
+      Final_Course_Thumbnail: courseData.Final_Course_Thumbnail || '',
+      isPublic: courseData.isPublic || false,
+      createdBy: courseData.createdBy || '',
+      createdAt: courseData.createdAt?.toDate() || new Date(),
+      likes: courseData.likes || 0,
+      views: courseData.views || 0,
+      totalRatings: courseData.totalRatings || 0,
+      Final_Module_Video_Duration: courseData.Final_Module_Video_Duration || [],
+      Final_Module_Thumbnails: courseData.Final_Module_Thumbnails || [],
+      Final_Course_Duration: courseData.Final_Course_Duration || 0,
       isCreator,
       isEnrolled,
       enrollmentData: enrollmentDoc.exists() ? enrollmentDoc.data() : null
     };
+
+    // Fetch creator profile and enrich with creator details
+    const creatorProfile = await getUserProfile(courseData.createdBy);
+    if (creatorProfile) {
+      enrichedCourseData.creatorUsername = creatorProfile.username || 'Unknown User';
+      enrichedCourseData.creatorDisplayName = creatorProfile.displayName || 'Unknown User';
+    } else {
+      enrichedCourseData.creatorUsername = 'Unknown User';
+      enrichedCourseData.creatorDisplayName = 'Unknown User';
+    }
+
+    console.debug('[getUserCourse] Enriched course data:', enrichedCourseData);
+    return enrichedCourseData;
   } catch (error) {
-    console.error('Error fetching course:', error);
+    console.error('[getUserCourse] Error:', error);
     throw error;
   }
 }
@@ -728,6 +765,8 @@ export async function enrollInCourse(userId: string, courseId: string) {
 
 export async function getEnrollmentStatus(userId: string, courseId: string) {
   try {
+    console.debug('[getEnrollmentStatus] Checking enrollment:', { userId, courseId });
+    
     // Check both enrollment document and user's courses collection
     const enrollmentRef = doc(db, 'enrollments', `${userId}_${courseId}`);
     const userCourseRef = doc(db, `users/${userId}/courses/${courseId}`);
@@ -739,17 +778,52 @@ export async function getEnrollmentStatus(userId: string, courseId: string) {
     
     // Check enrollment status from both documents
     const isEnrolledInEnrollments = enrollmentDoc.exists();
-    const isEnrolledInUserCourses = userCourseDoc.exists();
+    const isEnrolledInUserCourses = userCourseDoc.exists() && userCourseDoc.data().isEnrolled;
     
     const isEnrolled = isEnrolledInEnrollments || isEnrolledInUserCourses;
     
+    // Get enrollment data from the most recent source
+    let enrollmentData = null;
+    if (isEnrolledInEnrollments) {
+      enrollmentData = enrollmentDoc.data();
+    } else if (isEnrolledInUserCourses) {
+      enrollmentData = userCourseDoc.data();
+    }
+
+    // Initialize enrollment data if it doesn't exist
+    if (isEnrolled && !enrollmentData) {
+      enrollmentData = {
+        userId,
+        courseId,
+        enrolledAt: new Date(),
+        lastAccessedAt: new Date(),
+        completedModules: [],
+        moduleProgress: [],
+        quizResults: {
+          moduleQuizzes: {}
+        }
+      };
+
+      // Create enrollment document if it doesn't exist
+      if (!isEnrolledInEnrollments) {
+        console.debug('[getEnrollmentStatus] Creating enrollment document');
+        await setDoc(enrollmentRef, enrollmentData);
+      }
+    }
+
+    console.debug('[getEnrollmentStatus] Status:', {
+      isEnrolled,
+      hasEnrollmentDoc: isEnrolledInEnrollments,
+      hasUserCourseDoc: isEnrolledInUserCourses,
+      enrollmentData
+    });
+    
     return {
       isEnrolled,
-      enrollmentData: isEnrolledInEnrollments ? enrollmentDoc.data() : 
-                     isEnrolledInUserCourses ? userCourseDoc.data() : null
+      enrollmentData
     };
   } catch (error) {
-    console.error('Error checking enrollment status:', error);
+    console.error('[getEnrollmentStatus] Error:', error);
     throw error;
   }
 }

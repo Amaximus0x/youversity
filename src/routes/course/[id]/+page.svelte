@@ -29,6 +29,7 @@
   import type { FinalCourseStructure, Quiz, QuizResult, EnrollmentProgress } from "$lib/types/course";
   import ModuleQuizModal from "./quiz/ModuleQuizModal.svelte";
   import { quizStore } from "$lib/stores/quiz";
+  import { get } from "svelte/store";
 
   // Initialize states with null to indicate not loaded yet
   let courseDetails: FinalCourseStructure | null = null;
@@ -113,72 +114,61 @@
     saveState();
   }
 
-  onMount(async () => {
+  // Subscribe to auth state changes
+  user.subscribe(async (userData) => {
+    console.log('Auth state changed in course page:', { userData });
+    if (!loading) {
+      // Only reload if we're not in initial loading
+      await loadCourseData(userData);
+    }
+  });
+
+  async function loadCourseData(userData: any) {
+    loading = true;
+    console.log('Loading course data with user:', userData);
     try {
-      // Reset enrollment progress store before loading new course data
-      enrollmentProgressStore.set(null);
+      if (userData) {
+        // User is authenticated, get full course data
+        const courseData = await getUserCourse(userData.uid, $page.params.id);
+        console.log('Got course data:', courseData);
+        courseDetails = courseData;
+        isEnrolled = courseData.isEnrolled || false;
+        isCreator = courseData.isCreator || false;
 
-      if ($user) {
-        // Get enrollment status first
-        const enrollmentStatus = await getEnrollmentStatus($user.uid, $page.params.id);
-        
-        // Set enrollment status immediately
-        isEnrolled = enrollmentStatus.isEnrolled;
-        
-        // Then get course data
-        const courseData = await getUserCourse($user.uid, $page.params.id);
-        console.log("courseData", courseData);
-        if (!courseData) {
-          throw new Error('Course not found');
+        if (courseData.createdBy) {
+          creatorProfile = await getUserProfile(courseData.createdBy);
+          console.log('Got creator profile:', creatorProfile);
         }
 
-        courseDetails = courseData as FinalCourseStructure;
-        isCreator = courseData.isCreator;
-        
-        showProgress = enrollmentStatus.isEnrolled || courseData.isCreator;
-
-        // If enrolled, get progress immediately
+        // Load enrollment progress if enrolled
         if (isEnrolled) {
-          const progress = await getEnrollmentProgress($user.uid, $page.params.id);
-          enrollmentProgress = progress as EnrollmentProgress;
-          enrollmentProgressStore.set(progress as EnrollmentProgress);
+          const progress = await getEnrollmentProgress(userData.uid, $page.params.id);
+          console.log('Got enrollment progress:', progress);
+          enrollmentProgressStore.set(progress);
         }
-
-        // Save initial server state
-        saveState();
-
-        // Get current server states
-        const [bookmarkStatus, likeStatus] = await Promise.all([
-          checkBookmarkStatus($user.uid, $page.params.id),
-          hasLikedCourse($user.uid, $page.params.id)
-        ]);
-
-        isBookmarked = bookmarkStatus;
-        hasLiked = likeStatus;
-
-        // Fetch creator profile if needed
+      } else {
+        // No user, get shared course data
+        console.log('Getting shared course data');
+        courseDetails = await getSharedCourse($page.params.id);
         if (courseDetails?.createdBy) {
           creatorProfile = await getUserProfile(courseDetails.createdBy);
         }
-
-      } else {
-        // Handle non-logged-in user
-        courseDetails = await getSharedCourse($page.params.id);
-        isCreator = false;
         isEnrolled = false;
-        showProgress = false;
-        
-        if (!initialModuleSet) {
-          currentModuleStore.set(-1);
-          initialModuleSet = true;
-        }
+        isCreator = false;
+        enrollmentProgressStore.set(null);
       }
-    } catch (err) {
-      console.error("Error:", err);
-      error = err instanceof Error ? err.message : "An error occurred";
+    } catch (error) {
+      console.error('Error loading course data:', error);
     } finally {
       loading = false;
     }
+  }
+
+  onMount(async () => {
+    console.log('Course page mounted');
+    // Get initial user state
+    const userData = get(user);
+    await loadCourseData(userData);
   });
 
   // Helper function to check if all modules are completed

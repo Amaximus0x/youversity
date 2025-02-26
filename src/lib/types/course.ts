@@ -52,6 +52,9 @@ export interface FinalCourseStructure {
   Final_Course_Duration: number;
   creatorUsername?: string;
   creatorDisplayName?: string;
+  isCreator?: boolean;
+  isEnrolled?: boolean;
+  enrollmentData?: any;
 }
 
 export interface CourseRating {
@@ -77,6 +80,8 @@ export interface VideoItem {
 export interface ModuleProgress {
   completed: boolean;
   completedAt: Date;
+  quizAttempts?: number;
+  bestScore?: number;
 }
 
 export interface CourseProgress {
@@ -120,4 +125,16 @@ export interface EnrollmentProgress {
   moduleProgress: Record<number, ModuleProgress>;
   completedModules: number[];
   lastAccessedModule: number;
+}
+
+export interface UserProfile {
+  username: string;
+  displayName: string;
+  email: string;
+  photoURL: string;
+  about?: string;
+  firstName?: string;
+  lastName?: string;
+  createdAt: Date;
+  updatedAt: Date;
 }
