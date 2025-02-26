@@ -117,9 +117,23 @@
   // Subscribe to auth state changes
   user.subscribe(async (userData) => {
     console.log('Auth state changed in course page:', { userData });
-    if (!loading) {
-      // Only reload if we're not in initial loading
+    if (userData) {
+      // Always reload course data when user becomes available
       await loadCourseData(userData);
+    } else {
+      // No user, get shared course data
+      console.log('Getting shared course data');
+      try {
+        courseDetails = await getSharedCourse($page.params.id);
+        if (courseDetails?.createdBy) {
+          creatorProfile = await getUserProfile(courseDetails.createdBy);
+        }
+        isEnrolled = false;
+        isCreator = false;
+        enrollmentProgressStore.set(null);
+      } catch (error) {
+        console.error('Error loading shared course data:', error);
+      }
     }
   });
 
@@ -144,18 +158,36 @@
         if (isEnrolled) {
           const progress = await getEnrollmentProgress(userData.uid, $page.params.id);
           console.log('Got enrollment progress:', progress);
-          enrollmentProgressStore.set(progress);
+          if (progress) {
+            // Ensure progress has all required fields
+            const typedProgress: EnrollmentProgress = {
+              quizResults: progress.quizResults || { moduleQuizzes: {} },
+              moduleProgress: progress.moduleProgress || {},
+              completedModules: Array.isArray(progress.completedModules) 
+                ? [...progress.completedModules] 
+                : [],
+              lastAccessedModule: progress.lastAccessedModule || 0
+            };
+            // Set both local state and store
+            enrollmentProgress = typedProgress;
+            enrollmentProgressStore.set(typedProgress);
+            console.log('Updated enrollment progress:', typedProgress);
+          } else {
+            // Initialize empty progress if none exists
+            const emptyProgress: EnrollmentProgress = {
+              quizResults: { moduleQuizzes: {} },
+              moduleProgress: {},
+              completedModules: [],
+              lastAccessedModule: 0
+            };
+            enrollmentProgress = emptyProgress;
+            enrollmentProgressStore.set(emptyProgress);
+          }
+        } else {
+          // Reset progress if not enrolled
+          enrollmentProgress = null;
+          enrollmentProgressStore.set(null);
         }
-      } else {
-        // No user, get shared course data
-        console.log('Getting shared course data');
-        courseDetails = await getSharedCourse($page.params.id);
-        if (courseDetails?.createdBy) {
-          creatorProfile = await getUserProfile(courseDetails.createdBy);
-        }
-        isEnrolled = false;
-        isCreator = false;
-        enrollmentProgressStore.set(null);
       }
     } catch (error) {
       console.error('Error loading course data:', error);
@@ -168,7 +200,23 @@
     console.log('Course page mounted');
     // Get initial user state
     const userData = get(user);
-    await loadCourseData(userData);
+    if (userData) {
+      await loadCourseData(userData);
+    } else {
+      // No user, get shared course data
+      console.log('Getting shared course data');
+      try {
+        courseDetails = await getSharedCourse($page.params.id);
+        if (courseDetails?.createdBy) {
+          creatorProfile = await getUserProfile(courseDetails.createdBy);
+        }
+        isEnrolled = false;
+        isCreator = false;
+        enrollmentProgressStore.set(null);
+      } catch (error) {
+        console.error('Error loading shared course data:', error);
+      }
+    }
   });
 
   // Helper function to check if all modules are completed

@@ -80,6 +80,7 @@
                 };
                 localProgress = typedProgress;
                 forceUpdate++; // Force a reactive update
+                console.log('CourseModuleList - Updated local progress:', typedProgress);
             } else {
                 localProgress = null;
             }
