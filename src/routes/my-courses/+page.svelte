@@ -6,53 +6,96 @@
   import type { FinalCourseStructure } from '$lib/types/course';
   import UserCourseCard from '$lib/components/UserCourseCard.svelte';
   import { goto } from '$app/navigation';
+  import { get } from 'svelte/store';
 
   let allCourses: (FinalCourseStructure & { id: string; progress?: number })[] = [];
   let enrolledCourses: (FinalCourseStructure & { id: string; progress?: number })[] = [];
   let createdCourses: (FinalCourseStructure & { id: string; progress?: number })[] = [];
   let loading = true;
+  let error: string | null = null;
   let activeTab: 'all' | 'enrolled' | 'created' = 'all';
   let sortBy = '';
   let showShareModal = false;
   let selectedCourseId = '';
+  let initialLoad = true;
 
-  onMount(async () => {
-    if ($user) {
-      await loadCourses();
+  // Subscribe to auth state changes
+  user.subscribe(async (userData) => {
+    console.log('Auth state changed in my-courses page:', { userData });
+    if (userData) {
+      if (initialLoad || !loading) {
+        initialLoad = false;
+        await loadCourses();
+      }
+    } else {
+      // Clear courses when user logs out
+      allCourses = [];
+      enrolledCourses = [];
+      createdCourses = [];
+      if (!initialLoad) {
+        // Only redirect if this isn't the initial page load
+        goto('/login');
+      }
     }
   });
 
   async function loadCourses() {
+    const userData = get(user);
+    if (!userData) {
+      console.log('No user data, redirecting to login');
+      goto('/login');
+      return;
+    }
+
     try {
       loading = true;
-      const courses = await getUserCourses($user!.uid);
+      error = null;
+      console.log('Loading courses for user:', userData.uid);
+      
+      const courses = await getUserCourses(userData.uid);
+      console.log('Got courses:', courses);
+      
+      if (!courses || !Array.isArray(courses)) {
+        console.error('Invalid courses data:', courses);
+        throw new Error('Failed to load courses');
+      }
       
       // Load progress for each course
       const coursesWithProgress = await Promise.all(courses.map(async (course) => {
-        const enrollmentProgress = await getEnrollmentProgress($user!.uid, course.id);
-        let progress;
-        
-        if (enrollmentProgress?.completedModules) {
-          progress = Math.round(
-            (enrollmentProgress.completedModules.length / course.Final_Module_Title.length) * 100
-          );
+        try {
+          const enrollmentProgress = await getEnrollmentProgress(userData.uid, course.id);
+          let progress;
+          
+          if (enrollmentProgress?.completedModules) {
+            progress = Math.round(
+              (enrollmentProgress.completedModules.length / course.Final_Module_Title.length) * 100
+            );
+          }
+          
+          return {
+            ...course,
+            progress
+          };
+        } catch (error) {
+          console.error('Error loading progress for course:', course.id, error);
+          return {
+            ...course,
+            progress: 0
+          };
         }
-        
-        return {
-          ...course,
-          progress
-        };
       }));
 
       // Get created courses
       createdCourses = coursesWithProgress.filter(
-        course => course.isCreator || course.createdBy === $user!.uid
+        course => course.isCreator || course.createdBy === userData.uid
       );
+      console.log('Created courses:', createdCourses);
       
       // Get enrolled courses that are not created by the user
       enrolledCourses = coursesWithProgress.filter(
-        course => course.isEnrolled && !course.isCreator && course.createdBy !== $user!.uid
+        course => course.isEnrolled && !course.isCreator && course.createdBy !== userData.uid
       );
+      console.log('Enrolled courses:', enrolledCourses);
       
       // All courses should show both created and enrolled courses without duplicates
       // Use a Map to deduplicate by course ID
@@ -72,13 +115,27 @@
       
       // Convert Map back to array
       allCourses = Array.from(uniqueCourses.values());
+      console.log('All courses:', allCourses);
       
     } catch (error) {
       console.error('Error loading courses:', error);
+      error = error instanceof Error ? error.message : 'Failed to load courses';
     } finally {
       loading = false;
     }
   }
+
+  onMount(async () => {
+    console.log('My courses page mounted');
+    initialLoad = true;
+    // Get initial user state
+    const userData = get(user);
+    if (userData) {
+      await loadCourses();
+    } else {
+      console.log('No user data on mount, waiting for auth state');
+    }
+  });
 
   function handleShare(courseId: string) {
     selectedCourseId = courseId;
@@ -301,6 +358,8 @@
 {#if showShareModal}
   <ShareModal 
     show={showShareModal}
+    shareType="course"
+    id={selectedCourseId}
     courseId={selectedCourseId}
     onClose={() => showShareModal = false}
   />
