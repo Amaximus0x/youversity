@@ -26,6 +26,7 @@
                 text: `I just completed "${courseTitle}" with a score of ${score}%! 🎉`,
                 url: `${window.location.origin}/course/${courseId}`
             };
+            console.log('shareData', shareData);
 
             if (navigator.share && navigator.canShare(shareData)) {
                 // Use native sharing if available
