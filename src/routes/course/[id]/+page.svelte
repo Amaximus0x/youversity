@@ -115,6 +115,9 @@
 
   onMount(async () => {
     try {
+      // Reset enrollment progress store before loading new course data
+      enrollmentProgressStore.set(null);
+
       if ($user) {
         // Get enrollment status first
         const enrollmentStatus = await getEnrollmentStatus($user.uid, $page.params.id);
@@ -285,7 +288,7 @@
   // Update onDestroy
   onDestroy(() => {
     // Reset enrollment progress store when leaving the page
-    // enrollmentProgressStore.set(null);
+    enrollmentProgressStore.set(null);
   });
 
   // Update the module card styling
@@ -305,6 +308,7 @@
       // Update local state
       isEnrolled = false;
       enrollmentProgress = null;
+      enrollmentProgressStore.set(null);
       showProgress = false;
 
       // Save updated state

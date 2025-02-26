@@ -482,17 +482,12 @@
             <div class="lg:hidden mt-6">
 
               <!-- Course Enrollment Progress for mobile -->
-               {#if isEnrolled && $currentModuleStore !== -1}
+               {#if !isEnrolled && $currentModuleStore !== -1}
               <CourseModuleList
                 {courseDetails}
                 {isCreator}
                 {isEnrolled}
                 showProgress={true}
-                completedModules={isCreator
-                  ? moduleProgress
-                      .map((m, i) => (m?.completed ? i : -1))
-                      .filter((i) => i !== -1)
-                  : enrollmentProgress?.completedModules || []}
                 bind:currentModule
               />
               {/if}

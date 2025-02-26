@@ -10,6 +10,7 @@
     export let isEnrolled: boolean = false;
     export let showProgress: boolean = false;
     export let currentModule: number | undefined = undefined;
+    
 
     let showEnrollModal = false;
     $: completedModules = $enrollmentProgressStore?.completedModules || [];
