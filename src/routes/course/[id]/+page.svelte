@@ -355,6 +355,9 @@
 
     const moduleId = $currentModuleStore;
     try {
+        const isPassed = score >= 80;
+        console.log('Quiz completed:', { moduleId, score, isPassed });
+
         // Update enrollment progress with quiz result
         const updatedProgress = await updateEnrollmentQuizResult(
             $user.uid,
@@ -365,20 +368,49 @@
                 score,
                 timeSpent,
                 completedAt: new Date(),
-                completed: score >= 70,
-                passed: score >= 80
+                completed: isPassed,
+                passed: isPassed
             }
         );
 
+        console.log('Updated progress from server:', updatedProgress);
+
         // Update the store with new progress
         if (updatedProgress) {
-            enrollmentProgressStore.set(updatedProgress);
-        }
+            // Convert the DocumentData to EnrollmentProgress type and ensure completedModules is up to date
+            const typedProgress: EnrollmentProgress = {
+                quizResults: updatedProgress.quizResults || { moduleQuizzes: {} },
+                moduleProgress: updatedProgress.moduleProgress || [],
+                completedModules: Array.isArray(updatedProgress.completedModules) 
+                    ? [...updatedProgress.completedModules] 
+                    : [],
+                lastAccessedModule: updatedProgress.lastAccessedModule || 0
+            };
+            
+            // Force a reactive update by creating a new array
+            if (isPassed && !typedProgress.completedModules.includes(moduleId)) {
+                typedProgress.completedModules = [...typedProgress.completedModules, moduleId].sort((a, b) => a - b);
+                console.log('Updated completedModules:', typedProgress.completedModules);
+            }
+            
+            // Update both the store and local state
+            enrollmentProgressStore.set(typedProgress);
+            enrollmentProgress = typedProgress;
+            
+            // Update local module progress state
+            moduleProgress = moduleProgress.map((module, index) => 
+                index === moduleId ? { ...module, completed: isPassed } : module
+            );
 
-        // Update local module progress state
-        moduleProgress = moduleProgress.map((module, index) => 
-            index === moduleId ? { ...module, completed: score >= 70 } : module
-        );
+            // Force a UI update by triggering store update
+            enrollmentProgressStore.update(current => ({...current}));
+            
+            console.log('Final enrollment progress state:', {
+                storeValue: $enrollmentProgressStore,
+                localValue: enrollmentProgress,
+                completedModules: typedProgress.completedModules
+            });
+        }
 
     } catch (error) {
         console.error('Error updating quiz result:', error);

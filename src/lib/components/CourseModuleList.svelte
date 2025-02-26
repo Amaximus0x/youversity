@@ -2,8 +2,9 @@
     import { currentModuleStore, enrollmentProgressStore } from "$lib/stores/course";
     import { goto } from "$app/navigation";
     import { page } from "$app/stores";
-    import type { FinalCourseStructure } from "$lib/types/course";
+    import type { FinalCourseStructure, EnrollmentProgress } from "$lib/types/course";
     import EnrollModal from "./EnrollModal.svelte";
+    import { onMount, afterUpdate } from 'svelte';
 
     export let courseDetails: FinalCourseStructure;
     export let isCreator: boolean = false;
@@ -13,11 +14,25 @@
     
 
     let showEnrollModal = false;
+    let lastCompletedModules: number[] = [];
+    
+    // Make completedModules more reactive by directly using the store
     $: completedModules = $enrollmentProgressStore?.completedModules || [];
+    
+    // Debug logging for state changes
+    $: if (completedModules) {
+        console.log('CourseModuleList - completedModules updated:', completedModules);
+        if (JSON.stringify(completedModules) !== JSON.stringify(lastCompletedModules)) {
+            lastCompletedModules = [...completedModules];
+            console.log('Completed modules changed, forcing update');
+        }
+    }
 
     // Helper function to check if a module is completed
     function isModuleCompleted(index: number): boolean {
-        return completedModules.includes(index);
+        const isCompleted = completedModules.includes(index);
+        console.log(`Checking completion for module ${index}:`, isCompleted, 'Current completedModules:', completedModules);
+        return isCompleted;
     }
 
     // Update the module card styling
@@ -34,9 +49,30 @@
         goto(`/course/${$page.params.id}`);
     }
 
+    // Calculate progress percentage based on completed modules
+    $: progressPercentage = courseDetails?.Final_Module_Title?.length > 0 
+        ? Math.round((completedModules.length / courseDetails.Final_Module_Title.length) * 100)
+        : 0;
+
     $: progress = $enrollmentProgressStore?.moduleProgress || [];
 
-  
+    // Subscribe to store changes and force component update
+    onMount(() => {
+        const unsubscribe = enrollmentProgressStore.subscribe(progress => {
+            console.log('CourseModuleList - Progress store updated:', progress);
+            // Force component update
+            completedModules = progress?.completedModules || [];
+        });
+
+        return () => {
+            unsubscribe();
+        };
+    });
+
+    // After each update, check if we need to force a re-render
+    afterUpdate(() => {
+        console.log('CourseModuleList - After update, completedModules:', completedModules);
+    });
 </script>
 
 <div class="flex flex-col gap-4">
@@ -57,16 +93,13 @@
                 >
                     <div
                         class="h-full bg-brand-turquoise rounded-[200000px] transition-all duration-300"
-                        style="width: {((completedModules.length ||
-                                  0) /
-                                  10) *
-                              100}%"
+                        style="width: {progressPercentage}%"
                     />
                 </div>
                 <span
                     class="text-body text-light-text-primary dark:text-dark-text-primary"
                 >
-                    {Math.round(((completedModules.length || 0) / 10) * 100)}%
+                    {progressPercentage}%
                 </span>
             </div>
         </div>
@@ -86,16 +119,13 @@
                     >
                         <div
                             class="h-full bg-brand-turquoise rounded-[200000px] transition-all duration-300"
-                            style="width: {((completedModules.length ||
-                                      0) /
-                                      10) *
-                                  100}%"
+                            style="width: {progressPercentage}%"
                         />
                     </div>
                     <span
                         class="text-body text-light-text-primary dark:text-dark-text-primary"
                     >
-                        {Math.round(((completedModules.length || 0) / 10) * 100)}%
+                        {progressPercentage}%
                     </span>
                 </div>
             </div>
@@ -147,42 +177,29 @@
                             )}"
                         >
                             <button
-                                class="w-full flex items-center  gap-4"
+                                class="w-full flex items-center gap-4"
                                 on:click={() => handleModuleClick(index)}
                             >
                                 <!-- Module Info -->
                                 <div class="flex-1 min-w-0 text-left">
-                                    
-                                        <p
-                                            class="text-semibody-medium text-Black mb-2 inline-block"
-                                        >
-                                            <span
-                                                class="text-semibody-medium text-Black2"
-                                            >
-                                                {(index + 1)
-                                                    .toString()
-                                                    .padStart(2, "0")}:
-                                            </span>
-                                            {title}
-                                        </p>
-                                        <div class="flex items-start justify-between gap-2"> 
-                                    <p
-                                        class="text-mini-body text-light-text-tertiary"
-                                    >
-                                        {courseDetails
-                                            ?.Final_Module_Video_Duration?.[
-                                            index
-                                        ] || "0"} min
+                                    <p class="text-semibody-medium text-Black mb-2 inline-block">
+                                        <span class="text-semibody-medium text-Black2">
+                                            {(index + 1).toString().padStart(2, "0")}:
+                                        </span>
+                                        {title}
                                     </p>
+                                    <div class="flex items-start justify-between gap-2"> 
+                                        <p class="text-mini-body text-light-text-tertiary">
+                                            {courseDetails?.Final_Module_Video_Duration?.[index] || "0"} min
+                                        </p>
 
-                                    <!-- {#if getModuleStatus(index)} -->
-                                    {#if isModuleCompleted(index)}
+                                        {#if isModuleCompleted(index)}
                                             <img 
                                                 src="/images/checkmark-circle.svg" 
                                                 alt="Completed" 
                                                 class="w-3 h-3 flex-shrink-0"
                                             />
-                                            {/if} 
+                                        {/if} 
                                     </div>
                                 </div>
 
@@ -192,8 +209,7 @@
                                 >
                                     {#if courseDetails?.Final_Module_Thumbnails?.[index]}
                                         <img
-                                            src={courseDetails
-                                                .Final_Module_Thumbnails[index]}
+                                            src={courseDetails.Final_Module_Thumbnails[index]}
                                             alt="Video Thumbnail"
                                             class="absolute inset-0 w-full h-full object-cover"
                                         />

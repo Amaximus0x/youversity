@@ -118,4 +118,6 @@ export interface EnrollmentProgress {
     finalQuiz?: QuizResult;
   };
   moduleProgress: Record<number, ModuleProgress>;
+  completedModules: number[];
+  lastAccessedModule: number;
 }
