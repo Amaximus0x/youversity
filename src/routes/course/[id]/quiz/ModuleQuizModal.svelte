@@ -71,6 +71,7 @@
         );
 
         console.log("Final Score:", {
+            moduleIndex: moduleIndex,
             correct: correctAnswers,
             total: totalQuestions,
             percentage: percentageScore,
@@ -499,7 +500,12 @@
                                 <button
                                     class="w-full lg:w-[300px] px-4 py-2 bg-brand-red hover:bg-ButtonHover text-white rounded-2xl text-semi-body transition-colors"
                                     on:click={handleContinue}
-                                    >Continue to module {moduleIndex + 2}
+                                    >
+                                    {#if moduleIndex === 9}
+                                        Continue to course Conclusion
+                                    {:else}
+                                        Continue to module {moduleIndex + 2}
+                                    {/if}
                                 </button>
                                 <button
                                     class="w-full lg:w-[300px] px-4 py-2 bg-Green text-dark-text-primary dark:text-dark-text-primary rounded-2xl text-semi-body transition-colors"
@@ -527,7 +533,12 @@
                                 <button
                                     class="w-full lg:w-[300px] px-4 py-2 text-brand-turquoise rounded-2xl text-semi-body transition-colors"
                                     on:click={handleContinue}
-                                    >Continue to module {moduleIndex + 2}
+                                    >
+                                    {#if moduleIndex === 9}
+                                        Continue to course Conclusion
+                                    {:else}
+                                        Continue to module {moduleIndex + 2}
+                                    {/if}
                                 </button>
                             </div>
                         {/if}

@@ -180,7 +180,7 @@
 
     <div class="flex items-center gap-4">
         <!-- Bookmark Button -->
-        {#if !isCreator || $currentModuleStore !== -1 || $currentModuleStore !== courseDetails?.Final_Module_Title?.length}
+        <!-- {#if isEnrolled }    -->
             <button
                 class="w-full px-2 py-2 text-semibody-medium flex items-center justify-center gap-2 bg-Black/5 text-Green rounded-full hover:bg-Black/5 transition-colors"
                 on:click={handleBookmark}
@@ -193,10 +193,10 @@
                     class="w-6 h-6"
                 />
             </button>
-        {/if}
+        <!-- {/if} -->
 
         <!-- Share Button -->
-        {#if $currentModuleStore === -1 || $currentModuleStore === courseDetails?.Final_Module_Title?.length}
+        <!-- {#if $currentModuleStore === -1 || $currentModuleStore === courseDetails?.Final_Module_Title?.length} -->
             <button
                 class="flex items-center gap-2 bg-Black/5 px-2 py-2 rounded-full hover:opacity-80 transition-opacity"
                 on:click={handleShare}
@@ -230,7 +230,7 @@
                     />
                 </svg>
             </button>
-        {/if}
+        <!-- {/if} -->
     </div>
 </div>
 

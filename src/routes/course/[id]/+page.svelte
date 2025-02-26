@@ -183,14 +183,42 @@
 
   // Helper function to check if all modules are completed
   function hasCompletedAllModules(): boolean {
-    if (!courseDetails || !moduleProgress.length) return false;
+    if (!courseDetails || !enrollmentProgress) return false;
 
-    const totalModules = courseDetails.Final_Module_Title.length;
-    const completedModules = isCreator
-      ? moduleProgress.filter((m) => m?.completed).length
-      : enrollmentProgress?.completedModules?.length || 0;
+    // Get modules that have quiz data
+    const modulesWithQuiz = courseDetails.Final_Module_Quiz?.reduce((acc: number[], quiz, index) => {
+      if (quiz) acc.push(index);
+      return acc;
+    }, []) || [];
 
-    return completedModules === totalModules;
+    // Get completed modules
+    const completedModules = enrollmentProgress.completedModules || [];
+
+    // Check if all modules are completed
+    const allModulesCompleted = completedModules.length === courseDetails.Final_Module_Title.length;
+
+    // Get quiz results
+    const moduleQuizzes = enrollmentProgress.quizResults?.moduleQuizzes || {};
+
+    // Check if all quizzes that exist have been passed
+    const allQuizzesPassed = modulesWithQuiz.every(moduleIndex => {
+      const quizResult = moduleQuizzes[moduleIndex];
+      return quizResult?.passed;
+    });
+
+    // Log detailed information for debugging
+    console.log('Module completion check:', {
+      modulesWithQuiz,
+      completedModules,
+      moduleQuizzes,
+      allQuizzesPassed,
+      allModulesCompleted,
+      quizResults: enrollmentProgress.quizResults,
+    });
+
+    // Return true if all modules are completed and all available quizzes are passed
+    // return allModulesCompleted && allQuizzesPassed;
+    return allModulesCompleted;
   }
 
   // Enrollment handler
@@ -358,26 +386,54 @@
         const isPassed = score >= 80;
         console.log('Quiz completed:', { moduleId, score, isPassed });
 
+        // Get existing quiz data for this module
+        const existingQuizData = enrollmentProgress?.quizResults?.moduleQuizzes?.[moduleId] || {
+            attempts: [],
+            score: 0,
+            passed: false
+        };
+        
+        // Create new attempt
+        const newAttempt = {
+            score,
+            timeSpent,
+            completedAt: new Date(),
+            passed: isPassed
+        };
+        
+        // Ensure attempts is an array and add new attempt
+        const attempts = Array.isArray(existingQuizData.attempts) ? existingQuizData.attempts : [];
+        
+        // Get the best score from all attempts including the new one
+        const bestScore = Math.max(score, ...attempts.map(a => (a?.score || 0)));
+        
+        // Determine if the module was previously passed or is now passed
+        const wasPreviouslyPassed = existingQuizData?.passed || false;
+        const isNowPassed = wasPreviouslyPassed || isPassed;
+
+        // Create updated quiz result
+        const updatedQuizResult = {
+            attempts: [...attempts, newAttempt],
+            score: bestScore,
+            timeSpent,
+            completedAt: new Date(),
+            completed: true,
+            passed: isNowPassed
+        };
+
         // Update enrollment progress with quiz result
         const updatedProgress = await updateEnrollmentQuizResult(
             $user.uid,
             courseDetails.id!,
             moduleId,
-            {
-                attempts: 1,
-                score,
-                timeSpent,
-                completedAt: new Date(),
-                completed: isPassed,
-                passed: isPassed
-            }
+            updatedQuizResult
         );
 
         console.log('Updated progress from server:', updatedProgress);
 
         // Update the store with new progress
         if (updatedProgress) {
-            // Convert the DocumentData to EnrollmentProgress type and ensure completedModules is up to date
+            // Convert the DocumentData to EnrollmentProgress type
             const typedProgress: EnrollmentProgress = {
                 quizResults: updatedProgress.quizResults || { moduleQuizzes: {} },
                 moduleProgress: updatedProgress.moduleProgress || [],
@@ -387,8 +443,8 @@
                 lastAccessedModule: updatedProgress.lastAccessedModule || 0
             };
             
-            // Force a reactive update by creating a new array
-            if (isPassed && !typedProgress.completedModules.includes(moduleId)) {
+            // Only add to completedModules if not already there and module is passed
+            if (isNowPassed && !typedProgress.completedModules.includes(moduleId)) {
                 typedProgress.completedModules = [...typedProgress.completedModules, moduleId].sort((a, b) => a - b);
                 console.log('Updated completedModules:', typedProgress.completedModules);
             }
@@ -399,16 +455,17 @@
             
             // Update local module progress state
             moduleProgress = moduleProgress.map((module, index) => 
-                index === moduleId ? { ...module, completed: isPassed } : module
+                index === moduleId ? { ...module, completed: isNowPassed } : module
             );
 
-            // Force a UI update by triggering store update
+            // Force a UI update
             enrollmentProgressStore.update(current => ({...current}));
             
             console.log('Final enrollment progress state:', {
                 storeValue: $enrollmentProgressStore,
                 localValue: enrollmentProgress,
-                completedModules: typedProgress.completedModules
+                completedModules: typedProgress.completedModules,
+                quizResult: updatedQuizResult
             });
         }
 
@@ -608,28 +665,19 @@
                   <p class="text-body text-light-text-secondary">
                     {courseDetails?.Final_Course_Conclusion}
                   </p>
-                  {#if hasCompletedAllModules()}
-                    <div class="flex items-center gap-4 mt-4">
-                      <div class="flex items-center gap-2">
-                        <img
-                          src="/icons/check-circle.svg"
-                          alt="Completed"
-                          class="w-5 h-5"
-                        />
-                        <span class="text-semibody-medium text-Black">
-                          All {courseDetails.Final_Module_Title.length} modules completed
-                        </span>
-                      </div>
-                    </div>
-                  {/if}
+                 
                   <div class="mt-6">
-                  <button
-                    on:click={() => {
-                      goto(`/course/${$page.params.id}/quiz`);
-                    }}
-                    class="w-full px-4 py-2 flex items-center justify-center text-semibody-medium rounded-2xl transition-colors bg-Green hover:bg-GreenHover text-white"
-                  >
-                    Take Final Quiz
+                    <button
+                      on:click={() => {
+                        goto(`/course/${$page.params.id}/quiz`);
+                      }}
+                      disabled={!hasCompletedAllModules()}
+                      class="w-full px-4 py-2 flex items-center justify-center text-semibody-medium rounded-2xl transition-colors {hasCompletedAllModules() 
+                        ? 'bg-Green hover:bg-GreenHover text-white' 
+                        : 'bg-Black/5 text-light-text-tertiary dark:text-dark-text-tertiary'}"
+                    >
+                      Take Final Quiz
+                      
                     </button>
                   </div>
                 </div>
