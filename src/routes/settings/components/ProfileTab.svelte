@@ -30,7 +30,7 @@
     let about = "";
     let loading = false;
     let error: string | null = null;
-    let photoFile: FileList;
+    let photoFile: FileList | undefined;
     let previewURL = "";
     let photoURL = "";
 
@@ -42,6 +42,15 @@
     let showReauthDialog = false;
     let password = "";
     let reAuthError: string | null = null;
+
+    // Add these after the existing state variables
+    let initialFormState = {
+        firstName: "",
+        lastName: "",
+        about: ""
+    };
+
+    let hasChanges = false;
 
     // Handle photo file selection
     function handlePhotoSelect(event: Event) {
@@ -98,6 +107,13 @@
                     photoURL = profile.photoURL || photoURL;
                     previewURL = profile.photoURL || previewURL;
                     about = profile.about || "";
+
+                    // Store initial form state
+                    initialFormState = {
+                        firstName,
+                        lastName,
+                        about
+                    };
 
                     console.log("Profile data set:", {
                         firstName,
@@ -213,7 +229,7 @@
 
     // Handle form save
     async function handleSaveChanges() {
-        if (!$user) return;
+        if (!$user || !hasChanges) return;
 
         loading = true;
         error = null;
@@ -282,8 +298,8 @@
             await updateUserProfile(currentUser.uid, updateData);
             console.log("After Firestore update");
 
-            // Clear the file input
-            photoFile = null;
+            // Clear the file input using the new function
+            clearPhotoFile();
 
             // Force refresh the user store and wait for it
             const updatedUser = await user.refresh();
@@ -309,6 +325,15 @@
             notification.textContent = "Profile updated successfully!";
             document.body.appendChild(notification);
             setTimeout(() => notification.remove(), 3000);
+
+            // After successful save, update the initial form state
+            initialFormState = {
+                firstName,
+                lastName,
+                about
+            };
+            
+            hasChanges = false;
         } catch (err) {
             console.error("Profile update error:", err);
             error = "Failed to update profile. Please try again.";
@@ -324,34 +349,9 @@
         }
     });
 
-    // Update the reactive statement to handle all user data
-    $: if ($user) {
-        // Only update if values are empty or different
-        if (!firstName || !lastName) {
-            const [first, ...rest] = ($user.displayName || "").split(" ");
-            firstName = first || firstName;
-            lastName = rest.join(" ") || lastName;
-        }
-        if (!username) {
-            username = $user.username || "";
-        }
-        if (!email) {
-            email = $user.email || "";
-        }
-        if (!about && $user.about) {
-            about = $user.about;
-        }
-        if (!photoURL || photoURL !== $user.photoURL) {
-            photoURL = $user.photoURL || "";
-            previewURL = $user.photoURL || "";
-        }
-        console.log("User store updated, refreshing UI with:", $user);
-    }
-
-    // Add this near the top of your script section
+    // Keep only the photo URL update reactive statement
     $: {
         if ($user) {
-            console.log("User store updated, refreshing UI with:", $user);
             const newPhotoURL = $user.photoURL || "";
             if (newPhotoURL !== photoURL) {
                 console.log("Updating photo URLs:", {
@@ -362,6 +362,20 @@
                 previewURL = newPhotoURL;
             }
         }
+    }
+
+    // Also fix the photoFile null assignment issue
+    function clearPhotoFile() {
+        photoFile = undefined;
+    }
+
+    // Add this after form data initialization in onMount
+    $: {
+        // Check if any field has changed from its initial state
+        hasChanges = 
+            firstName !== initialFormState.firstName ||
+            lastName !== initialFormState.lastName ||
+            about !== initialFormState.about;
     }
 </script>
 
@@ -514,9 +528,9 @@
         <!-- Save Changes Button -->
         <div class="mt-6 md:mt-5 md:flex md:justify-end">
             <button
-                class="w-fit px-6 py-3 bg-brand-navy hover:bg-GreenHover text-white rounded-2xl text-semibody-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                class="w-fit px-6 py-3 text-semibody-medium rounded-2xl transition-colors {hasChanges ? 'bg-brand-navy hover:bg-GreenHover text-white' : 'bg-Black/5 text-light-text-tertiary dark:text-dark-text-tertiary'}"
                 on:click={handleSaveChanges}
-                disabled={loading}
+                disabled={!hasChanges || loading}
             >
                 Save changes
                 <!-- {loading ? "Saving..." : "Save changes"} -->
