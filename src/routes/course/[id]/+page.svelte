@@ -365,21 +365,15 @@
                 score,
                 timeSpent,
                 completedAt: new Date(),
-                completed: score >= 70, // Mark as completed if score is 70% or higher
-                passed: score >= 70
+                completed: score >= 70,
+                passed: score >= 80
             }
         );
 
-        // Update module progress to mark it as completed
-        if (score >= 70) {
-            await updateModuleProgress($user.uid, courseDetails.id!, moduleId, {
-                completed: true,
-                completedAt: new Date()
-            });
-        }
-
         // Update the store with new progress
-        enrollmentProgressStore.set(updatedProgress as EnrollmentProgress);
+        if (updatedProgress) {
+            enrollmentProgressStore.set(updatedProgress);
+        }
 
         // Update local module progress state
         moduleProgress = moduleProgress.map((module, index) => 

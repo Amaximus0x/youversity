@@ -853,11 +853,24 @@ export async function updateEnrollmentQuizResult(
     const enrollmentRef = doc(db, 'enrollments', enrollmentId);
     const enrollmentDoc = await getDoc(enrollmentRef);
 
+    // Initialize default enrollment data if it doesn't exist
     if (!enrollmentDoc.exists()) {
-      throw new Error('Enrollment not found');
+      const defaultEnrollmentData = {
+        userId,
+        courseId,
+        enrolledAt: serverTimestamp(),
+        lastAccessedAt: serverTimestamp(),
+        completedModules: [],
+        moduleProgress: [],
+        quizResults: {
+          moduleQuizzes: {}
+        }
+      };
+      await setDoc(enrollmentRef, defaultEnrollmentData);
     }
 
-    const enrollmentData = enrollmentDoc.data();
+    // Get the latest enrollment data
+    const enrollmentData = (await getDoc(enrollmentRef)).data() || {};
     const updatedQuizResults = {
       ...enrollmentData.quizResults || {},
     };
@@ -874,7 +887,6 @@ export async function updateEnrollmentQuizResult(
           isCompleted: true,
           lastAccessedAt: new Date()
         });
-        return;
       }
     } else {
       // Handle module quiz results
@@ -882,13 +894,24 @@ export async function updateEnrollmentQuizResult(
         updatedQuizResults.moduleQuizzes = {};
       }
       updatedQuizResults.moduleQuizzes[moduleIndex] = quizResult;
+
+      // Update completed modules if quiz is passed
+      let completedModules = enrollmentData.completedModules || [];
+      if (quizResult.passed && !completedModules.includes(moduleIndex)) {
+        completedModules = [...completedModules, moduleIndex];
+      }
+
+      // Update the enrollment document with quiz results and completed modules
+      await updateDoc(enrollmentRef, {
+        quizResults: updatedQuizResults,
+        completedModules,
+        lastAccessedAt: new Date()
+      });
     }
 
-    // Update the enrollment document
-    await updateDoc(enrollmentRef, {
-      quizResults: updatedQuizResults,
-      lastAccessedAt: new Date()
-    });
+    // Return the updated enrollment data
+    const updatedDoc = await getDoc(enrollmentRef);
+    return updatedDoc.data();
 
   } catch (error) {
     console.error('Error updating quiz result:', error);
