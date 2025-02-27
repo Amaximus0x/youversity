@@ -13,6 +13,7 @@
     import { writable } from 'svelte/store';
     import { get } from 'svelte/store';
     import { browser } from '$app/environment';
+    import ChangePasswordModal from '$lib/components/modals/ChangePasswordModal.svelte';
 
     // First, update the interface at the top of the file
     interface UserProfile {
@@ -67,6 +68,22 @@
     let authInitialized = false;
     let initialAuthCheck = true;
 
+    // Add state for change password modal
+    let showChangePasswordModal = false;
+
+    // Add state to track if user is email/password user
+    let isEmailPasswordUser = false;
+
+    // Update user subscription to check auth provider
+    user.subscribe((userData) => {
+        if (userData) {
+            console.log('Auth provider data:', userData.providerData);
+            // Check if any provider is password-based authentication
+            isEmailPasswordUser = userData.providerData.some((provider: { providerId?: string }) => provider?.providerId === 'password');
+            console.log('Is email/password user:', isEmailPasswordUser);
+        }
+    });
+
     // Load user profile data
     async function loadUserProfile(userData: any) {
         if (!userData && authInitialized) {
@@ -81,6 +98,9 @@
         try {
             loading = true;
             console.log('Loading profile for user:', userData);
+            // Check auth provider when loading profile
+            isEmailPasswordUser = userData.providerData.some((provider: { providerId?: string }) => provider?.providerId === 'password');
+            console.log('Is email/password user (on load):', isEmailPasswordUser);
 
             // First set basic data from Firebase Auth user
             const [first, ...rest] = (userData.displayName || '').split(' ');
@@ -166,6 +186,10 @@
             console.log('No authenticated user, redirecting to login');
             goto('/login');
         }
+
+        if (userData) {
+            isEmailPasswordUser = userData.providerData[0]?.providerId === 'password';
+        }
     });
 
     // Initialize form data when component mounts
@@ -207,7 +231,7 @@
                     photoFile: input.files || undefined
                 }));
 
-                // Create preview URL
+                // Create preview URL immediately
                 const reader = new FileReader();
                 reader.onload = function(e: ProgressEvent<FileReader>) {
                     if (e.target?.result) {
@@ -238,31 +262,55 @@
     async function handleProfilePictureRemove() {
         if (!$user) return;
 
-        formStore.update(form => ({ 
-            ...form, 
-            photoURL: '', 
-            previewURL: '',
-            photoFile: undefined 
-        }));
-
-        const currentUser = auth.currentUser;
-        if (currentUser) {
-            try {
+        loading = true;
+        try {
+            const currentUser = auth.currentUser;
+            if (currentUser) {
                 await updateProfile(currentUser, {
                     photoURL: "",
                 });
+                
+                // Update the user store to trigger UI updates
+                user.update(u => {
+                    if (!u) return u;
+                    return {
+                        ...u,
+                        photoURL: ""
+                    };
+                });
+
+                // Update Firestore
+                await updateUserProfile(currentUser.uid, {
+                    photoURL: "",
+                    updatedAt: new Date()
+                });
+
+                // Update form store
+                formStore.update(form => ({ 
+                    ...form, 
+                    photoURL: '', 
+                    previewURL: '',
+                    photoFile: undefined 
+                }));
+
                 await currentUser.reload();
-            } catch (err) {
-                console.error("Error removing profile picture:", err);
-                error = "Failed to remove profile picture";
             }
+        } catch (err) {
+            console.error("Error removing profile picture:", err);
+            error = "Failed to remove profile picture";
+        } finally {
+            loading = false;
         }
     }
 
     // Handle password change
     function handleChangePassword() {
-        // Implement password change logic
-        console.log("Change password clicked");
+        showChangePasswordModal = true;
+    }
+
+    // Handle modal close
+    function handleModalClose() {
+        showChangePasswordModal = false;
     }
 
     // Handle account deletion
@@ -319,22 +367,41 @@
         error = null;
 
         try {
-            let photoURL = $formStore.photoURL;
+            let newPhotoURL = $formStore.photoURL;
+            let shouldUpdateAuth = false;
 
             // Handle photo upload if there's a new photo
             if (photoFile && photoFile.length > 0) {
-                photoURL = await uploadProfileImage(userData.uid, photoFile[0]);
+                try {
+                    newPhotoURL = await uploadProfileImage(userData.uid, photoFile[0]);
+                    shouldUpdateAuth = true;
+                } catch (err) {
+                    console.error('Error uploading profile image:', err);
+                    error = 'Failed to upload profile image';
+                    loading = false;
+                    return;
+                }
             }
 
             // Create the full display name from first and last name
             const displayName = `${$formStore.firstName} ${$formStore.lastName}`.trim();
 
-            // Update Firebase Auth profile first
+            // Update Firebase Auth profile first if display name or photo changed
             const currentUser = auth.currentUser;
-            if (currentUser) {
+            if (currentUser && (shouldUpdateAuth || displayName !== currentUser.displayName)) {
                 await updateProfile(currentUser, {
                     displayName,
-                    photoURL
+                    photoURL: newPhotoURL
+                });
+
+                // Update the user store to trigger UI updates
+                user.update(u => {
+                    if (!u) return u;
+                    return {
+                        ...u,
+                        displayName,
+                        photoURL: newPhotoURL
+                    };
                 });
             }
 
@@ -346,9 +413,17 @@
                 username: $formStore.username,
                 email: $formStore.email,
                 about: $formStore.about,
-                photoURL,
+                photoURL: newPhotoURL,
                 updatedAt: new Date()
             });
+
+            // Update form store with new photo URL
+            formStore.update(form => ({
+                ...form,
+                photoURL: newPhotoURL,
+                previewURL: newPhotoURL,
+                photoFile: undefined
+            }));
 
             // Clear photo file after successful upload
             clearPhotoFile();
@@ -365,6 +440,15 @@
         } catch (err) {
             console.error('Error updating profile:', err);
             error = err instanceof Error ? err.message : 'Failed to update profile';
+            
+            // Reset preview if there was an error
+            if (photoFile) {
+                formStore.update(form => ({
+                    ...form,
+                    previewURL: $formStore.photoURL,
+                    photoFile: undefined
+                }));
+            }
         } finally {
             loading = false;
         }
@@ -540,12 +624,14 @@
         </div>
 
         <!-- Change Password Button -->
-        <button
-            class="text-brand-turquoise text-semibody-medium text-left"
-            on:click={handleChangePassword}
-        >
-            Change password
+        {#if isEmailPasswordUser}
+            <button
+                class="text-brand-turquoise text-semibody-medium text-left hover:text-brand-navy transition-colors"
+                on:click={handleChangePassword}
+            >
+                Change password
             </button>
+        {/if}
         </div>
 
         <!-- Save Changes Button -->
@@ -623,4 +709,10 @@
             {/if}
         </div>
     </div>
+
+    <!-- Add the modal component -->
+    <ChangePasswordModal 
+        bind:show={showChangePasswordModal}
+        on:close={handleModalClose}
+    />
 </div>

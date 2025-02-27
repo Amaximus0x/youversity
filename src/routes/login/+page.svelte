@@ -229,6 +229,18 @@
               <div class="self-stretch text-black text-h2">Get Started Now</div>
             </div>
 
+            <!-- Add Error and Success Messages -->
+            {#if error}
+              <div class="self-stretch p-4 bg-red-100 text-red-700 rounded-lg text-semi-body">
+                {error}
+              </div>
+            {/if}
+            {#if successMessage}
+              <div class="self-stretch p-4 bg-green-100 text-green-700 rounded-lg text-semi-body">
+                {successMessage}
+              </div>
+            {/if}
+
             <div class="self-stretch flex-col justify-start items-start gap-8 flex">
               <form on:submit|preventDefault={handleEmailAuth} class="self-stretch flex-col justify-start items-center gap-8 flex">
                 <div class="self-stretch flex-col justify-start items-start gap-6 flex">
@@ -390,6 +402,18 @@
               <div class="self-stretch text-black text-h2">Login</div>
               <div class="self-stretch text-Grey text-body">Welcome back!</div>
             </div>
+
+            <!-- Add Error and Success Messages -->
+            {#if error}
+              <div class="self-stretch p-4 bg-red-100 text-red-700 rounded-lg text-semi-body">
+                {error}
+              </div>
+            {/if}
+            {#if successMessage}
+              <div class="self-stretch p-4 bg-green-100 text-green-700 rounded-lg text-semi-body">
+                {successMessage}
+              </div>
+            {/if}
 
             <div class="self-stretch flex-col justify-start items-start gap-8 flex">
               <form on:submit|preventDefault={handleEmailAuth} class="self-stretch flex-col justify-start items-center gap-8 flex">
