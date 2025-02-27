@@ -5,6 +5,7 @@
   import { auth } from '$lib/firebase';
   import { onMount, createEventDispatcher } from 'svelte';
   import { clickOutside } from '$lib/actions/clickOutside';
+  import { goto } from '$app/navigation';
 
   declare namespace svelteHTML {
     interface HTMLAttributes<T> {
@@ -17,6 +18,7 @@
   let showNotifications = false;
   let unreadCount = 0;
   let unsubscribeNotifications: (() => void) | null = null;
+  let isMobile = false;
 
   // Calculate unread count whenever notifications change
   $: if ($notifications) {
@@ -30,16 +32,32 @@
       unsubscribeNotifications = notifications.init(user.uid);
     }
 
+    // Check if mobile
+    isMobile = window.innerWidth < 1024;
+    const handleResize = () => {
+      isMobile = window.innerWidth < 1024;
+    };
+    window.addEventListener('resize', handleResize);
+
     return () => {
       if (unsubscribeNotifications) {
         unsubscribeNotifications();
       }
+      window.removeEventListener('resize', handleResize);
     };
   });
 
   function handleClickOutside() {
     showNotifications = false;
     dispatch('close');
+  }
+
+  function handleNotificationClick() {
+    if (isMobile) {
+      goto('/notifications');
+    } else {
+      showNotifications = !showNotifications;
+    }
   }
 </script>
 
@@ -50,7 +68,7 @@
 >
   <button
     class="relative flex items-center justify-center w-6 h-6 transition-colors hover:opacity-80"
-    on:click={() => showNotifications = !showNotifications}
+    on:click={handleNotificationClick}
     aria-label="Notifications"
   >
   
@@ -80,8 +98,10 @@
     {/if}
   </button>
 
-  <NotificationModal
-    bind:show={showNotifications}
-    on:close={() => showNotifications = false}
-  />
+  {#if !isMobile}
+    <NotificationModal
+      bind:show={showNotifications}
+      on:close={() => showNotifications = false}
+    />
+  {/if}
 </div> 
