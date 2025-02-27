@@ -80,7 +80,11 @@
                     class="text-2xl text-light-text-primary dark:text-dark-text-primary"
                     on:click={close}
                 >
-                    <img src="/icons/arrow-left.svg" alt="Back" class="w-6 h-6" />
+                <svg class="w-6 h-6 text-light-text-primary dark:text-dark-text-primary" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M4 12H20" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M8.99997 17C8.99997 17 4.00002 13.3176 4 12C3.99999 10.6824 9 7 9 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    
                 </button>
                 <h2 class="text-h4-medium font-semibold text-light-text-primary dark:text-dark-text-primary">
                     Change Password
