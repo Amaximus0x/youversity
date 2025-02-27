@@ -326,20 +326,42 @@
                 photoURL = await uploadProfileImage(userData.uid, photoFile[0]);
             }
 
-            // Update profile
+            // Create the full display name from first and last name
+            const displayName = `${$formStore.firstName} ${$formStore.lastName}`.trim();
+
+            // Update Firebase Auth profile first
+            const currentUser = auth.currentUser;
+            if (currentUser) {
+                await updateProfile(currentUser, {
+                    displayName,
+                    photoURL
+                });
+            }
+
+            // Update Firestore profile
             await updateUserProfile(userData.uid, {
+                displayName,
                 firstName: $formStore.firstName,
                 lastName: $formStore.lastName,
                 username: $formStore.username,
                 email: $formStore.email,
                 about: $formStore.about,
-                photoURL
+                photoURL,
+                updatedAt: new Date()
             });
 
             // Clear photo file after successful upload
             clearPhotoFile();
             
-            // Show success message or handle success case
+            // Update initial form state to reflect saved changes
+            initialFormState = {
+                firstName: $formStore.firstName,
+                lastName: $formStore.lastName,
+                about: $formStore.about
+            };
+
+            // Show success message
+            error = null;
         } catch (err) {
             console.error('Error updating profile:', err);
             error = err instanceof Error ? err.message : 'Failed to update profile';
@@ -449,7 +471,7 @@
                 </label>
                 <input
                     type="text"
-                    bind:value={firstName}
+                    bind:value={$formStore.firstName}
                     class="w-full px-4 py-3 bg-white dark:bg-dark-bg-primary border-2 border-light-border dark:border-dark-border rounded-2xl text-mini-body text-light-text-primary dark:text-dark-text-primary"
                     placeholder="First Name"
                 />
@@ -462,7 +484,7 @@
                 </label>
                 <input
                     type="text"
-                    bind:value={lastName}
+                    bind:value={$formStore.lastName}
                     class="w-full px-4 py-3 bg-white dark:bg-dark-bg-primary border-2 border-light-border dark:border-dark-border rounded-2xl text-mini-body text-light-text-primary dark:text-dark-text-primary"
                     placeholder="Last Name"
                 />
@@ -511,7 +533,7 @@
                 About
             </label>
             <textarea
-                bind:value={about}
+                bind:value={$formStore.about}
                 class="w-full px-4 py-3 bg-white dark:bg-dark-bg-primary border-2 border-light-border dark:border-dark-border rounded-2xl text-mini-body text-light-text-primary dark:text-dark-text-primary min-h-[120px] resize-none"
                 placeholder="Write something about yourself..."
             />
