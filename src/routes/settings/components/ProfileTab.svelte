@@ -10,6 +10,9 @@
     import { auth } from "$lib/firebase";
     import { onMount, onDestroy } from "svelte";
     import { goto } from "$app/navigation";
+    import { writable } from 'svelte/store';
+    import { get } from 'svelte/store';
+    import { browser } from '$app/environment';
 
     // First, update the interface at the top of the file
     interface UserProfile {
@@ -22,17 +25,25 @@
         updatedAt: Date;
     }
 
-    // Form data
-    let firstName = "";
-    let lastName = "";
-    let username = "";
-    let email = "";
-    let about = "";
-    let loading = false;
+    // Create a store for form values
+    const formStore = writable({
+        firstName: '',
+        lastName: '',
+        username: '',
+        email: '',
+        about: '',
+        photoURL: '',
+        previewURL: '',
+        photoFile: undefined as FileList | undefined
+    });
+
+    // Bind form values to store
+    $: ({ firstName, lastName, username, email, about, photoURL, previewURL, photoFile } = $formStore);
+
+    // Track if form has been initialized
+    let formInitialized = false;
+    let loading = true;
     let error: string | null = null;
-    let photoFile: FileList | undefined;
-    let previewURL = "";
-    let photoURL = "";
 
     // Add state for delete confirmation
     let showDeleteConfirm = false;
@@ -52,127 +63,199 @@
 
     let hasChanges = false;
 
-    // Handle photo file selection
-    function handlePhotoSelect(event: Event) {
-        const input = event.target as HTMLInputElement;
-        if (input.files && input.files[0]) {
-            const file = input.files[0];
-            photoFile = input.files;
+    // Track if auth is ready
+    let authInitialized = false;
+    let initialAuthCheck = true;
 
-            // Revoke old preview URL if it exists
-            if (previewURL && previewURL !== photoURL) {
-                URL.revokeObjectURL(previewURL);
+    // Load user profile data
+    async function loadUserProfile(userData: any) {
+        if (!userData && authInitialized) {
+            goto('/login');
+            return;
+        }
+
+        if (!userData) {
+            return; // Wait for auth to initialize
+        }
+
+        try {
+            loading = true;
+            console.log('Loading profile for user:', userData);
+
+            // First set basic data from Firebase Auth user
+            const [first, ...rest] = (userData.displayName || '').split(' ');
+            const initialData = {
+                firstName: first || '',
+                lastName: rest.join(' ') || '',
+                username: userData.username || '',
+                email: userData.email || '',
+                about: '',
+                photoURL: userData.photoURL || '',
+                previewURL: userData.photoURL || '',
+                photoFile: undefined as FileList | undefined
+            };
+
+            // Then fetch and set additional data from Firestore
+            const profile = await getUserProfile(userData.uid);
+            console.log('Fetched Firestore profile:', profile);
+
+            if (profile) {
+                // Update with Firestore data if available
+                const [profileFirst, ...profileRest] = (profile.displayName || '').split(' ');
+                const updatedData = {
+                    ...initialData,
+                    firstName: profileFirst || initialData.firstName,
+                    lastName: profileRest.join(' ') || initialData.lastName,
+                    username: profile.username || initialData.username,
+                    email: profile.email || initialData.email,
+                    about: profile.about || '',
+                    photoURL: profile.photoURL || initialData.photoURL,
+                    previewURL: profile.photoURL || initialData.photoURL
+                };
+
+                formStore.set(updatedData);
+                
+                // Store initial form state for change detection
+                initialFormState = {
+                    firstName: updatedData.firstName,
+                    lastName: updatedData.lastName,
+                    about: updatedData.about
+                };
+            } else {
+                // If no Firestore profile, use Firebase Auth data
+                formStore.set(initialData);
+                initialFormState = {
+                    firstName: initialData.firstName,
+                    lastName: initialData.lastName,
+                    about: initialData.about
+                };
             }
 
-            // Create new preview URL
-            previewURL = URL.createObjectURL(file);
-            console.log("Photo selected:", { file, previewURL });
+            formInitialized = true;
+            console.log('Profile data initialized:', { initialFormState, formStore: get(formStore) });
+
+        } catch (err) {
+            console.error('Error loading profile:', err);
+            error = err instanceof Error ? err.message : 'Failed to load profile';
+        } finally {
+            loading = false;
         }
     }
 
-    // Initialize form data
-    onMount(async () => {
-        if ($user?.uid) {
-            try {
-                loading = true;
-                console.log(
-                    "Starting profile initialization with user:",
-                    $user,
-                );
-
-                // Wait for the user store to be fully initialized
-                await new Promise((resolve) => setTimeout(resolve, 500));
-
-                // First set basic data from Firebase Auth user
-                const [first, ...rest] = ($user.displayName || "").split(" ");
-                firstName = first || "";
-                lastName = rest.join(" ") || "";
-                photoURL = $user.photoURL || "";
-                previewURL = $user.photoURL || "";
-                email = $user.email || "";
-                username = $user.username || "";
-
-                // Then fetch and set additional data from Firestore
-                const profile = await getUserProfile($user.uid);
-                console.log("Fetched Firestore profile:", profile);
-
-                if (profile) {
-                    // Update fields with Firestore data if available
-                    const [profileFirst, ...profileRest] = (
-                        profile.displayName || ""
-                    ).split(" ");
-                    firstName = profileFirst || firstName;
-                    lastName = profileRest.join(" ") || lastName;
-                    username = profile.username || username;
-                    photoURL = profile.photoURL || photoURL;
-                    previewURL = profile.photoURL || previewURL;
-                    about = profile.about || "";
-
-                    // Store initial form state
-                    initialFormState = {
-                        firstName,
-                        lastName,
-                        about
-                    };
-
-                    console.log("Profile data set:", {
-                        firstName,
-                        lastName,
-                        username,
-                        photoURL,
-                        previewURL,
-                        about,
-                    });
-                }
-            } catch (err) {
-                console.error("Error loading profile:", err);
-                error = "Failed to load profile data";
-            } finally {
-                loading = false;
+    // Subscribe to auth state changes
+    user.subscribe(async (userData) => {
+        console.log('Auth state changed:', userData);
+        
+        if (initialAuthCheck) {
+            initialAuthCheck = false;
+            // Don't redirect on the first auth check
+            if (userData) {
+                authInitialized = true;
+                await loadUserProfile(userData);
             }
+            return;
+        }
+        
+        // After initial check, mark auth as initialized and handle state changes
+        authInitialized = true;
+        
+        if (userData) {
+            await loadUserProfile(userData);
+        } else if (authInitialized && !initialAuthCheck) {
+            // Only redirect if auth is initialized and this isn't the first check
+            console.log('No authenticated user, redirecting to login');
+            goto('/login');
         }
     });
 
+    // Initialize form data when component mounts
+    onMount(() => {
+        console.log('ProfileTab mounted');
+        const userData = get(user);
+        if (userData) {
+            authInitialized = true;
+            loadUserProfile(userData);
+        }
+    });
+
+    // Track form changes
+    $: hasChanges = formInitialized && (
+        $formStore.firstName !== initialFormState.firstName ||
+        $formStore.lastName !== initialFormState.lastName ||
+        $formStore.about !== initialFormState.about ||
+        photoFile !== undefined
+    );
+
+    // Update form values
+    function updateFormValue(field: string, value: any) {
+        formStore.update(form => ({ ...form, [field]: value }));
+    }
+
+    // Clear photo file
+    function clearPhotoFile() {
+        formStore.update(form => ({ ...form, photoFile: undefined }));
+    }
+
+    // Handle photo file selection
+    function handlePhotoChange(event: Event) {
+        const input = event.target as HTMLInputElement;
+        if (input.files) {
+            const file = input.files[0];
+            if (file) {
+                formStore.update(form => ({ 
+                    ...form, 
+                    photoFile: input.files || undefined
+                }));
+
+                // Create preview URL
+                const reader = new FileReader();
+                reader.onload = function(e: ProgressEvent<FileReader>) {
+                    if (e.target?.result) {
+                        const result = e.target.result;
+                        if (typeof result === 'string') {
+                            formStore.update(form => ({
+                                ...form,
+                                previewURL: result
+                            }));
+                        }
+                    }
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+    }
+
     // Handle profile picture change
-    async function handleChangePicture() {
+    function handleProfilePictureChange() {
         const input = document.createElement("input");
         input.type = "file";
         input.accept = "image/*";
-        input.onchange = handlePhotoSelect;
+        input.onchange = handlePhotoChange;
         input.click();
     }
 
-    // Handle profile picture delete
-    async function handleDeletePicture() {
-        try {
-            if (!$user) return;
+    // Handle profile picture remove
+    async function handleProfilePictureRemove() {
+        if (!$user) return;
 
-            photoURL = "";
-            previewURL = "";
+        formStore.update(form => ({ 
+            ...form, 
+            photoURL: '', 
+            previewURL: '',
+            photoFile: undefined 
+        }));
 
-            const currentUser = auth.currentUser;
-            if (currentUser) {
-                // Update Firebase Auth profile
+        const currentUser = auth.currentUser;
+        if (currentUser) {
+            try {
                 await updateProfile(currentUser, {
                     photoURL: "",
                 });
-
-                // Update Firestore profile with all required fields
-                await updateUserProfile($user.uid, {
-                    photoURL: "",
-                    displayName: currentUser.displayName || "", // Keep existing displayName
-                    username: $user.username || "", // Keep existing username
-                    email: currentUser.email || "", // Keep existing email
-                    about: about || "", // Keep existing about text
-                    updatedAt: new Date(),
-                });
-
-                // Refresh the user store to update UI
-                await user.refresh();
+                await currentUser.reload();
+            } catch (err) {
+                console.error("Error removing profile picture:", err);
+                error = "Failed to remove profile picture";
             }
-        } catch (err) {
-            console.error("Error deleting profile picture:", err);
-            error = "Failed to delete profile picture. Please try again.";
         }
     }
 
@@ -229,114 +312,37 @@
 
     // Handle form save
     async function handleSaveChanges() {
-        if (!$user || !hasChanges) return;
+        const userData = get(user);
+        if (!userData) return;
 
         loading = true;
         error = null;
-        console.log("Starting save with:", { photoFile, photoURL, previewURL });
 
         try {
-            const currentUser = auth.currentUser;
-            if (!currentUser) {
-                throw new Error("No authenticated user found");
+            let photoURL = $formStore.photoURL;
+
+            // Handle photo upload if there's a new photo
+            if (photoFile && photoFile.length > 0) {
+                photoURL = await uploadProfileImage(userData.uid, photoFile[0]);
             }
 
-            let updatedPhotoURL = photoURL;
-
-            // Handle photo upload if a new photo was selected
-            if (photoFile?.[0]) {
-                try {
-                    updatedPhotoURL = await uploadProfileImage(
-                        currentUser.uid,
-                        photoFile[0],
-                    );
-                    console.log(
-                        "Photo uploaded successfully:",
-                        updatedPhotoURL,
-                    );
-
-                    // Update local state immediately after successful upload
-                    photoURL = updatedPhotoURL;
-                    previewURL = updatedPhotoURL;
-                } catch (uploadError) {
-                    console.error("Error uploading photo:", uploadError);
-                    error = "Failed to upload photo. Please try again.";
-                    return;
-                }
-            }
-
-            const displayName = `${firstName} ${lastName}`.trim();
-            console.log("Before profile updates:", {
-                updatedPhotoURL,
-                currentPhotoURL: currentUser.photoURL,
+            // Update profile
+            await updateUserProfile(userData.uid, {
+                firstName: $formStore.firstName,
+                lastName: $formStore.lastName,
+                username: $formStore.username,
+                email: $formStore.email,
+                about: $formStore.about,
+                photoURL
             });
 
-            // First update Firebase Auth user profile
-            await updateProfile(currentUser, {
-                displayName,
-                photoURL: updatedPhotoURL,
-            });
-
-            // Force reload the current user
-            await currentUser.reload();
-            console.log(
-                "After Auth profile update, new photoURL:",
-                currentUser.photoURL,
-            );
-
-            // Update Firestore profile
-            const updateData = {
-                displayName,
-                photoURL: updatedPhotoURL,
-                username: username || $user.username || "",
-                email: currentUser.email || "",
-                about: about || "",
-                updatedAt: new Date(),
-            };
-
-            console.log("Updating Firestore with:", updateData);
-            await updateUserProfile(currentUser.uid, updateData);
-            console.log("After Firestore update");
-
-            // Clear the file input using the new function
+            // Clear photo file after successful upload
             clearPhotoFile();
-
-            // Force refresh the user store and wait for it
-            const updatedUser = await user.refresh();
-            console.log("User store updated with:", updatedUser);
-
-            // Force update the UI by triggering a state change
-            setTimeout(() => {
-                photoURL = updatedPhotoURL;
-                previewURL = updatedPhotoURL;
-                // Force a re-render of the image
-                const img = document.querySelector(
-                    ".profile-image",
-                ) as HTMLImageElement;
-                if (img) {
-                    img.src = updatedPhotoURL;
-                }
-            }, 0);
-
-            // Show success notification
-            const notification = document.createElement("div");
-            notification.className =
-                "fixed bottom-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg z-50";
-            notification.textContent = "Profile updated successfully!";
-            document.body.appendChild(notification);
-            setTimeout(() => notification.remove(), 3000);
-
-            // After successful save, update the initial form state
-            initialFormState = {
-                firstName,
-                lastName,
-                about
-            };
             
-            hasChanges = false;
+            // Show success message or handle success case
         } catch (err) {
-            console.error("Profile update error:", err);
-            error = "Failed to update profile. Please try again.";
+            console.error('Error updating profile:', err);
+            error = err instanceof Error ? err.message : 'Failed to update profile';
         } finally {
             loading = false;
         }
@@ -364,18 +370,13 @@
         }
     }
 
-    // Also fix the photoFile null assignment issue
-    function clearPhotoFile() {
-        photoFile = undefined;
-    }
-
     // Add this after form data initialization in onMount
     $: {
         // Check if any field has changed from its initial state
         hasChanges = 
-            firstName !== initialFormState.firstName ||
-            lastName !== initialFormState.lastName ||
-            about !== initialFormState.about;
+            $formStore.firstName !== initialFormState.firstName ||
+            $formStore.lastName !== initialFormState.lastName ||
+            $formStore.about !== initialFormState.about;
     }
 </script>
 
@@ -419,14 +420,14 @@
             <div class="flex items-center justify-center gap-2 lg:gap-4">
                 <button
                     class="px-2 py-1 bg-brand-navy text-white rounded-lg text-semibody-medium"
-                    on:click={handleChangePicture}
+                    on:click={handleProfilePictureChange}
                     disabled={loading}
                 >
                     Change picture
                 </button>
                 <button
                     class="px-2 py-1 bg-Black/5 text-[#FF0000] rounded-lg text-semibody-medium"
-                    on:click={handleDeletePicture}
+                    on:click={handleProfilePictureRemove}
                     disabled={loading}
                 >
                     Delete Picture

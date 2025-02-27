@@ -3,6 +3,8 @@
   import ThemeTab from "./components/ThemeTab.svelte";
   import AppInfoTab from "./components/AppInfoTab.svelte";
   import ContactTab from "./components/ContactTab.svelte";
+  import { page } from '$app/stores';
+  import { goto } from '$app/navigation';
 
   // Define available tabs with both mobile and desktop labels
   const tabs = [
@@ -32,12 +34,14 @@
     }
   ];
 
-  // Active tab state
-  let activeTab = 'profile';
+  // Get active tab from URL query parameter, default to 'profile'
+  $: activeTab = $page.url.searchParams.get('tab') || 'profile';
 
-  // Handle tab change
+  // Handle tab change by updating URL
   function handleTabChange(tabId: string) {
-    activeTab = tabId;
+    const url = new URL(window.location.href);
+    url.searchParams.set('tab', tabId);
+    goto(url.toString(), { replaceState: true });
   }
 </script>
 
