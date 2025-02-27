@@ -270,7 +270,7 @@
       enrolling = true;
       await enrollInCourse($user.uid, $page.params.id);
       currentModuleStore.set(-1); // Start with introduction
-      goto(`/course/${$page.params.id}/learn`);
+      goto(`/course/${$page.params.id}`);
     } catch (error) {
       console.error("Error enrolling:", error);
     } finally {

@@ -3,6 +3,8 @@
     import { createEventDispatcher } from 'svelte';
     import { updatePassword, EmailAuthProvider, reauthenticateWithCredential } from 'firebase/auth';
     import { auth } from '$lib/firebase';
+    import { NotificationService } from '$lib/services/notificationService';
+    import { NotificationType } from '$lib/types/notification';
 
     const dispatch = createEventDispatcher();
 
@@ -46,19 +48,42 @@
                 return;
             }
 
-            // Re-authenticate user
-            const credential = EmailAuthProvider.credential(user.email, currentPassword);
-            await reauthenticateWithCredential(user, credential);
+            try {
+                // Re-authenticate user
+                const credential = EmailAuthProvider.credential(user.email, currentPassword);
+                await reauthenticateWithCredential(user, credential);
+            } catch (authError) {
+                console.error('Re-authentication error:', authError);
+                error = 'Current password is incorrect';
+                return;
+            }
 
             // Update password
             await updatePassword(user, newPassword);
+
+            try {
+                // Create notification
+                await NotificationService.createNotification({
+                    userId: user.uid,
+                    title: 'Password Updated',
+                    message: 'Your password has been successfully changed.',
+                    type: NotificationType.PASSWORD_CHANGE,
+                    createdAt: new Date(),
+                    isRead: false
+                });
+            } catch (notificationError) {
+                console.error('Error creating notification:', notificationError);
+                // Don't show this error to the user since the password was changed successfully
+            }
 
             // Close modal on success
             close();
         } catch (err) {
             console.error('Error changing password:', err);
             if (err instanceof Error) {
-                if (err.message.includes('auth/invalid-credential')) {
+                if (err.message.includes('auth/requires-recent-login')) {
+                    error = 'Please sign in again before changing your password';
+                } else if (err.message.includes('auth/invalid-credential')) {
                     error = 'Invalid current password';
                 } else {
                     error = 'Failed to change password. Please try again.';
@@ -84,7 +109,6 @@
                     <path d="M4 12H20" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                     <path d="M8.99997 17C8.99997 17 4.00002 13.3176 4 12C3.99999 10.6824 9 7 9 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                     </svg>
-                    
                 </button>
                 <h2 class="text-h4-medium font-semibold text-light-text-primary dark:text-dark-text-primary">
                     Change Password

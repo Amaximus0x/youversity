@@ -21,6 +21,10 @@
   import { loadingState } from "$lib/stores/loadingState";
   import { modalState } from "$lib/stores/modalState";
   import { browser } from "$app/environment";
+  import { auth } from '$lib/firebase';
+  import { notifications } from '$lib/stores/notificationStore';
+  import { onAuthStateChanged } from 'firebase/auth';
+  import NotificationButton from "$lib/components/NotificationButton.svelte";
 
   // State variables
   let isSearchPage = false;
@@ -104,6 +108,8 @@
     }
   }
 
+  let unsubscribeNotifications: (() => void) | null = null;
+
   // Load data on mount
   onMount(async () => {
     isMounted = true;
@@ -162,6 +168,21 @@
       window.removeEventListener("offline", updateOnlineStatus);
       document.removeEventListener("click", handleClickOutside);
     };
+  });
+
+  onMount(() => {
+    return onAuthStateChanged(auth, (user) => {
+      if (user) {
+        // Initialize notifications for authenticated user
+        unsubscribeNotifications = notifications.init(user.uid);
+      } else {
+        // Cleanup notification subscription
+        if (unsubscribeNotifications) {
+          unsubscribeNotifications();
+          unsubscribeNotifications = null;
+        }
+      }
+    });
   });
 
   // Reactive declarations
@@ -455,11 +476,7 @@
                 <div
                   class="p-2 rounded-[100px] border border-black/5 justify-start items-center gap-2.5 flex"
                 >
-                  <img
-                    src="/icons/notification-block-02.svg"
-                    alt="Notification"
-                    class="w-6 h-6"
-                  />
+                  <NotificationButton />
                 </div>
                 {#if $user}
                   <div
@@ -619,11 +636,7 @@
               <div
                 class="relative w-12 h-12 flex items-center justify-center border border-light-border dark:border-dark-border rounded-full"
               >
-                <img
-                  src="/icons/notification-block-02.svg"
-                  alt="Notification"
-                  class="w-6 h-6"
-                />
+                <NotificationButton />
               </div>
 
               {#if $user}
