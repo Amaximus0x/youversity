@@ -38,7 +38,7 @@
       
       // Add specific section anchors based on notification type
       if (notification.type === NotificationType.COURSE_LIKED) {
-        hash = '#likes';
+        hash = '';
       } else if (notification.type === NotificationType.COURSE_REVIEWED) {
         hash = '#reviews';
       }
