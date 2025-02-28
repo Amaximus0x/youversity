@@ -217,6 +217,24 @@
         console.error('Error loading shared course data:', error);
       }
     }
+
+    // Add scroll event listener
+    window.addEventListener("scroll", handleScroll);
+
+    // Handle hash navigation after data is loaded
+    if (window.location.hash) {
+      setTimeout(() => {
+        const hash = window.location.hash;
+        const element = document.querySelector(hash);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 400); // Increased timeout to ensure content is loaded
+    }
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
   });
 
   // Helper function to check if all modules are completed
@@ -342,14 +360,6 @@
       showFloatingButton = scrollPosition > contentStartPosition;
     }
   }
-
-  onMount(() => {
-    // Add scroll event listener
-    window.addEventListener("scroll", handleScroll);
-    return () => {
-      window.removeEventListener("scroll", handleScroll);
-    };
-  });
 
   // Update onDestroy
   onDestroy(() => {
@@ -907,14 +917,16 @@
               {/if}
 
               <!-- Reviews Section -->
-              {#if courseDetails.isPublic}
-                <div class="w-full mt-6">
-                  <CourseRatings
-                    courseId={$page.params.id}
-                    showReadAll={true}
-                  />
-                </div>
-              {/if}
+              <section id="reviews">
+                {#if courseDetails.isPublic}
+                  <div class="w-full">
+                    <CourseRatings
+                      courseId={$page.params.id}
+                      showReadAll={true}
+                    />
+                  </div>
+                {/if}
+              </section>
 
               <!-- Remove Course Button - Desktop -->
               {#if isEnrolled && $user}

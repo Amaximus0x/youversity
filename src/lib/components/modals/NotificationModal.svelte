@@ -4,6 +4,8 @@
   import { notifications } from '$lib/stores/notificationStore';
   import type { Notification } from '$lib/types/notification';
   import { formatDistanceToNow } from 'date-fns';
+  import { goto } from '$app/navigation';
+  import { NotificationType } from '$lib/types/notification';
 
   const dispatch = createEventDispatcher();
 
@@ -28,6 +30,22 @@
     selectedId = notification.id;
     if (!notification.isRead) {
       await notifications.markAsRead(notification.id);
+    }
+
+    // Handle navigation for course-related notifications
+    if (notification.courseId) {
+      let hash = '';
+      
+      // Add specific section anchors based on notification type
+      if (notification.type === NotificationType.COURSE_LIKED) {
+        hash = '#likes';
+      } else if (notification.type === NotificationType.COURSE_REVIEWED) {
+        hash = '#reviews';
+      }
+
+      // Navigate to the course page with the appropriate section hash
+      await goto(`/course/${notification.courseId}${hash}`);
+      close();
     }
   }
 

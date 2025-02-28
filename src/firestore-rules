@@ -19,6 +19,12 @@ service cloud.firestore {
         request.resource.data.keys().hasAll(['displayName', 'email', 'username', 'photoURL', 'updatedAt']) &&
         (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['createdAt']));
       allow delete: if request.auth != null && request.auth.uid == userId;
+
+      // Allow access to user's likes subcollection
+      match /likes/{courseId} {
+        allow read: if isAuthenticated();
+        allow write: if isAuthenticated() && request.auth.uid == userId;
+      }
     }
 
     // Usernames collection for username reservation
@@ -39,10 +45,14 @@ service cloud.firestore {
         && request.resource.data.keys().hasAll(['Final_Course_Title', 'createdBy'])
         && request.resource.data.createdBy == request.auth.uid;
       
-      // Allow updates by course creator OR likes/views updates
+      // Allow updates by course creator OR likes/views updates by any authenticated user
       allow update: if isAuthenticated() && (
         request.auth.uid == resource.data.createdBy ||
-        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likes', 'views'])
+        (
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likes', 'views']) &&
+          (request.resource.data.likes - resource.data.likes) <= 1 &&
+          (request.resource.data.likes - resource.data.likes) >= -1
+        )
       );
       
       // Allow deletion only by course creator
@@ -92,9 +102,12 @@ service cloud.firestore {
         resource.data.userId == request.auth.uid);
     }
 
-    // Add rules for user's likes subcollection
-    match /users/{userId}/likes/{courseId} {
-      allow read, write, delete: if isOwner(userId);
+    // Notifications collection
+    match /notifications/{notificationId} {
+      allow read: if isAuthenticated() && request.auth.uid == resource.data.userId;
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated() && request.auth.uid == resource.data.userId;
+      allow delete: if isAuthenticated() && request.auth.uid == resource.data.userId;
     }
 
     // Add this rule inside the match /databases/{database}/documents block
@@ -122,16 +135,6 @@ service cloud.firestore {
       
       // Allow list queries for user's searches only
       allow list: if request.auth != null;
-    }
-
-    // Notifications collection rules
-    match /notifications/{notificationId} {
-      allow read: if isOwner(resource.data.userId);
-      allow create: if isOwner(request.resource.data.userId);
-      allow update: if isOwner(resource.data.userId) 
-        && request.resource.data.userId == resource.data.userId 
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isRead']);
-      allow delete: if isOwner(resource.data.userId);
     }
   }
 }

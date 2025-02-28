@@ -4,6 +4,8 @@ import { getAuth, setPersistence, browserLocalPersistence, signInWithPopup, Goog
 import { getStorage } from 'firebase/storage';
 import type { CourseEnrollment, EnrollmentProgress, FinalCourseStructure, ModuleProgress, CourseRating, QuizResult } from './types/course';
 import { getUserProfile } from '$lib/services/profile';
+import { NotificationService } from '$lib/services/notificationService';
+import { NotificationType } from '$lib/types/notification';
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -651,12 +653,14 @@ export async function likeCourse(userId: string, courseId: string) {
       throw new Error('Course not found');
     }
 
+    const courseData = courseDoc.data();
+    
     // Check if user has already liked
     const userLikeRef = doc(db, `users/${userId}/likes/${courseId}`);
     const likeDoc = await getDoc(userLikeRef);
 
     // Get current likes count
-    const currentLikes = courseDoc.data().likes || 0;
+    const currentLikes = courseData.likes || 0;
 
     if (likeDoc.exists()) {
       // Remove like - first update course to avoid permission issues
@@ -674,6 +678,25 @@ export async function likeCourse(userId: string, courseId: string) {
       await updateDoc(courseRef, {
         likes: currentLikes + 1
       });
+
+      // Create notification for course creator if it's not the same user
+      if (userId !== courseData.createdBy) {
+        // Get liker's profile for the notification message
+        const likerProfile = await getUserProfile(userId);
+        const likerName = likerProfile?.displayName || 'Someone';
+
+        await NotificationService.createNotification({
+          userId: courseData.createdBy,
+          title: 'New Course Like',
+          message: `${likerName} liked your course "${courseData.Final_Course_Title}"`,
+          type: NotificationType.COURSE_LIKED,
+          isRead: false,
+          createdAt: new Date(),
+          courseId,
+          courseTitle: courseData.Final_Course_Title
+        });
+      }
+
       return true;
     }
   } catch (error) {
@@ -1059,7 +1082,9 @@ export async function submitCourseRating(
       throw new Error('Course not found');
     }
 
-    if (!courseDoc.data().isPublic) {
+    const courseData = courseDoc.data();
+
+    if (!courseData.isPublic) {
       throw new Error('Cannot review a private course');
     }
 
@@ -1089,6 +1114,20 @@ export async function submitCourseRating(
     } else {
       console.log('Creating new review');
       await setDoc(ratingRef, reviewData);
+
+      // Create notification for course creator if it's not the same user
+      if (userId !== courseData.createdBy) {
+        await NotificationService.createNotification({
+          userId: courseData.createdBy,
+          title: 'New Course Review',
+          message: `${userDisplayName} left a review on your course "${courseData.Final_Course_Title}"`,
+          type: NotificationType.COURSE_REVIEWED,
+          isRead: false,
+          createdAt: new Date(),
+          courseId,
+          courseTitle: courseData.Final_Course_Title
+        });
+      }
     }
 
     return reviewData;

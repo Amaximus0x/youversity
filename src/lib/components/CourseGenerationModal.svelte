@@ -41,6 +41,7 @@
       const courseId = $finalLoadingState.courseId;
 
       // Navigate first
+      // currentModuleStore.set(-1);
       await goto(`/course/${courseId}`);
 
       // Then clear states
