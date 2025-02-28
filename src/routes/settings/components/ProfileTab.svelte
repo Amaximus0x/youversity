@@ -14,6 +14,8 @@
     import { get } from 'svelte/store';
     import { browser } from '$app/environment';
     import ChangePasswordModal from '$lib/components/modals/ChangePasswordModal.svelte';
+    import { NotificationService } from "$lib/services/notificationService";
+    import { NotificationType } from "$lib/types/notification";
 
     // First, update the interface at the top of the file
     interface UserProfile {
@@ -369,12 +371,22 @@
         try {
             let newPhotoURL = $formStore.photoURL;
             let shouldUpdateAuth = false;
+            let changedFields = [];
+
+            // Check which fields have changed
+            if ($formStore.firstName !== initialFormState.firstName || $formStore.lastName !== initialFormState.lastName) {
+                changedFields.push('name');
+            }
+            if ($formStore.about !== initialFormState.about) {
+                changedFields.push('about');
+            }
 
             // Handle photo upload if there's a new photo
             if (photoFile && photoFile.length > 0) {
                 try {
                     newPhotoURL = await uploadProfileImage(userData.uid, photoFile[0]);
                     shouldUpdateAuth = true;
+                    changedFields.push('profile picture');
                 } catch (err) {
                     console.error('Error uploading profile image:', err);
                     error = 'Failed to upload profile image';
@@ -416,6 +428,40 @@
                 photoURL: newPhotoURL,
                 updatedAt: new Date()
             });
+
+            // Create notifications for each changed field
+            if (changedFields.length > 0) {
+                const notificationPromises = changedFields.map(field => {
+                    let title = '';
+                    let message = '';
+
+                    switch (field) {
+                        case 'name':
+                            title = 'Name Updated';
+                            message = `Your name has been updated to ${displayName}`;
+                            break;
+                        case 'about':
+                            title = 'About Section Updated';
+                            message = 'Your about section has been successfully updated';
+                            break;
+                        case 'profile picture':
+                            title = 'Profile Picture Updated';
+                            message = 'Your profile picture has been successfully updated';
+                            break;
+                    }
+
+                    return NotificationService.createNotification({
+                        userId: userData.uid,
+                        title,
+                        message,
+                        type: NotificationType.PROFILE_UPDATE,
+                        createdAt: new Date(),
+                        isRead: false
+                    });
+                });
+
+                await Promise.all(notificationPromises);
+            }
 
             // Update form store with new photo URL
             formStore.update(form => ({

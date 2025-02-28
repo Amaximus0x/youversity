@@ -68,7 +68,7 @@
     {
       icon: "/icons/settings-02.svg",
       label: "Settings",
-      href: "/settings",
+      href: "/settings?tab=profile",
       isActive: false,
     },
   ];
@@ -83,7 +83,7 @@
       href: "/my-courses",
     },
     { icon: "/icons/bookmark-03.svg", label: "Bookmarks", href: "/bookmarks" },
-    { icon: "/icons/settings-02.svg", label: "Settings", href: "/settings" },
+    { icon: "/icons/settings-02.svg", label: "Settings", href: "/settings?tab=profile" },
   ];
 
   // Add new state for profile modal
@@ -414,7 +414,7 @@
                 a task? Please contact us
               </p>
               <a
-                href="/help"
+                href="/settings?tab=contact"
                 class="mt-4 w-full py-2 px-4 text-mini-body text-light-text-primary dark:text-dark-text-primary border border-brand-red rounded-lg hover:bg-[#FFF2F3] dark:hover:bg-dark-bg-secondary transition-colors text-center"
               >
                 Go to help center
