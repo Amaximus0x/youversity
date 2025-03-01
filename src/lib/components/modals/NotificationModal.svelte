@@ -24,7 +24,10 @@
   }
 
   function formatDate(date: Date) {
-    return formatDistanceToNow(date, { addSuffix: true });
+    return formatDistanceToNow(date, { 
+      addSuffix: true,
+      includeSeconds: false
+    }).replace(/^about\s/i, '');
   }
 
   async function handleNotificationClick(notification: Notification) {
@@ -40,8 +43,6 @@
       
       // If already on home page, dispatch focus event
       if ($page.url.pathname === '/') {
-        // Dispatch both a custom event and component event
-        window.dispatchEvent(new CustomEvent('focusCourseObjective'));
         dispatch('focusCourseObjective');
       } else {
         // Navigate to home page and focus on course objective input

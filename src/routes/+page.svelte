@@ -61,14 +61,6 @@
     history.replaceState({}, '', url);
   }
 
-  // Listen for focusCourseObjective event
-  $: if (browser && courseObjectiveInput) {
-    window.addEventListener('focusCourseObjective', focusCourseObjective);
-    return () => {
-      window.removeEventListener('focusCourseObjective', focusCourseObjective);
-    };
-  }
-
   // Update filteredCourses when userCourses changes
   $: {
     if (userCourses) {
