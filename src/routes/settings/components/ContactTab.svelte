@@ -4,17 +4,36 @@
   let email = "";
   let message = "";
   let loading = false;
+  let formStatus: { success: boolean; message: string } | null = null;
 
   async function handleSubmit() {
     loading = true;
+    formStatus = null;
+    
     try {
-      console.log("Form submitted:", { firstName, lastName, email, message });
-      firstName = "";
-      lastName = "";
-      email = "";
-      message = "";
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ firstName, lastName, email, message }),
+      });
+      
+      const result = await response.json();
+      
+      if (result.success) {
+        formStatus = { success: true, message: 'Thank you for your message! We will get back to you soon.' };
+        // Reset form fields on success
+        firstName = "";
+        lastName = "";
+        email = "";
+        message = "";
+      } else {
+        formStatus = { success: false, message: result.message || 'Failed to send message. Please try again.' };
+      }
     } catch (error) {
       console.error("Error submitting form:", error);
+      formStatus = { success: false, message: 'An unexpected error occurred. Please try again later.' };
     } finally {
       loading = false;
     }
@@ -37,7 +56,7 @@
           learning difficulties.
         </div>
         <div class="text-light-text-tertiary dark:text-dark-text-tertiary text-semi-body">
-          info@youversity.io
+          team@youversity.io
         </div>
         <div class="text-light-text-tertiary dark:text-dark-text-tertiary text-semi-body">
           411-334-567
@@ -85,6 +104,13 @@
             You can reach us anytime
           </div>
         </div>
+
+        <!-- Form Status Message -->
+        {#if formStatus}
+          <div class="mb-6 p-4 rounded-2xl text-semi-body" class:bg-light-bg-tertiary={formStatus.success} class:bg-light-bg-secondary={!formStatus.success} class:text-brand-navy={formStatus.success} class:text-brand-red={!formStatus.success}>
+            {formStatus.message}
+          </div>
+        {/if}
 
         <!-- Form Content -->
         <form on:submit|preventDefault={handleSubmit} class="flex flex-col gap-6">
