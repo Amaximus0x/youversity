@@ -16,6 +16,7 @@
     import ChangePasswordModal from '$lib/components/modals/ChangePasswordModal.svelte';
     import { NotificationService } from "$lib/services/notificationService";
     import { NotificationType } from "$lib/types/notification";
+    import { createEventDispatcher } from 'svelte';
 
     // First, update the interface at the top of the file
     interface UserProfile {
@@ -75,6 +76,9 @@
 
     // Add state to track if user is email/password user
     let isEmailPasswordUser = false;
+
+    // Create event dispatcher
+    const dispatch = createEventDispatcher();
 
     // Update user subscription to check auth provider
     user.subscribe((userData) => {
@@ -387,7 +391,40 @@
         error = null;
     }
 
-    // Handle form save
+    // Function to update all profile images in the document
+    function updateAllProfileImages(newPhotoURL: string) {
+        if (!browser || !newPhotoURL) return;
+        
+        console.log("Updating profile images in the document to:", newPhotoURL);
+        
+        // Add a small delay to ensure the DOM has been updated
+        setTimeout(() => {
+            // Find only profile-related images
+            const profileImages = document.querySelectorAll('.profile-image, .header-profile-image');
+            let updatedCount = 0;
+            
+            profileImages.forEach((img: HTMLImageElement) => {
+                // Update the image source with the new URL and a timestamp
+                const timestamp = Date.now();
+                img.src = `${newPhotoURL}?t=${timestamp}`;
+                updatedCount++;
+            });
+            
+            console.log(`Updated ${updatedCount} profile images in the document`);
+            
+            // Dispatch a custom event to notify other components about the profile update
+            if (browser && updatedCount > 0) {
+                const event = new CustomEvent('profileUpdate', {
+                    detail: { photoURL: newPhotoURL, timestamp: Date.now() },
+                    bubbles: true
+                });
+                window.dispatchEvent(event);
+                console.log('Dispatched profileUpdate event');
+            }
+        }, 300);
+    }
+
+    // Update handleSaveChanges to call the new function
     async function handleSaveChanges() {
         const userData = get(user);
         if (!userData) return;
@@ -436,7 +473,26 @@
                     photoURL: newPhotoURL
                 });
 
-                // Update the user store to trigger UI updates
+                // Force reload the user to ensure we have the latest data
+                await currentUser.reload();
+                
+                // Get the updated user data after reload
+                const updatedUser = auth.currentUser;
+                if (updatedUser) {
+                    console.log("User reloaded with new photo URL:", updatedUser.photoURL);
+                    
+                    // IMPORTANT: Update the user store with the latest data from Firebase Auth
+                    // This ensures all components using the user store (like the header) get updated
+                    user.set({
+                        ...updatedUser,
+                        photoURL: newPhotoURL // Explicitly set photoURL to ensure it's updated
+                    });
+                    
+                    console.log("User store updated with latest data from Firebase Auth");
+                }
+            } else {
+                // Even if we didn't update Firebase Auth, still update the user store
+                // to ensure all components get the latest data
                 user.update(u => {
                     if (!u) return u;
                     return {
@@ -445,15 +501,7 @@
                         photoURL: newPhotoURL
                     };
                 });
-                
-                // Force reload the user to ensure we have the latest data
-                await currentUser.reload();
-                
-                // Get the updated user data after reload
-                const updatedUser = auth.currentUser;
-                if (updatedUser) {
-                    console.log("User reloaded with new photo URL:", updatedUser.photoURL);
-                }
+                console.log("User store updated with new photo URL");
             }
 
             // Update Firestore profile
@@ -531,6 +579,9 @@
             }
             
             console.log("Profile updated successfully. New photo URL:", newPhotoURL);
+            
+            // Update all profile images in the document
+            updateAllProfileImages(newPhotoURL);
             
             // Trigger a manual update to the UI by forcing a reactive update
             formStore.update(form => ({ ...form }));
