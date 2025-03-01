@@ -209,7 +209,7 @@
         $formStore.firstName !== initialFormState.firstName ||
         $formStore.lastName !== initialFormState.lastName ||
         $formStore.about !== initialFormState.about ||
-        photoFile !== undefined
+        $formStore.photoFile !== undefined
     );
 
     // Update form values
@@ -243,6 +243,7 @@
                                 ...form,
                                 previewURL: result
                             }));
+                            console.log("Profile picture updated, photoFile is now set", $formStore.photoFile !== undefined);
                         }
                     }
                 };
@@ -253,6 +254,7 @@
 
     // Handle profile picture change
     function handleProfilePictureChange() {
+        console.log("Change picture button clicked");
         const input = document.createElement("input");
         input.type = "file";
         input.accept = "image/*";
@@ -525,10 +527,12 @@
     // Add this after form data initialization in onMount
     $: {
         // Check if any field has changed from its initial state
-        hasChanges = 
+        hasChanges = formInitialized && (
             $formStore.firstName !== initialFormState.firstName ||
             $formStore.lastName !== initialFormState.lastName ||
-            $formStore.about !== initialFormState.about;
+            $formStore.about !== initialFormState.about ||
+            $formStore.photoFile !== undefined
+        );
     }
 </script>
 
@@ -687,8 +691,7 @@
                 on:click={handleSaveChanges}
                 disabled={!hasChanges || loading}
             >
-                Save changes
-                <!-- {loading ? "Saving..." : "Save changes"} -->
+                {loading ? "Saving..." : "Save changes"}
             </button>
         </div>
 
