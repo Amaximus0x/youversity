@@ -14,16 +14,18 @@ service cloud.firestore {
     match /users/{userId} {
       allow read: if request.auth != null;
       allow create: if request.auth != null && request.auth.uid == userId;
-      allow update: if request.auth != null && 
-        request.auth.uid == userId &&
-        request.resource.data.keys().hasAll(['displayName', 'email', 'username', 'photoURL', 'updatedAt']) &&
-        (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['createdAt']));
+      allow update: if request.auth != null && request.auth.uid == userId;
       allow delete: if request.auth != null && request.auth.uid == userId;
 
       // Allow access to user's likes subcollection
       match /likes/{courseId} {
         allow read: if isAuthenticated();
         allow write: if isAuthenticated() && request.auth.uid == userId;
+      }
+
+      // User's subcollections
+      match /{collection}/{docId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
       }
     }
 
@@ -104,10 +106,13 @@ service cloud.firestore {
 
     // Notifications collection
     match /notifications/{notificationId} {
-      allow read: if isAuthenticated() && request.auth.uid == resource.data.userId;
-      allow create: if isAuthenticated();
-      allow update: if isAuthenticated() && request.auth.uid == resource.data.userId;
-      allow delete: if isAuthenticated() && request.auth.uid == resource.data.userId;
+      allow read: if request.auth != null && request.auth.uid == resource.data.userId;
+      allow create: if request.auth != null && (
+        request.resource.data.userId == request.auth.uid ||
+        request.resource.data.type == 'GENERAL'
+      );
+      allow update: if request.auth != null && request.auth.uid == resource.data.userId;
+      allow delete: if request.auth != null && request.auth.uid == resource.data.userId;
     }
 
     // Add this rule inside the match /databases/{database}/documents block

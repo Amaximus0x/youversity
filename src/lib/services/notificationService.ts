@@ -1,9 +1,23 @@
 import { db } from '$lib/firebase';
 import type { Notification } from '$lib/types/notification';
+import { NotificationType } from '$lib/types/notification';
 import { collection, addDoc, query, where, getDocs, updateDoc, doc, orderBy, onSnapshot, serverTimestamp, Timestamp } from 'firebase/firestore';
 
 export class NotificationService {
   private static COLLECTION = 'notifications';
+
+  static async createWelcomeNotification(userId: string): Promise<string> {
+    const welcomeNotification = {
+      userId,
+      title: 'Welcome to Youversity! 🎉',
+      message: 'Start your learning journey by creating your first course or exploring trending courses.',
+      type: NotificationType.GENERAL,
+      isRead: false,
+      createdAt: new Date()
+    };
+
+    return this.createNotification(welcomeNotification);
+  }
 
   static async createNotification(notification: Omit<Notification, 'id'>): Promise<string> {
     try {

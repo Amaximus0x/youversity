@@ -26,6 +26,8 @@
   import LoadingOverlay from '$lib/components/LoadingOverlay.svelte';
   import CourseCreationOverlay from '$lib/components/CourseCreationOverlay.svelte';
   import UserCourseList from '$lib/components/UserCourseList.svelte';
+  import { notifications } from '$lib/stores/notificationStore';
+  import { browser } from '$app/environment';
 
   let learningObjective = '';
   let userCourses: (FinalCourseStructure & { id: string })[] = [];
@@ -39,6 +41,33 @@
   let trendingCoursesLoading = true;
   let showLoadingOverlay = false;
   let showCreationOverlay = false;
+  let courseObjectiveInput: HTMLInputElement;
+
+  // Function to focus the course objective input
+  function focusCourseObjective() {
+    if (courseObjectiveInput) {
+      courseObjectiveInput.focus();
+      // Scroll into view if needed
+      courseObjectiveInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }
+
+  // Handle focus from URL parameter
+  $: if (browser && courseObjectiveInput && $page.url.searchParams.get('focus') === 'courseObjective') {
+    focusCourseObjective();
+    // Clear the parameter after focusing
+    const url = new URL(window.location.href);
+    url.searchParams.delete('focus');
+    history.replaceState({}, '', url);
+  }
+
+  // Listen for focusCourseObjective event
+  $: if (browser && courseObjectiveInput) {
+    window.addEventListener('focusCourseObjective', focusCourseObjective);
+    return () => {
+      window.removeEventListener('focusCourseObjective', focusCourseObjective);
+    };
+  }
 
   // Update filteredCourses when userCourses changes
   $: {
@@ -83,6 +112,8 @@
   }
 
   onMount(async () => {
+    
+
     try {
       console.log('Fetching trending courses...');
       // Get courses sorted by views/likes
@@ -137,7 +168,7 @@
 
 
 
-  function handleFilterChange(event) {
+  function handleFilterChange(event: { detail: string }) {
     const filterValue = event.detail;
     let sortedCourses = [...userCourses];
     
@@ -261,6 +292,7 @@
             id="course-objective-input"
             type="text"
             bind:value={learningObjective}
+            bind:this={courseObjectiveInput}
             placeholder="Enter what you want to learn..."
             on:focus={() => isInputFocused = true}
             on:blur={() => isInputFocused = false}
@@ -314,5 +346,6 @@
     show={showShareModal}
     courseId={selectedCourseId}
     onClose={() => showShareModal = false}
+    on:focusCourseObjective={focusCourseObjective}
   />
 {/if}

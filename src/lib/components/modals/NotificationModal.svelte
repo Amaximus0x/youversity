@@ -6,6 +6,7 @@
   import { formatDistanceToNow } from 'date-fns';
   import { goto } from '$app/navigation';
   import { NotificationType } from '$lib/types/notification';
+  import { page } from '$app/stores';
 
   const dispatch = createEventDispatcher();
 
@@ -32,8 +33,21 @@
       await notifications.markAsRead(notification.id);
     }
 
-    // Handle navigation for course-related notifications
-    if (notification.courseId) {
+    // Handle navigation based on notification type
+    if (notification.type === NotificationType.GENERAL && notification.title.includes('Welcome')) {
+      // Close modal first to prevent any UI glitches
+      close();
+      
+      // If already on home page, dispatch focus event
+      if ($page.url.pathname === '/') {
+        // Dispatch both a custom event and component event
+        window.dispatchEvent(new CustomEvent('focusCourseObjective'));
+        dispatch('focusCourseObjective');
+      } else {
+        // Navigate to home page and focus on course objective input
+        await goto('/?focus=courseObjective');
+      }
+    } else if (notification.courseId) {
       let hash = '';
       
       // Add specific section anchors based on notification type

@@ -3,30 +3,50 @@ import { auth, db } from '$lib/firebase';
 import { goto } from '$app/navigation';
 import { createUserProfile, getUserProfile } from './profile';
 import type { UserProfile } from './profile';
-import { doc, deleteDoc, collection, query, where, getDocs, writeBatch } from 'firebase/firestore';
+import { doc, deleteDoc, collection, query, where, getDocs, writeBatch, getDoc, setDoc } from 'firebase/firestore';
+import { NotificationService } from './notificationService';
 
 const provider = new GoogleAuthProvider();
 
 export const signInWithGoogle = async (callbackUrl?: string) => {
   try {
     const result = await signInWithPopup(auth, provider);
-    
-    // Check if user profile exists, if not create one
-    const existingProfile = await getUserProfile(result.user.uid);
+    const user = result.user;
+
+    // Check if this is a new user by looking up their profile
+    const userDoc = await getDoc(doc(db, 'users', user.uid));
+    const isNewUser = !userDoc.exists();
+
+    // Create or update user document
+    await setDoc(doc(db, 'users', user.uid), {
+      uid: user.uid,
+      email: user.email,
+      displayName: user.displayName,
+      photoURL: user.photoURL,
+      username: user.email?.split('@')[0],
+      createdAt: isNewUser ? new Date() : userDoc.data()?.createdAt,
+      updatedAt: new Date()
+    }, { merge: true });
+
+    // Create user profile if it doesn't exist
+    const existingProfile = await getUserProfile(user.uid);
     if (!existingProfile) {
-      await createUserProfile(result.user.uid, {
-        displayName: result.user.displayName || '',
-        email: result.user.email || '',
-        photoURL: result.user.photoURL || '',
+      await createUserProfile(user.uid, {
+        displayName: user.displayName || '',
+        email: user.email || '',
+        photoURL: user.photoURL || '',
         createdAt: new Date(),
         updatedAt: new Date()
       });
+
+      // Create welcome notification for new users
+      await NotificationService.createWelcomeNotification(user.uid);
     }
 
     if (callbackUrl) {
       window.location.href = callbackUrl;
     }
-    return result.user;
+    return user;
   } catch (error) {
     console.error('Error signing in with Google:', error);
     throw error;
@@ -44,17 +64,45 @@ export async function registerWithEmail(
   redirectTo: string,
   userData: UserData
 ) {
-  const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-  
-  // Update the user profile with additional data
-  await updateProfile(userCredential.user, {
-    displayName: `${userData.firstName} ${userData.lastName}`
-  });
+  try {
+    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    const user = userCredential.user;
+    
+    // Update the user profile with additional data
+    await updateProfile(user, {
+      displayName: `${userData.firstName} ${userData.lastName}`
+    });
 
-  // You might want to store additional user data in Firestore here
-  
-  if (redirectTo) {
-    goto(redirectTo);
+    // Create user document
+    await setDoc(doc(db, 'users', user.uid), {
+      uid: user.uid,
+      email: user.email,
+      displayName: `${userData.firstName} ${userData.lastName}`,
+      username: email.split('@')[0],
+      createdAt: new Date(),
+      updatedAt: new Date()
+    });
+
+    // Create user profile
+    await createUserProfile(user.uid, {
+      displayName: `${userData.firstName} ${userData.lastName}`,
+      email: email,
+      photoURL: '',
+      createdAt: new Date(),
+      updatedAt: new Date()
+    });
+
+    // Create welcome notification
+    await NotificationService.createWelcomeNotification(user.uid);
+    
+    if (redirectTo) {
+      goto(redirectTo);
+    }
+
+    return user;
+  } catch (error) {
+    console.error('Error registering with email:', error);
+    throw error;
   }
 }
 

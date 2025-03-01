@@ -16,56 +16,31 @@ export interface UserProfile {
   updatedAt: Date;
 }
 
-export async function createUserProfile(userId: string, initialData: Partial<UserProfile>) {
+export async function createUserProfile(userId: string, data: Partial<UserProfile>): Promise<void> {
   try {
     const userRef = doc(db, 'users', userId);
     
-    // Generate a unique username
-    const username = await generateUsername(initialData.displayName || '', initialData.email || '');
+    // Generate a username if not provided
+    const username = data.username || await generateUsername(data.displayName || '', data.email || '');
     
-    // Create the profile data with server timestamps
-    const profileData = {
+    // Create initial profile with required fields
+    const initialProfile = {
       username,
-      displayName: initialData.displayName || '',
-      email: initialData.email || '',
-      photoURL: initialData.photoURL || '',
-      about: initialData.about || '',
+      displayName: data.displayName || '',
+      email: data.email || '',
+      photoURL: data.photoURL || '',
+      about: data.about || '',
+      firstName: data.firstName || data.displayName?.split(' ')[0] || '',
+      lastName: data.lastName || data.displayName?.split(' ').slice(1).join(' ') || '',
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp()
     };
 
-    try {
-      // First try to reserve the username
-      const usernameRef = doc(db, 'usernames', username);
-      await setDoc(usernameRef, {
-        userId,
-        createdAt: serverTimestamp()
-      });
-
-      // If username reservation succeeds, create the user profile
-      await setDoc(userRef, profileData);
-    } catch (error) {
-      // If username reservation fails, try to clean up
-      try {
-        const usernameRef = doc(db, 'usernames', username);
-        await deleteDoc(usernameRef);
-      } catch (cleanupError) {
-        console.error('Error cleaning up username after failure:', cleanupError);
-      }
-      throw error;
-    }
-
-    return {
-      ...profileData,
-      createdAt: new Date(),
-      updatedAt: new Date()
-    } as UserProfile;
+    // Use setDoc with merge option to handle both creation and updates
+    await setDoc(userRef, initialProfile, { merge: true });
   } catch (error) {
     console.error('Error creating user profile:', error);
-    if (error instanceof Error) {
-      throw new Error(`Failed to create user profile: ${error.message}`);
-    }
-    throw new Error('Failed to create user profile');
+    throw new Error('Failed to create user profile: ' + (error as Error).message);
   }
 }
 
@@ -77,19 +52,8 @@ export async function getUserProfile(userId: string): Promise<UserProfile | null
     if (!userDoc.exists()) {
       return null;
     }
-
-    const data = userDoc.data();
-    return {
-      username: data.username || '',
-      displayName: data.displayName || '',
-      email: data.email || '',
-      photoURL: data.photoURL || '',
-      about: data.about || '',
-      firstName: data.firstName || '',
-      lastName: data.lastName || '',
-      createdAt: data.createdAt?.toDate() || new Date(),
-      updatedAt: data.updatedAt?.toDate() || new Date()
-    };
+    
+    return userDoc.data() as UserProfile;
   } catch (error) {
     console.error('Error getting user profile:', error);
     return null;
@@ -101,42 +65,16 @@ type UpdateData = {
   [key: string]: string | Date | undefined;
 };
 
-export async function updateUserProfile(userId: string, data: Partial<UserProfile>) {
+export async function updateUserProfile(userId: string, data: Partial<UserProfile>): Promise<void> {
   try {
     const userRef = doc(db, 'users', userId);
-    
-    // Get current user data first
-    const currentUserDoc = await getDoc(userRef);
-    const currentData = currentUserDoc.data();
-
-    // Create update object with all required fields
-    const updateData = {
-      displayName: data.displayName || currentData?.displayName || '',
-      photoURL: data.photoURL || '',  // Don't fallback to current photoURL to allow deletion
-      username: data.username || currentData?.username || '',
-      email: data.email || currentData?.email || '',
-      about: data.about || currentData?.about || '',
-      updatedAt: new Date()
-    };
-
-    console.log('Updating user profile with data:', updateData);
-
-    // Update the user document
-    await updateDoc(userRef, updateData);
-    
-    // Update username if changed
-    if (data.username && data.username !== currentData?.username) {
-      const usernameRef = doc(db, 'usernames', data.username);
-      await setDoc(usernameRef, {
-        userId: userId,
-        createdAt: new Date()
-      });
-    }
-
-    return updateData;
+    await updateDoc(userRef, {
+      ...data,
+      updatedAt: serverTimestamp()
+    });
   } catch (error) {
     console.error('Error updating user profile:', error);
-    throw new Error('Failed to update user profile');
+    throw error;
   }
 }
 
