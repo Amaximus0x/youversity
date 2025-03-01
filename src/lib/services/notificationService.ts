@@ -10,7 +10,7 @@ export class NotificationService {
     const welcomeNotification = {
       userId,
       title: 'Welcome to Youversity! 🎉',
-      message: 'Start your learning journey by creating your first course or exploring trending courses.',
+      message: 'Welcome to Youversity! Start your journey toward smarter learning today.',
       type: NotificationType.GENERAL,
       isRead: false,
       createdAt: new Date()

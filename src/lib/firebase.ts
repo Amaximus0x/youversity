@@ -687,8 +687,9 @@ export async function likeCourse(userId: string, courseId: string) {
 
         await NotificationService.createNotification({
           userId: courseData.createdBy,
-          title: 'New Course Like',
-          message: `${likerName} liked your course "${courseData.Final_Course_Title}"`,
+          title: 'Your Course Got an Upvote',
+          message: `Great work! Your course just received an upvote.`,
+          // message: `${likerName} liked your course "${courseData.Final_Course_Title}"`,
           type: NotificationType.COURSE_LIKED,
           isRead: false,
           createdAt: new Date(),
@@ -1119,8 +1120,9 @@ export async function submitCourseRating(
       if (userId !== courseData.createdBy) {
         await NotificationService.createNotification({
           userId: courseData.createdBy,
-          title: 'New Course Review',
-          message: `${userDisplayName} left a review on your course "${courseData.Final_Course_Title}"`,
+          title: 'New Comment on Your Course',
+          message: `There's a new comment on your course. Check it out and join the conversation!`,
+          // message: `${userDisplayName} left a new on your course "${courseData.Final_Course_Title}"`,
           type: NotificationType.COURSE_REVIEWED,
           isRead: false,
           createdAt: new Date(),
