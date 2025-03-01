@@ -40,8 +40,7 @@
   let prevPath = "";
 
   // Initialize search-related arrays
-  let recentSearches: Array<{ id: string; query: string; timestamp: Date }> =
-    [];
+  let recentSearches: Array<{ id: string; query: string; timestamp: Date }> = [];
   let recommendations: string[] = [];
 
   // Sidebar items configuration
@@ -103,12 +102,35 @@
   // Add this function to handle clicks outside the search area
   function handleClickOutside(event: MouseEvent) {
     const target = event.target as HTMLElement;
-    if (!target.closest("form")) {
+    const searchForm = target.closest("form");
+    const searchDropdown = target.closest(".search-dropdown");
+    
+    if (!searchForm && !searchDropdown) {
       isSearchFocused = false;
+      console.log("Clicked outside search area, closing dropdown");
     }
   }
 
   let unsubscribeNotifications: (() => void) | null = null;
+
+  // Add reactive statement for user changes
+  $: if ($user) {
+    loadRecentSearches();
+  }
+
+  // Function to load recent searches
+  async function loadRecentSearches() {
+    if ($user) {
+      console.log("Loading recent searches for user:", $user.uid);
+      try {
+        recentSearches = await getRecentSearches($user.uid);
+        console.log("Loaded recent searches:", recentSearches);
+      } catch (error) {
+        console.error("Error loading recent searches:", error);
+        recentSearches = [];
+      }
+    }
+  }
 
   // Load data on mount
   onMount(async () => {
@@ -118,10 +140,7 @@
     window.addEventListener("offline", updateOnlineStatus);
 
     // Load recent searches
-    console.log("User:", $user);
-    if ($user) {
-      recentSearches = await getRecentSearches($user.uid);
-    }
+    await loadRecentSearches();
 
     // Load recommendations
     // try {
@@ -521,14 +540,17 @@
                     bind:value={searchQuery}
                     on:focus|stopPropagation={() => {
                       isSearchFocused = true;
-                      console.log("Search focused");
+                      console.log("Search focused, isSearchFocused:", isSearchFocused);
+                      console.log("Recent searches:", recentSearches);
                     }}
                     on:blur={() => {
                       // Only hide dropdown if clicked outside search area
                       setTimeout(() => {
-                        if (!document.activeElement?.closest("form")) {
+                        const activeElement = document.activeElement;
+                        const searchForm = activeElement?.closest("form");
+                        if (!searchForm) {
                           isSearchFocused = false;
-                          console.log("Search blurred");
+                          console.log("Search blurred, isSearchFocused:", isSearchFocused);
                         }
                       }, 200);
                     }}
@@ -566,9 +588,9 @@
                 </div>
 
                 <!-- Recent Searches Dropdown -->
-                {#if isSearchFocused && recentSearches.length > 0}
+                {#if isSearchFocused && recentSearches && recentSearches.length > 0}
                   <div
-                    class="absolute top-full left-0 right-[80px] mt-2 bg-white dark:bg-dark-bg-primary rounded-2xl border border-light-border dark:border-dark-border shadow-lg z-50"
+                    class="search-dropdown absolute top-full left-0 right-[80px] mt-2 bg-white dark:bg-dark-bg-primary rounded-2xl border border-light-border dark:border-dark-border shadow-lg z-50"
                     on:mousedown|stopPropagation
                     on:click|stopPropagation
                   >
