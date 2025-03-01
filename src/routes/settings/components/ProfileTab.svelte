@@ -199,6 +199,10 @@
         console.log('ProfileTab mounted');
         const userData = get(user);
         if (userData) {
+            console.log('User data available on mount:', {
+                photoURL: userData.photoURL,
+                displayName: userData.displayName
+            });
             authInitialized = true;
             loadUserProfile(userData);
         }
@@ -222,28 +226,49 @@
         formStore.update(form => ({ ...form, photoFile: undefined }));
     }
 
+    // Force refresh the profile picture
+    function forceRefreshProfilePicture(url: string) {
+        if (!url) return;
+        
+        // Don't add timestamp to data URLs
+        const refreshedUrl = url.startsWith('data:') 
+            ? url 
+            : (url.includes('?') 
+                ? `${url}&t=${Date.now()}` 
+                : `${url}?t=${Date.now()}`);
+            
+        console.log("Forcing profile picture refresh with URL type:", 
+            url.startsWith('data:') ? 'data URL' : 'regular URL');
+        
+        // Update the form store with the refreshed URL
+        formStore.update(form => ({
+            ...form,
+            previewURL: refreshedUrl
+        }));
+    }
+
     // Handle photo file selection
     function handlePhotoChange(event: Event) {
         const input = event.target as HTMLInputElement;
         if (input.files) {
             const file = input.files[0];
             if (file) {
-                formStore.update(form => ({ 
-                    ...form, 
-                    photoFile: input.files || undefined
-                }));
-
+                console.log("New photo file selected:", file.name);
+                
                 // Create preview URL immediately
                 const reader = new FileReader();
                 reader.onload = function(e: ProgressEvent<FileReader>) {
                     if (e.target?.result) {
                         const result = e.target.result;
                         if (typeof result === 'string') {
+                            // Update both photoFile and previewURL in a single update
                             formStore.update(form => ({
                                 ...form,
+                                photoFile: input.files || undefined,
                                 previewURL: result
                             }));
                             console.log("Profile picture updated, photoFile is now set", $formStore.photoFile !== undefined);
+                            console.log("Preview URL updated: data URL (length: " + result.length + ")");
                         }
                     }
                 };
@@ -386,7 +411,9 @@
             // Handle photo upload if there's a new photo
             if (photoFile && photoFile.length > 0) {
                 try {
+                    console.log("Uploading new profile picture...");
                     newPhotoURL = await uploadProfileImage(userData.uid, photoFile[0]);
+                    console.log("Profile picture uploaded successfully:", newPhotoURL);
                     shouldUpdateAuth = true;
                     changedFields.push('profile picture');
                 } catch (err) {
@@ -403,6 +430,7 @@
             // Update Firebase Auth profile first if display name or photo changed
             const currentUser = auth.currentUser;
             if (currentUser && (shouldUpdateAuth || displayName !== currentUser.displayName)) {
+                console.log("Updating Firebase Auth profile with new photo URL:", newPhotoURL);
                 await updateProfile(currentUser, {
                     displayName,
                     photoURL: newPhotoURL
@@ -417,6 +445,15 @@
                         photoURL: newPhotoURL
                     };
                 });
+                
+                // Force reload the user to ensure we have the latest data
+                await currentUser.reload();
+                
+                // Get the updated user data after reload
+                const updatedUser = auth.currentUser;
+                if (updatedUser) {
+                    console.log("User reloaded with new photo URL:", updatedUser.photoURL);
+                }
             }
 
             // Update Firestore profile
@@ -465,16 +502,17 @@
                 await Promise.all(notificationPromises);
             }
 
-            // Update form store with new photo URL
+            // Clear photo file after successful upload
+            clearPhotoFile();
+            
+            // Update form store with new photo URL - IMPORTANT for UI update
+            // Do this BEFORE updating initialFormState to ensure the reactive statement detects the change
             formStore.update(form => ({
                 ...form,
                 photoURL: newPhotoURL,
                 previewURL: newPhotoURL,
                 photoFile: undefined
             }));
-
-            // Clear photo file after successful upload
-            clearPhotoFile();
             
             // Update initial form state to reflect saved changes
             initialFormState = {
@@ -483,6 +521,20 @@
                 about: $formStore.about
             };
 
+            // Force UI refresh by directly updating the bound variables
+            photoURL = newPhotoURL;
+            previewURL = newPhotoURL;
+            
+            // Force a refresh of the profile picture to bypass cache
+            if (newPhotoURL && !newPhotoURL.startsWith('data:')) {
+                forceRefreshProfilePicture(newPhotoURL);
+            }
+            
+            console.log("Profile updated successfully. New photo URL:", newPhotoURL);
+            
+            // Trigger a manual update to the UI by forcing a reactive update
+            formStore.update(form => ({ ...form }));
+            
             // Show success message
             error = null;
         } catch (err) {
@@ -511,15 +563,34 @@
 
     // Keep only the photo URL update reactive statement
     $: {
-        if ($user) {
+        if ($user && formInitialized) {
             const newPhotoURL = $user.photoURL || "";
+            console.log("Reactive statement checking photo URL:", { 
+                newPhotoURL, 
+                currentPhotoURL: photoURL,
+                hasPhotoFile: $formStore.photoFile !== undefined,
+                previewIsDataURL: $formStore.previewURL?.startsWith('data:')
+            });
+            
+            // Always update the local photoURL variable
             if (newPhotoURL !== photoURL) {
-                console.log("Updating photo URLs:", {
+                console.log("Updating photo URLs from user store:", {
                     old: photoURL,
                     new: newPhotoURL,
                 });
+                
                 photoURL = newPhotoURL;
-                previewURL = newPhotoURL;
+                
+                // Update the form store if we don't have a pending photo change
+                // or if we're coming from a successful save operation
+                if (!$formStore.photoFile && !$formStore.previewURL?.startsWith('data:')) {
+                    formStore.update(form => ({
+                        ...form,
+                        photoURL: newPhotoURL,
+                        previewURL: newPhotoURL
+                    }));
+                    console.log("Form store updated with new photo URL");
+                }
             }
         }
     }
@@ -555,12 +626,21 @@
                     />
                 {:else if previewURL}
                     <img
-                        src={previewURL}
+                        src={previewURL.startsWith('data:') ? previewURL : previewURL + '?t=' + Date.now()}
                         alt="Profile"
                         class="profile-image w-full h-full rounded-full object-cover"
-                        on:error={() => {
+                        on:error={(e) => {
                             console.error("Image failed to load:", previewURL);
-                            previewURL = "";
+                            // If the preview URL fails, try using the photoURL directly
+                            if (previewURL !== photoURL && photoURL) {
+                                console.log("Falling back to photoURL:", photoURL);
+                                formStore.update(form => ({
+                                    ...form,
+                                    previewURL: photoURL
+                                }));
+                            } else {
+                                previewURL = "";
+                            }
                         }}
                     />
                 {:else}
