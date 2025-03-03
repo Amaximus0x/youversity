@@ -102,6 +102,7 @@
     <NotificationModal
       bind:show={showNotifications}
       on:close={() => showNotifications = false}
+      on:focusCourseObjective
     />
   {/if}
 </div> 

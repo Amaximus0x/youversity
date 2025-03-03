@@ -41,6 +41,7 @@ export const signInWithGoogle = async (callbackUrl?: string) => {
 
       // Create welcome notification for new users
       await NotificationService.createWelcomeNotification(user.uid);
+      await NotificationService.createFirstCourseNotification(user.uid);
     }
 
     if (callbackUrl) {
@@ -94,6 +95,7 @@ export async function registerWithEmail(
 
     // Create welcome notification
     await NotificationService.createWelcomeNotification(user.uid);
+    await NotificationService.createFirstCourseNotification(user.uid);
     
     if (redirectTo) {
       goto(redirectTo);

@@ -3,6 +3,8 @@
     import { formatDistanceToNow } from "date-fns";
     import type { Notification } from "$lib/types/notification";
     import { goto } from "$app/navigation";
+    import { page } from "$app/stores";
+    import { NotificationType } from "$lib/types/notification";
 
     let selectedId: string | null = null;
 
@@ -14,6 +16,32 @@
         selectedId = notification.id;
         if (!notification.isRead) {
             await notifications.markAsRead(notification.id);
+        }
+
+        // Handle navigation based on notification type
+        if (notification.type === NotificationType.GENERAL) {
+            // Handle different general notifications
+            if (notification.title.includes('Welcome') || notification.title.includes('Create Your First Course')) {
+                // If already on home page, dispatch focus event
+                if ($page.url.pathname === '/') {
+                    window.dispatchEvent(new Event('focusCourseObjective'));
+                } else {
+                    // Navigate to home page and focus on course objective input
+                    await goto('/?focus=courseObjective');
+                }
+            }
+        } else if (notification.courseId) {
+            let hash = '';
+            
+            // Add specific section anchors based on notification type
+            if (notification.type === NotificationType.COURSE_LIKED) {
+                hash = '';
+            } else if (notification.type === NotificationType.COURSE_REVIEWED) {
+                hash = '#reviews';
+            }
+
+            // Navigate to the course page with the appropriate section hash
+            await goto(`/course/${notification.courseId}${hash}`);
         }
     }
 

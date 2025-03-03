@@ -37,16 +37,19 @@
     }
 
     // Handle navigation based on notification type
-    if (notification.type === NotificationType.GENERAL && notification.title.includes('Welcome')) {
+    if (notification.type === NotificationType.GENERAL) {
       // Close modal first to prevent any UI glitches
       close();
       
-      // If already on home page, dispatch focus event
-      if ($page.url.pathname === '/') {
-        dispatch('focusCourseObjective');
-      } else {
-        // Navigate to home page and focus on course objective input
-        await goto('/?focus=courseObjective');
+      // Handle different general notifications
+      if (notification.title.includes('Welcome') || notification.title.includes('Create Your First Course')) {
+        // If already on home page, dispatch focus event
+        if ($page.url.pathname === '/') {
+          dispatch('focusCourseObjective');
+        } else {
+          // Navigate to home page and focus on course objective input
+          await goto('/?focus=courseObjective');
+        }
       }
     } else if (notification.courseId) {
       let hash = '';

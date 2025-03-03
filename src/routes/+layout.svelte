@@ -731,7 +731,13 @@
                 <div
                   class="relative w-12 h-12 flex items-center justify-center border border-light-border dark:border-dark-border rounded-full"
                 >
-                  <NotificationButton />
+                  <NotificationButton 
+                    on:focusCourseObjective={() => {
+                      if ($page.url.pathname === '/') {
+                        window.dispatchEvent(new CustomEvent('focusCourseObjective'));
+                      }
+                    }}
+                  />
                 </div>
 
                 {#if $user}

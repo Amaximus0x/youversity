@@ -104,7 +104,11 @@
   }
 
   onMount(async () => {
-    
+    // Add event listener for focusCourseObjective
+    const handleFocusCourseObjective = () => {
+      focusCourseObjective();
+    };
+    window.addEventListener('focusCourseObjective', handleFocusCourseObjective);
 
     try {
       console.log('Fetching trending courses...');
@@ -121,6 +125,11 @@
     } finally {
       trendingCoursesLoading = false;
     }
+
+    // Clean up event listener
+    return () => {
+      window.removeEventListener('focusCourseObjective', handleFocusCourseObjective);
+    };
   });
 
 

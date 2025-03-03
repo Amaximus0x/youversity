@@ -19,6 +19,19 @@ export class NotificationService {
     return this.createNotification(welcomeNotification);
   }
 
+  static async createFirstCourseNotification(userId: string): Promise<string> {
+    const firstCourseNotification = {
+      userId,
+      title: 'Create Your First Course',
+      message: 'Kickstart your experience. create your first course now and share your passion.',
+      type: NotificationType.GENERAL,
+      isRead: false,
+      createdAt: new Date()
+    };
+
+    return this.createNotification(firstCourseNotification);
+  }
+
   static async createNotification(notification: Omit<Notification, 'id'>): Promise<string> {
     try {
       const notificationsRef = collection(db, this.COLLECTION);
