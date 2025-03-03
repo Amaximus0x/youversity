@@ -65,22 +65,35 @@
         try {
           const enrollmentProgress = await getEnrollmentProgress(userData.uid, course.id);
           let progress;
+          let isCompleted = false;
           
           if (enrollmentProgress?.completedModules) {
             progress = Math.round(
               (enrollmentProgress.completedModules.length / course.Final_Module_Title.length) * 100
             );
+            // Check if the course is completed (final quiz passed)
+            isCompleted = enrollmentProgress.quizResults?.finalQuiz?.completed && 
+                         enrollmentProgress.quizResults?.finalQuiz?.passed;
+            
+            console.log('Course completion check:', {
+              courseId: course.id,
+              courseTitle: course.Final_Course_Title,
+              isCompleted,
+              finalQuiz: enrollmentProgress.quizResults?.finalQuiz
+            });
           }
           
           return {
             ...course,
-            progress
+            progress,
+            isCompleted
           };
         } catch (error) {
           console.error('Error loading progress for course:', course.id, error);
           return {
             ...course,
-            progress: 0
+            progress: 0,
+            isCompleted: false
           };
         }
       }));

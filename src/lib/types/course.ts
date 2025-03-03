@@ -55,6 +55,8 @@ export interface FinalCourseStructure {
   isCreator?: boolean;
   isEnrolled?: boolean;
   enrollmentData?: any;
+  progress?: number;
+  isCompleted?: boolean;
 }
 
 export interface CourseRating {

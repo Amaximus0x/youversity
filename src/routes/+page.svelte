@@ -82,14 +82,19 @@
       const coursesWithProgress = await Promise.all(courses.map(async (course) => {
         const enrollmentProgress = await getEnrollmentProgress($user!.uid, course.id);
         let progress;
+        let isCompleted = false;
         
         if (enrollmentProgress?.completedModules) {
           progress = Math.round((enrollmentProgress.completedModules.length / course.Final_Module_Title.length) * 100);
+          // Check if the course is completed (final quiz passed)
+          isCompleted = enrollmentProgress.quizResults?.finalQuiz?.completed && 
+                       enrollmentProgress.quizResults?.finalQuiz?.passed;
         }
         
         return {
           ...course,
-          progress: progress
+          progress,
+          isCompleted
         };
       }));
 

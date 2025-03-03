@@ -132,6 +132,11 @@
             forceUpdate,
         });
     });
+
+    // Compute if the course is completed
+    $: isCourseCompleted =
+        localProgress?.quizResults?.finalQuiz?.completed &&
+        localProgress?.quizResults?.finalQuiz?.passed;
 </script>
 
 <div class="flex flex-col gap-4">
@@ -140,17 +145,21 @@
         <div
             class="hidden lg:block rounded-2xl border border-light-border dark:border-dark-border"
         >
-        <div class="flex justify-between border-b border-light-border dark:border-dark-border p-2 mb-4">
-            <h3
-                class="text-body-semibold  text-light-text-primary dark:text-dark-text-primary "
+            <div
+                class="flex justify-between border-b border-light-border dark:border-dark-border p-2 mb-4"
             >
-                Your Progress
-            </h3>
-            {#if enrollmentProgressStore.isCompleted}
-                <h3 class="text-semibody-medium  text-light-text-primary dark:text-dark-text-primary">
-                    Completed Course
+                <h3
+                    class="text-body-semibold text-light-text-primary dark:text-dark-text-primary"
+                >
+                    Your Progress
                 </h3>
-            {/if}
+                {#if isCourseCompleted}
+                    <h3
+                        class="text-semibody-medium text-light-text-primary dark:text-dark-text-primary"
+                    >
+                        Completed Course
+                    </h3>
+                {/if}
             </div>
 
             <div class="flex items-center gap-4 px-2 pb-2">
@@ -162,11 +171,15 @@
                         style="width: {progressPercentage}%"
                     />
                 </div>
+                {#if !isCourseCompleted}
                 <span
                     class="text-body text-light-text-primary dark:text-dark-text-primary"
                 >
                     {progressPercentage}%
-                </span>
+                    </span>
+                {:else}
+                <img src="/images/checkmark-circle.svg" alt="Completed" class="w-6 h-6 flex-shrink-0" />    
+                {/if}
             </div>
         </div>
     {/if}
@@ -188,11 +201,15 @@
                             style="width: {progressPercentage}%"
                         />
                     </div>
-                    <span
-                        class="text-body text-light-text-primary dark:text-dark-text-primary"
-                    >
-                        {progressPercentage}%
+                    {#if isCourseCompleted}
+                <span
+                    class="text-body text-light-text-primary dark:text-dark-text-primary"
+                >
+                    {progressPercentage}%
                     </span>
+                {:else}
+                <img src="/images/checkmark-circle.svg" alt="Completed" class="w-6 h-6 flex-shrink-0" />    
+                {/if}
                 </div>
             </div>
         {/if}

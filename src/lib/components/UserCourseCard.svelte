@@ -7,8 +7,20 @@
     import { getUserProfile } from "$lib/services/profile";
     import { getEnrollmentProgress } from "$lib/firebase";
 
-    export let course: FinalCourseStructure & { id: string };
+    export let course: FinalCourseStructure & { 
+        id: string;
+        progress?: number;
+        isCompleted?: boolean;
+    };
     export let onShare: (courseId: string) => void;
+    
+    // Add debug logging
+    $: console.log('UserCourseCard received course:', {
+        courseId: course.id,
+        courseTitle: course.Final_Course_Title,
+        isCompleted: course.isCompleted,
+        progress: course.progress
+    });
 
     async function handleNavigateToCourse(courseId: string) {
         try {
@@ -239,13 +251,18 @@
             </div>
 
             <!-- Progress Bar -->
-            <div
-                class="w-full h-3 bg-Black/5 dark:bg-White/5 rounded-full overflow-hidden"
-            >
+            <div class="flex items-center gap-2 w-full">
                 <div
-                    class="h-full bg-brand-turquoise rounded-full"
-                    style="width: {course.progress || 0}%"
-                ></div>
+                    class="flex-1 h-3 bg-Black/5 dark:bg-White/5 rounded-full overflow-hidden"
+                >
+                    <div
+                        class="h-full bg-brand-turquoise rounded-full"
+                        style="width: {course.progress || 0}%"
+                    ></div>
+                </div>
+                {#if course.isCompleted}
+                    <img src="/images/checkmark-circle.svg" alt="Completed" class="w-4 h-4 flex-shrink-0" />
+                {/if}
             </div>
         </div>
 
@@ -255,7 +272,7 @@
             on:click|stopPropagation={() => handleNavigateToCourse(course.id)}
         >
             <span class="text-white text-semi-body"
-                >{course.progress ? "Continue" : "Start Course"}</span
+                >{course.isCompleted ? "Review Course" : course.progress ? "Continue" : "Start Course"}</span
             >
         </button>
     </div>
