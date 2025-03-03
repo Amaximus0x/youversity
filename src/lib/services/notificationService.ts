@@ -1,10 +1,11 @@
 import { db } from '$lib/firebase';
 import type { Notification } from '$lib/types/notification';
-import { NotificationType } from '$lib/types/notification';
-import { collection, addDoc, query, where, getDocs, updateDoc, doc, orderBy, onSnapshot, serverTimestamp, Timestamp } from 'firebase/firestore';
+import { NotificationType, SystemAnnouncementCategory } from '$lib/types/notification';
+import { collection, addDoc, query, where, getDocs, updateDoc, doc, orderBy, onSnapshot, serverTimestamp, Timestamp, writeBatch } from 'firebase/firestore';
 
 export class NotificationService {
   private static COLLECTION = 'notifications';
+  private static USERS_COLLECTION = 'users';
 
   static async createWelcomeNotification(userId: string): Promise<string> {
     const welcomeNotification = {
@@ -89,5 +90,75 @@ export class NotificationService {
       });
       callback(notifications);
     });
+  }
+
+  static async createSystemAnnouncement(
+    title: string,
+    message: string,
+    category: SystemAnnouncementCategory
+  ): Promise<void> {
+    try {
+      // Get all users
+      const usersSnapshot = await getDocs(collection(db, this.USERS_COLLECTION));
+      const batch = writeBatch(db);
+      
+      // Create notification for each user
+      usersSnapshot.forEach((userDoc) => {
+        const notificationRef = doc(collection(db, this.COLLECTION));
+        batch.set(notificationRef, {
+          userId: userDoc.id,
+          title,
+          message,
+          type: NotificationType.SYSTEM_ANNOUNCEMENT,
+          isRead: false,
+          createdAt: serverTimestamp(),
+          isSystemWide: true,
+          category
+        });
+      });
+
+      // Commit the batch
+      await batch.commit();
+      console.log('System announcement sent to all users');
+    } catch (error) {
+      console.error('Error creating system announcement:', error);
+      throw error;
+    }
+  }
+
+  // Helper method to send feature announcement
+  static async announceNewFeature(title: string, message: string): Promise<void> {
+    return this.createSystemAnnouncement(
+      title,
+      message,
+      SystemAnnouncementCategory.NEW_FEATURES
+    );
+  }
+
+  // Helper method to send tips
+  static async sendTip(title: string, message: string): Promise<void> {
+    return this.createSystemAnnouncement(
+      title,
+      message,
+      SystemAnnouncementCategory.TIPS
+    );
+  }
+
+  // Helper method to send maintenance notifications
+  static async announceMaintenance(title: string, message: string): Promise<void> {
+    return this.createSystemAnnouncement(
+      title,
+      message,
+      SystemAnnouncementCategory.MAINTENANCE
+    );
+  }
+
+  // Helper method to send general updates
+  static async sendUpdate(title: string, message: string): Promise<void> {
+    return this.createSystemAnnouncement(
+      title,
+      message,
+      SystemAnnouncementCategory.UPDATES
+    );
   }
 } 

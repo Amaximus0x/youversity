@@ -31,6 +31,7 @@
   import SearchModal from "$lib/components/modals/SearchModal.svelte";
   import { createEventDispatcher } from 'svelte';
   import type { SearchFilter } from "$lib/types/search";
+  import { DeploymentAnnouncements } from "$lib/services/deploymentAnnouncements";
 
   // State variables
   let isSearchPage = false;
@@ -138,7 +139,7 @@
   }
 
   // Load data on mount
-  onMount(() => {
+  onMount(async () => {
     const cleanup = async () => {
       isMounted = true;
       updateOnlineStatus();
@@ -205,6 +206,9 @@
           }
         }
       }
+
+      // Check for and send any new deployment announcements
+      await DeploymentAnnouncements.checkAndSendDeploymentAnnouncements();
     };
 
     cleanup();

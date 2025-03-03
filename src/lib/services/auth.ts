@@ -40,8 +40,10 @@ export const signInWithGoogle = async (callbackUrl?: string) => {
       });
 
       // Create welcome notification for new users
-      await NotificationService.createWelcomeNotification(user.uid);
-      await NotificationService.createFirstCourseNotification(user.uid);
+      if (isNewUser) {
+        await NotificationService.createWelcomeNotification(user.uid);
+        await NotificationService.createFirstCourseNotification(user.uid);
+      }
     }
 
     if (callbackUrl) {
