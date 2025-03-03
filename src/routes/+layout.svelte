@@ -530,7 +530,7 @@
           <!-- <header class="fixed top-0 right-0 left-0 lg:left-64 lg:h-24 px-5 lg:px-4 py-6 lg:ml-1.5 lg:border-b border-light-border dark:border-dark-border {$page.url.pathname.startsWith('/course/') ? 'bg-light-bg-primary dark:bg-dark-bg-primary' : 'bg-light-bg-primary/5 dark:bg-dark-bg-primary/5 !backdrop-blur-[30px]'} z-50"> -->
 
           <header
-            class="fixed top-0 right-0 left-0 lg:left-64 lg:h-24 px-5 lg:px-4 pt-6 pb-4 lg:ml-1.5 lg:border-b border-light-border dark:border-dark-border bg-light-bg-secondary dark:bg-dark-bg-secondary z-50"
+            class="fixed top-0 right-0 left-0 lg:left-64 lg:h-24 px-5 lg:px-4 pt-6 pb-4 lg:ml-1.5 lg:border-b border-light-border dark:border-dark-border bg-light-bg-secondary dark:bg-dark-bg-secondary z-40"
           >
             <!-- Mobile Header -->
             <div
@@ -975,7 +975,8 @@
 <!-- Add Profile Modal -->
 {#if showProfileModal}
   <button
-    class="fixed top-24 right-8 z-50"
+    class="fixed top-24 right-8 z-50 drop-shadow(0px 4px 73px 0px #000000/17);
+)"
     transition:fade={{ duration: 200 }}
     on:click|stopPropagation
   >

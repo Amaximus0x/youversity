@@ -201,7 +201,7 @@
                             style="width: {progressPercentage}%"
                         />
                     </div>
-                    {#if isCourseCompleted}
+                    {#if !isCourseCompleted}
                 <span
                     class="text-body text-light-text-primary dark:text-dark-text-primary"
                 >
