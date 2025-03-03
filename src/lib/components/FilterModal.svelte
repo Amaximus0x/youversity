@@ -1,6 +1,6 @@
 <script lang="ts">
   import { fade } from 'svelte/transition';
-  import type { SearchFilter } from '$lib/services/search';
+  import type { SearchFilter } from '$lib/types/search';
 
   export let show = false;
   export let onClose: () => void;
@@ -66,7 +66,7 @@
             <button 
               class="px-2 py-1 rounded-lg {selectedFilter === 'relevance' ? ' border border-brand-red' : 'border border-[#E5E7EB]'}"
               on:click={() => {
-                selectedFilter = '';
+                selectedFilter = 'relevance';
               }}
             >
               <span class="{(selectedFilter === 'latest' || selectedFilter === 'earliest') ? 'text-Black dark:text-White' : 'text-[#6B7280]'} text-mini-body">

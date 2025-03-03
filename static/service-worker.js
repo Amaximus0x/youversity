@@ -35,7 +35,7 @@ self.addEventListener('install', (event) => {
 
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return Promise.all(
+      return Promise.allSettled(
         STATIC_ASSETS.map(path => {
           const url = new URL(path, self.location.origin).href;
           return fetch(url, { 
@@ -47,7 +47,8 @@ self.addEventListener('install', (event) => {
               console.warn(`Failed to fetch ${path}: ${response.status} ${response.statusText}`);
               return;
             }
-            return cache.put(path, response);
+            // Clone the response before putting it in the cache
+            return cache.put(path, response.clone());
           })
           .catch(error => {
             console.warn(`Failed to cache ${path}:`, error);
@@ -78,23 +79,35 @@ self.addEventListener('fetch', (event) => {
           credentials: 'same-origin'
         }).then((response) => {
           // Check if we received a valid response
-          if (!response || response.status !== 200) {
+          if (!response || response.status !== 200 || response.type !== 'basic') {
             return response;
           }
 
-          // Clone the response because it can only be used once
-          const responseToCache = response.clone();
+          try {
+            // Clone the response because it can only be used once
+            const responseToCache = response.clone();
 
-          caches.open(CACHE_NAME)
-            .then((cache) => {
-              cache.put(event.request, responseToCache);
-            })
-            .catch(error => {
-              console.warn('Cache put error:', error);
-            });
+            caches.open(CACHE_NAME)
+              .then((cache) => {
+                cache.put(event.request, responseToCache)
+                  .catch(error => {
+                    console.warn(`Cache put error for ${event.request.url}:`, error);
+                  });
+              })
+              .catch(error => {
+                console.warn('Cache open error:', error);
+              });
+          } catch (error) {
+            console.warn('Response cloning error:', error);
+          }
 
           return response;
         });
+      })
+      .catch(error => {
+        console.warn('Fetch handler error:', error);
+        // Optionally return a fallback response for offline experience
+        return new Response('Network error occurred', { status: 503, statusText: 'Service Unavailable' });
       })
   );
 });

@@ -36,7 +36,7 @@
   let isSearchPage = false;
   let isMounted = false;
   let showFilterModal = false;
-  let currentFilter: "relevance" | "latest" = "relevance";
+  let currentFilter: SearchFilter = "relevance";
   let activeFilterCount = 0;
   let showMobileSearch = false;
   let menuOpen = false;
@@ -138,54 +138,76 @@
   }
 
   // Load data on mount
-  onMount(async () => {
-    isMounted = true;
-    updateOnlineStatus();
-    window.addEventListener("online", updateOnlineStatus);
-    window.addEventListener("offline", updateOnlineStatus);
+  onMount(() => {
+    const cleanup = async () => {
+      isMounted = true;
+      updateOnlineStatus();
+      window.addEventListener("online", updateOnlineStatus);
+      window.addEventListener("offline", updateOnlineStatus);
 
-    // Load recent searches
-    await loadRecentSearches();
+      // Load recent searches
+      await loadRecentSearches();
 
-    // Load recommendations
-    // try {
-    //   recommendations = await getSearchRecommendations();
-    // } catch (error) {
-    //   console.error("Error loading recommendations:", error);
-    //   recommendations = [];
-    // }
-
-    // Register service worker
-    if ("serviceWorker" in navigator) {
-      navigator.serviceWorker
-        .register("/service-worker.js")
-        .then((registration) => {
-          console.log("ServiceWorker registration successful");
-        })
-        .catch((err) => {
+      // Register service worker for offline functionality
+      if ("serviceWorker" in navigator) {
+        try {
+          // Check if there's an existing service worker causing issues
+          const registrations = await navigator.serviceWorker.getRegistrations();
+          
+          // Unregister any existing service workers to clear potential issues
+          for (const registration of registrations) {
+            await registration.unregister();
+            console.log('Unregistered existing service worker');
+          }
+          
+          // Register the service worker again
+          const registration = await navigator.serviceWorker.register("/service-worker.js", {
+            scope: '/'
+          });
+          console.log("ServiceWorker registration successful with scope:", registration.scope);
+          
+          // Handle service worker updates
+          registration.onupdatefound = () => {
+            const installingWorker = registration.installing;
+            if (installingWorker) {
+              installingWorker.onstatechange = () => {
+                if (installingWorker.state === 'installed') {
+                  if (navigator.serviceWorker.controller) {
+                    console.log('New service worker installed, content will update when all tabs close');
+                  } else {
+                    console.log('Service worker installed for offline use');
+                  }
+                }
+              };
+            }
+          };
+        } catch (err) {
           console.error("ServiceWorker registration failed:", err);
-        });
-    }
+        }
+      }
 
-    // Add click event listener for handling clicks outside search
-    document.addEventListener("click", handleClickOutside);
+      // Add click event listener for handling clicks outside search
+      document.addEventListener("click", handleClickOutside);
 
-    if (browser) {
-      // Restore states from localStorage if needed
-      const storedLoadingState = localStorage.getItem("loadingState");
-      const storedModalState = localStorage.getItem("modalState");
+      if (browser) {
+        // Restore states from localStorage if needed
+        const storedLoadingState = localStorage.getItem("loadingState");
+        const storedModalState = localStorage.getItem("modalState");
 
-      if (storedLoadingState) {
-        const state = JSON.parse(storedLoadingState);
-        if ((state.courseId && state.minimized) || state.isLoading) {
-          loadingState.startLoading(state.courseTitle || "", true, false);
-          loadingState.setProgress(state.progress || 0);
-          if (state.minimized) {
-            modalState.setMinimized(true);
+        if (storedLoadingState) {
+          const state = JSON.parse(storedLoadingState);
+          if ((state.courseId && state.minimized) || state.isLoading) {
+            loadingState.startLoading(state.courseTitle || "", true, false);
+            loadingState.setProgress(state.progress || 0);
+            if (state.minimized) {
+              modalState.setMinimized(true);
+            }
           }
         }
       }
-    }
+    };
+
+    cleanup();
 
     return () => {
       window.removeEventListener("online", updateOnlineStatus);
@@ -214,7 +236,7 @@
     isSearchPage = $page.url.pathname === "/search";
     if (isSearchPage) {
       const urlParams = new URLSearchParams($page.url.search);
-      const filter = urlParams.get("filter") as "relevance" | "latest";
+      const filter = urlParams.get("filter") as SearchFilter;
       if (filter) {
         currentFilter = filter;
       }
@@ -314,7 +336,7 @@
     }
   }
 
-  function handleFilterChange(newFilter: "relevance" | "latest") {
+  function handleFilterChange(newFilter: SearchFilter) {
     currentFilter = newFilter;
     showFilterModal = false;
     showMobileSearch = false;
@@ -434,16 +456,19 @@
                 <img
                   src={item.icon}
                   alt={item.label}
-                  style={$page?.url?.pathname === item.href
+                  style={($page?.url?.pathname === item.href.split('?')[0] || 
+                         (item.href.includes('/settings') && $page?.url?.pathname === '/settings'))
                     ? "filter: invert(45%) sepia(95%) saturate(1648%) hue-rotate(325deg) brightness(97%) contrast(91%);"
                     : ""}
-                  class="w-6 h-6 mr-4 transition-all {$page?.url?.pathname ===
-                  item.href
+                  class="w-6 h-6 mr-4 transition-all {($page?.url?.pathname ===
+                  item.href.split('?')[0] || 
+                  (item.href.includes('/settings') && $page?.url?.pathname === '/settings'))
                     ? ''
                     : 'opacity-60 group-hover:opacity-100 group-hover:[filter:invert(45%)_sepia(95%)_saturate(1648%)_hue-rotate(325deg)_brightness(97%)_contrast(91%)]'}"
                 />
                 <span
-                  class="{$page?.url?.pathname === item.href
+                  class="{($page?.url?.pathname === item.href.split('?')[0] || 
+                          (item.href.includes('/settings') && $page?.url?.pathname === '/settings'))
                     ? 'text-light-text-primary dark:text-dark-text-primary font-semibold'
                     : 'text-light-text-secondary dark:text-dark-text-secondary hover:text-light-text-secondary dark:hover:text-dark-text-secondary hover:font-semibold'} transition-all"
                   >{item.label}</span
@@ -766,16 +791,18 @@
                     <img
                       src={item.icon}
                       alt={item.label}
-                      style={$page?.url?.pathname === item.href
+                      style={($page?.url?.pathname === item.href.split('?')[0] || 
+                             (item.href.includes('/settings') && $page?.url?.pathname === '/settings'))
                         ? "filter: invert(45%) sepia(95%) saturate(1648%) hue-rotate(325deg) brightness(97%) contrast(91%);"
                         : ""}
-                      class="w-6 h-6 {$page?.url?.pathname === item.href
+                      class="w-6 h-6 {($page?.url?.pathname === item.href.split('?')[0] || 
+                                      (item.href.includes('/settings') && $page?.url?.pathname === '/settings'))
                         ? 'opacity-100'
                         : 'opacity-60'}"
                     />
                     <span
-                      class="text-center text-mini-body leading-tight {$page?.url
-                        ?.pathname === item.href
+                      class="text-center text-mini-body leading-tight {($page?.url?.pathname === item.href.split('?')[0] || 
+                                                                       (item.href.includes('/settings') && $page?.url?.pathname === '/settings'))
                         ? 'text-black font-medium'
                         : 'text-[#494848] font-normal'}"
                     >
