@@ -13,9 +13,11 @@
     export let liking: boolean = false;
     export const showShareModal: boolean = false;
     export let isEnrolled: boolean = false;
+    export let isIntroPage: boolean = false;
+    export let isModulePage: boolean = false;
 
     // Check if we're on the module page
-    $: isModulePage = $page.url.pathname.includes("/module");
+    // $: isModulePage = $page.url.pathname.includes("/module");
 
     // Helper function to format numbers
     function formatNumber(num: number): string {
@@ -79,10 +81,9 @@
     </div>
 
     <!-- Module Button -->
-    <!-- {#if !isCreator || !isEnrolled} -->
-    <div class="lg:hidden flex items-center">
+    <div class=" flex items-center">
         <button
-            class="flex items-center"
+            class="{!isIntroPage ? 'hidden' : 'lg:hidden'} flex items-center"
             on:click={() => {
                 if (isModulePage && (!isCreator || !isEnrolled)) {
                     goto(`/course/${courseDetails.id}/intro`);
@@ -117,8 +118,28 @@
                 />
             {/if}
         </button>
+
+        <!-- Course Intro Button on course page for mobile -->
+        {#if isIntroPage && isModulePage}
+            <div class="lg:hidden">
+                <button
+                    class="px-4 py-2 text-body text-brand-turquoise hover:text-brand-turquoise/80 flex items-center gap-1"
+                on:click={() => {
+                    currentModuleStore.set(-1);
+                    goto(`/course/${courseDetails.id}`);
+                }}
+            >
+                Course Introo
+                <img
+                    src="/icons/arrow-right.svg"
+                    alt="Introduction"
+                    class="w-6 h-6"
+                />
+            </button>
+        </div>
+        {/if}
     </div>
-    <!-- {/if} -->
+
 </div>
 
 <!-- Creator Info with Bookmark and Share Button -->
@@ -237,7 +258,7 @@
 <!-- Navigation Buttons - Only for enrolled users and creators -->
 
 {#if isEnrolled || (isCreator && $currentModuleStore !== -1 && $currentModuleStore !== 0)}
-    <div class="flex items-center justify-between mt-4">
+    <div class="flex items-center {$currentModuleStore !== 10 ? 'justify-between' : 'justify-end'} mt-4">
         {#if $currentModuleStore !== -1 && $currentModuleStore !== courseDetails?.Final_Module_Title?.length}
             <!-- Prev and Next Buttons -->
             <div class="flex items-center gap-4">
@@ -300,10 +321,10 @@
         {/if}
 
         <!-- Course Intro Button for desktop -->
-        <div class="hidden lg:flex">
-            {#if $currentModuleStore !== -1 && $currentModuleStore !== courseDetails?.Final_Module_Title?.length}
+        <div class="hidden lg:flex justify-end">
+            {#if $currentModuleStore !== -1 }
                 <button
-                    class="lg:flex px-4 py-2 text-body text-brand-turquoise hover:text-brand-turquoise/80 flex items-center gap-1"
+                    class="lg:flex  py-2 text-body text-brand-turquoise hover:text-brand-turquoise/80 flex items-center gap-1"
                     on:click={() => {
                         currentModuleStore.set(-1);
                         goto(`/course/${courseDetails.id}`);
@@ -324,7 +345,7 @@
         <div class="lg:hidden">
             {#if $currentModuleStore !== -1 && $currentModuleStore !== courseDetails?.Final_Module_Title?.length}
                 <button
-                    class="lg:flex px-4 py-2 text-body text-brand-turquoise hover:text-brand-turquoise/80 flex items-center gap-1"
+                    class="lg:flex py-2 text-body text-brand-turquoise hover:text-brand-turquoise/80 flex items-center gap-1"
                     on:click={() => {
                         currentModuleStore.set(-1);
                         goto(`/course/${courseDetails.id}`);

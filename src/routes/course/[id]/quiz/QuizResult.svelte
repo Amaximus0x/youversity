@@ -20,13 +20,13 @@
     async function handleShare() {
         try {
             isSharing = true;
-            const courseTitle = quizData?.title || 'Course';
+            const courseTitle = quizData?.title || "Course";
             const shareData = {
-                title: 'Course Completion Achievement',
+                title: "Course Completion Achievement",
                 text: `I just completed "${courseTitle}" with a score of ${score}%! 🎉`,
-                url: `${window.location.origin}/course/${courseId}`
+                url: `${window.location.origin}/course/${courseId}`,
             };
-            console.log('shareData', shareData);
+            console.log("shareData", shareData);
 
             if (navigator.share && navigator.canShare(shareData)) {
                 // Use native sharing if available
@@ -35,11 +35,11 @@
                 // Fallback to clipboard copy
                 const shareText = `${shareData.text}\nCheck out the course here: ${shareData.url}`;
                 await navigator.clipboard.writeText(shareText);
-                alert('Achievement link copied to clipboard!');
+                alert("Achievement link copied to clipboard!");
             }
         } catch (error) {
-            console.error('Error sharing achievement:', error);
-            alert('Failed to share achievement. Please try again.');
+            console.error("Error sharing achievement:", error);
+            alert("Failed to share achievement. Please try again.");
         } finally {
             isSharing = false;
         }
@@ -52,15 +52,16 @@
         try {
             // Get current enrollment to check existing attempts
             const enrollmentId = `${$user.uid}_${courseId}`;
-            const enrollmentRef = doc(db, 'enrollments', enrollmentId);
+            const enrollmentRef = doc(db, "enrollments", enrollmentId);
             const enrollmentDoc = await getDoc(enrollmentRef);
 
             if (!enrollmentDoc.exists()) {
-                throw new Error('Enrollment not found');
+                throw new Error("Enrollment not found");
             }
 
             const enrollmentData = enrollmentDoc.data();
-            const currentAttempts = enrollmentData?.quizResults?.finalQuiz?.attempts || 0;
+            const currentAttempts =
+                enrollmentData?.quizResults?.finalQuiz?.attempts || 0;
 
             const quizResult = {
                 attempts: currentAttempts + 1,
@@ -71,18 +72,24 @@
                 passed: score >= 80,
                 // Track attempt history
                 attemptHistory: [
-                    ...(enrollmentData?.quizResults?.finalQuiz?.attemptHistory || []),
+                    ...(enrollmentData?.quizResults?.finalQuiz
+                        ?.attemptHistory || []),
                     {
                         score,
-                        timestamp: new Date()
-                    }
-                ]
+                        timestamp: new Date(),
+                    },
+                ],
             };
 
             // -1 indicates this is the final quiz (not a module quiz)
-            await updateEnrollmentQuizResult($user.uid, courseId, -1, quizResult);
+            await updateEnrollmentQuizResult(
+                $user.uid,
+                courseId,
+                -1,
+                quizResult,
+            );
         } catch (error) {
-            console.error('Error saving quiz result:', error);
+            console.error("Error saving quiz result:", error);
         }
     }
 
@@ -272,10 +279,28 @@
                         disabled={isSharing}
                     >
                         {#if isSharing}
-                            <div class="absolute inset-0 flex items-center justify-center bg-Black/5 rounded-2xl">
-                                <svg class="animate-spin h-5 w-5 text-Green" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            <div
+                                class="absolute inset-0 flex items-center justify-center bg-Black/5 rounded-2xl"
+                            >
+                                <svg
+                                    class="animate-spin h-5 w-5 text-Green"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                >
+                                    <circle
+                                        class="opacity-25"
+                                        cx="12"
+                                        cy="12"
+                                        r="10"
+                                        stroke="currentColor"
+                                        stroke-width="4"
+                                    ></circle>
+                                    <path
+                                        class="opacity-75"
+                                        fill="currentColor"
+                                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                    ></path>
                                 </svg>
                             </div>
                         {/if}

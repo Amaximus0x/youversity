@@ -45,6 +45,7 @@
   let bookmarking = false;
   let creatorProfile: any = null;
   let liking = false;
+  let isIntroPage = true;
   let showFloatingButton = false;
   let contentStartElement: HTMLElement;
 
@@ -301,7 +302,7 @@
   {:else if error}
     <div class="text-brand-red text-center p-4">{error}</div>
   {:else if courseDetails}
-    <div class="w-full lg:container lg:mx-auto lg:pb-8">
+    <div class="w-full pt-6 lg:container lg:mx-auto lg:pb-8">
       <!-- Two Column Layout -->
       <div class="w-full lg:grid lg:grid-cols-12 lg:gap-8">
         <!-- Left Column - Video and Course Info -->
@@ -361,21 +362,18 @@
             bind:this={contentStartElement}
           >
             <!-- Course Module Title -->
-            <div class="mb-4">
+            <div class="flex flex-col gap-8 mb-4">
               <h4 class="text-h4-medium text-Black">
                 {#if $currentModuleStore === -1}
                   Course Introduction and Objectives
                 {:else if $currentModuleStore === courseDetails?.Final_Module_Title?.length}
                   Course Conclusion
-                {:else}
-                  <span class="text-h4-medium text-Black2"
-                    >{($currentModuleStore + 1)
-                      .toString()
-                      .padStart(2, "0")}</span
-                  >: {courseDetails.Final_Module_Title[$currentModuleStore] ||
-                    "Loading module..."}
                 {/if}
               </h4>
+
+              <h2 class="text-h2-mobile-bold text-Black lg:hidden">
+                {courseDetails?.Final_Course_Title}
+              </h2>
             </div>
 
             <!-- Creator Info with Bookmark and Share Button -->
@@ -387,6 +385,7 @@
               {hasLiked}
               {liking}
               {showShareModal}
+              {isIntroPage}
               on:like={handleLike}
               on:bookmark={handleBookmark}
               on:share={() => (showShareModal = true)}
@@ -398,7 +397,7 @@
                 <!-- Course Introduction and Objectives -->
                 <div>
                   <!-- Add Course Title here -->
-                  <div class="mt-6 mb-2">
+                  <div class="hidden lg:block mt-6 mb-2">
                     <p class="text-h2-mobile lg:text-h2 text-Black">
                       {courseDetails?.Final_Course_Title}
                     </p>
@@ -455,7 +454,7 @@
                 <!-- Regular Module Content -->
                 <div>
                   <!-- Course Title -->
-                  <div class="mt-6">
+                  <div class=" mt-6">
                     <p class="text-h2-mobile lg:text-h2 text-Black">
                       {courseDetails?.Final_Course_Title}
                     </p>
@@ -480,18 +479,6 @@
 
             <!-- Move Reviews Section after Course Conclusion for mobile -->
             <div class="lg:hidden mt-6">
-
-              <!-- Course Enrollment Progress for mobile -->
-               {#if !isEnrolled && $currentModuleStore !== -1}
-              <CourseModuleList
-                {courseDetails}
-                {isCreator}
-                {isEnrolled}
-                showProgress={true}
-                bind:currentModule
-              />
-              {/if}
-
               <!-- Reviews Section for mobile -->
               {#if courseDetails.isPublic}
                 <div class="w-full mt-6">

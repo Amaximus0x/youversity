@@ -33,6 +33,7 @@
     let creatorProfile: any = null;
     let hasLiked = false;
     let liking = false;
+    let isModulePage = true;
     // Add state for active tab
     let activeTab: "modules" | "reviews" = "modules";
 
@@ -156,7 +157,7 @@
 
 <div class="min-h-screen mx-[-20px]">
     <!-- Tab buttons -->
-    <div class=" w-full bg-BackgroundRed border-b border-light-border dark:border-dark-border fixed top-[86px] lg:top-[96px] lg:left-[262px] lg:right-[26px] left-0 right-0 z-[51]">
+    <div class=" w-full bg-BackgroundRed border-b border-light-border dark:border-dark-border fixed top-[86px] lg:top-[96px] lg:left-[262px] lg:right-[26px] left-0 right-0 z-[50]">
         <div class="container mx-auto flex gap-2 px-5 py-2">
             <button
                 class="flex-1 px-4 py-3 text-h4- rounded-lg transition-colors {activeTab ===
@@ -192,7 +193,7 @@
         {:else if courseDetails}
             <!-- Course Title -->
             <h1
-                class="text-h4-medium lg:text-h2 text-Black dark:text-White mb-4"
+                class="text-h4-medium font-bold lg:text-h2 text-Black dark:text-White mb-4"
             >
                 {courseDetails.Final_Course_Title}
             </h1>
@@ -205,6 +206,7 @@
                 {hasLiked}
                 {liking}
                 {showShareModal}
+                {isModulePage}
                 on:like={handleLike}
                 on:bookmark={handleBookmark}
                 on:share={() => (showShareModal = true)}

@@ -40,6 +40,8 @@
   let showProgress = false;
   let isBookmarked = false;
   let hasLiked = false;
+  let isIntroPage = false;
+  let isModulePage = false;
 
   // Other state variables
   let moduleProgress: { completed?: boolean }[] = [];
@@ -668,6 +670,8 @@
               {liking}
               {showShareModal}
               {isEnrolled}
+              {isIntroPage}
+              {isModulePage}  
               on:like={handleLike}
               on:bookmark={handleBookmark}
               on:share={() => (showShareModal = true)}
