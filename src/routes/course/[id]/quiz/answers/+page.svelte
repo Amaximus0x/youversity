@@ -3,8 +3,9 @@
     import { goto } from "$app/navigation";
     import { onMount } from "svelte";
     import { quizStore } from '$lib/stores/quiz';
+    import type { Quiz, QuizQuestion } from "$lib/types/course";
 
-    let quizData: any;
+    let quizData: Quiz | null = null;
     let selectedAnswers: Record<number, string>;
     let score: number;
 
@@ -15,18 +16,18 @@
         score = store.score;
     });
 
-    function isAnswerCorrect(questionId: number, optionKey: string): boolean {
-        const question = quizData.quiz.find((q: any) => q.id === questionId);
+    function isAnswerCorrect(questionIndex: number, optionKey: string): boolean {
+        const question = quizData?.quiz[questionIndex];
         return question?.answer === optionKey;
     }
 
-    function wasOptionSelected(questionId: number, optionKey: string): boolean {
-        return selectedAnswers[questionId] === optionKey;
+    function wasOptionSelected(questionIndex: number, optionKey: string): boolean {
+        return selectedAnswers[questionIndex] === optionKey;
     }
 
-    function getOptionClass(questionId: number, optionKey: string): string {
-        const isCorrect = isAnswerCorrect(questionId, optionKey);
-        const wasSelected = wasOptionSelected(questionId, optionKey);
+    function getOptionClass(questionIndex: number, optionKey: string): string {
+        const isCorrect = isAnswerCorrect(questionIndex, optionKey);
+        const wasSelected = wasOptionSelected(questionIndex, optionKey);
         
         if (isCorrect) return 'correct';
         if (wasSelected && !isCorrect) return 'incorrect';
@@ -61,10 +62,10 @@
                     <!-- quiz title -->
                     <div class="w-full flex flex-col gap-6 bg-BackgroundRed border border-light-border dark:border-dark-border rounded-2xl p-4">
                         <h1 class="text-light-text-secondary dark:text-dark-text-secondary text-h4-medium">
-                            Final Quiz Answers
+                            Quiz Results
                         </h1>
                         <p class="text-light-text-primary dark:text-dark-text-primary text-h4 font-bold">
-                            {quizData.title}
+                            {score}% Score
                         </p>
                     </div>
                 </div>
@@ -74,34 +75,36 @@
         <!-- Questions with Answers -->
         <div class="mt-[23px] pl-5 flex-1 pb-8">
             <div class="space-y-8">
-                {#each quizData.quiz as question, index}
-                    <div class="flex flex-col gap-4 text-body-semibold">
-                        <div class="flex items-start gap-2">
-                            <p>{index + 1}.</p>
-                            <p>{question.question}</p>
-                        </div>
-                        <div class="space-y-4">
-                            {#each Object.entries(question.options) as [key, value]}
-                                <div class="flex items-center gap-3">
-                                    <div class="relative flex items-center">
-                                        <div class="radio-circle w-6 h-6 flex items-center justify-center {getOptionClass(question.id, key)}">
-                                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                <path 
-                                                    d="M12 20C16.4183 20 20 16.4183 20 12C20 7.58172 16.4183 4 12 4C7.58172 4 4 7.58172 4 12C4 16.4183 7.58172 20 12 20Z" 
-                                                    stroke="currentColor" 
-                                                    stroke-width="1.5"
-                                                />
-                                            </svg>
+                {#if quizData?.quiz}
+                    {#each quizData.quiz as question, index}
+                        <div class="flex flex-col gap-4 text-body-semibold">
+                            <div class="flex items-start gap-2">
+                                <p>{index + 1}.</p>
+                                <p>{question.question}</p>
+                            </div>
+                            <div class="space-y-4">
+                                {#each Object.entries(question.options) as [key, value]}
+                                    <div class="flex items-center gap-3">
+                                        <div class="relative flex items-center">
+                                            <div class="radio-circle w-6 h-6 flex items-center justify-center {getOptionClass(index, key)}">
+                                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                    <path 
+                                                        d="M12 20C16.4183 20 20 16.4183 20 12C20 7.58172 16.4183 4 12 4C7.58172 4 4 7.58172 4 12C4 16.4183 7.58172 20 12 20Z" 
+                                                        stroke="currentColor" 
+                                                        stroke-width="1.5"
+                                                    />
+                                                </svg>
+                                            </div>
                                         </div>
+                                        <span class="text-semi-body text-Black group-hover:opacity-90">
+                                            {value}
+                                        </span>
                                     </div>
-                                    <span class="radio-text text-semi-body text-Black {getOptionClass(question.id, key)}">
-                                        {value}
-                                    </span>
-                                </div>
-                            {/each}
+                                {/each}
+                            </div>
                         </div>
-                    </div>
-                {/each}
+                    {/each}
+                {/if}
             </div>
 
             <!-- Done Button mobile -->
@@ -110,7 +113,7 @@
                     class="w-full px-6 py-3 bg-brand-red hover:bg-ButtonHover text-white rounded-2xl text-semibody-medium transition-colors flex items-center justify-center gap-2"
                     on:click={() => goto(`/course/${$page.params.id}`)}
                 >
-                    Done
+                    Continue Course
                     <svg width="25" height="24" viewBox="0 0 25 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <g id="arrow-right">
                             <path id="Vector" d="M20.5 12H4.50002" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
@@ -128,8 +131,8 @@
         <!-- Desktop Header - Fixed -->
         <div class="flex-shrink-0 pl-5 pb-6 ">
             <div class="p-4 flex gap-6 items-center justify-between border border-light-border dark:border-dark-border rounded-2xl">
-                <p class="text-Black text-h4 font-bold">{quizData.title}</p>
-                <h1 class="text-light-text-secondary dark:text-dark-text-secondary text-h4-medium text-nowrap">Final Quiz</h1>
+                <p class="text-Black text-h4 font-bold">{score}% Score</p>
+                <h1 class="text-light-text-secondary dark:text-dark-text-secondary text-h4-medium text-nowrap">Quiz Results</h1>
             </div>
         </div>
 
@@ -137,38 +140,40 @@
         <div class="flex-1 overflow-hidden relative ">
             <div class="absolute inset-0 overflow-y-auto custom-scrollbar pl-5 pr-8">
                 <div class="space-y-8 pb-8">
-                    {#each quizData.quiz as question, index}
-                        <div class="flex flex-col gap-4 text-body-semibold">
-                            <div class="flex items-start gap-2">
-                                <p>
-                                    {index + 1}. 
-                                </p>
-                                <p>
-                                    {question.question}
-                                </p>
-                            </div>
-                            <div class="space-y-4">
-                                {#each Object.entries(question.options) as [key, value]}
-                                <div class="flex items-center gap-3">
-                                    <div class="relative flex items-center">
-                                        <div class="radio-circle w-6 h-6 flex items-center justify-center {getOptionClass(question.id, key)}">
-                                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                <path 
-                                                    d="M12 20C16.4183 20 20 16.4183 20 12C20 7.58172 16.4183 4 12 4C7.58172 4 4 7.58172 4 12C4 16.4183 7.58172 20 12 20Z" 
-                                                    stroke="currentColor" 
-                                                    stroke-width="1.5"
-                                                />
-                                            </svg>
-                                        </div>
-                                    </div>
-                                    <span class="radio-text text-semi-body text-Black {getOptionClass(question.id, key)}">
-                                        {value}
-                                    </span>
+                    {#if quizData?.quiz}
+                        {#each quizData.quiz as question, index}
+                            <div class="flex flex-col gap-4 text-body-semibold">
+                                <div class="flex items-start gap-2">
+                                    <p>
+                                        {index + 1}. 
+                                    </p>
+                                    <p>
+                                        {question.question}
+                                    </p>
                                 </div>
-                                {/each}
+                                <div class="space-y-4">
+                                    {#each Object.entries(question.options) as [key, value]}
+                                    <div class="flex items-center gap-3">
+                                        <div class="relative flex items-center">
+                                            <div class="radio-circle w-6 h-6 flex items-center justify-center {getOptionClass(index, key)}">
+                                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                    <path 
+                                                        d="M12 20C16.4183 20 20 16.4183 20 12C20 7.58172 16.4183 4 12 4C7.58172 4 4 7.58172 4 12C4 16.4183 7.58172 20 12 20Z" 
+                                                        stroke="currentColor" 
+                                                        stroke-width="1.5"
+                                                    />
+                                                </svg>
+                                            </div>
+                                        </div>
+                                        <span class="text-semi-body text-Black group-hover:opacity-90">
+                                            {value}
+                                        </span>
+                                    </div>
+                                    {/each}
+                                </div>
                             </div>
-                        </div>
-                    {/each}
+                        {/each}
+                    {/if}
                 </div>
             </div>
         </div>
@@ -180,7 +185,7 @@
                 class="px-4 py-2 rounded-lg text-semibody-medium transition-colors flex items-center justify-center gap-2 bg-brand-red hover:bg-ButtonHover text-white"
                 on:click={() => goto(`/course/${$page.params.id}`)}
             >
-                Done
+                Continue Course
                 <svg width="25" height="24" viewBox="0 0 25 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <g id="arrow-right">
                         <path id="Vector" d="M20.5 12H4.50002" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
@@ -201,17 +206,17 @@
 
     /* Selected and Correct */
     .radio-circle.correct {
-        color: #4CAF50 !important;  /* Green for correct answers */
+        color: #22C55E !important;  /* Green for correct answers */
     }
     .radio-text.correct {
-        color: #4CAF50 !important;  /* Green for correct answers */
+        color: #22C55E !important;  /* Green for correct answers */
     }
     .radio-circle.correct::after {
         content: '';
         position: absolute;
         width: 12px;
         height: 12px;
-        background-color: #4CAF50;
+        background-color: #22C55E;
         border-radius: 50%;
         left: 50%;
         top: 50%;
@@ -220,17 +225,17 @@
 
     /* Selected but Incorrect */
     .radio-circle.incorrect {
-        color: #EE434A !important;  /* Red for incorrect answers */
+        color: #EF4444 !important;  /* Red for incorrect answers */
     }
     .radio-text.incorrect {
-        color: #EE434A !important;  /* Red for incorrect answers */
+        color: #EF4444 !important;  /* Red for incorrect answers */
     }
     .radio-circle.incorrect::after {
         content: '';
         position: absolute;
         width: 12px;
         height: 12px;
-        background-color: #EE434A;
+        background-color: #EF4444;
         border-radius: 50%;
         left: 50%;
         top: 50%;
@@ -253,7 +258,7 @@
         position: absolute;
         width: 8px;
         height: 8px;
-        border: 2px solid #4CAF50;
+        border: 2px solid #22C55E;
         border-top: 0;
         border-left: 0;
         transform: rotate(45deg);

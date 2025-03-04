@@ -3,113 +3,81 @@
   import { goto } from "$app/navigation";
   import { onMount } from "svelte";
   import { user } from "$lib/stores/auth";
+  import { quizStore } from "$lib/stores/quiz";
+  import { currentModuleStore } from "$lib/stores/course";
+  import type { Quiz, QuizQuestion } from "$lib/types/course";
   // import QuizResult from './QuizResult.svelte';
 
-  // Static quiz data for now
-  const quiz = {
-      title: "Mastering motion design: From concept to creation",
-      quiz: [
-          {
-              id: 1,
-              question:
-                  "How can principles of motion design enhance storytelling and user engagement across different media?",
-              answer: 'a',
-              options: {
-                 a: "Guide attention with smooth transitions.",
-                 b: "Establish hierarchy and emphasize key elements.",
-                 c: "Evoke emotions through timing and pacing.",
-                 d: "Ensure consistency in branding and visuals.",
-              },
-              type: "checkbox",
-          },
-          {
-              id: 2,
-              question:
-                  "What are the key steps in transforming a static concept into a dynamic motion design project?",
-              answer: 'a',
-              options: {
-                 a: "True",
-                 b: "False",
-              },
-              type: "radio",
-          },
-          {
-              id: 3,
-              question:
-                  "How do timing, easing, and transitions improve motion design?",
-              answer: 'c',
-              options: {
-                 a: "Guide attention with smooth transitions.",
-                 b: "Establish hierarchy and emphasize key elements.",
-                 c: "Evoke emotions through timing and pacing.",
-                 d: "Ensure consistency in branding and visuals.",
-              },
-              type: "checkbox",
-          },
-          {
-              id: 4,
-              question:
-                  "How do timing, easing, and transitions improve motion design?",
-              answer: 'b',
-              options: {
-                 a: "Guide attention with smooth transitions.",
-                 b: "Establish hierarchy and emphasize key elements.",
-                 c: "Evoke emotions through timing and pacing.",
-                 d: "Ensure consistency in branding and visuals.",
-              },
-              type: "checkbox",
-          },
-          {
-              id: 5,
-              question:
-                  "How do timing, easing, and transitions improve motion design?",
-              answer: 'a',
-              options: {
-                 a: "Guide attention with smooth transitions.",
-                 b: "Establish hierarchy and emphasize key elements.",
-                 c: "Evoke emotions through timing and pacing.",
-                 d: "Ensure consistency in branding and visuals.",
-              },
-              type: "checkbox",
-          },
-      ],
+  export let data: {
+    quiz: Quiz;
+    moduleTitle: string;
+    moduleId: number;
   };
+  const { quiz, moduleTitle, moduleId } = data;
 
-  let selectedAnswers: { [key: number]: string | string[] } = {};
+  let selectedAnswers: Record<number, string> = {};
   let showQuizResult = false;
-  let quizScore = 60; // This will come from your quiz logic
+  let quizScore = 0;
+  let startTime: Date;
 
   // Track if all questions are answered
-  $: isAllAnswered =
-      quiz?.quiz.every((q) => selectedAnswers[q.id] !== undefined) ||
-      false;
+  $: isAllAnswered = quiz?.quiz.every((_, index) => selectedAnswers[index] !== undefined) || false;
 
-  function handleOptionSelect(questionId: number, option: string) {
-      selectedAnswers[questionId] = option;
+  function handleOptionSelect(questionIndex: number, option: string) {
+    selectedAnswers[questionIndex] = option;
   }
 
-  function isOptionSelected(questionId: number, option: string): boolean {
-      return selectedAnswers[questionId] === option;
+  function isOptionSelected(questionIndex: number, option: string): boolean {
+    return selectedAnswers[questionIndex] === option;
+  }
+
+  function calculateScore() {
+    let correctAnswers = 0;
+    const totalQuestions = quiz.quiz.length;
+
+    quiz.quiz.forEach((question: QuizQuestion, index: number) => {
+      const selectedAnswer = selectedAnswers[index];
+      if (selectedAnswer === question.answer) {
+        correctAnswers++;
+      }
+    });
+
+    return Math.round((correctAnswers / totalQuestions) * 100);
   }
 
   function handleSubmit() {
-      // Calculate score and show result
-      showQuizResult = true;
+    const endTime = new Date();
+    const timeSpent = Math.round((endTime.getTime() - startTime.getTime()) / 1000); // in seconds
+    quizScore = calculateScore();
+    
+    // Store quiz data in the store for the result page
+    quizStore.update(store => ({
+      ...store,
+      quizData: quiz,
+      selectedAnswers,
+      score: quizScore,
+      moduleIndex: moduleId
+    }));
+
+    showQuizResult = true;
+    goto(`/course/${$page.params.id}/quiz/answers`);
   }
 
   function handleQuizRetake() {
-      showQuizResult = false;
-      // Reset quiz state
+    showQuizResult = false;
+    // Reset quiz state
   }
 
   function handleQuizReview() {
-      // Implement review logic
+    // Implement review logic
   }
 
   onMount(() => {
-      // if (!$user) {
-      //   goto('/login');
-      // }
+    if (!$user) {
+      goto("/login");
+      return;
+    }
+    startTime = new Date();
   });
 </script>
 
@@ -136,10 +104,10 @@
                       class="w-full flex flex-col gap-6 bg-BackgroundRed border border-light-border dark:border-dark-border rounded-2xl p-4"
                   >
                       <h1 class="text-light-text-secondary dark:text-dark-text-secondary text-h4-medium">
-                          Final Quiz
+                          Module Quiz
                       </h1>
                       <p class="text-light-text-primary dark:text-dark-text-primary text-h4 font-bold">
-                          {quiz.title}
+                          {moduleTitle}
                       </p>
                   </div>
               </div>
@@ -168,10 +136,10 @@
                                   <div class="relative flex items-center">
                                       <input
                                           type="radio"
-                                          name={`question-${question.id}`}
+                                          name={`question-${index}`}
                                           value={key}
-                                          checked={isOptionSelected(question.id, key)}
-                                          on:change={() => handleOptionSelect(question.id, key)}
+                                          checked={isOptionSelected(index, key)}
+                                          on:change={() => handleOptionSelect(index, key)}
                                           class="absolute opacity-0 w-6 h-6 cursor-pointer"
                                       />
                                       <div class="radio-circle w-6 h-6 flex items-center justify-center">
@@ -220,8 +188,8 @@
       <!-- Desktop Header - Fixed -->
       <div class="flex-shrink-0 pl-5 pb-6 ">
           <div class="p-4 flex gap-6 items-center justify-between border border-light-border dark:border-dark-border rounded-2xl">
-              <p class="text-Black text-h4 font-bold">{quiz.title}</p>
-              <h1 class="text-light-text-secondary dark:text-dark-text-secondary text-h4-medium text-nowrap">Final Quiz</h1>
+              <p class="text-Black text-h4 font-bold">{moduleTitle}</p>
+              <h1 class="text-light-text-secondary dark:text-dark-text-secondary text-h4-medium text-nowrap">Module Quiz</h1>
           </div>
       </div>
 
@@ -247,10 +215,10 @@
                                       <div class="relative flex items-center">
                                           <input
                                               type="radio"
-                                              name={`question-${question.id}`}
+                                              name={`question-${index}`}
                                               value={key}
-                                              checked={isOptionSelected(question.id, key)}
-                                              on:change={() => handleOptionSelect(question.id, key)}
+                                              checked={isOptionSelected(index, key)}
+                                              on:change={() => handleOptionSelect(index, key)}
                                               class="absolute opacity-0 w-6 h-6 cursor-pointer"
                                           />
                                           <div class="radio-circle w-6 h-6 flex items-center justify-center">
