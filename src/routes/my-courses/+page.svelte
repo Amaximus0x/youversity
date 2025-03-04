@@ -192,7 +192,7 @@
     <h1 class="text-h2-mobile lg:text-h2 text-light-text-primary dark:text-dark-text-primary mb-4">
       My Courses
     </h1>
-    <p class="text-light-text-secondary dark:text-dark-text-secondary text-semi-body lg:text-body">
+    <p class="text-light-text-tertiary dark:text-dark-text-tertiary text-semi-body lg:text-body">
 
       Access all your enrolled and created courses. Stay on top of your learning, monitor your progress, and keep everything organized in one place!
     </p>
@@ -256,14 +256,17 @@
         <!-- Sort and Create Course Section - Desktop -->
         <div class="hidden lg:flex items-center gap-4 absolute right-0 top-[-8px]   h-full ">
           <!-- Sort Dropdown -->
-          <button 
 
-            class="flex items-center gap-2 px-4 py-2 rounded-lg bg-Black/5 dark:bg-dark-bg-primary"
-          >
-            <!-- <img src="/icons/sort-icon.svg" alt="Sort" class="w-5 h-5" /> -->
-            <span class="text-semibody-medium text-Black2 dark:text-dark-text-primary">Sort by</span>
-            <!-- <img src="/icons/chevron-down.svg" alt="Expand" class="w-5 h-5" /> -->
-          </button>
+          <div class="h-[42px] px-4 py-2 bg-white/10 rounded-lg justify-start items-center gap-[17px] inline-flex">
+            <div class="text-[#dddada] text-sm font-medium font-['Poppins']">Sort by</div>
+            <div data-svg-wrapper class="relative">
+            <svg width="16" height="27" viewBox="0 0 16 27" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 10.5C12 10.5 9.05403 6.50001 7.99997 6.5C6.9459 6.49999 4 10.5 4 10.5" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M12 16.5C12 16.5 9.05403 20.5 7.99997 20.5C6.9459 20.5 4 16.5 4 16.5" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            </div>
+        </div>
+          
 
           <!-- Create Course Button -->
           <button 
@@ -281,14 +284,15 @@
     <!-- Sort and Create Course Section - Mobile -->
     <div class="flex lg:hidden items-center justify-end gap-4 mt-4">
       <!-- Sort Dropdown -->
-      <button 
-
-        class="flex items-center gap-2 px-4 py-2  rounded-lg bg-Black/5 dark:bg-dark-bg-primary"
-      >
-        <!-- <img src="/icons/sort-icon.svg" alt="Sort" class="w-5 h-5" /> -->
-        <span class="text-semibody-medium text-Black2 dark:text-dark-text-primary">Sort by</span>
-        <!-- <img src="/icons/chevron-down.svg" alt="Expand" class="w-5 h-5" /> -->
-      </button>
+      <div class="h-[42px] px-4 py-2 bg-white/10 rounded-lg justify-start items-center gap-[17px] inline-flex">
+        <div class="text-[#dddada] text-sm font-medium font-['Poppins']">Sort by</div>
+        <div data-svg-wrapper class="relative">
+        <svg width="16" height="27" viewBox="0 0 16 27" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 10.5C12 10.5 9.05403 6.50001 7.99997 6.5C6.9459 6.49999 4 10.5 4 10.5" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M12 16.5C12 16.5 9.05403 20.5 7.99997 20.5C6.9459 20.5 4 16.5 4 16.5" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        </div>
+    </div>
 
       <!-- Create Course Button -->
       <button 

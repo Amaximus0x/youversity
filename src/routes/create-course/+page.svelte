@@ -297,7 +297,7 @@
 >
   <!-- Fixed Header Section for Mobile -->
   <div
-    class="md:hidden fixed top-14 left-0 right-0 z-40 pt-safe-top bg-light-bg-secondary dark:bg-dark-bg-secondary"
+    class="md:hidden fixed top-[72px] left-0 right-0 z-40  bg-light-bg-secondary dark:bg-dark-bg-secondary"
   >
     <div class=" pt-4 pb-4">
       <div class="px-4">

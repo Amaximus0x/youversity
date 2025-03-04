@@ -87,14 +87,13 @@
     </svg> -->
 
     {#if unreadCount === 0 || unreadCount === null}
-      <!-- <span
-        class="absolute -top-1 -right-1 flex items-center justify-center min-w-[18px] h-[18px] text-sm-button text-white bg-brand-red rounded-full px-1"
-      >
-        {unreadCount}
-      </span> -->
-      <img src="/icons/notification-block-02.svg" alt="Notifications" class="w-6 h-6 text-light-text-primary dark:text-dark-text-primary" />
+      <img src="/icons/notification-block-02.svg" alt="Notifications" class="w-6 h-6 opacity-60 dark:opacity-100 dark:invert dark:brightness-200" />
     {:else}
-      <img src="/icons/notification-active.svg" alt="Notifications" class="w-6 h-6 text-light-text-primary dark:text-dark-text-primary" />
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-6 h-6">
+        <path d="M14.5 2.42385C13.7178 2.14933 12.8764 2 12 2C7.84413 2 4.47513 5.35786 4.47513 9.5C4.47503 10.5718 4.41272 11.5793 3.78561 12.5029C3.30684 13.1995 2.66061 13.9129 2.52992 14.7696C2.31727 16.1636 3.268 17.1312 4.43205 17.6134C8.89481 19.4622 15.1052 19.4622 19.5679 17.6134C20.732 17.1312 21.6827 16.1636 21.4701 14.7696C21.3702 14.1149 20.9692 13.5438 20.5719 13" class="stroke-light-text-secondary dark:stroke-dark-text-secondary" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M8 19C8.45849 20.7252 10.0755 22 12 22C13.9245 22 15.5415 20.7252 16 19" class="stroke-light-text-secondary dark:stroke-dark-text-secondary" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M21 7.5C21 5.567 19.433 4 17.5 4C15.567 4 14 5.567 14 7.5C14 9.433 15.567 11 17.5 11C19.433 11 21 9.433 21 7.5Z" fill="#EB434A" stroke="#EB434A" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
     {/if}
   </button>
 

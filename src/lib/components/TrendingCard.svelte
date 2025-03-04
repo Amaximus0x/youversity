@@ -235,7 +235,7 @@
     <div class="w-full">
       <!-- View Course Button -->
       <button
-        class="w-full px-4 py-2 bg-Green hover:bg-GreenHover rounded-lg justify-center items-center gap-2 transition-colors duration-200"
+        class="w-full px-4 py-2 bg-Green dark:bg-Green2 hover:bg-GreenHover rounded-lg justify-center items-center gap-2 transition-colors duration-200"
         on:click|stopPropagation={() => handleNavigateToCourse(course.id)}
       >
         <span class="text-white text-semi-body">View Course</span>

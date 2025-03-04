@@ -3,7 +3,6 @@
   import { user, isAuthenticated } from "$lib/stores/auth";
   import { signOutUser } from "$lib/services/auth";
   import Skeleton from "$lib/components/Skeleton.svelte";
-  import ThemeToggle from "$lib/components/ThemeToggle.svelte";
   import { theme } from "$lib/stores/theme";
   import "../app.css";
   import { goto } from "$app/navigation";
@@ -468,7 +467,7 @@
                   item.href.split('?')[0] || 
                   (item.href.includes('/settings') && $page?.url?.pathname === '/settings'))
                     ? ''
-                    : 'opacity-60 group-hover:opacity-100 group-hover:[filter:invert(45%)_sepia(95%)_saturate(1648%)_hue-rotate(325deg)_brightness(97%)_contrast(91%)]'}"
+                    : 'opacity-60 group-hover:opacity-100 group-hover:[filter:invert(45%)_sepia(95%)_saturate(1648%)_hue-rotate(325deg)_brightness(97%)_contrast(91%)] dark:opacity-100 dark:invert dark:brightness-200 dark:group-hover:opacity-100 dark:group-hover:invert-0 dark:group-hover:brightness-100'}"
                 />
                 <span
                   class="{($page?.url?.pathname === item.href.split('?')[0] || 
@@ -548,17 +547,17 @@
                 </div>
                 <div class="justify-start items-start gap-4 flex">
                   <button
-                    class="p-2 rounded-[100px] border border-black/5 justify-start items-center gap-2.5 flex"
+                    class="p-2 rounded-[100px] border border-black/5 dark:border-white/10 justify-start items-center gap-2.5 flex"
                     on:click={toggleMobileSearch}
                   >
                     <img
                       src="/icons/search-01.svg"
                       alt="Search"
-                      class="w-6 h-6"
+                      class="w-6 h-6 opacity-60 dark:opacity-100 dark:invert dark:brightness-200"
                     />
                   </button>
                   <div
-                    class="p-2 rounded-[100px] border border-black/5 justify-start items-center gap-2.5 flex"
+                    class="p-2 rounded-[100px] border border-black/5 dark:border-white/10 justify-start items-center gap-2.5 flex"
                   >
                     <NotificationButton />
                   </div>
@@ -612,7 +611,7 @@
                   class="relative flex-1 w-full"
                 >
                   <div
-                    class="flex items-center bg-white dark:bg-dark-bg-primary border-[1.5px] border-light-border dark:border-dark-border hover:border-brand-red focus-within:border-brand-red rounded-2xl py-2 pl-4 pr-2 h-12 gap-2 transition-all duration-300"
+                    class="flex items-center bg-light-bg-primary dark:bg-dark-bg-primary border-[1.5px] border-light-border dark:border-dark-border hover:border-brand-red focus-within:border-brand-red rounded-2xl py-2 pl-4 pr-2 h-12 gap-2 transition-all duration-300"
                   >
                     <div
                       class="absolute left-4 top-1/2 -translate-y-1/2 transition-all duration-300 ease-in-out {isSearchFocused
@@ -622,7 +621,7 @@
                       <img
                         src="/icons/search-01.svg"
                         alt="Search"
-                        class="w-6 h-6"
+                        class="w-6 h-6 opacity-60 group-hover:opacity-100 group-hover:[filter:invert(45%)_sepia(95%)_saturate(1648%)_hue-rotate(325deg)_brightness(97%)_contrast(91%)] dark:opacity-100 dark:invert dark:brightness-200 dark:group-hover:opacity-100 dark:group-hover:invert-0 dark:group-hover:brightness-100'"
                       />
                     </div>
                     <input
@@ -645,7 +644,7 @@
                           }
                         }, 200);
                       }}
-                      class="flex-1 w-full pl-8 focus:pl-0 bg-transparent border-none outline-none focus:outline-none text-body text-light-text-primary dark:text-dark-text-primary placeholder:text-light-text-secondary dark:placeholder:text-dark-text-secondary transition-all duration-300"
+                      class="flex-1 w-full pl-8 focus:pl-0 bg-transparent border-none outline-none focus:outline-none text-body text-light-text-primary dark:text-dark-text-primary placeholder:text-light-text-tertiary dark:placeholder:text-dark-text-tertiary transition-all duration-300"
                     />
                     <button
                       type="button"
@@ -791,7 +790,7 @@
 
           <!-- Mobile Bottom Navigation -->
           <div class="fixed bottom-0 left-0 right-0 z-50 lg:hidden flex flex-col">
-            <nav class="h-20 bg-white border-t border-black/5">
+            <nav class="h-20 bg-light-bg-primary dark:bg-dark-bg-primary border-t border-light-border dark:border-dark-border">
               <div class="flex justify-between items-center h-full">
                 {#each mobileNavItems as item}
                   <a
@@ -804,17 +803,17 @@
                       style={($page?.url?.pathname === item.href.split('?')[0] || 
                              (item.href.includes('/settings') && $page?.url?.pathname === '/settings'))
                         ? "filter: invert(45%) sepia(95%) saturate(1648%) hue-rotate(325deg) brightness(97%) contrast(91%);"
-                        : ""}
+                        : " "}
                       class="w-6 h-6 {($page?.url?.pathname === item.href.split('?')[0] || 
                                       (item.href.includes('/settings') && $page?.url?.pathname === '/settings'))
                         ? 'opacity-100'
-                        : 'opacity-60'}"
+                        : 'opacity-60 dark:opacity-100 dark:invert dark:brightness-200'}"
                     />
                     <span
                       class="text-center text-mini-body leading-tight {($page?.url?.pathname === item.href.split('?')[0] || 
                                                                        (item.href.includes('/settings') && $page?.url?.pathname === '/settings'))
-                        ? 'text-black font-medium'
-                        : 'text-[#494848] font-normal'}"
+                        ? 'text-light-text-primary dark:text-dark-text-primary font-medium'
+                        : 'text-light-text-secondary dark:text-dark-text-secondary font-normal'}"
                     >
                       {item.label}
                     </span>

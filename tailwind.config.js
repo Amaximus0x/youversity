@@ -57,9 +57,9 @@ export default {
           'text': {
             'primary': '#FFFFFF',
             'secondary': '#DDDADA',
-            'tertiary': '#A3A3A3'
+            'tertiary': '#797979'
           },
-          'border': 'rgba(255, 255, 255, 0.05)'
+          'border': 'rgba(255, 255, 255, 0.10)'
         },
         // Your new color palette
         "BackgroundRed": "#FFF2F3",
@@ -75,7 +75,7 @@ export default {
         "Grey2": "#EBEBEB",
         "Grey3": "#797979",
         "Black2dark":"#DDDADA",
-        "TransparentGreen2": "#41C1CB",
+        "Green2": "#41C1CB",
         "blackTransparent": "#000000",
         "GreenHover": "#1E3443",
         "ButtonHover": "#C3373C",

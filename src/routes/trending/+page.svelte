@@ -77,7 +77,7 @@
     <h1 class="text-h2-mobile lg:text-h2 text-light-text-primary dark:text-dark-text-primary mb-2">
       Trending
     </h1>
-    <p class="text-light-text-secondary dark:text-dark-text-secondary text-semi-body lg:text-body">
+    <p class="text-light-text-tertiary dark:text-dark-text-tertiary text-semi-body lg:text-body">
       Stay in the loop with Trending! Explore the most popular courses and join the buzz around the latest must-learn topics.
     </p>
   </div>
