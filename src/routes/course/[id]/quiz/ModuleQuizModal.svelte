@@ -300,7 +300,7 @@
         {:else}
         <!-- Header -->
             <div
-                class="p-4 pt-8 flex items-center justify-center border-b border-light-border dark:border-dark-border"
+                class="p-4 {!showResult ? 'pl-4' : 'pl-14'} pt-8 flex items-center justify-center border-b border-light-border dark:border-dark-border"
             >
                 <h1
                     class="w-full text-center text-h4-medium text-light-text-primary dark:text-dark-text-primary"
