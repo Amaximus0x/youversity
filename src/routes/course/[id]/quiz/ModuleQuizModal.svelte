@@ -161,7 +161,7 @@
 
 <!-- desktop content only-->
 <!-- Modal Overlay -->
-<div class="fixed inset-0 z-[100] lg:flex lg:items-center lg:justify-center">
+<div class="hidden lg:flex fixed inset-0 z-[100] lg:items-center lg:justify-center">
     <div class="lg:fixed inset-0 bg-black/50"></div>
     <div
         class="relative w-full max-w-[390px] lg:max-w-[808px] bg-gradient-light dark:bg-gradient-dark rounded-[32px] overflow-hidden pb-4"
