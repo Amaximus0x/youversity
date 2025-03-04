@@ -4,9 +4,10 @@
   import { onMount } from "svelte";
   import { user } from "$lib/stores/auth";
   import { quizStore } from "$lib/stores/quiz";
-  import { currentModuleStore } from "$lib/stores/course";
+  import { currentModuleStore, enrollmentProgressStore } from "$lib/stores/course";
   import type { Quiz, QuizQuestion } from "$lib/types/course";
   import ModuleResultModal from "./ModuleResultModal.svelte";
+  import { updateEnrollmentQuizResult } from "$lib/firebase";
 
   export let data: {
     quiz: Quiz;
@@ -45,10 +46,50 @@
     return Math.round((correctAnswers / totalQuestions) * 100);
   }
 
-  function handleSubmit() {
+  async function handleSubmit() {
     const endTime = new Date();
     const timeSpent = Math.round((endTime.getTime() - startTime.getTime()) / 1000); // in seconds
     quizScore = calculateScore();
+    
+    // Check if quiz is passed
+    const isPassed = quizScore >= 80;
+    
+    // Create quiz result object
+    const quizResult = {
+      attempts: 1, // This will be handled by the backend
+      score: quizScore,
+      timeSpent,
+      completedAt: new Date(),
+      completed: true,
+      passed: isPassed
+    };
+
+    try {
+      if ($user) {
+        // Update enrollment progress with quiz result
+        const updatedProgress = await updateEnrollmentQuizResult(
+          $user.uid,
+          $page.params.id,
+          moduleId,
+          quizResult
+        );
+
+        // Update the enrollment progress store if we got updated data
+        if (updatedProgress) {
+          const typedProgress = {
+            quizResults: updatedProgress.quizResults || { moduleQuizzes: {} },
+            moduleProgress: updatedProgress.moduleProgress || {},
+            completedModules: Array.isArray(updatedProgress.completedModules) 
+              ? [...updatedProgress.completedModules] 
+              : [],
+            lastAccessedModule: updatedProgress.lastAccessedModule || 0
+          };
+          enrollmentProgressStore.set(typedProgress);
+        }
+      }
+    } catch (error) {
+      console.error('Error updating quiz result:', error);
+    }
     
     // Store quiz data in the store for the result page
     quizStore.update(store => ({

@@ -2,6 +2,7 @@
     import { goto } from "$app/navigation";
     import { createEventDispatcher } from "svelte";
     import type { Quiz } from "$lib/types/course";
+    import { currentModuleStore } from "$lib/stores/course";
 
     const dispatch = createEventDispatcher();
 
@@ -47,7 +48,9 @@
 
     function handleContinue() {
         if (score >= 80) {
-            // If passed, continue to next module
+            // Set the next module as active
+            currentModuleStore.set(moduleId + 1);
+            // Navigate back to course page
             goto(`/course/${courseId}`);
         } else {
             // If failed, stay on current module

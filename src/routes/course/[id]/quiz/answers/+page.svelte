@@ -8,12 +8,14 @@
     let quizData: Quiz | null = null;
     let selectedAnswers: Record<number, string>;
     let score: number;
+    let moduleId: number;
 
     // Subscribe to the store
     quizStore.subscribe(store => {
         quizData = store.quizData;
         selectedAnswers = store.selectedAnswers;
         score = store.score;
+        moduleId = store.moduleIndex;
     });
 
     function isAnswerCorrect(questionIndex: number, optionKey: string): boolean {
@@ -35,6 +37,7 @@
     }
 
     onMount(() => {
+
         // If no quiz data is available, go back to the course page
         if (!quizData?.quiz) {
             goto(`/course/${$page.params.id}`);
@@ -51,23 +54,24 @@
         <!-- Mobile header -->
         <div class="w-[calc(100%+40px)] -mr-5 sticky top-[85px] z-40 bg-BackgroundRed">
             <div class="px-5 pt-1 pb-4">
-                <div class="flex flex-col gap-4 items-start">
+                <div class="flex  gap-2 items-start">
                     <!-- back button -->
                     <button
                         class="flex items-center gap-2 text-Black hover:opacity-70"
-                        on:click={() => goto(`/course/${$page.params.id}`)}
+                        on:click={() => goto(`/course/${$page.params.id}/quiz/module/${moduleId + 1}`)}
                     >
-                        <img src="/icons/arrow-left.svg" alt="Back" class="w-6 h-6" />
+                        <img
+                            src="/icons/arrow-left.svg"
+                            alt="Back"
+                            class="w-6 h-6"
+                        />
                     </button>
                     <!-- quiz title -->
-                    <div class="w-full flex flex-col gap-6 bg-BackgroundRed border border-light-border dark:border-dark-border rounded-2xl p-4">
-                        <h1 class="text-light-text-secondary dark:text-dark-text-secondary text-h4-medium">
-                            Quiz Results
-                        </h1>
-                        <p class="text-light-text-primary dark:text-dark-text-primary text-h4 font-bold">
-                            {score}% Score
+                    
+                        <p class="text-light-text-primary dark:text-dark-text-primary text-h4-medium">
+                            Module {moduleId + 1} Quiz
                         </p>
-                    </div>
+                    
                 </div>
             </div>
         </div>
