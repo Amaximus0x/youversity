@@ -37,11 +37,15 @@
     );
   }
 
-  function handleCustomVideoAdd(video: VideoItem, moduleIndex: number) {
+  function handleCustomVideoAdd(video: VideoItem, moduleIndex: number, addAtBeginning: boolean = false) {
     if (!moduleVideos[moduleIndex]) {
       moduleVideos[moduleIndex] = [];
     }
-    moduleVideos[moduleIndex] = [...moduleVideos[moduleIndex], video];
+    if (addAtBeginning) {
+      moduleVideos[moduleIndex] = [video, ...moduleVideos[moduleIndex]];
+    } else {
+      moduleVideos[moduleIndex] = [...moduleVideos[moduleIndex], video];
+    }
     moduleVideos = [...moduleVideos];
     allModulesLoaded = checkAllModulesLoaded();
     showCustomUrlInput = false;
@@ -378,7 +382,8 @@
               <YoutubeUrlInput
                 moduleIndex={currentModuleIndex}
                 onVideoAdd={handleCustomVideoAdd}
-                class="w-full"
+                moduleTitle={courseStructure?.OG_Module_Title[currentModuleIndex] || ''}
+                onClose={() => showCustomUrlInput = false}
               />
             </div>
           {/if}
@@ -469,7 +474,8 @@
               <YoutubeUrlInput
                 moduleIndex={currentModuleIndex}
                 onVideoAdd={handleCustomVideoAdd}
-                class="w-full"
+                moduleTitle={courseStructure?.OG_Module_Title[currentModuleIndex] || ''}
+                onClose={() => showCustomUrlInput = false}
               />
             </div>
           {/if}
@@ -504,7 +510,7 @@
               (_, index) => selectedVideos[index] !== undefined,
             )}
         >
-          <span class="text-body">Generate Complete Course</span>
+          <span class="text-body">Create Complete Course</span>
           <svg
             class="w-5 h-5 {!allModulesLoaded ? 'fill-Grey' : ''}"
             viewBox="0 0 24 24"
@@ -539,7 +545,7 @@
       !courseStructure?.OG_Module_Title.every(
         (_, index) => selectedVideos[index] !== undefined,
       )
-        ? 'bg-Black/5 cursor-not-allowed text-Grey'
+        ? 'bg-white cursor-not-allowed text-Grey'
         : 'bg-brand-red hover:bg-ButtonHover text-white'}"
       on:click={handleSaveCourse}
       disabled={!allModulesLoaded ||
@@ -548,7 +554,7 @@
         )}
     >
       <div class="flex items-center gap-2">
-        <span class="text-body">Generate Course</span>
+        <span class="text-body">Complete Creating Course</span>
         <svg
           class="w-5 h-5 {!allModulesLoaded ? 'fill-Grey' : ''}"
           viewBox="0 0 24 24"
