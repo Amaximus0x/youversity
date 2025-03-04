@@ -643,12 +643,6 @@
                 </p>
               </div>
               {/if}
-
-              <!-- <div class="mt-6">
-                    <p class="text-h2-mobile-bold lg:text-h2-bold text-Black">
-                      {courseDetails?.Final_Course_Title}
-                    </p>
-                  </div> -->
             </div>
 
             <!-- Course Title -->

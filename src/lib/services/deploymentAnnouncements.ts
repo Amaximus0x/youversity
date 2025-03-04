@@ -8,8 +8,8 @@ interface DeploymentVersion {
 }
 
 export class DeploymentAnnouncements {
-  private static readonly COLLECTION = 'system';
-  private static readonly VERSION_DOC = 'deployment_version';
+  private static readonly COLLECTION = 'deploymentVersions';
+  private static readonly VERSION_DOC = 'current';
   
   // Current deployment version - update this when you want to send new announcements
   private static readonly CURRENT_VERSION = '1.0.0';
@@ -37,15 +37,15 @@ export class DeploymentAnnouncements {
 
   private static async sendDeploymentAnnouncements() {
     // Add your deployment announcements here
-    await NotificationService.announceNewFeature(
-      'New Features Available',
-      'Exciting news! Explore the latest features and improvements on Youversity.'
-    );
+    // await NotificationService.announceNewFeature(
+    //   'New Features Available',
+    //   'Exciting news! Explore the latest features and improvements on Youversity.'
+    // );
 
-    // You can add multiple announcements for the same deployment
-    await NotificationService.sendTip(
-      'Did You Know?',
-      'You can now organize your courses into custom playlists. Give it a try today!'
-    );
+    // // You can add multiple announcements for the same deployment
+    // await NotificationService.sendTip(
+    //   'Did You Know?',
+    //   'You can now organize your courses into custom playlists. Give it a try today!'
+    // );
   }
 } 
