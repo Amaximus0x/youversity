@@ -47,13 +47,13 @@
       on:click|stopPropagation
     >
       <!-- Header -->
-      <div class="flex items-center justify-between px-6 py-4 border-b border-Black/5">
-        <h2 class="text-h4-medium text-black dark:text-white">Add filter</h2>
+      <div class="flex items-center justify-between px-6 py-4 border-b border-light-border dark:border-dark-border">
+        <h2 class="text-h4-medium text-light-text-primary dark:text-dark-text-primary">Add filter</h2>
         <button 
           on:click={onClose}
           class="w-6 h-6 flex items-center justify-center hover:opacity-70 transition-opacity"
         >
-          <img src="/icons/cancel-square.svg" alt="Close" class="w-6 h-6" />
+          <img src="/icons/cancel-square.svg" alt="Close" class="w-6 h-6 dark:invert" />
         </button>
       </div>
 
@@ -61,15 +61,15 @@
       <div class="px-6 py-4">
          <!-- Sort by -->
          <div class="flex gap-3 items-center mb-4">
-          <h3 class="text-mini-body">Sort by:</h3>
+          <h3 class="text-mini-body text-light-text-primary dark:text-dark-text-primary">Sort by:</h3>
           <div class="flex items-center gap-2">
             <button 
-              class="px-2 py-1 rounded-lg {selectedFilter === 'relevance' ? ' border border-brand-red' : 'border border-[#E5E7EB]'}"
+              class="px-2 py-1 rounded-lg {selectedFilter === 'relevance' ? 'border border-brand-red' : 'border border-light-border dark:border-dark-border'}"
               on:click={() => {
                 selectedFilter = 'relevance';
               }}
             >
-              <span class="{(selectedFilter === 'latest' || selectedFilter === 'earliest') ? 'text-Black dark:text-White' : 'text-[#6B7280]'} text-mini-body">
+              <span class="{selectedFilter === 'relevance' ? 'text-brand-red' : 'text-light-text-tertiary dark:text-dark-text-tertiary'} text-mini-body">
                 Relevance
               </span>
               {#if selectedFilter === 'relevance'}
@@ -81,7 +81,7 @@
         
         <!-- Sort by -->
         <div class="mb-4">
-          <h3 class="text-mini-body uppercase text-Grey mb-3">CREATION DATE</h3>
+          <h3 class="text-mini-body uppercase text-light-text-tertiary dark:text-dark-text-tertiary mb-3">CREATION DATE</h3>
           <div class="space-y-3">
             <label class="flex items-center gap-3 cursor-pointer">
               <input 
@@ -93,9 +93,9 @@
               <img 
                 src={selectedFilter === 'latest' ? '/icons/checkmark-square-active.svg' : '/icons/checkmark-square-inactive.svg'} 
                 alt="Checkbox"
-                class="w-5 h-5"
+                class="w-5 h-5 {selectedFilter !== 'latest' && 'dark:invert'}"
               />
-              <span class="text-semi-body">Latest to Earliest</span>
+              <span class="text-semi-body text-light-text-primary dark:text-dark-text-primary">Latest to Earliest</span>
             </label>
             <label class="flex items-center gap-3 cursor-pointer">
               <input 
@@ -107,16 +107,16 @@
               <img 
                 src={selectedFilter === 'earliest' ? '/icons/checkmark-square-active.svg' : '/icons/checkmark-square-inactive.svg'} 
                 alt="Checkbox"
-                class="w-5 h-5"
+                class="w-5 h-5 {selectedFilter !== 'earliest' && 'dark:invert'}"
               />
-              <span class="text-semi-body">Earliest to Latest</span>
+              <span class="text-semi-body text-light-text-primary dark:text-dark-text-primary">Earliest to Latest</span>
             </label>
           </div>
         </div>
       </div>
 
       <!-- Footer -->
-      <div class="flex items-center justify-between px-6 py-4">
+      <div class="flex items-center justify-between px-6 py-4 border-t border-light-border dark:border-dark-border">
         <button 
           on:click={clearAll}
           class="text-semi-body text-brand-red hover:opacity-70 transition-opacity"
@@ -125,7 +125,7 @@
         </button>
         <button 
           on:click={handleFilter}
-          class="px-6 py-2 bg-brand-red text-white rounded-lg hover:opacity-70 transition-opacity text-body"
+          class="px-6 py-2 bg-brand-red text-white rounded-lg hover:bg-ButtonHover transition-colors text-body"
         >
           Add filter
         </button>

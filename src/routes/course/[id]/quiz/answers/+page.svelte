@@ -52,7 +52,7 @@
     <!-- Mobile Layout -->
     <div class="lg:hidden flex flex-col min-h-[calc(100vh-85px)]">
         <!-- Mobile header -->
-        <div class="w-[calc(100%+40px)] -mr-5 sticky top-[85px] z-40 bg-BackgroundRed">
+        <div class="w-[calc(100%+40px)] -mr-5 sticky top-[70px] z-40 bg-BackgroundRed dark:bg-dark-bg-secondary">
             <div class="px-5 pt-1 pb-4">
                 <div class="flex  gap-2 items-start">
                     <!-- back button -->

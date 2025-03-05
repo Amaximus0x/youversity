@@ -123,7 +123,7 @@
     <div class="lg:hidden flex flex-col min-h-[calc(100vh-85px)]">
         <!-- Mobile header -->
         <div
-            class="w-[calc(100%+40px)] -mr-5 sticky top-[85px] z-40 bg-BackgroundRed"
+            class="w-[calc(100%+40px)] -mr-5 sticky pt-3 top-[70px] z-40 bg-BackgroundRed dark:bg-dark-bg-secondary"
         >
             <div class="px-5 pt-1 pb-4">
                 <div class="flex flex-col gap-4 items-start">
@@ -132,15 +132,33 @@
                         class="flex items-center gap-2 text-Black hover:opacity-70"
                         on:click={() => goto(`/course/${$page.params.id}`)}
                     >
-                        <img
-                            src="/icons/arrow-left.svg"
-                            alt="Back"
-                            class="w-6 h-6"
-                        />
+                    <svg
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="text-light-text-primary dark:text-dark-text-primary"
+                  >
+                    <path
+                      d="M4 12H20"
+                      stroke="currentColor"
+                      stroke-width="1.5"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                    <path
+                      d="M8.99997 17C8.99997 17 4.00002 13.3176 4 12C3.99999 10.6824 9 7 9 7"
+                      stroke="currentColor"
+                      stroke-width="1.5"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
                     </button>
                     <!-- quiz title -->
                     <div
-                        class="w-full flex flex-col gap-6 bg-BackgroundRed border border-light-border dark:border-dark-border rounded-2xl p-4"
+                        class="w-full flex flex-col gap-6 bg-BackgroundRed dark:bg-dark-bg-secondary p-4"
                     >
                         <h1
                             class="text-light-text-secondary dark:text-dark-text-secondary text-h4-medium"
@@ -162,7 +180,7 @@
             <!-- Questions -->
             <div class="space-y-8">
                 {#each quiz.quiz as question, index}
-                    <div class="flex flex-col gap-4 text-body-semibold">
+                    <div class="flex flex-col gap-4 text-body-semibold text-light-text-primary dark:text-dark-text-primary">
                         <div class="flex items-start gap-2">
                             <p>
                                 {index + 1}.
@@ -193,7 +211,7 @@
                                             class="absolute opacity-0 w-6 h-6 cursor-pointer"
                                         />
                                         <div
-                                            class="radio-circle w-6 h-6 flex items-center justify-center"
+                                            class="radio-circle w-6 h-6 flex items-center justify-center text-black/20 dark:text-white/10"
                                         >
                                             <svg
                                                 width="24"
@@ -211,7 +229,7 @@
                                         </div>
                                     </div>
                                     <span
-                                        class="text-semi-body text-Black group-hover:opacity-90"
+                                        class="text-semi-body text-light-text-secondary dark:text-dark-text-secondary group-hover:opacity-90"
                                     >
                                         {value}
                                     </span>
@@ -227,7 +245,7 @@
                 <button
                     class="w-full px-6 py-3 rounded-2xl text-semibody-medium transition-colors flex items-center justify-center gap-2 {isAllAnswered
                         ? 'bg-brand-red hover:bg-ButtonHover text-white'
-                        : 'bg-Black/5 text-light-text-tertiary'}"
+                        : 'bg-Black/5 dark:bg-White/10 text-light-text-tertiary'}"
                     disabled={!isAllAnswered}
                     on:click={handleSubmit}
                 >
@@ -272,7 +290,7 @@
             <div
                 class="p-4 flex gap-6 items-center justify-between border border-light-border dark:border-dark-border rounded-2xl"
             >
-                <p class="text-Black text-h4 font-bold">{quiz.title}</p>
+                <p class="text-light-text-primary dark:text-dark-text-primary text-h4 font-bold">{quiz.title}</p>
                 <h1
                     class="text-light-text-secondary dark:text-dark-text-secondary text-h4-medium text-nowrap"
                 >
@@ -284,11 +302,11 @@
         <!-- Questions Container - Scrollable -->
         <div class="flex-1 overflow-hidden relative">
             <div
-                class="absolute inset-0 overflow-y-auto custom-scrollbar pl-5 pr-8"
+                class="absolute inset-0 overflow-y-auto custom-scrollbar pl-16 pr-8"
             >
                 <div class="space-y-8 pb-8">
                     {#each quiz.quiz as question, index}
-                        <div class="flex flex-col gap-4 text-body-semibold">
+                        <div class="flex flex-col gap-4 text-body-semibold text-light-text-primary dark:text-dark-text-primary">
                             <div class="flex items-start gap-2">
                                 <p>
                                     {index + 1}.
@@ -320,7 +338,7 @@
                                                 class="absolute opacity-0 w-6 h-6 cursor-pointer"
                                             />
                                             <div
-                                                class="radio-circle w-6 h-6 flex items-center justify-center"
+                                                class="radio-circle w-6 h-6 flex items-center justify-center text-black/20 dark:text-white/10"
                                             >
                                                 <svg
                                                     width="24"
@@ -338,7 +356,7 @@
                                             </div>
                                         </div>
                                         <span
-                                            class="text-semi-body text-Black group-hover:opacity-90"
+                                            class="text-semi-body text-light-text-secondary dark:text-dark-text-secondary group-hover:opacity-90"
                                         >
                                             {value}
                                         </span>
@@ -356,7 +374,7 @@
             class="flex-shrink-0 flex justify-between items-center px-5 pr-8 py-5 pt-8 border-t border-light-border"
         >
             <button
-                class="flex items-center gap-2 px-4 py-2 text-brand-red text-semi-body bg-Black/5 rounded-lg border border-light-border dark:border-dark-border"
+                class="flex items-center gap-2 px-4 py-2 text-brand-red text-semi-body bg-Black/5  rounded-lg border border-light-border dark:border-[#EE434A]"
                 on:click={() => goto(`/course/${$page.params.id}`)}
             >
                 Leave Quiz
@@ -365,7 +383,7 @@
             <button
                 class="px-4 py-2 rounded-lg text-semibody-medium transition-colors flex items-center justify-center gap-2 {isAllAnswered
                     ? 'bg-brand-red hover:bg-ButtonHover text-white'
-                    : 'bg-Black/5 text-light-text-tertiary'}"
+                    : 'bg-Black/5 dark:bg-White/10 text-light-text-tertiary'}"
                 disabled={!isAllAnswered}
                 on:click={handleSubmit}
             >
@@ -419,6 +437,10 @@
         transition: all 0.2s ease-in-out;
     }
 
+    :global(.dark) .radio-circle {
+        color: rgba(255, 255, 255, 0.1);
+    }
+
     input[type="radio"]:checked + .radio-circle {
         color: #ee434a; /* brand-red color */
     }
@@ -436,6 +458,10 @@
         color: rgba(0, 0, 0, 0.4);
     }
 
+    :global(.dark) input[type="radio"]:hover:not(:checked) + .radio-circle {
+        color: rgba(255, 255, 255, 0.2);
+    }
+
     /* Remove focus outline */
     input[type="radio"]:focus {
         outline: none;
@@ -451,6 +477,10 @@
         scrollbar-color: #ee434a #fff2f3;
     }
 
+    :global(.dark) .custom-scrollbar {
+        scrollbar-color: #ee434a rgba(255, 255, 255, 0.05);
+    }
+
     .custom-scrollbar::-webkit-scrollbar {
         width: 4px;
     }
@@ -458,6 +488,10 @@
     .custom-scrollbar::-webkit-scrollbar-track {
         background: #fff2f3;
         border-radius: 20px;
+    }
+
+    :global(.dark) .custom-scrollbar::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.05);
     }
 
     .custom-scrollbar::-webkit-scrollbar-thumb {

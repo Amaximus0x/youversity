@@ -569,7 +569,7 @@
           <div class="relative w-full lg:rounded-2xl overflow-hidden">
             {#if $currentModuleStore >= 0 && $currentModuleStore < courseDetails?.Final_Module_Title?.length}
               <div
-                class="fixed lg:relative top-[85px] lg:top-0 left-0 right-0 z-30 bg-black aspect-video"
+                class="fixed pt-3 lg:relative top-[70px] lg:top-0 left-0 right-0 z-30 bg-BackgroundRed dark:bg-dark-bg-secondary aspect-video"
               >
                 <div class="video-container w-full h-full">
                   {#if courseDetails?.Final_Module_YouTube_Video_URL?.length > 0 && courseDetails?.Final_Module_YouTube_Video_URL[$currentModuleStore]}
@@ -601,9 +601,9 @@
                     />
                   {:else}
                     <div
-                      class="absolute inset-0 flex items-center justify-center bg-black/5"
+                      class="absolute inset-0 flex items-center justify-center bg-black/5 dark:bg-white/5"
                     >
-                      <p class="text-light-text-tertiary">No video available</p>
+                      <p class="text-light-text-tertiary dark:text-dark-text-tertiary">No video available</p>
                     </div>
                   {/if}
                 </div>
@@ -621,7 +621,7 @@
           >
             <!-- Course Module Title -->
             <div class="mb-4">
-              <h4 class="text-h4-medium text-Black">
+              <h4 class="text-h4-medium text-light-text-primary dark:text-dark-text-primary">
                 {#if $currentModuleStore === -1}
                   Course Introduction and Objectives
                 {:else if $currentModuleStore === courseDetails?.Final_Module_Title?.length}
@@ -638,8 +638,15 @@
               </h4>
               {#if $currentModuleStore !== -1 && $currentModuleStore !== courseDetails?.Final_Module_Title?.length}
               <div class="mt-6">
-                <p class="text-h2-mobile-bold lg:text-h2-bold text-Black">
+                <p class="text-h2-mobile-bold lg:text-h2-bold text-light-text-primary dark:text-dark-text-primary">
                   {courseDetails.Final_Module_Title[$currentModuleStore]}
+                </p>
+              </div>
+              {/if}
+              {#if $currentModuleStore !== -1 && $currentModuleStore == courseDetails?.Final_Module_Title?.length}
+              <div class="mt-6">
+                <p class="text-h2-mobile-bold lg:text-h2-bold text-light-text-primary dark:text-dark-text-primary">
+                  {courseDetails.Final_Course_Title}
                 </p>
               </div>
               {/if}
@@ -648,7 +655,7 @@
             <!-- Course Title -->
             {#if $currentModuleStore === -1}
               <div class="mt-6">
-                <p class="text-h2-mobile-bold lg:text-h2-bold text-Black">
+                <p class="text-h2-mobile-bold lg:text-h2-bold text-light-text-primary dark:text-dark-text-primary">
                   {courseDetails?.Final_Course_Title}
                 </p>
               </div>
@@ -684,12 +691,12 @@
                   </div> -->
 
                   <!-- <h3 class="text-h4-medium text-Black mb-4">Course Introduction</h3> -->
-                  <p class="text-body text-light-text-secondary">
+                  <p class="text-body text-light-text-secondary dark:text-dark-text-secondary">
                     {courseDetails?.Final_Course_Introduction}
                   </p>
 
                   <div class="mt-6">
-                    <h3 class="text-h4-medium text-Black mb-4">
+                    <h3 class="text-h4-medium text-light-text-primary dark:text-dark-text-primary mb-4">
                       Course Objective
                     </h3>
                     <p
@@ -703,12 +710,12 @@
                 <!-- Course Conclusion -->
                 <div>
                   <!-- Add Course Title here too -->
-                  <div class="mt-6 mb-8">
-                    <p class="text-h2-mobile-bold lg:text-h2-bold text-Black">
+                  <!-- <div class="mt-6 mb-8">
+                    <p class="text-h2-mobile-bold lg:text-h2-bold text-light-text-primary dark:text-dark-text-primary">
                       {courseDetails?.Final_Course_Title}
                     </p>
-                  </div>
-                  <p class="text-body text-light-text-secondary">
+                  </div> -->
+                  <p class="text-body text-light-text-secondary dark:text-dark-text-secondary">
                     {courseDetails?.Final_Course_Conclusion}
                   </p>
                  
@@ -719,8 +726,8 @@
                       }}
                       disabled={!hasCompletedAllModules()}
                       class="w-full px-4 py-2 flex items-center justify-center text-semibody-medium rounded-2xl transition-colors {hasCompletedAllModules() 
-                        ? 'bg-Green hover:bg-GreenHover text-white' 
-                        : 'bg-Black/5 text-light-text-tertiary dark:text-dark-text-tertiary'}"
+                        ? 'bg-Green dark:bg-Green2 hover:bg-GreenHover text-white' 
+                        : 'bg-Black/5 dark:bg-White/10 text-light-text-tertiary dark:text-dark-text-tertiary'}"
                     >
                       Take Final Quiz
                       
@@ -739,7 +746,7 @@
 
                   <!-- Module Objective -->
                   <div class="mt-6">
-                    <h3 class="text-h4-medium text-Black mb-4">
+                    <h3 class="text-h4-medium text-light-text-primary dark:text-dark-text-primary mb-4">
                       Module Objective
                     </h3>
                     <p
@@ -771,7 +778,7 @@
                   </button> -->
                   <button
                   on:click={handleModuleQuiz}
-                  class="w-full px-4 py-2 flex items-center justify-center text-semibody-medium rounded-2xl transition-colors bg-Green hover:bg-GreenHover text-white"
+                  class="w-full px-4 py-2 flex items-center justify-center text-semibody-medium rounded-2xl transition-colors bg-Green dark:bg-Green2 hover:bg-GreenHover text-white"
                 >
                   Take Module Quiz
                 </button>
@@ -806,7 +813,7 @@
               {#if isEnrolled && $user}
                 <div class="lg:hidden mt-6 pb-20">
                   <button
-                    class="w-full px-4 py-2 flex items-center justify-center gap-2 border border-[#FF0000] hover:bg-[#FF0000]/5 text-[#FF0000] rounded-lg transition-colors disabled:opacity-50"
+                    class="w-full px-4 py-2 flex items-center justify-center gap-2 border border-[#FF0000] hover:bg-[#FF0000]/5 text-[#FF0000] rounded-lg transition-colors disabled:opacity-50 bg-light-bg-primary dark:bg-dark-bg-primary"
                     on:click={handleRemoveCourseEnrollment}
                     disabled={removing}
                   >
@@ -883,7 +890,7 @@
                       quizModuleTitle = courseDetails?.Final_Module_Title?.[$currentModuleStore] || "";
                       showNewQuizPage = true;
                     }}
-                    class="w-full px-4 py-2 flex items-center justify-center text-semibody-medium rounded-2xl transition-colors bg-Green hover:bg-GreenHover text-white"
+                    class="w-full px-4 py-2 flex items-center justify-center text-semibody-medium rounded-2xl transition-colors bg-Green dark:bg-Green2 hover:bg-GreenHover text-white"
                   >
                     Take Module Quiz
                   </button>
@@ -930,7 +937,7 @@
               {#if isEnrolled && $user}
                 <div class="mt-6 col-span-2">
                   <button
-                    class="px-4 py-2 flex items-center justify-center gap-2 border border-[#FF0000] hover:bg-[#FF0000]/5 text-[#FF0000] rounded-lg transition-colors disabled:opacity-50"
+                    class="px-4 py-2 flex items-center justify-center gap-2 border border-[#FF0000] hover:bg-[#FF0000]/5 text-[#FF0000] rounded-lg transition-colors disabled:opacity-50 bg-light-bg-primary dark:bg-dark-bg-primary"
                     on:click={handleRemoveCourseEnrollment}
                     disabled={removing}
                   >

@@ -164,7 +164,7 @@
 
             <div class="flex items-center gap-4 px-2 pb-2">
                 <div
-                    class="flex-1 h-3 bg-black/[0.05] rounded-[2000px] overflow-hidden"
+                    class="flex-1 h-3 bg-black/[0.05] dark:bg-White/10 rounded-[2000px] overflow-hidden"
                 >
                     <div
                         class="h-full bg-brand-turquoise rounded-[200000px] transition-all duration-300"
@@ -194,7 +194,7 @@
             >
                 <div class="flex items-center gap-4 px-2 py-2">
                     <div
-                        class="flex-1 h-3 bg-black/[0.05] rounded-[2000px] overflow-hidden"
+                        class="flex-1 h-3 bg-black/[0.05] dark:bg-White/10 rounded-[2000px] overflow-hidden"
                     >
                         <div
                             class="h-full bg-brand-turquoise rounded-[200000px] transition-all duration-300"
@@ -216,9 +216,9 @@
 
         <div class="hidden lg:block">
             <h3
-                class="text-body-semibold text-Black p-2 border-b border-light-border dark:border-dark-border bg-BackgroundRed"
+                class="text-body-semibold text-light-text-primary dark:text-dark-text-primary p-2 border-b border-light-border dark:border-dark-border bg-light-bg-primary dark:bg-dark-bg-secondary"
             >
-                Course Module
+                Course Modules
             </h3>
         </div>
 
@@ -228,7 +228,7 @@
                 {#if courseDetails?.Final_Module_Title?.length > 0}
                     <!-- Course Introduction Card -->
                     <div
-                        class="hidden lg:block p-2 rounded-2xl border border-light-border hover:bg-Black/5 dark:hover:bg-Black/5 transition-colors duration-200 {activeModuleClass(
+                        class="hidden lg:block p-2 rounded-2xl border border-light-border dark:border-dark-border hover:bg-Black/5 dark:hover:bg-Black/5 transition-colors duration-200 {activeModuleClass(
                             -1,
                         )}"
                     >
@@ -244,7 +244,7 @@
                             <!-- Module Info -->
                             <div class="flex-1 min-w-0 text-center">
                                 <p
-                                    class="text-wrap text-body-semibold text-Black2 px-2 py-6 mb-2"
+                                    class="text-wrap text-body-semibold text-light-text-secondary dark:text-dark-text-secondary px-2 py-6 mb-2"
                                 >
                                     Course Introduction and Objectives
                                 </p>
@@ -255,7 +255,7 @@
                     <!-- Regular Module Cards -->
                     {#each courseDetails.Final_Module_Title as title, index (index)}
                         <div
-                            class="p-2 rounded-2xl border border-light-border lg:hover:bg-Black/5 lg:dark:hover:bg-Black/5 transition-colors duration-200 {activeModuleClass(
+                            class="p-2 rounded-2xl border border-light-border dark:border-dark-border lg:hover:bg-Black/5 lg:dark:hover:bg-Black/5 transition-colors duration-200 {activeModuleClass(
                                 index,
                             )}"
                         >
@@ -266,10 +266,10 @@
                                 <!-- Module Info -->
                                 <div class="flex-1 min-w-0 text-left">
                                     <p
-                                        class="text-semibody-medium text-Black mb-2 inline-block"
+                                        class="text-semibody-medium text-light-text-primary dark:text-dark-text-primary mb-2 inline-block"
                                     >
                                         <span
-                                            class="text-semibody-medium text-Black2"
+                                            class="text-semibody-medium text-light-text-secondary dark:text-dark-text-secondary"
                                         >
                                             {(index + 1)
                                                 .toString()
@@ -281,7 +281,7 @@
                                         class="flex items-start justify-between gap-2"
                                     >
                                         <p
-                                            class="text-mini-body text-light-text-tertiary"
+                                            class="text-mini-body text-light-text-tertiary dark:text-dark-text-tertiary"
                                         >
                                             {courseDetails
                                                 ?.Final_Module_Video_Duration?.[
@@ -339,7 +339,7 @@
                     <!-- Course Conclusion Card - Only show for enrolled users and creators -->
                     {#if (isEnrolled || isCreator) && courseDetails?.Final_Module_Title?.length >= 0}
                         <div
-                            class="hidden lg:block p-2 rounded-2xl border border-light-border hover:bg-Black/5 dark:hover:bg-Black/5 transition-colors duration-200 {activeModuleClass(
+                            class="hidden lg:block p-2 rounded-2xl border border-light-border dark:border-dark-border hover:bg-Black/5 dark:hover:bg-Black/5 transition-colors duration-200 {activeModuleClass(
                                 courseDetails.Final_Module_Title.length,
                             )}"
                         >
@@ -359,7 +359,7 @@
                                 <!-- Module Info -->
                                 <div class="flex-1 min-w-0 text-center">
                                     <p
-                                        class="text-body-semibold text-Black2 px-2 py-6 mb-2"
+                                        class="text-body-semibold text-light-text-secondary dark:text-dark-text-secondary px-2 py-6 mb-2"
                                     >
                                         Course Conclusion
                                     </p>

@@ -239,15 +239,15 @@
             <div
                 class="pt-4 h-[122px] flex-col justify-start items-center inline-flex"
             >
-                <div class="px-2.5 py-1 bg-black/5 rounded-[20px]">
+                <div class="px-2.5 py-1 bg-Black/5 dark:bg-White/10 rounded-[20px]">
                     <div
-                        class="text-black text-base font-normal font-['Poppins'] leading-normal"
+                        class="text-light-text-primary dark:text-dark-text-primary text-base font-normal font-['Poppins'] leading-normal"
                     >
                         Your score
                     </div>
                 </div>
                 <div
-                    class="w-[123px] h-[90px] text-center text-black text-5xl font-bold font-['Poppins'] leading-[104px]"
+                    class="w-[123px] h-[90px] text-center text-light-text-primary dark:text-dark-text-primary text-5xl font-bold font-['Poppins'] leading-[104px]"
                 >
                     {score}%
                 </div>
