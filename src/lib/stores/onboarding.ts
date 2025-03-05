@@ -9,6 +9,7 @@ interface OnboardingSlide {
   };
   description: string;
   image: string;
+  imageDark: string;
 }
 
 const slides: OnboardingSlide[] = [
@@ -24,7 +25,8 @@ const slides: OnboardingSlide[] = [
       ]
     },
     description: 'Say goodbye to endless scrolling and random videos. Youversity curates structured courses from the best YouTube content, turning your watching habits into productive learning experiences.',
-    image: '/images/Onboarding-1-light.svg'
+    image: '/images/Onboarding-1-light.svg',
+    imageDark: '/images/Onboarding-1-dark.svg'
   },
   {
     title: {
@@ -37,7 +39,8 @@ const slides: OnboardingSlide[] = [
       ]
     },
     description: 'Pick a topic, and our AI finds the best YouTube videos, organizes them into a structured course, and adds progress tracking. Learn at your own pace, anytime, anywhere.',
-    image: '/images/Onboarding-2-light.svg'
+    image: '/images/Onboarding-2-light.svg',
+    imageDark: '/images/Onboarding-2-dark.svg'
   },
   {
     title: {
@@ -47,7 +50,8 @@ const slides: OnboardingSlide[] = [
       ]
     },
     description: 'Want to teach? Build your own courses with curated YouTube videos, add quizzes, and share them with friends, students, or the entire community.',
-    image: '/images/Onboarding-3-light.svg'
+    image: '/images/Onboarding-3-light.svg',
+    imageDark: '/images/Onboarding-3-dark.svg'
   },
   {
     title: {
@@ -60,7 +64,8 @@ const slides: OnboardingSlide[] = [
       ]
     },
     description: 'Explore courses created by others, and collaborate on learning paths. With Youversity, knowledge is always within reach.',
-    image: '/images/Onboarding-4-light.svg'
+    image: '/images/Onboarding-4-light.svg',
+    imageDark: '/images/Onboarding-4-dark.svg'
   }
 ];
 

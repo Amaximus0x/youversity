@@ -3,15 +3,39 @@
   import { fade, fly, slide } from 'svelte/transition';
   import { onboarding } from '$lib/stores/onboarding';
   import { linear } from 'svelte/easing';
+  import { writable } from 'svelte/store';
+
+  const isDarkMode = writable(false);
 
   let carouselInterval: NodeJS.Timeout;
   let previousSlide = 0;
   
   onMount(() => {
+    // Check initial theme
+    isDarkMode.set(document.documentElement.classList.contains('dark'));
+
+    // Watch for theme changes
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.attributeName === 'class') {
+          isDarkMode.set(document.documentElement.classList.contains('dark'));
+        }
+      });
+    });
+
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class']
+    });
+
     // Auto-advance slides every 5 seconds
     carouselInterval = setInterval(() => {
       onboarding.nextSlide();
     }, 2000);
+
+    return () => {
+      observer.disconnect();
+    };
   });
 
   onDestroy(() => {
@@ -86,7 +110,7 @@
 
           <!-- Description -->
           <div class="self-stretch flex-col justify-start items-start gap-2 sm:gap-4 flex">
-            <div class="self-stretch text-Black2 text-sm sm:text-Body break-words">
+            <div class="self-stretch text-Black2dark text-sm sm:text-Body break-words">
               {currentSlide.description}
             </div>
           </div>
@@ -95,7 +119,7 @@
         <!-- Image Container -->
         <div class="relative w-full flex justify-center mt-4">
           <img 
-            src={currentSlide.image}
+            src={currentSlide.imageDark && $isDarkMode ? currentSlide.imageDark : currentSlide.image}
             alt="Onboarding Illustration"
             class="w-auto h-auto max-w-full max-h-[40vh] sm:max-h-[430px] object-contain"
           />
