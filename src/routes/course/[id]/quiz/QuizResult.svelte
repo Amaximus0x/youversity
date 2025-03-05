@@ -134,18 +134,35 @@
 
     function handleReview() {
         // Store the quiz data and selected answers in the store
-        quizStore.update((store) => ({
-            ...store,
-            quizData: {
-                title: quizData.title,
-                quiz: quizData.quiz.map((q: any, index: number) => ({
-                    ...q,
-                    id: q.id || index + 1,
-                })),
-            },
-            selectedAnswers,
-            score,
-        }));
+        quizStore.update((store) => {
+            // Map the quiz questions first to ensure we have the correct IDs
+            const mappedQuiz = quizData.quiz.map((q: any, index: number) => ({
+                ...q,
+                id: q.id || index + 1,
+            }));
+
+            // Map the selected answers to use the same IDs as the questions
+            const mappedAnswers = Object.entries(selectedAnswers).reduce((acc, [key, value]) => {
+                // Find the corresponding question index
+                const questionIndex = mappedQuiz.findIndex((q) => q.id === parseInt(key));
+                if (questionIndex !== -1) {
+                    acc[questionIndex] = value;
+                }
+                return acc;
+            }, {} as Record<number, string>);
+
+            return {
+                ...store,
+                quizData: {
+                    title: quizData.title,
+                    quiz: mappedQuiz,
+                },
+                selectedAnswers: mappedAnswers,
+                score,
+                moduleIndex: -1,
+                isFinalQuiz: true
+            };
+        });
 
         handleClose();
         goto(`/course/${courseId}/quiz/answers`);

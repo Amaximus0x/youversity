@@ -1,10 +1,11 @@
 import { writable } from 'svelte/store';
 
 interface QuizStore {
-    quizData: any;
+    quizData: Quiz | null;
     selectedAnswers: Record<number, string>;
     score: number;
     moduleIndex: number;
+    isFinalQuiz: boolean;
 }
 
 function createQuizStore() {
@@ -12,7 +13,8 @@ function createQuizStore() {
         quizData: null,
         selectedAnswers: {},
         score: 0,
-        moduleIndex: 0
+        moduleIndex: 0,
+        isFinalQuiz: false
     });
 
     return {
@@ -22,7 +24,8 @@ function createQuizStore() {
         setSelectedAnswers: (answers: Record<number, string>) => update(store => ({ ...store, selectedAnswers: answers })),
         setScore: (score: number) => update(store => ({ ...store, score })),
         setModuleIndex: (index: number) => update(store => ({ ...store, moduleIndex: index })),
-        reset: () => set({ quizData: null, selectedAnswers: {}, score: 0, moduleIndex: 0 })
+        setIsFinalQuiz: (isFinal: boolean) => update(store => ({ ...store, isFinalQuiz: isFinal })),
+        reset: () => set({ quizData: null, selectedAnswers: {}, score: 0, moduleIndex: 0, isFinalQuiz: false })
     };
 }
 

@@ -442,9 +442,9 @@
               <a href="/">
                 <div class="flex justify-start items-center">
                   <!-- //logo icon -->
-                  <img
+                <img
                     src="/YV.svg"
-                    alt="Youversity Logo"
+                  alt="Youversity Logo"
                     class="w-[35.29px] h-[38px] lg:w-[44.97px] lg:h-[48.43px]"
                   />
         
@@ -599,9 +599,9 @@
                   <a href="/">
                     <div class="flex justify-start items-center">
                       <!-- //logo icon -->
-                      <img
+                    <img
                         src="/YV.svg"
-                        alt="Youversity Logo"
+                      alt="Youversity Logo"
                         class="w-[35.29px] h-[38px] lg:w-[44.97px] lg:h-[48.43px]"
                       />
             

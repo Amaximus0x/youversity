@@ -23,9 +23,9 @@
 
   function getReadableErrorMessage(err: any): string {
     if (!(err instanceof Error)) return "Authentication failed";
-
+    
     const errorCode = err.message.match(/\(([^)]+)\)/)?.[1] || "";
-
+    
     switch (errorCode) {
       case "auth/invalid-credential":
       case "auth/wrong-password":
@@ -147,12 +147,12 @@
     <div
       class="w-full px-5  lg:px-8 py-6 fixed top-0 left-0 z-10"
     >
-      <a href="/">
+        <a href="/">
         <div class="flex justify-start items-center">
           <!-- //logo icon -->
-          <img
+          <img 
             src="/YV.svg"
-            alt="Youversity Logo"
+            alt="Youversity Logo" 
             class="w-[35.29px] h-[38px] lg:w-[44.97px] lg:h-[48.43px]"
           />
 
@@ -227,8 +227,8 @@
               class="self-stretch h-[76px] lg:h-auto flex-col justify-start items-start gap-2 flex"
             >
               <!-- Back Button - Mobile Only -->
-              <button
-                on:click={() => window.history.back()}
+              <button 
+                on:click={() => window.history.back()} 
                 class="lg:hidden w-6 h-6"
               >
                 <svg
@@ -369,7 +369,7 @@
                           class="w-6 h-6"
                           on:click={togglePasswordVisibility}
                         >
-                          <img
+                          <img 
                             src={showPassword
                               ? "/icons/view-off-slash.svg"
                               : "/icons/view.svg"}
@@ -397,11 +397,11 @@
                     >
                       <div class="w-6 h-6 relative">
                         {#if termsAccepted}
-                          <img
+                        <img 
                             src="/icons/checkmark-square-active.svg"
-                            alt="Terms checkbox"
-                            class="w-6 h-6"
-                          />
+                          alt="Terms checkbox"
+                          class="w-6 h-6"
+                        />
                         {:else}
                           <svg
                             fill="none"
@@ -447,7 +447,7 @@
                 <div
                   class="h-10 justify-center items-center gap-4 inline-flex w-full"
                 >
-                  <div
+                  <div 
                     role="button"
                     tabindex="0"
                     on:click={handleSignIn}
@@ -473,7 +473,7 @@
                       </div>
                     </div>
                   </div>
-                  <div
+                  <div 
                     role="button"
                     tabindex="0"
                     on:keydown={(e) => e.key === "Enter" && null}
@@ -540,8 +540,8 @@
               class="self-stretch h-[116px] lg:h-[84px] flex-col justify-start items-start gap-4 flex"
             >
               <!-- Back Button - Mobile Only -->
-              <button
-                on:click={() => window.history.back()}
+              <button 
+                on:click={() => window.history.back()} 
                 class="lg:hidden w-6 h-6 mb-2"
               >
                 <svg
@@ -652,7 +652,7 @@
                           class="w-6 h-6"
                           on:click={togglePasswordVisibility}
                         >
-                          <img
+                          <img 
                             src={showPassword
                               ? "/icons/view-off-slash.svg"
                               : "/icons/view.svg"}
@@ -692,7 +692,7 @@
                 <div
                   class="h-10 justify-center items-center gap-4 inline-flex w-full"
                 >
-                  <div
+                  <div 
                     role="button"
                     tabindex="0"
                     on:click={handleSignIn}
@@ -718,7 +718,7 @@
                       </div>
                     </div>
                   </div>
-                  <div
+                  <div 
                     role="button"
                     tabindex="0"
                     on:keydown={(e) => e.key === "Enter" && null}

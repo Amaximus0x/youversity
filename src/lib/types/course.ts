@@ -25,6 +25,7 @@ export interface QuizQuestion {
 }
 
 export interface Quiz {
+  title: string;
   quiz: QuizQuestion[];
 }
 

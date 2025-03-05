@@ -123,13 +123,13 @@
     <div class="lg:hidden flex flex-col min-h-[calc(100vh-85px)]">
         <!-- Mobile header -->
         <div
-            class="w-[calc(100%+40px)] -mr-5 sticky pt-3 top-[70px] z-40 bg-BackgroundRed dark:bg-dark-bg-secondary"
+            class="w-[calc(100%+40px)] pt-6 -mr-5 fixed top-[70px] z-40 bg-BackgroundRed dark:bg-dark-bg-secondary"
         >
             <div class="px-5 pt-1 pb-4">
                 <div class="flex flex-col gap-4 items-start">
                     <!-- back button -->
                     <button
-                        class="flex items-center gap-2 text-Black hover:opacity-70"
+                        class="flex items-center gap-2 text-light-text-primary dark:text-dark-text-primary hover:opacity-70"
                         on:click={() => goto(`/course/${$page.params.id}`)}
                     >
                     <svg
@@ -176,12 +176,12 @@
         </div>
 
         <!-- Mobile content -->
-        <div class="mt-[23px] pl-5 flex-1 pb-8">
+        <div class="mt-[226px] pl-5 flex-1 pb-8 hide-scrollbar">
             <!-- Questions -->
             <div class="space-y-8">
                 {#each quiz.quiz as question, index}
-                    <div class="flex flex-col gap-4 text-body-semibold text-light-text-primary dark:text-dark-text-primary">
-                        <div class="flex items-start gap-2">
+                    <div class="flex flex-col gap-4 ">
+                        <div class="flex items-start text-body-semibold text-light-text-primary dark:text-dark-text-primary gap-2">
                             <p>
                                 {index + 1}.
                             </p>
