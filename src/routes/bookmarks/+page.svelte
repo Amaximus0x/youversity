@@ -133,14 +133,14 @@
           
           <!-- Sort Dropdown -->
           <div class="relative">
-            <button class="flex items-center gap-2 px-2 py-4 text-semibody-medium rounded-lg bg-Black/5 dark:bg-dark-bg-secondary ">
-              <span class=" text-light-text-tertiary dark:text-dark-text-tertiary">Sort by</span>
+            <button class="flex items-center gap-2 px-2 py-4 text-semibody-medium rounded-lg bg-Black/5 dark:bg-white/10 ">
+              <span class=" text-light-text-secondary dark:text-dark-text-secondary">Sort by</span>
               <select
                 bind:value={sortBy}
-                class="bg-transparent outline-none cursor-pointer"
+                class="bg-transparent outline-none cursor-pointer text-light-text-secondary dark:text-dark-text-secondary"
               >
-                <option class="text-light-text-primary dark:text-dark-text-primary" value="newest">Newest</option>
-                <option class="text-light-text-primary dark:text-dark-text-primary" value="oldest">Oldest</option>
+                <option class="text-light-text-secondary dark:text-dark-text-secondary" value="newest">Newest</option>
+                <option class="text-light-text-secondary dark:text-dark-text-secondary" value="oldest">Oldest</option>
               </select>
             </button>
           </div>

@@ -706,14 +706,14 @@
             </div>
             <div class="flex items-center justify-center gap-2 lg:gap-4">
                 <button
-                    class="px-2 py-1 bg-brand-navy text-white rounded-lg text-semibody-medium"
+                    class="px-2 py-1 bg-brand-navy dark:bg-Green2 text-white rounded-lg text-semibody-medium"
                     on:click={handleProfilePictureChange}
                     disabled={loading}
                 >
                     Change picture
                 </button>
                 <button
-                    class="px-2 py-1 bg-Black/5 text-[#FF0000] rounded-lg text-semibody-medium"
+                    class="px-2 py-1 bg-Black/5 dark:bg-white/10 text-[#FF0000] rounded-lg text-semibody-medium"
                     on:click={handleProfilePictureRemove}
                     disabled={loading}
                 >
@@ -818,7 +818,7 @@
         <!-- Save Changes Button -->
         <div class="mt-6 md:mt-5 md:flex md:justify-end">
             <button
-                class="w-fit px-6 py-3 text-semibody-medium rounded-2xl transition-colors {hasChanges ? 'bg-brand-navy hover:bg-GreenHover text-white' : 'bg-Black/5 text-light-text-tertiary dark:text-dark-text-tertiary'}"
+                class="w-fit px-6 py-3 text-semibody-medium rounded-lg transition-colors {hasChanges ? 'bg-brand-navy hover:bg-GreenHover text-white' : 'bg-Black/5 dark:bg-white/10 text-light-text-tertiary dark:text-dark-text-tertiary'}"
                 on:click={handleSaveChanges}
                 disabled={!hasChanges || loading}
             >
@@ -829,7 +829,7 @@
         <!-- Delete Account Button -->
         <div class="flex flex-col gap-4">
             {#if showDeleteConfirm}
-                <div class="p-4 bg-red-50 dark:bg-red-900/10 rounded-2xl">
+                <div class="p-4 bg-red-50 dark:bg-red-900/10 rounded-lg">
                     <p
                         class="text-semi-body text-red-700 dark:text-red-400 mb-4"
                     >
@@ -869,7 +869,7 @@
                                 : "Yes, Delete Account"}
                         </button>
                         <button
-                            class="px-4 py-2 bg-[#F5F5F5] dark:bg-dark-bg-secondary text-light-text-primary dark:text-dark-text-primary rounded-2xl text-semibody-medium"
+                            class="px-4 py-2 bg-[#F5F5F5] dark:bg-white/10 text-light-text-primary dark:text-dark-text-primary rounded-2xl text-semibody-medium"
                             on:click={cancelDelete}
                             disabled={deleteLoading}
                         >
@@ -880,7 +880,7 @@
             {:else}
                 <div class="mt-8 md:mt-6 md:w-full md:flex md:items-center md:justify-start">
                 <button
-                    class="px-4 py-2 text-[#FF0000] text-semibody-medium rounded-lg bg-Black/5 w-full md:w-fit"
+                    class="px-4 py-2 text-[#FF0000] text-semibody-medium rounded-lg bg-Black/5 dark:bg-white/10 w-full md:w-fit"
                     on:click={handleDeleteAccount}
                 >
                     Delete Account

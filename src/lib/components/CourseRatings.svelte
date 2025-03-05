@@ -115,7 +115,7 @@
     <!-- Add Review Button -->
     {#if $user && !showReviewInput}
       <button 
-        class="ml-auto px-4 py-2 bg-Black/5 text-Green text-semibody-medium rounded-lg hover:bg-Black/10 transition-colors"
+        class="ml-auto px-4 py-2 bg-Black/5 dark:bg-white/10 text-Green dark:text-Green2 text-semibody-medium rounded-lg hover:bg-Black/10 transition-colors"
         on:click={() => {
           if (userExistingReview) {
             handleEditReview();
@@ -135,11 +135,11 @@
       <textarea
         bind:value={reviewText}
         placeholder="Write your review here..."
-        class="w-full h-32 p-4 border border-light-border dark:border-dark-border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-brand-turquoise"
+        class="w-full h-32 p-4 bg-light-bg-primary dark:bg-dark-bg-primary text-light-text-primary dark:text-dark-text-primary border border-light-border dark:border-dark-border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-brand-turquoise"
       ></textarea>
       <div class="flex justify-end gap-4 mt-4">
         <button
-          class="px-4 py-2 text-Black2 hover:text-Black transition-colors"
+          class="px-4 py-2 text-light-text-primary dark:text-dark-text-secondary hover:text-light-text-secondary dark:hover:text-dark-text-secondary bg-Black/5 dark:bg-white/10 rounded-lg transition-colors"
           on:click={() => {
             showReviewInput = false;
             isEditing = false;
@@ -149,7 +149,7 @@
           Cancel
         </button>
         <button
-          class="px-4 py-2 bg-Green hover:bg-GreenHover text-white rounded-lg transition-colors disabled:opacity-50"
+          class="px-4 py-2 bg-Green dark:bg-Green2 hover:bg-GreenHover text-white rounded-lg transition-colors disabled:opacity-50"
           on:click={handleSubmitReview}
           disabled={!reviewText.trim() || submitting}
         >

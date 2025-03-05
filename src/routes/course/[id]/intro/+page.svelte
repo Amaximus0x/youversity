@@ -363,7 +363,7 @@
           >
             <!-- Course Module Title -->
             <div class="flex flex-col gap-8 mb-4">
-              <h4 class="text-h4-medium text-Black">
+              <h4 class="text-h4-medium text-light-text-primary dark:text-dark-text-primary">
                 {#if $currentModuleStore === -1}
                   Course Introduction and Objectives
                 {:else if $currentModuleStore === courseDetails?.Final_Module_Title?.length}
@@ -371,7 +371,7 @@
                 {/if}
               </h4>
 
-              <h2 class="text-h2-mobile-bold text-Black lg:hidden">
+              <h2 class="text-h2-mobile-bold lg:text-h2 lg:font-bold text-light-text-primary dark:text-dark-text-primary ">
                 {courseDetails?.Final_Course_Title}
               </h2>
             </div>
@@ -397,19 +397,19 @@
                 <!-- Course Introduction and Objectives -->
                 <div>
                   <!-- Add Course Title here -->
-                  <div class="hidden lg:block mt-6 mb-2">
+                  <!-- <div class="hidden lg:block mt-6 mb-2">
                     <p class="text-h2-mobile lg:text-h2 text-Black">
                       {courseDetails?.Final_Course_Title}
                     </p>
-                  </div>
+                  </div> -->
 
                   <!-- <h3 class="text-h4-medium text-Black mb-4">Course Introduction</h3> -->
-                  <p class="text-body text-light-text-secondary">
+                  <p class="text-body text-light-text-secondary dark:text-dark-text-secondary">
                     {courseDetails?.Final_Course_Introduction}
                   </p>
 
                   <div class="mt-6">
-                    <h3 class="text-h4-medium text-Black mb-4">
+                    <h3 class="text-h4-medium text-light-text-primary dark:text-dark-text-primary mb-4">
                       Course Objective
                     </h3>
                     <p
@@ -501,7 +501,7 @@
                 <button
                   class="w-full px-4 py-2 flex items-center justify-center text-semibody-medium rounded-2xl transition-colors {isEnrolled
                     ? 'bg-brand-red hover:bg-ButtonHover text-white'
-                    : 'bg-Green hover:bg-GreenHover text-white'}"
+                    : 'bg-Green dark:bg-Green2 hover:bg-GreenHover text-white'}"
                   on:click={isEnrolled
                     ? () => {
                     // Get last accessed module from enrollment progress

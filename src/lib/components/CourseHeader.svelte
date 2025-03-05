@@ -51,7 +51,7 @@
     <div class="flex items-center gap-4">
         <!-- Upvotes -->
         <button
-            class="flex items-center gap-2 bg-Black/5 px-2 py-2 rounded-2xl hover:opacity-80 transition-opacity disabled:opacity-50"
+            class="flex items-center gap-2 bg-Black/5 dark:bg-white/10 px-2 py-2 rounded-2xl hover:opacity-80 transition-opacity disabled:opacity-50"
             on:click={handleLike}
             disabled={liking}
         >
@@ -60,12 +60,12 @@
                     ? "/icons/upvote-filled.svg"
                     : "/icons/upvote.svg"}
                 alt="Upvotes"
-                class="w-5 h-5"
+                class="w-5 h-5 opacity-60 dark:opacity-100 dark:invert dark:brightness-200"
             />
             <span
                 class={hasLiked
-                    ? "text-semibody-medium text-Black"
-                    : "text-mini-body text-Black2 hover:text-Black"}
+                    ? "text-semibody-medium text-light-text-primary dark:text-dark-text-primary"
+                    : "text-mini-body text-light-text-secondary dark:text-dark-text-secondary hover:text-light-text-secondary dark:hover:text-dark-text-secondary"}
             >
                 {formatNumber(courseDetails?.likes || 0)} Upvotes
             </span>
@@ -73,8 +73,8 @@
 
         <!-- Views -->
         <div class="flex items-center gap-2">
-            <img src="/icons/view.svg" alt="Views" class="w-5 h-5" />
-            <span class="text-mini-body text-light-text-secondary">
+            <img src="/icons/view.svg" alt="Views" class="w-5 h-5 opacity-60 dark:opacity-100 dark:invert dark:brightness-200" />
+            <span class="text-mini-body text-light-text-secondary dark:text-dark-text-secondary">
                 {formatNumber(courseDetails?.views || 0)} views
             </span>
         </div>
@@ -174,7 +174,7 @@
 
             <div >
                 <p
-                    class="text-semi-body text-light-text-tertiary dark:text-dark-text-tertiary"
+                    class="text-semi-body text-light-text-secondary dark:text-dark-text-secondary"
                 >
                     <span
                         class="text-body-semibold text-light-text-primary dark:text-dark-text-primary"
