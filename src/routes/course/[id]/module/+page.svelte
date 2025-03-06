@@ -462,12 +462,12 @@
                         showProgress={true}
                         bind:currentModule
                     />
-                    {#if isEnrolled && import.meta.env.DEV}
+                    <!-- {#if isEnrolled && import.meta.env.DEV}
                         <div class="mt-4 text-sm text-light-text-tertiary dark:text-dark-text-tertiary">
                             Debug: isEnrolled={isEnrolled.toString()}, 
                             completedModules={enrollmentProgress?.completedModules?.length || 0}
                         </div>
-                    {/if}
+                    {/if} -->
                 {:else}
                     <CourseRatings
                         courseId={$page.params.id}

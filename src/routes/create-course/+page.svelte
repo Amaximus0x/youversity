@@ -297,7 +297,7 @@
 >
   <!-- Fixed Header Section for Mobile -->
   <div
-    class="md:hidden fixed top-[72px] left-0 right-0 z-40  bg-light-bg-secondary dark:bg-dark-bg-secondary"
+    class="md:hidden fixed top-[70px] left-0 right-0 z-40  bg-light-bg-secondary dark:bg-dark-bg-secondary"
   >
     <div class=" pt-4 pb-4">
       <div class="px-4">
@@ -306,10 +306,10 @@
 
       {#if courseStructure}
         <div class="px-4">
-          <h1 class="text-h2-mobile-bold mt-4 mb-2">
+          <h1 class="text-h2-mobile-bold mt-4 mb-2 text-Black dark:text-White">
             {courseStructure.OG_Course_Title}
           </h1>
-        <p class="text-semi-body mb-4 opacity-80">
+        <p class="text-semi-body mb-4 opacity-80 text-light-text-secondary dark:text-dark-text-secondary">
           {courseStructure.OG_Course_Objective}
         </p>
         </div>
@@ -320,8 +320,8 @@
             <button
               class="px-4 py-2 rounded-lg whitespace-nowrap transition-all duration-200 {currentModuleIndex ===
               index
-                ? 'text-body-semibold bg-Green text-white'
-                : 'text-body bg-Black/5 text-Green hover:bg-gray-200'}"
+                ? 'text-body-semibold bg-Green dark:bg-Green2 text-white'
+                : 'text-body bg-Black/5 dark:bg-White/10 text-Green dark:text-Green2 hover:bg-gray-200'}"
               on:click={() => (currentModuleIndex = index)}
             >
               Module {index + 1}
@@ -410,7 +410,7 @@
           <h1 class="text-h2-mobile lg:text-h2 text-Black dark:text-White mb-2">
             {courseStructure.OG_Course_Title}
           </h1>
-          <p class="text-semi-body lg:text-body text-Black2">
+          <p class="text-semi-body lg:text-body text-light-text-secondary dark:text-dark-text-secondary">
             {courseStructure.OG_Course_Objective}
           </p>
         </div>
@@ -421,8 +421,8 @@
             <button
               class="px-4 py-2 rounded-lg whitespace-nowrap transition-all duration-200 {currentModuleIndex ===
               index
-                ? 'text-body-semibold bg-Green text-white'
-                : 'text-body bg-Black/5 text-Green hover:bg-gray-200'}"
+                ? 'text-body-semibold bg-Green dark:bg-Green2 text-white'
+                : 'text-body bg-Black/5 dark:bg-White/10 text-Green dark:text-Green2 hover:bg-gray-200'}"
               on:click={() => (currentModuleIndex = index)}
             >
               Module {index + 1}

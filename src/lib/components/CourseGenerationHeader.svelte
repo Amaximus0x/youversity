@@ -16,7 +16,7 @@
 </script>
 
 <div 
-  class="max-w-[746px] h-auto rounded-2xl shadow-sm border border-[rgba(0,0,0,0.05)] px-4 pt-2 pb-4 mb-6"
+  class="max-w-[746px] h-auto rounded-2xl shadow-sm border border-light-border dark:border-dark-border px-4 pt-2 pb-4 mb-6"
   in:fade={{ duration: 200 }}
 >
   <div class="flex items-center justify-between">
