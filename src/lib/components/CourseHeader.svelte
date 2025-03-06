@@ -15,6 +15,7 @@
     export let isEnrolled: boolean = false;
     export let isIntroPage: boolean = false;
     export let isModulePage: boolean = false;
+    export let isCoursePage: boolean = false;
 
     // Check if we're on the module page
     // $: isModulePage = $page.url.pathname.includes("/module");
@@ -101,10 +102,37 @@
         </div>
     </div>
 
-    <!-- Module Button -->
+    <!-- Module Button and Intro button for mobile only -->
+     <!-- {#if $currentModuleStore !== -1 && $currentModuleStore !== courseDetails?.Final_Module_Title?.length} show intro button else show module button -->
+     <!-- {#if $currentModuleStore == -1 && $currentModuleStore !== courseDetails?.Final_Module_Title?.length}
+       
+        <button
+            class="flex items-center gap-2 bg-Black/5 dark:bg-White/10 px-2 py-2 rounded-full hover:opacity-80 transition-opacity"
+            on:click={() => {
+                goto(`/course/${courseDetails.id}/module?tab=modules`);
+            }}
+        >
+        Modules
+        </button>
+     {/if} -->
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+     <!-- class="{isIntroPage ? 'hidden' : 'lg:hidden'} flex items-center" -->
     <div class=" flex items-center">
         <button
-            class="{!isIntroPage ? 'hidden' : 'lg:hidden'} flex items-center"
+            class="{isCoursePage ? 'hidden' : 'lg:hidden'} flex items-center"
             on:click={() => {
                 if (isModulePage && (!isCreator || !isEnrolled)) {
                     goto(`/course/${courseDetails.id}/intro`);
@@ -141,16 +169,15 @@
         </button>
 
         <!-- Course Intro Button on course page for mobile -->
-        {#if isIntroPage && isModulePage}
+        {#if !isIntroPage && !isModulePage}
             <div class="lg:hidden">
                 <button
                     class="px-4 py-2 text-body text-brand-turquoise hover:text-brand-turquoise/80 flex items-center gap-1"
                 on:click={() => {
-                    currentModuleStore.set(-1);
-                    goto(`/course/${courseDetails.id}`);
+                    goto(`/course/${courseDetails.id}/module?tab=modules`);
                 }}
             >
-                Course Introo
+                Modules
                 <img
                     src="/icons/arrow-right.svg"
                     alt="Introduction"
@@ -359,7 +386,6 @@
         </div>
 
         <!-- Course Intro Button for mobile -->
-        <!-- Course Intro Button for desktop -->
         <div class="lg:hidden">
             {#if $currentModuleStore !== -1 && $currentModuleStore !== courseDetails?.Final_Module_Title?.length}
                 <button

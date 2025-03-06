@@ -42,7 +42,7 @@
   let hasLiked = false;
   let isIntroPage = false;
   let isModulePage = false;
-
+  let isCoursePage = true;
   // Other state variables
   let moduleProgress: { completed?: boolean }[] = [];
   let enrollmentProgress: any = null;
@@ -699,6 +699,7 @@
               {isEnrolled}
               {isIntroPage}
               {isModulePage}  
+              {isCoursePage}
               on:like={handleLike}
               on:bookmark={handleBookmark}
               on:share={() => (showShareModal = true)}
@@ -869,7 +870,7 @@
                   <button
                     class="w-full px-4 py-2 flex items-center justify-center text-semibody-medium rounded-2xl transition-colors {isEnrolled
                       ? 'bg-brand-red hover:bg-ButtonHover text-white'
-                      : 'bg-Green hover:bg-GreenHover text-white'}"
+                      : 'bg-Green dark:bg-Green2 hover:bg-GreenHover text-white'}"
                     on:click={isEnrolled
                       ? () => {
                           // Get last accessed module from enrollment progress
