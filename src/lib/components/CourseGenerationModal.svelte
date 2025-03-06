@@ -100,7 +100,7 @@
       out:fade
     >
       <button
-        class="bg-BackgroundRed dark:bg-dark-background-primary rounded-2xl shadow-lg border border-[rgba(0,0,0,0.05)] px-4 pt-2 pb-4 cursor-pointer relative"
+        class="bg-light-bg-secondary dark:bg-dark-bg-secondary rounded-2xl shadow-lg border border-light-border dark:border-dark-border px-4 pt-2 pb-4 cursor-pointer relative"
         on:click={handleMaximize}
       >
         <div class="flex items-center justify-between mb-2">
@@ -126,7 +126,7 @@
 
         {#if !isComplete}
           <div
-            class="relative h-3 bg-Black/5 rounded-full overflow-hidden mb-4"
+            class="relative h-3 bg-Black/5 dark:bg-White/10 rounded-full overflow-hidden mb-4"
           >
             <div
               class="absolute left-0 top-0 h-full bg-[#42C1C8] rounded-full transition-all duration-300 ease-out"
@@ -145,7 +145,7 @@
 
         {#if isComplete}
           <button
-            class="w-full bg-brand-navy hover:bg-brand-darkBlue text-white rounded-xl py-3 text-body transition-colors duration-200"
+            class="w-full bg-Green dark:bg-Green2 hover:bg-Green2 text-white rounded-xl py-3 text-body transition-colors duration-200"
             on:click|stopPropagation={handleViewCourse}
           >
             View Course
@@ -161,7 +161,7 @@
       on:click={handleOutsideClick}
     >
       <button
-        class="bg-BackgroundRed dark:bg-dark-background-primary rounded-2xl shadow-lg w-[390px] p-4 relative"
+        class="bg-light-bg-secondary dark:bg-dark-bg-secondary rounded-2xl shadow-lg w-[390px] p-4 relative"
         on:click|stopPropagation
         in:fly={{ y: 20, duration: 300 }}
       >
@@ -181,10 +181,10 @@
                   d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
                 />
               </svg>
-              <h3 class="text-lg font-semibold mb-2">
+              <h3 class="text-lg font-semibold text-Black dark:text-White mb-2">
                 Course Generation Failed
               </h3>
-              <p class="text-sm text-gray-600 mb-4">
+              <p class="text-sm text-brand-red mb-4">
                 {$finalLoadingState.error}
               </p>
             </div>
@@ -197,7 +197,7 @@
                 Dismiss
               </button>
               <button
-                class="px-4 py-2 bg-brand-navy hover:bg-brand-darkBlue text-white rounded-lg text-sm font-medium transition-colors"
+                class="px-4 py-2 bg-Green dark:bg-Green2 hover:bg-Green2 text-white rounded-lg text-sm font-medium transition-colors"
                 on:click={handleRetry}
               >
                 Try Again
@@ -216,7 +216,7 @@
                     <img
                       src="/images/checkmark-circle.svg"
                       alt="Success"
-                      class="w-[51px] h-[51px]"
+                      class="w-6 h-6"
                     />
                   {:else}
                     <img
@@ -230,7 +230,7 @@
 
               {#if !isComplete}
                 <div
-                  class="relative h-3 bg-Black/5 rounded-full overflow-hidden"
+                  class="relative h-3 bg-Black/5 dark:bg-white/10 rounded-full overflow-hidden"
                 >
                   <div
                     class="absolute left-0 top-0 h-full bg-brand-turquoise rounded-full transition-all duration-300 ease-out"
@@ -252,7 +252,7 @@
                 {$finalLoadingState.courseTitle}
               </p>
               <button
-                class="w-full bg-brand-navy hover:bg-brand-darkBlue text-white rounded-xl py-4 text-body-semibold transition-colors duration-200"
+                class="w-full bg-Green dark:bg-Green2 hover:bg-Green2 text-white rounded-xl py-4 text-body-semibold transition-colors duration-200"
                 on:click={handleViewCourse}
               >
                 View Course

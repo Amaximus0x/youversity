@@ -32,21 +32,21 @@
       <img 
         src="/images/checkmark-circle.svg" 
         alt="Success" 
-        class="w-4 h-4"
+        class="w-6 h-6"
       />
     {:else}
       <img 
 
         src="/images/loading-spin.gif" 
         alt="Loading" 
-        class="w-4 h-4"
+        class="w-12 h-12"
       />
       {/if}
     </div>
   </div>
   
 
-  <div class="relative h-3 bg-Black/5 rounded-full overflow-hidden mb-4">
+  <div class="relative h-3 bg-Black/5 dark:bg-white/10 rounded-full overflow-hidden mb-4">
     <div 
       class="absolute left-0 top-0 h-full bg-[#42C1C8] rounded-full transition-all duration-300 ease-out"
       style="width: {$initialLoadingState.progress}%"

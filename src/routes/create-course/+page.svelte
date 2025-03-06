@@ -503,7 +503,7 @@
           !courseStructure?.OG_Module_Title.every(
             (_, index) => selectedVideos[index] !== undefined,
           )
-            ? 'bg-Black/5 cursor-not-allowed text-Grey'
+            ? 'bg-white cursor-not-allowed text-Grey'
             : 'bg-brand-red hover:bg-ButtonHover text-white'}"
           disabled={!allModulesLoaded ||
             !courseStructure?.OG_Module_Title.every(

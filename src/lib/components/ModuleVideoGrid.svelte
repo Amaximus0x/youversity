@@ -59,10 +59,10 @@
   {#if moduleVideos[currentModuleIndex]?.length}
     {#if showLeftArrow}
       <button
-        class="absolute -left-3 top-1/2 -translate-y-1/2 bg-white p-2 rounded-full shadow-md z-20 hover:bg-gray-50"
+        class="absolute -left-3 top-1/2 -translate-y-1/2 bg-white dark:bg-dark-bg-secondary p-2 rounded-full shadow-md z-20 hover:bg-gray-50"
         on:click={() => scroll("left")}
       >
-        <ChevronLeft class="w-6 h-6 text-[#2A4D61]" />
+        <ChevronLeft class="w-6 h-6 text-Green dark:text-Green2" />
       </button>
     {/if}
 
@@ -76,11 +76,11 @@
         <div class="flex-shrink-0 w-full md:w-[341px]">
           <!-- Video Card with Selection Highlight -->
           <div 
-            class="group relative p-2 rounded-2xl overflow-hidden transition-all duration-200 cursor-pointer border flex md:block gap-4 "
+            class="group relative p-2 rounded-2xl overflow-hidden transition-all duration-200 cursor-pointer border border-light-border dark:border-dark-border flex md:block gap-4 "
             class:ring-2={selectedVideos[currentModuleIndex] === videoIndex}
             class:ring-brand-red={selectedVideos[currentModuleIndex] === videoIndex}
-            class:ring-offset-2={selectedVideos[currentModuleIndex] === videoIndex}
             on:click={() => selectVideo(videoIndex)}
+            
           >
             <!-- Thumbnail Container - Hidden on mobile, shown on md+ -->
             <div class="hidden md:block">
@@ -90,8 +90,8 @@
                   <!-- Video Title -->
                   <div class="flex gap-1">
                     <span class="text-semibody-medium  line-clamp-2 break-words">
-                      <span class="text-light-text-secondary">{String(videoIndex + 1).padStart(2, '0')}: </span>
-                      <span class="text-light-text-primary"> {video.title}</span>
+                      <span class="text-light-text-secondary dark:text-dark-text-secondary">{String(videoIndex + 1).padStart(2, '0')}: </span>
+                      <span class="text-light-text-primary dark:text-dark-text-primary"> {video.title}</span>
                     </span>
                   </div>
                   <!-- Duration -->
@@ -127,8 +127,8 @@
               <!-- Left side: Title and Duration -->
               <div class="flex-1 min-w-0 flex flex-col justify-between mr-4">
                 <span class="text-semibody-medium text-light-text-secondary line-clamp-2">
-                  <span class="text-light-text-secondary">{String(videoIndex + 1).padStart(2, '0')}: </span>
-                  <span class="text-light-text-primary"> {video.title}</span>
+                  <span class="text-light-text-secondary dark:text-dark-text-secondary">{String(videoIndex + 1).padStart(2, '0')}: </span>
+                  <span class="text-light-text-primary dark:text-dark-text-primary"> {video.title}</span>
                 </span>
                 <span class="text-mini-body text-light-text-tertiary">
                   {video.length} min
@@ -161,10 +161,10 @@
 
     {#if showRightArrow}
       <button
-        class="absolute -right-3 top-1/2 -translate-y-1/2 bg-white p-2 rounded-full shadow-md z-20 hover:bg-gray-50"
+        class="absolute -right-3 top-1/2 -translate-y-1/2 bg-white dark:bg-dark-bg-secondary p-2 rounded-full shadow-md z-20 hover:bg-gray-50"
         on:click={() => scroll("right")}
       >
-        <ChevronRight class="w-6 h-6 text-[#2A4D61]" />
+        <ChevronRight class="w-6 h-6 text-Green dark:text-Green2" />
       </button>
     {/if}
   {:else}
@@ -182,12 +182,12 @@
     transition:fade={{ duration: 200 }}
   >
     <div
-      class="bg-white rounded-lg w-full h-[90vh] max-w-[90vw] md:max-w-[80vw] lg:max-w-[1200px] relative flex flex-col"
+      class="bg-white rounded-lg w-full h-[60vh] max-w-[80vw] md:max-w-[80vw] lg:max-w-[1200px] relative flex flex-col"
       in:scale={{ duration: 300, delay: 200, start: 0.95 }}
       out:scale={{ duration: 200, start: 1 }}
     >
       <button
-        class="absolute -top-2 -right-2 bg-white p-1.5 rounded-full shadow-lg hover:bg-gray-100 transition-colors duration-200 z-10"
+        class="absolute -top-2 -right-2 bg-white dark:bg-dark-bg-secondary text-light-text-secondary dark:text-dark-text-secondary p-1.5 rounded-full shadow-lg hover:bg-gray-100 transition-colors duration-200 z-10"
         on:click={closeVideoPlayer}
       >
         <svg
@@ -212,8 +212,8 @@
             class="absolute inset-0"
           />
         </div>
-        <div class="p-4 bg-white border-t">
-          <h3 class="text-lg font-semibold text-[#2A4D61] truncate">
+        <div class="p-4 bg-white border-t dark:bg-dark-bg-secondary rounded-b-lg">
+          <h3 class="text-lg font-semibold text-Green dark:text-Green2 truncate">
             {currentPlayingVideo.title}
           </h3>
         </div>
