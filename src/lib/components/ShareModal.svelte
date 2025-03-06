@@ -1,3 +1,7 @@
+<script context="module" lang="ts">
+  export {};
+</script>
+
 <script lang="ts">
   import { Copy, X, Mail, Facebook, Twitter, Instagram, Share2 } from 'lucide-svelte';
   import { fade } from 'svelte/transition';

@@ -113,7 +113,9 @@ service cloud.firestore {
       allow create: if request.auth != null && (
         request.resource.data.userId == request.auth.uid ||
         request.resource.data.type == 'SYSTEM_ANNOUNCEMENT' ||
-        request.resource.data.type == 'GENERAL'
+        request.resource.data.type == 'GENERAL' ||
+        request.resource.data.type == 'COURSE_LIKED' ||
+        request.resource.data.type == 'COURSE_REVIEWED'
       );
       allow update: if request.auth != null && request.auth.uid == resource.data.userId;
       allow delete: if request.auth != null && request.auth.uid == resource.data.userId;

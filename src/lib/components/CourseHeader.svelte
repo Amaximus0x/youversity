@@ -29,6 +29,27 @@
         return num.toString();
     }
 
+    // Helper function to format dates
+    function formatDate(dateInput: any): string {
+        let date: Date;
+        try {
+            if (dateInput && typeof dateInput === 'object' && 'toDate' in dateInput && typeof dateInput.toDate === 'function') {
+                date = dateInput.toDate();
+            } else if (dateInput instanceof Date) {
+                date = dateInput;
+            } else {
+                date = new Date();
+            }
+        } catch (e) {
+            date = new Date();
+        }
+        return date.toLocaleDateString("en-US", {
+            month: "long",
+            day: "numeric",
+            year: "numeric",
+        });
+    }
+
     // Event dispatchers for actions
     import { createEventDispatcher } from "svelte";
     const dispatch = createEventDispatcher();
@@ -185,15 +206,7 @@
                         "Unknown Creator"}
                 </p>
                 <div class="self-stretch text-mini-body text-light-text-tertiary dark:text-dark-text-tertiary text-left">
-                    {new Date(
-                        courseDetails.createdAt?.toDate?.() ||
-                            courseDetails.createdAt ||
-                            Date.now(),
-                    ).toLocaleDateString("en-US", {
-                        month: "long",
-                        day: "numeric",
-                        year: "numeric",
-                    })}
+                    {formatDate(courseDetails.createdAt)}
                 </div>
             </div>
         </button>

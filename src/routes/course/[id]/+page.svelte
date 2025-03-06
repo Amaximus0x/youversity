@@ -198,23 +198,43 @@
     }
   }
 
-  onMount(async () => {
+  // Add this interface to extend the QuizStore
+  interface ExtendedQuizStore {
+    quizData: any | null;
+    selectedAnswers: Record<number, string>;
+    score: number;
+    moduleIndex: number;
+    isFinalQuiz: boolean;
+    showResult?: boolean;
+  }
+
+  // Subscribe to quiz store
+  quizStore.subscribe((store: ExtendedQuizStore) => {
+    showNewQuizPage = store.showResult || false;
+  });
+
+  // Update the onMount function
+  onMount(() => {
     console.log('Course page mounted');
     // Get initial user state
     const userData = get(user);
     if (userData) {
-      await loadCourseData(userData);
+      loadCourseData(userData);
     } else {
       // No user, get shared course data
       console.log('Getting shared course data');
       try {
-        courseDetails = await getSharedCourse($page.params.id);
-        if (courseDetails?.createdBy) {
-          creatorProfile = await getUserProfile(courseDetails.createdBy);
-        }
-        isEnrolled = false;
-        isCreator = false;
-        enrollmentProgressStore.set(null);
+        getSharedCourse($page.params.id).then(data => {
+          courseDetails = data;
+          if (courseDetails?.createdBy) {
+            getUserProfile(courseDetails.createdBy).then(profile => {
+              creatorProfile = profile;
+            });
+          }
+          isEnrolled = false;
+          isCreator = false;
+          enrollmentProgressStore.set(null);
+        });
       } catch (error) {
         console.error('Error loading shared course data:', error);
       }
@@ -234,6 +254,7 @@
       }, 400); // Increased timeout to ensure content is loaded
     }
 
+    // Return cleanup function
     return () => {
       window.removeEventListener("scroll", handleScroll);
     };
@@ -422,11 +443,6 @@
     return enrollmentProgress?.quizResults?.finalQuiz?.completed || false;
   }
 
-  // Subscribe to quiz store
-  quizStore.subscribe(store => {
-    showNewQuizPage = store.showResult;
-  });
-
   // Update the quiz completion handler
   async function handleQuizComplete(score: number, timeSpent: number) {
     if (!$user || !courseDetails) return;
@@ -455,14 +471,14 @@
         const attempts = Array.isArray(existingQuizData.attempts) ? existingQuizData.attempts : [];
         
         // Get the best score from all attempts including the new one
-        const bestScore = Math.max(score, ...attempts.map(a => (a?.score || 0)));
+        const bestScore = Math.max(score, ...attempts.map((a: any) => (a?.score || 0)));
         
         // Determine if the module was previously passed or is now passed
         const wasPreviouslyPassed = existingQuizData?.passed || false;
         const isNowPassed = wasPreviouslyPassed || isPassed;
 
         // Create updated quiz result
-        const updatedQuizResult = {
+        const updatedQuizResult: any = {
             attempts: [...attempts, newAttempt],
             score: bestScore,
             timeSpent,
@@ -508,8 +524,18 @@
                 index === moduleId ? { ...module, completed: isNowPassed } : module
             );
 
-            // Force a UI update
-            enrollmentProgressStore.update(current => ({...current}));
+            // Force a UI update with proper type handling
+            enrollmentProgressStore.update(current => {
+                if (current) {
+                    return {...current};
+                }
+                return {
+                    quizResults: { moduleQuizzes: {} },
+                    moduleProgress: {},
+                    completedModules: [],
+                    lastAccessedModule: 0
+                };
+            });
             
             console.log('Final enrollment progress state:', {
                 storeValue: $enrollmentProgressStore,
@@ -569,7 +595,7 @@
           <div class="relative w-full lg:rounded-2xl overflow-hidden">
             {#if $currentModuleStore >= 0 && $currentModuleStore < courseDetails?.Final_Module_Title?.length}
               <div
-                class="fixed pt-3 lg:relative top-[70px] lg:top-0 left-0 right-0 z-30 bg-BackgroundRed dark:bg-dark-bg-secondary aspect-video"
+                class="fixed pt-3 lg:pt-0 lg:relative top-[70px] lg:top-0 left-0 right-0 z-30 bg-BackgroundRed dark:bg-dark-bg-secondary aspect-video"
               >
                 <div class="video-container w-full h-full">
                   {#if courseDetails?.Final_Module_YouTube_Video_URL?.length > 0 && courseDetails?.Final_Module_YouTube_Video_URL[$currentModuleStore]}

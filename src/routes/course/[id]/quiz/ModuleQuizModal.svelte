@@ -1,3 +1,7 @@
+<script context="module" lang="ts">
+  export {};
+</script>
+
 <script lang="ts">
     import { page } from "$app/stores";
     import { goto } from "$app/navigation";
@@ -176,7 +180,7 @@
                     <h1
                         class="w-full text-center text-h4-medium text-light-text-primary dark:text-dark-text-primary"
                     >
-                        Review Answers - Module {moduleIndex + 1} Quiz
+                        Module {moduleIndex + 1} Quiz Answers
                     </h1>
                     <button
                         class="p-2 border border-light-border dark:border-dark-border rounded-full"
@@ -196,9 +200,9 @@
                         <div class="space-y-8">
                             {#each quiz.quiz as question, index}
                                 <div
-                                    class="flex flex-col gap-4 text-body-semibold"
+                                    class="flex flex-col gap-4 "
                                 >
-                                    <div class="flex items-start gap-2">
+                                    <div class="flex items-start text-body-semibold text-light-text-primary dark:text-dark-text-primary gap-2">
                                         <p>{index + 1}.</p>
                                         <p>{question.question}</p>
                                     </div>
@@ -246,7 +250,7 @@
                                                         question.id ||
                                                             index + 1,
                                                         key,
-                                                    )}"
+                                                    )} text-light-text-secondary dark:text-dark-text-secondary"
                                                 >
                                                     {value}
                                                 </span>
@@ -329,9 +333,9 @@
                 <div class="space-y-8">
                             {#each quiz.quiz as question, index}
                                 <div
-                                    class="flex flex-col gap-4 text-body-semibold"
+                                    class="flex flex-col gap-4 "
                                 >
-                            <div class="flex items-start gap-2">
+                            <div class="flex items-start text-body-semibold text-light-text-primary dark:text-dark-text-primary gap-2">
                                 <p>{index + 1}.</p>
                                 <p>{question.question}</p>
                             </div>
@@ -379,7 +383,7 @@
                                             </div>
                                         </div>
                                                 <span
-                                                    class="text-semi-body text-Black group-hover:opacity-90"
+                                                    class="text-semi-body text-light-text-secondary dark:text-dark-text-secondary group-hover:opacity-90"
                                                 >
                                             {value}
                                         </span>
@@ -398,7 +402,7 @@
                 <button
                     class="px-4 py-2 rounded-lg text-semibody-medium transition-colors flex items-center justify-center gap-2 {isAllAnswered 
                         ? 'bg-brand-red hover:bg-ButtonHover text-white' 
-                        : 'bg-Black/5 text-light-text-tertiary'}"
+                        : 'bg-Black/5 dark:bg-white/10 text-light-text-tertiary'}"
                     disabled={!isAllAnswered}
                     on:click={handleSubmit}
                 >
@@ -470,10 +474,10 @@
 
                     <!-- Score and Message -->
                     <div class="pt-4 flex flex-col items-center">
-                        <div class="px-2.5 py-1 bg-black/5 rounded-[20px]">
-                            <div class="text-base">Your score</div>
+                        <div class="px-2.5 py-1 bg-black/5 dark:bg-white/10 rounded-[20px]">
+                            <div class="text-base text-light-text-tertiary dark:text-dark-text-primary">Your score</div>
                         </div>
-                        <div class="text-5xl font-bold mt-2">{quizScore}%</div>
+                        <div class="text-5xl font-bold mt-2 text-light-text-primary dark:text-dark-text-primary">{quizScore}%</div>
                     </div>
 
                     <!-- Add Score Message -->
@@ -554,6 +558,9 @@
         color: rgba(0, 0, 0, 0.2);
         transition: all 0.2s ease-in-out;
     }
+    :global(.dark) .radio-circle {
+        color: rgba(255, 255, 255, 0.1);
+    }
 
     input[type="radio"]:checked + .radio-circle {
         color: #ee434a;
@@ -570,6 +577,9 @@
 
     input[type="radio"]:hover:not(:checked) + .radio-circle {
         color: rgba(0, 0, 0, 0.4);
+    }
+    :global(.dark) input[type="radio"]:hover:not(:checked) + .radio-circle {
+        color: rgba(255, 255, 255, 0.2);
     }
 
     /* Selected and Correct */

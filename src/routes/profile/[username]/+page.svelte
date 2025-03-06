@@ -12,7 +12,7 @@
 
     let loading = true;
     let error: string | null = null;
-    let courses: FinalCourseStructure[] = [];
+    let courses: (FinalCourseStructure & { id: string })[] = [];
     let profile: any = null;
     let showShareModal = false;
     let selectedCourseId = "";
@@ -63,8 +63,30 @@
     {:else}
         <!-- Mobile Share Buttons -->
         <div class="flex justify-between items-center mb-2 mt-2.5 lg:hidden">
-            <button class="text-light-text-primary dark:text-dark-text-primary" on:click={() => $page.back()}>
-                <img src="/icons/arrow-left.svg" alt="Back" class="w-6 h-6" />
+            <button class="text-light-text-primary dark:text-dark-text-primary" on:click={() => history.back()}>
+                <svg
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="text-light-text-primary dark:text-dark-text-primary"
+                  >
+                    <path
+                      d="M4 12H20"
+                      stroke="currentColor"
+                      stroke-width="1.5"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                    <path
+                      d="M8.99997 17C8.99997 17 4.00002 13.3176 4 12C3.99999 10.6824 9 7 9 7"
+                      stroke="currentColor"
+                      stroke-width="1.5"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
             </button>
             <button
                 class="text-light-text-primary dark:text-dark-text-primary"
@@ -106,7 +128,7 @@
             >
                 <!-- Profile Card -->
                 <div
-                    class="flex flex-col items-center p-4 gap-4 border border-light-border-primary dark:border-dark-border-primary rounded-[32px] overflow-hidden"
+                    class="flex flex-col items-center p-4 gap-4 border border-light-border dark:border-dark-border rounded-[32px] overflow-hidden"
                 >
                     <div class="w-[130px] h-[130px] lg:w-[236px] lg:h-[236px]">
                         {#if profile.photoURL}
@@ -194,7 +216,7 @@
 
                 <!-- About Card -->
                 <div
-                    class="mt-4 flex flex-col items-start lg:px-4 lg:py-6 gap-4 lg:border border-light-border-primary dark:border-dark-border-primary rounded-[32px]"
+                    class="mt-4 flex flex-col items-start lg:px-4 lg:py-6 gap-4 lg:border border-light-border dark:border-dark-border rounded-[32px]"
                 >
                     <h2
                         class="text-h4-medium text-light-text-primary dark:text-dark-text-primary"

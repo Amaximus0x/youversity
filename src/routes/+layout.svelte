@@ -979,24 +979,47 @@
 <!-- Mobile Search Modal -->
 {#if showMobileSearch}
   <div
-    class="fixed inset-0 z-[60] lg:hidden bg-gradient-to-b from-[#FFF2F3] to-BackgoundBlue dark:from-dark-bg-secondary dark:to-dark-bg-primary/40"
+    class="fixed inset-0 z-[60] lg:hidden bg-gradient-light dark:bg-gradient-dark"
   >
+  
     <!-- Search Header -->
     <div class="px-5 pt-6">
-      <div class="flex items-center gap-3">
+      <div class="flex items-center gap-2">
         <button
-          class="p-2"
+        class="text-light-text-primary dark:text-dark-text-primary"
           on:click={() => {
             showMobileSearch = false;
             searchQuery = "";
           }}
         >
-          <img src="/icons/arrow-left.svg" alt="Back" class="w-6 h-6" />
+        <svg
+        width="24"
+        height="24"
+        viewBox="0 0 24 24"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        class="text-light-text-primary dark:text-dark-text-primary"
+      >
+        <path
+          d="M4 12H20"
+          stroke="currentColor"
+          stroke-width="1.5"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        />
+        <path
+          d="M8.99997 17C8.99997 17 4.00002 13.3176 4 12C3.99999 10.6824 9 7 9 7"
+          stroke="currentColor"
+          stroke-width="1.5"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        />
+      </svg>
         </button>
 
         <form on:submit={handleMobileSearch} class="flex-1">
           <div
-            class="flex items-center bg-white dark:bg-dark-bg-primary border border-brand-red rounded-2xl h-12"
+            class="pl-4 pr-2 py-2 h-12 flex gap-2 items-center bg-white dark:bg-dark-bg-primary border border-brand-red rounded-2xl"
           >
             <input
               type="text"
@@ -1007,7 +1030,7 @@
             />
             <button
               type="button"
-              class="px-4 py-2"
+              class="px-2 py-0.5 border border-light-border dark:border-dark-border rounded-[10px]"
               on:click={() => (showFilterModal = true)}
             >
               <img src="/icons/filter-icon.svg" alt="Filter" class="w-6 h-6" />
@@ -1025,7 +1048,7 @@
           <div
             class="flex justify-between items-center pb-2 border-b border-light-border dark:border-dark-border mb-2"
           >
-            <h2 class="text-h4-medium">Recent Search</h2>
+            <h2 class="text-h4-medium text-light-text-primary dark:text-dark-text-primary">Recent Search</h2>
             <button
               class="text-brand-red text-body"
               on:click={handleClearRecentSearches}
@@ -1042,11 +1065,13 @@
                   handleMobileSearch(new Event("submit"));
                 }}
               >
-                <img
-                  src="/icons/time-quarter-pass.svg"
-                  alt="Recent"
-                  class="w-5 h-5 opacity-60"
-                />
+              <svg class="text-light-text-secondary dark:text-dark-text-secondary" width="20" height="21" viewBox="0 0 20 21" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <g id="time-quarter-pass">
+                <path id="Vector" d="M6.98002 3C6.80176 3.06661 6.62645 3.13927 6.45433 3.21772M17.265 14.0843C17.3501 13.8999 17.4287 13.7118 17.5002 13.5204M15.4159 16.6373C15.559 16.5037 15.6973 16.3651 15.8305 16.2217M12.7243 18.3103C12.8861 18.2493 13.0453 18.1833 13.202 18.1126M10.1302 18.8283C9.93782 18.8349 9.74407 18.8349 9.55157 18.8283M6.48966 18.117C6.64033 18.1848 6.79343 18.2482 6.94878 18.3069M3.89403 16.2673C4.00793 16.3881 4.12548 16.5053 4.24648 16.619M2.19415 13.5538C2.25655 13.7185 2.32413 13.8808 2.39667 14.0403M1.67104 10.9211C1.66563 10.7477 1.66565 10.5732 1.67104 10.3995M2.18811 7.78095C2.24941 7.61804 2.31577 7.45761 2.38698 7.29983M3.88025 5.06603C4.0008 4.93762 4.12544 4.81311 4.25398 4.6927" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                <path id="Vector_2" d="M11.25 10.5C11.25 11.1903 10.6903 11.75 10 11.75C9.30967 11.75 8.75 11.1903 8.75 10.5C8.75 9.80967 9.30967 9.25 10 9.25M11.25 10.5C11.25 9.80967 10.6903 9.25 10 9.25M11.25 10.5H13.3333M10 9.25V5.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                <path id="Vector_3" d="M18.3333 10.5003C18.3333 5.89795 14.6023 2.16699 10 2.16699" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                </g>
+                </svg>
                 <span class="text-semibody-medium">{search.query}</span>
               </button>
             {/each}

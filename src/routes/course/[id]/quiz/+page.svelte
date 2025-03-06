@@ -286,7 +286,7 @@
         class="hidden lg:flex lg:flex-col lg:h-[calc(100vh-118px)] lg:fixed lg:w-[calc(100%-284px)] lg:top-[116px] bg-light-background dark:bg-dark-background"
     >
         <!-- Desktop Header - Fixed -->
-        <div class="flex-shrink-0 pl-5 pb-6">
+        <div class="flex-shrink-0 pl-5 ">
             <div
                 class="p-4 flex gap-6 items-center justify-between border border-light-border dark:border-dark-border rounded-2xl"
             >
@@ -302,7 +302,7 @@
         <!-- Questions Container - Scrollable -->
         <div class="flex-1 overflow-hidden relative">
             <div
-                class="absolute inset-0 overflow-y-auto custom-scrollbar pl-16 pr-8"
+                class="absolute inset-0 overflow-y-auto custom-scrollbar pl-16 pr-8 pt-6"
             >
                 <div class="space-y-8 pb-8">
                     {#each quiz.quiz as question, index}
@@ -371,7 +371,7 @@
 
         <!-- Desktop Footer - Fixed -->
         <div
-            class="flex-shrink-0 flex justify-between items-center px-5 pr-8 py-5 pt-8 border-t border-light-border"
+            class="flex-shrink-0 flex justify-between items-center px-5 pr-8 py-5 pt-8 ml-8 border-t border-light-border dark:border-dark-border"
         >
             <button
                 class="flex items-center gap-2 px-4 py-2 text-brand-red text-semi-body bg-Black/5  rounded-lg border border-light-border dark:border-[#EE434A]"

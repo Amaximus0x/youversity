@@ -681,21 +681,26 @@ export async function likeCourse(userId: string, courseId: string) {
 
       // Create notification for course creator if it's not the same user
       if (userId !== courseData.createdBy) {
-        // Get liker's profile for the notification message
-        const likerProfile = await getUserProfile(userId);
-        const likerName = likerProfile?.displayName || 'Someone';
+        try {
+          // Get liker's profile for the notification message
+          const likerProfile = await getUserProfile(userId);
+          const likerName = likerProfile?.displayName || 'Someone';
 
-        await NotificationService.createNotification({
-          userId: courseData.createdBy,
-          title: 'Your Course Got an Upvote',
-          message: `Great work! Your course just received an upvote.`,
-          // message: `${likerName} liked your course "${courseData.Final_Course_Title}"`,
-          type: NotificationType.COURSE_LIKED,
-          isRead: false,
-          createdAt: new Date(),
-          courseId,
-          courseTitle: courseData.Final_Course_Title
-        });
+          await NotificationService.createNotification({
+            userId: courseData.createdBy,
+            title: 'Your Course Got an Upvote',
+            message: `Great work! Your course just received an upvote.`,
+            // message: `${likerName} liked your course "${courseData.Final_Course_Title}"`,
+            type: NotificationType.COURSE_LIKED,
+            isRead: false,
+            createdAt: new Date(),
+            courseId,
+            courseTitle: courseData.Final_Course_Title
+          });
+        } catch (notificationError) {
+          // Log notification error but don't fail the like operation
+          console.error('Error creating notification:', notificationError);
+        }
       }
 
       return true;

@@ -1,3 +1,7 @@
+<script context="module" lang="ts">
+  export {};
+</script>
+
 <script lang="ts">
   import { goto } from "$app/navigation";
   import type { FinalCourseStructure } from "$lib/types/course";
