@@ -169,7 +169,7 @@
         </button>
 
         <!-- Course Intro Button on course page for mobile -->
-        {#if !isIntroPage && !isModulePage}
+        {#if !isIntroPage && !isModulePage && $currentModuleStore == -1}
             <div class="lg:hidden">
                 <button
                     class="px-4 py-2 text-body text-brand-turquoise hover:text-brand-turquoise/80 flex items-center gap-1"
