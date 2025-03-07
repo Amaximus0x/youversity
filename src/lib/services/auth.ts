@@ -46,8 +46,10 @@ export const signInWithGoogle = async (callbackUrl?: string) => {
       }
     }
 
-    if (callbackUrl) {
+    if (callbackUrl && callbackUrl !== '/') {
       window.location.href = callbackUrl;
+    } else {
+      window.location.href = '/dashboard';
     }
     return user;
   } catch (error) {
@@ -98,9 +100,12 @@ export async function registerWithEmail(
     // Create welcome notification
     await NotificationService.createWelcomeNotification(user.uid);
     await NotificationService.createFirstCourseNotification(user.uid);
-    
-    if (redirectTo) {
-      goto(redirectTo);
+
+    // Redirect to the specified URL or dashboard
+    if (redirectTo && redirectTo !== '/') {
+      window.location.href = redirectTo;
+    } else {
+      window.location.href = '/dashboard';
     }
 
     return user;
@@ -147,8 +152,10 @@ export const signInWithEmail = async (email: string, password: string, callbackU
       });
     }
     
-    if (callbackUrl) {
+    if (callbackUrl && callbackUrl !== '/') {
       window.location.href = callbackUrl;
+    } else {
+      window.location.href = '/dashboard';
     }
     return result.user;
   } catch (error) {
