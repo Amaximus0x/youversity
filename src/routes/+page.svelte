@@ -29,6 +29,7 @@
   import { notifications } from '$lib/stores/notificationStore';
   import { browser } from '$app/environment';
   import { isAuthenticated } from '$lib/stores/auth';
+  import LandingHeader from '$lib/components/LandingHeader.svelte';
 
   let learningObjective = '';
   let userCourses: (FinalCourseStructure & { id: string })[] = [];
@@ -215,47 +216,18 @@
 <CourseCreationOverlay show={showCreationOverlay} />
 
 <div class="min-h-screen flex flex-col">
+  <!-- Landing Header -->
+  <LandingHeader />
+  
   <!-- Hero Section -->
-  <section class="flex-1 flex flex-col items-center justify-center px-4 py-12 md:py-24">
+  <section class="flex-1 flex flex-col items-center justify-center px-4 py-12 md:py-24 bg-dark-bg-primary">
     <div class="max-w-5xl mx-auto text-center">
-      <div class="mb-8 flex justify-center">
-        <div class="flex justify-start items-center">
-          <img
-            src="/YV.svg"
-            alt="Youversity Logo"
-            class="w-[44.97px] h-[48.43px] mr-2"
-          />
-          
-          <div class="pt-2">
-            <svg
-              class="w-[107.83px] h-[21.36px] text-light-text-primary dark:text-dark-text-primary"
-              viewBox="0 0 109 24"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-              preserveAspectRatio="xMidYMid meet"
-            >
-              <g id="Youversity">
-                <path
-                  d="M12.8206 1.85152L8.04707 11.0458V16.276H5.68104V11.0458L0.886719 1.85152H3.52256L6.86406 8.92886L10.2056 1.85152H12.8206Z"
-                  fill="currentColor"
-                />
-                <!-- Rest of the SVG paths -->
-                <path
-                  d="M19.6587 16.4628C18.5794 16.4628 17.6039 16.2207 16.7322 15.7364C15.8605 15.2383 15.1756 14.5465 14.6775 13.6609C14.1794 12.7616 13.9304 11.7238 13.9304 10.5477C13.9304 9.38546 14.1863 8.35465 14.6983 7.45528C15.2102 6.55591 15.909 5.86409 16.7945 5.37981C17.68 4.89554 18.6693 4.6534 19.7624 4.6534C20.8555 4.6534 21.8448 4.89554 22.7303 5.37981C23.6159 5.86409 24.3146 6.55591 24.8266 7.45528C25.3385 8.35465 25.5945 9.38546 25.5945 10.5477C25.5945 11.71 25.3316 12.7408 24.8058 13.6402C24.28 14.5395 23.5605 15.2383 22.6473 15.7364C21.748 16.2207 20.7517 16.4628 19.6587 16.4628Z"
-                  fill="currentColor"
-                />
-                <!-- More SVG paths omitted for brevity -->
-              </g>
-            </svg>
-          </div>
-        </div>
-      </div>
-      
-      <h1 class="text-h1 text-light-text-primary dark:text-dark-text-primary mb-6">
-        Your Learning Journey Starts Here
+      <h1 class="text-h1 text-white mb-6">
+        Transform Your <span class="text-brand-red">YouTube</span> Time<br>
+        Into <span class="text-white">Real</span> <span class="text-brand-turquoise">Learning</span>
       </h1>
       
-      <p class="text-18-28 text-light-text-secondary dark:text-dark-text-secondary mb-12 max-w-3xl mx-auto">
+      <p class="text-18-28 text-white/80 mb-12 max-w-3xl mx-auto">
         Discover personalized courses, connect with learners, and expand your knowledge with Youversity's AI-powered learning platform.
       </p>
       
@@ -269,7 +241,7 @@
         
         <button 
           on:click={() => goto('/login?register=true')}
-          class="px-8 py-3 border border-brand-red text-brand-red rounded-lg hover:bg-light-bg-secondary dark:hover:bg-dark-bg-secondary transition-all font-medium"
+          class="px-8 py-3 border border-brand-red text-brand-red rounded-lg hover:bg-dark-bg-secondary transition-all font-medium"
         >
           Create an Account
         </button>
