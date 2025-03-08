@@ -36,7 +36,7 @@
   </div>
   
   <!-- Main Header -->
-  <div class="w-full bg-light-bg-secondary dark:bg-dark-bg-secondary py-4 px-4 md:px-16">
+  <div class="w-full bg-light-bg-secondary dark:bg-dark-bg-secondary py-4 px-4 md:px-16 md:border-b md:border-light-border md:dark:border-dark-border">
     <div class=" mx-auto flex justify-between items-center">
       <!-- Logo -->
       <div class="flex items-center">
