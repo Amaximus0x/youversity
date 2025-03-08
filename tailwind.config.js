@@ -245,6 +245,16 @@ export default {
             textAlign: 'left', // Text alignment
           },
         ],
+        'h1-landing': [
+          '40px', // Font size
+          {
+            lineHeight: '48px', // Line height
+            fontWeight: '700', // Font weight
+            fontFamily: 'Poppins', // Font family
+            textAlign: 'center', // Text alignment
+          },
+        ],
+
 
 
       },
