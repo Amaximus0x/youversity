@@ -5,6 +5,7 @@
   
   let isMenuOpen = false;
   let isMobile = false;
+  let scrolled = false;
   
   function navigateToLogin() {
     goto('/login');
@@ -14,30 +15,36 @@
     isMenuOpen = !isMenuOpen;
   }
   
-  // Check if we're on mobile
+  // Check if we're on mobile and handle scroll
   onMount(() => {
     const checkMobile = () => {
       isMobile = window.innerWidth < 768;
     };
     
+    const handleScroll = () => {
+      scrolled = window.scrollY > 0;
+    };
+    
     checkMobile();
     window.addEventListener('resize', checkMobile);
+    window.addEventListener('scroll', handleScroll);
     
     return () => {
       window.removeEventListener('resize', checkMobile);
+      window.removeEventListener('scroll', handleScroll);
     };
   });
 </script>
 
-<header class="w-full flex flex-col">
+<header class="w-full flex flex-col fixed top-0 left-0 right-0 z-50">
   <!-- Red Banner -->
   <div class="w-full bg-brand-red py-2 px-4 text-center">
     <p class="text-white text-mini-body md:text-body md:font-normal">if it's on YouTube, you can master it on YouVersity.</p>
   </div>
   
   <!-- Main Header -->
-  <div class="w-full bg-light-bg-secondary dark:bg-dark-bg-secondary py-4 px-4 md:px-16 md:border-b md:border-light-border md:dark:border-dark-border">
-    <div class=" mx-auto flex justify-between items-center">
+  <div class="w-full bg-light-bg-secondary dark:bg-dark-bg-secondary py-4 px-4 md:px-16 md:border-b md:border-light-border md:dark:border-dark-border shadow-sm {scrolled ? 'shadow-md' : ''}">
+    <div class="mx-auto flex justify-between items-center">
       <!-- Logo -->
       <div class="flex items-center">
         <a href="/" class="flex items-center">
@@ -198,4 +205,7 @@
       </nav>
     </div>
   {/if}
-</header> 
+</header>
+
+<!-- Spacer to prevent content from being hidden under the fixed header -->
+<div class="h-[100px] md:h-[120px]"></div> 

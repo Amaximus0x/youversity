@@ -245,7 +245,7 @@ export default {
             textAlign: 'left', // Text alignment
           },
         ],
-        'h1-landing': [
+        'h1-landing-mobile': [
           '40px', // Font size
           {
             lineHeight: '48px', // Line height
@@ -254,7 +254,55 @@ export default {
             textAlign: 'center', // Text alignment
           },
         ],
-
+        'h1-landing': [
+          '64px', // Font size
+          {
+            lineHeight: '72px', // Line height
+            fontWeight: '700', // Font weight
+            fontFamily: 'Poppins', // Font family
+            textAlign: 'center',
+            letterSpacing: '-1%',
+            verticalAlign: 'middle',
+          },
+        ],
+        'h2-landing-mobile': [
+          '32px', // Font size
+          {
+            lineHeight: '56px', // Line height
+            fontWeight: '700', // Font weight
+            fontFamily: 'Poppins', // Font family
+            textAlign: 'center', // Text alignment
+          },
+        ],
+        'h2-landing': [
+          '48px', // Font size
+          {
+            lineHeight: '56px', // Line height
+            fontWeight: '700', // Font weight
+            fontFamily: 'Poppins', // Font family
+            textAlign: 'center',
+            letterSpacing: '0%',
+            verticalAlign: 'middle',
+          },
+        ],
+        'h3-landing-mobile': [
+          '32px', // Font size
+          {
+            lineHeight: '40px', // Line height
+            fontWeight: '700', // Font weight
+            fontFamily: 'Poppins', // Font family
+            textAlign: 'center',
+            letterSpacing: '0%',
+            verticalAlign: 'middle',
+          },
+        ],
+        'h3-landing': [
+          '48px', // Font size
+          {
+            lineHeight: '56px', // Line height
+            fontWeight: '700', // Font weight
+          },
+        ],
 
 
       },
@@ -269,6 +317,8 @@ export default {
       backgroundImage: {
         'gradient-light': 'linear-gradient(to bottom, #FFF2F3, #EDFEFF)',
         'gradient-dark': 'linear-gradient(180deg, #241015 0%, #0E1313 100%)',
+        'content-gradient-light': 'linear-gradient(179.73deg, rgba(255, 255, 255, 0.1) 52.62%, #F7EEEF 80.01%)',
+        'content-gradient-dark': 'linear-gradient(179.73deg, rgba(32, 17, 21, 0) 52.62%, #211115 80.01%)'
       }
     }
   },

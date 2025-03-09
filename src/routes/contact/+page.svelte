@@ -1,5 +1,6 @@
 <script lang="ts">
   import LandingHeader from '$lib/components/LandingHeader.svelte';
+  import Footer from '$lib/components/Footer.svelte';
   import { onMount } from 'svelte';
 
   let name = '';
@@ -205,16 +206,5 @@
   </section>
   
   <!-- Footer -->
-  <footer class="py-8 px-4 bg-light-bg-primary dark:bg-dark-bg-primary border-t border-light-border dark:border-dark-border">
-    <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center">
-      <div class="flex items-center mb-4 md:mb-0">
-        <img src="/YV.svg" alt="Youversity Logo" class="w-8 h-8 mr-2" />
-        <span class="text-light-text-primary dark:text-dark-text-primary font-medium">Youversity</span>
-      </div>
-      
-      <div class="text-light-text-tertiary dark:text-dark-text-tertiary text-mini-body">
-        © {new Date().getFullYear()} Youversity. All rights reserved.
-      </div>
-    </div>
-  </footer>
+  <Footer />
 </div> 
