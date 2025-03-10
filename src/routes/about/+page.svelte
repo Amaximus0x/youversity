@@ -1,6 +1,7 @@
 <script lang="ts">
   import LandingHeader from '$lib/components/LandingHeader.svelte';
   import Footer from '$lib/components/Footer.svelte';
+  import { theme } from '$lib/stores/theme';
 </script>
 
 <div class="min-h-screen flex flex-col bg-content-gradient-light dark:bg-content-gradient-dark">
@@ -20,7 +21,11 @@
       
       <!-- Screenshot/Demo Image -->
       <div class="relative rounded-xl overflow-hidden border border-light-border dark:border-dark-border mb-8">
-        <img src="/images/landing/CourseModule-Enrolled.png" alt="Youversity Platform Demo" class="w-full h-auto" />
+        {#if $theme === 'light'}
+          <img src="/images/landing/CourseModule-Enrolled-Light.png" alt="Youversity course module interface - light mode" class="w-full h-auto" />
+        {:else}
+          <img src="/images/landing/CourseModule-Enrolled.png" alt="Youversity course module interface - dark mode" class="w-full h-auto" />
+        {/if}
         <div
         class="absolute inset-0 w-full h-full mx-0 mt-[20px] lg:mt-[142px] bg-content-gradient-light dark:bg-content-gradient-dark pointer-events-none z-10"
       ></div>
@@ -110,12 +115,12 @@
     </div>
     
     <!-- CTA Section -->
-    <div class="bg-gradient-dark dark:bg-gradient-light rounded-2xl p-8 text-center mb-12">
+    <div class="bg-gradient-dark dark:bg-gradient-light rounded-[32px] p-8 text-center mb-12">
       <div class="flex flex-col items-center">
         <img src="/YV.svg" alt="Youversity Logo" class="w-16 h-16 mb-4" />
         <div class="flex flex-col text-2xl md:text-3xl font-bold dark:text-black text-white mb-4 "><span> Join Us On Your</span> <span>Learning Journey</span></div>
         <p class="dark:text-light-text-secondary text-dark-text-secondary mb-6 max-w-lg mx-auto">
-          Whether you're picking up a new skill or mastering an advanced topic, we’re here to make learning effortless, engaging, and effective.        </p>
+          Whether you're picking up a new skill or mastering an advanced topic, we're here to make learning effortless, engaging, and effective.        </p>
         <a href="/signup" class="bg-brand-red text-white px-8 py-4 gap-4 rounded-lg font-semibold hover:bg-opacity-90 transition-colors inline-flex items-center">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
             <g id="arrow-up-right-03">

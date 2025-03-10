@@ -1,0 +1,10 @@
+<svg width="25" height="24" viewBox="0 0 25 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="keyboard">
+<path id="Vector" d="M15.4531 7H10.4531C7.16564 7 5.5219 7 4.41556 7.90796C4.21302 8.07418 4.0273 8.25989 3.86108 8.46243C2.95312 9.56878 2.95313 11.2125 2.95313 14.5C2.95313 17.7875 2.95312 19.4312 3.86108 20.5376C4.0273 20.7401 4.21302 20.9258 4.41556 21.092C5.5219 22 7.16564 22 10.4531 22H15.4531C18.7406 22 20.3843 22 21.4907 21.092C21.6932 20.9258 21.8789 20.7401 22.0451 20.5376C22.9531 19.4312 22.9531 17.7875 22.9531 14.5C22.9531 11.2125 22.9531 9.56878 22.0451 8.46243C21.8789 8.25989 21.6932 8.07418 21.4907 7.90796C20.3843 7 18.7406 7 15.4531 7Z" stroke="#41C1CB" stroke-width="1.5" stroke-linecap="round"/>
+<path id="Vector_2" d="M12.9531 7V5C12.9531 4.44772 13.4008 4 13.9531 4C14.5054 4 14.9531 3.55228 14.9531 3V2" stroke="#41C1CB" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+<path id="Vector_3" d="M7.95312 12H8.95312" stroke="#41C1CB" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+<path id="Vector_4" d="M12.4531 12H13.4531" stroke="#41C1CB" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+<path id="Vector_5" d="M16.9531 12H17.9531" stroke="#41C1CB" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+<path id="Vector_6" d="M7.95312 17H17.9531" stroke="#41C1CB" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+</g>
+</svg>

@@ -2,6 +2,7 @@
   import LandingHeader from '$lib/components/LandingHeader.svelte';
   import Footer from '$lib/components/Footer.svelte';
   import { onMount } from 'svelte';
+  import { theme } from '$lib/stores/theme';
 
   let name = '';
   let email = '';
@@ -43,14 +44,14 @@
   <LandingHeader />
   
   <!-- Contact Content -->
-  <section class="flex-1 px-4 py-12 md:py-16 bg-dark-bg-primary">
+  <section class="flex-1 px-4 py-12 md:py-16 bg-light-background-primary dark:bg-dark-background-primary">
     <div class="max-w-4xl mx-auto">
-      <h1 class="text-h1 text-white mb-8 text-center">Contact Us</h1>
+      <h1 class="text-h1 text-light-text-primary dark:text-white mb-8 text-center">Contact Us</h1>
       
       <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
         <!-- Contact Information -->
-        <div class="bg-dark-bg-secondary rounded-xl p-6 md:p-8">
-          <h2 class="text-h2 text-white mb-6">Get in Touch</h2>
+        <div class="bg-light-background-secondary dark:bg-dark-background-secondary rounded-xl p-6 md:p-8">
+          <h2 class="text-h2 text-light-text-primary dark:text-white mb-6">Get in Touch</h2>
           
           <div class="space-y-6">
             <div class="flex items-start">
@@ -60,8 +61,8 @@
                 </svg>
               </div>
               <div>
-                <h3 class="text-h4-medium text-white mb-1">Email</h3>
-                <p class="text-semi-body text-white/80">
+                <h3 class="text-h4-medium text-light-text-primary dark:text-white mb-1">Email</h3>
+                <p class="text-semi-body text-light-text-primary dark:text-white/80">
                   <a href="mailto:support@youversity.com" class="hover:text-brand-red transition-colors">
                     support@youversity.com
                   </a>
@@ -76,8 +77,8 @@
                 </svg>
               </div>
               <div>
-                <h3 class="text-h4-medium text-white mb-1">Phone</h3>
-                <p class="text-semi-body text-white/80">
+                <h3 class="text-h4-medium text-light-text-primary dark:text-white mb-1">Phone</h3>
+                <p class="text-semi-body text-light-text-primary dark:text-white/80">
                   <a href="tel:+1234567890" class="hover:text-brand-turquoise transition-colors">
                     +1 (234) 567-890
                   </a>
@@ -92,8 +93,8 @@
                 </svg>
               </div>
               <div>
-                <h3 class="text-h4-medium text-white mb-1">Support Hours</h3>
-                <p class="text-semi-body text-white/80">
+                <h3 class="text-h4-medium text-light-text-primary dark:text-white mb-1">Support Hours</h3>
+                <p class="text-semi-body text-light-text-primary dark:text-white/80">
                   Monday - Friday: 9am - 5pm EST
                 </p>
               </div>
@@ -101,7 +102,7 @@
           </div>
           
           <div class="mt-8">
-            <h3 class="text-h4-medium text-white mb-4">Follow Us</h3>
+            <h3 class="text-h4-medium text-light-text-primary dark:text-white mb-4">Follow Us</h3>
             <div class="flex space-x-4">
               <a href="#" class="w-10 h-10 bg-brand-red/20 rounded-full flex items-center justify-center hover:bg-brand-red/30 transition-colors">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -125,8 +126,8 @@
         </div>
         
         <!-- Contact Form -->
-        <div class="bg-dark-bg-secondary rounded-xl p-6 md:p-8">
-          <h2 class="text-h2 text-white mb-6">Send a Message</h2>
+        <div class="bg-light-background-secondary dark:bg-dark-background-secondary rounded-xl p-6 md:p-8">
+          <h2 class="text-h2 text-light-text-primary dark:text-white mb-6">Send a Message</h2>
           
           {#if submitSuccess}
             <div class="bg-green-500/20 border border-green-500/30 rounded-lg p-4 mb-6">
@@ -146,45 +147,45 @@
           
           <form on:submit={handleSubmit} class="space-y-4">
             <div>
-              <label for="name" class="block text-white text-semi-body mb-2">Name</label>
+              <label for="name" class="block text-light-text-primary dark:text-white mb-2">Name</label>
               <input 
                 type="text" 
                 id="name" 
                 bind:value={name} 
                 required
-                class="w-full px-4 py-3 bg-dark-bg-primary border border-dark-border rounded-lg focus:outline-none focus:border-brand-red text-white"
+                class="w-full px-4 py-3 bg-light-background-primary dark:bg-dark-background-primary border border-light-border dark:border-dark-border rounded-lg focus:outline-none focus:border-brand-red text-light-text-primary dark:text-white"
               />
             </div>
             
             <div>
-              <label for="email" class="block text-white text-semi-body mb-2">Email</label>
+              <label for="email" class="block text-light-text-primary dark:text-white mb-2">Email</label>
               <input 
                 type="email" 
                 id="email" 
                 bind:value={email} 
                 required
-                class="w-full px-4 py-3 bg-dark-bg-primary border border-dark-border rounded-lg focus:outline-none focus:border-brand-red text-white"
+                class="w-full px-4 py-3 bg-light-background-primary dark:bg-dark-background-primary border border-light-border dark:border-dark-border rounded-lg focus:outline-none focus:border-brand-red text-light-text-primary dark:text-white"
               />
             </div>
             
             <div>
-              <label for="subject" class="block text-white text-semi-body mb-2">Subject</label>
+              <label for="subject" class="block text-light-text-primary dark:text-white mb-2">Subject</label>
               <input 
                 type="text" 
                 id="subject" 
                 bind:value={subject}
-                class="w-full px-4 py-3 bg-dark-bg-primary border border-dark-border rounded-lg focus:outline-none focus:border-brand-red text-white"
+                class="w-full px-4 py-3 bg-light-background-primary dark:bg-dark-background-primary border border-light-border dark:border-dark-border rounded-lg focus:outline-none focus:border-brand-red text-light-text-primary dark:text-white"
               />
             </div>
             
             <div>
-              <label for="message" class="block text-white text-semi-body mb-2">Message</label>
+              <label for="message" class="block text-light-text-primary dark:text-white mb-2">Message</label>
               <textarea 
                 id="message" 
                 bind:value={message} 
                 required
                 rows="5"
-                class="w-full px-4 py-3 bg-dark-bg-primary border border-dark-border rounded-lg focus:outline-none focus:border-brand-red text-white resize-none"
+                class="w-full px-4 py-3 bg-light-background-primary dark:bg-dark-background-primary border border-light-border dark:border-dark-border rounded-lg focus:outline-none focus:border-brand-red text-light-text-primary dark:text-white resize-none"
               ></textarea>
             </div>
             
