@@ -22,148 +22,187 @@
   }
 </script>
 
-<!-- Email Subscription Card (Fixed Position on Desktop) -->
-<!-- <div class="hidden md:block fixed top-[340px] right-0 w-[390px] z-10">
-  <div class="bg-white dark:bg-dark-bg-primary rounded-l-[32px] p-8">
-    <h2 class="text-[32px] font-bold mb-2">Stay Updated on Trends</h2>
-    <p class="text-light-text-tertiary dark:text-dark-text-tertiary mb-6">
-      Stay Informed with the Latest from Youversity
-    </p>
-    
-    <form on:submit={handleSubmit} class="space-y-6">
-      <div>
-        <label for="email-desktop" class="block text-black dark:text-white mb-2">Email address</label>
-        <input
-          type="email"
-          id="email-desktop"
-          bind:value={email}
-          placeholder="Enter email address"
-          class="w-full h-12 px-4 bg-white dark:bg-dark-bg-secondary border border-light-border dark:border-dark-border rounded-lg focus:outline-none focus:border-brand-red text-light-text-tertiary dark:text-dark-text-tertiary text-base"
-          required
-        />
-      </div>
-      
-      <button
-        type="submit"
-        class="w-full bg-brand-red text-white py-4 rounded-lg font-semibold hover:bg-opacity-90 transition-colors"
-      >
-        Subscribe
-      </button>
-
-      <p class="text-light-text-tertiary dark:text-dark-text-tertiary text-sm text-center">
-        By contacting us you agree with our <a href="/terms" class="text-brand-red hover:underline">Terms of service</a> and <a href="/privacy" class="text-brand-red hover:underline">Privacy Policy</a>
+<div class="relative">
+  <!-- Email Subscription Card -->
+  <div class="absolute left-1/2 lg:-right-[45%] transform -translate-x-1/2 -translate-y-[25%] w-full max-w-[546px] mx-auto">
+    <div class=" dark:bg-gradient-light bg-gradient-dark rounded-[32px] p-4 shadow-lg mx-5 border dark:border-light-border border-dark-border">
+      <h2 class="text-[24px] lg:text-[36px] leading-[44px] lg:leading-[44px] font-semibold text-poppins dark:text-black text-white mb-2">Stay Updated on Trends</h2>
+      <p class="text-light-text-tertiary dark:text-dark-text-tertiary text-semi-body lg:text-body mb-6">
+        Stay Informed with the Latest from Youversity
       </p>
-    </form>
-  </div>
-</div> -->
-
-<div class="flex flex-col">
-  <!-- Mobile Email Subscription Card -->
-  <div class="md:hidden w-full bg-[#FFF2F3] dark:bg-dark-bg-primary rounded-[32px] p-8 mb-8">
-    <h2 class="text-[32px] font-bold mb-2">Stay Updated on Trends</h2>
-    <p class="text-light-text-tertiary dark:text-dark-text-tertiary mb-6">
-      Stay Informed with the Latest from Youversity
-    </p>
-    
-    <form on:submit={handleSubmit} class="space-y-6">
-      <div>
-        <label for="email-mobile" class="block text-black dark:text-white mb-2">Email address</label>
-        <input
-          type="email"
-          id="email-mobile"
-          bind:value={email}
-          placeholder="Enter email address"
-          class="w-full h-12 px-4 bg-white dark:bg-dark-bg-secondary border border-light-border dark:border-dark-border rounded-lg focus:outline-none focus:border-brand-red text-light-text-tertiary dark:text-dark-text-tertiary text-base"
-          required
-        />
-      </div>
       
-      <button
-        type="submit"
-        class="w-full bg-brand-red text-white py-4 rounded-lg font-semibold hover:bg-opacity-90 transition-colors"
-      >
-        Subscribe
-      </button>
+      <form on:submit={handleSubmit} class="space-y-8">
+        <div>
+          <label for="email" class="block dark:text-black text-white text-semibody-medium mb-2">Email address</label>
+          <input
+            type="email"
+            id="email"
+            bind:value={email}
+            placeholder="Enter email address"
+            class="w-full h-12 px-4 py-2 dark:bg-white bg-black border dark:border-light-border border-dark-border rounded-2xl focus:outline-none focus:border-brand-red placeholder:text-light-text-tertiary dark:placeholder:text-dark-text-tertiary dark:text-light-text-primary text-dark-text-primary  text-mini-body"
+            required
+          />
+        </div>
+        <div>
+          <button
+            type="submit"
+            class="w-full h-[54px] text-body bg-brand-red text-white px-4 py-2 rounded-2xl  hover:bg-Button-hover transition-colors"
+        >
+          Subscribe
+        </button>
 
-      <p class="text-light-text-tertiary dark:text-dark-text-tertiary text-sm text-center">
-        By contacting us you agree with our <a href="/terms" class="text-brand-red hover:underline">Terms of service</a> and <a href="/privacy" class="text-brand-red hover:underline">Privacy Policy</a>
-      </p>
-    </form>
+        <p class="pt-4 px-[33px] text-light-text-tertiary dark:text-dark-text-tertiary text-semi-body text-center">
+          By contacting us you agree with our <a href="/terms" class="text-brand-red hover:underline">Terms of service</a> and <a href="/privacy" class="text-brand-red hover:underline">Privacy Policy</a>
+        </p>
+        </div>
+      </form>
+    </div>
   </div>
 
   <!-- Footer -->
-  <footer class="py-8 px-4 bg-light-bg-primary dark:bg-dark-bg-primary">
-    <div class="max-w-6xl mx-auto">
+  <footer class="pt-[378px] pb-[46px] px-4 lg:pt-[30px] lg:px-[60px] lg:pb-[96px] dark:bg-gradient-light bg-gradient-dark">
+    <div class=" mx-auto">
       <!-- Left Column -->
       <div class="flex flex-col gap-8">
         <!-- Navigation -->
-        <nav class="flex gap-8">
+        <nav class="flex gap-8 text-body font-medium">
           <a 
             href="/" 
-            class="{$page.url.pathname === '/' ? 'text-brand-red' : 'text-light-text-tertiary dark:text-dark-text-tertiary'} hover:text-brand-red transition-colors"
+            class="{$page.url.pathname === '/' ? 'text-brand-red' : 'dark:text-light-text-primary text-dark-text-primary'} hover:text-brand-red transition-colors"
           >
             Home
           </a>
           <a 
             href="/about" 
-            class="{$page.url.pathname === '/about' ? 'text-brand-red' : 'text-light-text-tertiary dark:text-dark-text-tertiary'} hover:text-brand-red transition-colors"
+            class="{$page.url.pathname === '/about' ? 'text-brand-red' : 'dark:text-light-text-primary text-dark-text-primary'} hover:text-brand-red transition-colors"
           >
             About
           </a>
           <a 
             href="/contact" 
-            class="{$page.url.pathname === '/contact' ? 'text-brand-red' : 'text-light-text-tertiary dark:text-dark-text-tertiary'} hover:text-brand-red transition-colors"
+            class="{$page.url.pathname === '/contact' ? 'text-brand-red' : 'dark:text-light-text-primary text-dark-text-primary'} hover:text-brand-red transition-colors"
           >
             Contact
           </a>
         </nav>
-
+        <div class="lg:flex items-center lg:gap-16">
         <!-- Logo -->
         <div class="flex items-center">
-          <img src="/YV.svg" alt="Youversity Logo" class="w-8 h-8" />
-          <span class="text-light-text-primary dark:text-dark-text-primary font-medium ml-2">Youversity</span>
+          <img 
+            src="/YV.svg"
+            alt="Youversity Logo" 
+            class="w-[35.29px] h-[38px] lg:w-[44.97px] lg:h-[48.43px]"
+          />
+
+          <div class="pt-2">
+            <!-- //logo text -->
+            <svg
+              class="w-[86.61px] h-[16.76px] lg:w-[107.83px] lg:h-[21.36px] dark:text-light-text-primary text-dark-text-primary"
+              viewBox="0 0 109 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              preserveAspectRatio="xMidYMid meet"
+            >
+              <g id="Youversity">
+                <path
+                  d="M12.8206 1.85152L8.04707 11.0458V16.276H5.68104V11.0458L0.886719 1.85152H3.52256L6.86406 8.92886L10.2056 1.85152H12.8206Z"
+                  fill="currentColor"
+                />
+                <path
+                  d="M19.6587 16.4628C18.5794 16.4628 17.6039 16.2207 16.7322 15.7364C15.8605 15.2383 15.1756 14.5465 14.6775 13.6609C14.1794 12.7616 13.9304 11.7238 13.9304 10.5477C13.9304 9.38546 14.1863 8.35465 14.6983 7.45528C15.2102 6.55591 15.909 5.86409 16.7945 5.37981C17.68 4.89554 18.6693 4.6534 19.7624 4.6534C20.8555 4.6534 21.8448 4.89554 22.7303 5.37981C23.6159 5.86409 24.3146 6.55591 24.8266 7.45528C25.3385 8.35465 25.5945 9.38546 25.5945 10.5477C25.5945 11.71 25.3316 12.7408 24.8058 13.6402C24.28 14.5395 23.5605 15.2383 22.6473 15.7364C21.748 16.2207 20.7517 16.4628 19.6587 16.4628ZM19.6587 14.4081C20.2675 14.4081 20.8347 14.2628 21.3605 13.9722C21.9002 13.6817 22.336 13.2458 22.6681 12.6647C23.0001 12.0836 23.1662 11.3779 23.1662 10.5477C23.1662 9.71754 23.0071 9.0188 22.6888 8.4515C22.3706 7.87037 21.9486 7.43452 21.4228 7.14396C20.897 6.85339 20.3297 6.70811 19.7209 6.70811C19.1121 6.70811 18.5448 6.85339 18.019 7.14396C17.5071 7.43452 17.0989 7.87037 16.7945 8.4515C16.4901 9.0188 16.3379 9.71754 16.3379 10.5477C16.3379 11.7792 16.6492 12.7339 17.2719 13.4119C17.9083 14.076 18.7039 14.4081 19.6587 14.4081Z"
+                  fill="currentColor"
+                />
+                <path
+                  d="M38.29 4.84019V16.276H35.924V14.927C35.5504 15.3974 35.0592 15.771 34.4504 16.0477C33.8554 16.3106 33.2189 16.442 32.541 16.442C31.6416 16.442 30.8322 16.2552 30.1127 15.8817C29.407 15.5081 28.8466 14.9546 28.4315 14.2213C28.0303 13.488 27.8297 12.6024 27.8297 11.5647V4.84019H30.1749V11.2119C30.1749 12.2358 30.4309 13.0244 30.9429 13.5779C31.4548 14.1175 32.1535 14.3873 33.0391 14.3873C33.9246 14.3873 34.6233 14.1175 35.1353 13.5779C35.6611 13.0244 35.924 12.2358 35.924 11.2119V4.84019H38.29Z"
+                  fill="currentColor"
+                />
+                <path
+                  d="M45.8325 14.159L49.0703 4.84019H51.5816L47.2231 16.276H44.4005L40.0627 4.84019H42.5948L45.8325 14.159Z"
+                  fill="currentColor"
+                />
+                <path
+                  d="M63.8511 10.2779C63.8511 10.7068 63.8235 11.0943 63.7681 11.4402H55.0304C55.0996 12.3534 55.4386 13.0867 56.0474 13.6402C56.6562 14.1936 57.4034 14.4704 58.2889 14.4704C59.5618 14.4704 60.4612 13.9376 60.987 12.8722H63.5398C63.1939 13.9238 62.5643 14.7886 61.6511 15.4666C60.7518 16.1307 59.631 16.4628 58.2889 16.4628C57.1958 16.4628 56.2134 16.2207 55.3417 15.7364C54.4839 15.2383 53.8059 14.5465 53.3078 13.6609C52.8235 12.7616 52.5814 11.7238 52.5814 10.5477C52.5814 9.37162 52.8166 8.34081 53.287 7.45528C53.7713 6.55591 54.4424 5.86409 55.3002 5.37981C56.1719 4.89554 57.1681 4.6534 58.2889 4.6534C59.3681 4.6534 60.3298 4.88862 61.1738 5.35906C62.0178 5.8295 62.675 6.49365 63.1455 7.3515C63.6159 8.19553 63.8511 9.171 63.8511 10.2779ZM61.3813 9.53074C61.3675 8.65905 61.0562 7.96031 60.4474 7.43452C59.8386 6.90874 59.0845 6.64585 58.1851 6.64585C57.3688 6.64585 56.67 6.90874 56.0889 7.43452C55.5078 7.94647 55.1619 8.64521 55.0512 9.53074H61.3813Z"
+                  fill="currentColor"
+                />
+                <path
+                  d="M68.5456 6.50056C68.8915 5.91943 69.3481 5.46975 69.9154 5.15151C70.4965 4.81944 71.1814 4.6534 71.9701 4.6534V7.10245H71.3682C70.4412 7.10245 69.7355 7.33767 69.2512 7.80811C68.7808 8.27855 68.5456 9.0949 68.5456 10.2572V16.276H66.1796V4.84019H68.5456V6.50056Z"
+                  fill="currentColor"
+                />
+                <path
+                  d="M78.2959 16.4628C77.3965 16.4628 76.5871 16.3037 75.8676 15.9854C75.1619 15.6534 74.6016 15.2106 74.1865 14.6571C73.7714 14.0898 73.55 13.4603 73.5223 12.7685H75.9714C76.0129 13.2527 76.2412 13.6609 76.6563 13.993C77.0852 14.3112 77.6179 14.4704 78.2544 14.4704C78.9185 14.4704 79.4305 14.3458 79.7902 14.0968C80.1638 13.8339 80.3506 13.5018 80.3506 13.1005C80.3506 12.6716 80.1431 12.3534 79.728 12.1458C79.3267 11.9383 78.6833 11.71 77.7978 11.4609C76.9399 11.2257 76.2412 10.9974 75.7016 10.776C75.1619 10.5546 74.6915 10.2156 74.2902 9.75904C73.9028 9.30244 73.7091 8.70056 73.7091 7.95339C73.7091 7.34459 73.889 6.79113 74.2487 6.29302C74.6085 5.78107 75.1204 5.37981 75.7846 5.08925C76.4626 4.79868 77.2374 4.6534 78.1091 4.6534C79.4097 4.6534 80.4544 4.98547 81.243 5.64962C82.0456 6.29993 82.4745 7.19238 82.5298 8.32697H80.1638C80.1223 7.81502 79.9147 7.40685 79.5412 7.10245C79.1676 6.79805 78.6626 6.64585 78.0261 6.64585C77.4034 6.64585 76.9261 6.76346 76.594 6.99867C76.2619 7.23389 76.0959 7.54521 76.0959 7.93263C76.0959 8.23704 76.2066 8.49301 76.428 8.70056C76.6494 8.9081 76.9192 9.07414 77.2374 9.19867C77.5556 9.30936 78.0261 9.45464 78.6487 9.63452C79.4789 9.8559 80.1569 10.0842 80.6827 10.3194C81.2223 10.5408 81.6858 10.8729 82.0732 11.3156C82.4606 11.7584 82.6613 12.3465 82.6751 13.0798C82.6751 13.7301 82.4952 14.3112 82.1355 14.8232C81.7757 15.3351 81.2638 15.7364 80.5996 16.0269C79.9493 16.3175 79.1814 16.4628 78.2959 16.4628Z"
+                  fill="currentColor"
+                />
+                <path
+                  d="M86.4354 3.3251C86.0065 3.3251 85.6468 3.17982 85.3562 2.88925C85.0656 2.59869 84.9203 2.23894 84.9203 1.81001C84.9203 1.38108 85.0656 1.02133 85.3562 0.73077C85.6468 0.440205 86.0065 0.294922 86.4354 0.294922C86.8505 0.294922 87.2034 0.440205 87.4939 0.73077C87.7845 1.02133 87.9298 1.38108 87.9298 1.81001C87.9298 2.23894 87.7845 2.59869 87.4939 2.88925C87.2034 3.17982 86.8505 3.3251 86.4354 3.3251ZM87.5977 4.84019V16.276H85.2317V4.84019H87.5977Z"
+                  fill="currentColor"
+                />
+                <path
+                  d="M93.4645 6.77037V13.1005C93.4645 13.5295 93.5613 13.8408 93.755 14.0345C93.9626 14.2144 94.3085 14.3043 94.7927 14.3043H96.2456V16.276H94.3777C93.3123 16.276 92.4959 16.0269 91.9286 15.5288C91.3613 15.0307 91.0777 14.2213 91.0777 13.1005V6.77037H89.7286V4.84019H91.0777V1.9968H93.4645V4.84019H96.2456V6.77037H93.4645Z"
+                  fill="currentColor"
+                />
+                <path
+                  d="M108.721 4.84019L101.706 21.6515H99.2565L101.581 16.0892L97.0772 4.84019H99.7131L102.93 13.5571L106.272 4.84019H108.721Z"
+                  fill="currentColor"
+                />
+              </g>
+            </svg>
+          </div>
         </div>
 
         <!-- Social Links -->
         <div class="flex gap-6">
-          <a href="#" class="text-light-text-tertiary dark:text-dark-text-tertiary hover:text-brand-red transition-colors">
+          <a href="#" class="dark:text-light-text-primary text-dark-text-primary hover:text-brand-red transition-colors">
             <svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-            </svg>
+              <g id="facebook.24.icon_1wRfb">
+                <path id="Vector" d="M17.0187 9.26613H13.8488V7.18613C13.8488 6.40613 14.3588 6.22613 14.7288 6.22613H16.9587V2.78613H13.8888C10.4688 2.78613 9.68875 5.34613 9.68875 6.98613V9.26613H7.71875V12.7861H9.68875V22.7861H13.8488V12.7861H16.6488L17.0088 9.26613H17.0187Z" fill="currentColor"/>
+                </g>            </svg>
           </a>
-          <a href="#" class="text-light-text-tertiary dark:text-dark-text-tertiary hover:text-brand-red transition-colors">
+          <a href="#" class="dark:text-light-text-primary text-dark-text-primary hover:text-brand-red transition-colors">
             <svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/>
-            </svg>
+              <g id="twitter.24.icon_34Z4B">
+                <path id="Vector" d="M14.4288 11.4061L21.1287 3.78613H19.5487L13.7188 10.4061L9.07875 3.78613H3.71875L10.7487 13.7861L3.71875 21.7861H5.30875L11.4487 14.7961L16.3588 21.7861H21.7188L14.4288 11.4061ZM12.2587 13.8861L11.5487 12.8861L5.87875 4.95613H8.31875L12.8888 11.3561L13.5988 12.3561L19.5487 20.6761H17.1087L12.2587 13.8761V13.8861Z" fill="white"/>
+                </g>  </svg>
           </a>
-          <a href="#" class="text-light-text-tertiary dark:text-dark-text-tertiary hover:text-brand-red transition-colors">
+          <a href="#" class="dark:text-light-text-primary text-dark-text-primary hover:text-brand-red transition-colors">
             <svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
-            </svg>
+              <g id="linkedin.24.icon_baq3k">
+                <path id="Vector" d="M2.77953 9.38613H7.14953V22.5361H2.77953V9.37613V9.38613ZM4.98953 3.03613C3.48953 3.03613 2.51953 4.01613 2.51953 5.30613C2.51953 6.56613 3.46953 7.58613 4.93953 7.58613H4.95953C6.48953 7.58613 7.43953 6.56613 7.43953 5.30613C7.40953 4.01613 6.48953 3.03613 4.98953 3.03613ZM17.8895 9.06613C17.0962 9.03436 16.3094 9.2208 15.6147 9.60518C14.92 9.98956 14.344 10.5571 13.9495 11.2461V9.37613H9.56953C9.62953 10.6161 9.56953 22.5361 9.56953 22.5361H13.9495V15.1861C13.9495 14.7861 13.9695 14.4061 14.0895 14.1161C14.4095 13.3361 15.1295 12.5161 16.3295 12.5161C17.9195 12.5161 18.5495 13.7261 18.5495 15.4961V22.5361H22.9195V14.9961C22.9195 10.9461 20.7695 9.06613 17.8895 9.06613Z" fill="white"/>
+                </g> </svg>
           </a>
-          <a href="#" class="text-light-text-tertiary dark:text-dark-text-tertiary hover:text-brand-red transition-colors">
+          <a href="#" class="dark:text-light-text-primary text-dark-text-primary hover:text-brand-red transition-colors">
             <svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 0C8.74 0 8.333.015 7.053.072 5.775.132 4.905.333 4.14.63c-.789.306-1.459.717-2.126 1.384S.935 3.35.63 4.14C.333 4.905.131 5.775.072 7.053.012 8.333 0 8.74 0 12s.015 3.667.072 4.947c.06 1.277.261 2.148.558 2.913.306.788.717 1.459 1.384 2.126.667.666 1.336 1.079 2.126 1.384.766.296 1.636.499 2.913.558C8.333 23.988 8.74 24 12 24s3.667-.015 4.947-.072c1.277-.06 2.148-.262 2.913-.558.788-.306 1.459-.718 2.126-1.384.666-.667 1.079-1.335 1.384-2.126.296-.765.499-1.636.558-2.913.06-1.28.072-1.687.072-4.947s-.015-3.667-.072-4.947c-.06-1.277-.262-2.149-.558-2.913-.306-.789-.718-1.459-1.384-2.126C21.319 1.347 20.651.935 19.86.63c-.765-.297-1.636-.499-2.913-.558C15.667.012 15.26 0 12 0zm0 2.16c3.203 0 3.585.016 4.85.071 1.17.055 1.805.249 2.227.415.562.217.96.477 1.382.896.419.42.679.819.896 1.381.164.422.36 1.057.413 2.227.057 1.266.07 1.646.07 4.85s-.015 3.585-.074 4.85c-.061 1.17-.256 1.805-.421 2.227-.224.562-.479.96-.899 1.382-.419.419-.824.679-1.38.896-.42.164-1.065.36-2.235.413-1.274.057-1.649.07-4.859.07-3.211 0-3.586-.015-4.859-.074-1.171-.061-1.816-.256-2.236-.421-.569-.224-.96-.479-1.379-.899-.421-.419-.69-.824-.9-1.38-.165-.42-.359-1.065-.42-2.235-.045-1.26-.061-1.649-.061-4.844 0-3.196.016-3.586.061-4.861.061-1.17.255-1.814.42-2.234.21-.57.479-.96.9-1.381.419-.419.81-.689 1.379-.898.42-.166 1.051-.361 2.221-.421 1.275-.045 1.65-.06 4.859-.06l.045.03zm0 3.678c-3.405 0-6.162 2.76-6.162 6.162 0 3.405 2.76 6.162 6.162 6.162 3.405 0 6.162-2.76 6.162-6.162 0-3.405-2.76-6.162-6.162-6.162zM12 16c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4zm7.846-10.405c0 .795-.646 1.44-1.44 1.44-.795 0-1.44-.646-1.44-1.44 0-.794.646-1.439 1.44-1.439.793-.001 1.44.645 1.44 1.439z"/>
-            </svg>
+              <g id="instagram.24.icon_YxHEE">
+                <path id="Vector" d="M12.7188 2.78613C15.4388 2.78613 15.7788 2.79613 16.8388 2.84613C17.9088 2.89613 18.6387 3.06613 19.2687 3.30613C19.9287 3.56613 20.4888 3.90613 21.0387 4.46613C21.5487 4.96613 21.9387 5.56613 22.1987 6.23613C22.4387 6.87613 22.6088 7.59613 22.6588 8.66613C22.7087 9.72613 22.7188 10.0661 22.7188 12.7861C22.7188 15.5061 22.7087 15.8461 22.6588 16.9061C22.6428 17.7362 22.4873 18.5577 22.1987 19.3361C21.9462 20.0039 21.5502 20.6081 21.0387 21.1061C20.5387 21.6161 19.9387 22.0061 19.2687 22.2561C18.6287 22.5061 17.9088 22.6761 16.8388 22.7261C15.7788 22.7761 15.4388 22.7861 12.7188 22.7861C9.99875 22.7861 9.65875 22.7761 8.59875 22.7261C7.76811 22.707 6.94662 22.5481 6.16875 22.2561C5.50207 22.0062 4.89799 21.6138 4.39875 21.1061C3.88875 20.6061 3.49875 20.0061 3.23875 19.3361C2.94945 18.5579 2.79392 17.7363 2.77875 16.9061C2.72875 15.8461 2.71875 15.5061 2.71875 12.7861C2.71875 10.0661 2.72875 9.72613 2.77875 8.66613C2.82875 7.59613 2.99875 6.86613 3.23875 6.23613C3.49875 5.56613 3.88875 4.96613 4.39875 4.46613C4.89875 3.95613 5.49875 3.56613 6.16875 3.30613C6.947 3.01683 7.7686 2.8613 8.59875 2.84613C9.65875 2.79613 9.99875 2.78613 12.7188 2.78613ZM12.7188 7.78613C11.3927 7.78613 10.1209 8.31292 9.18322 9.2506C8.24553 10.1883 7.71875 11.4601 7.71875 12.7861C7.71875 14.1122 8.24553 15.384 9.18322 16.3217C10.1209 17.2593 11.3927 17.7861 12.7188 17.7861C14.0448 17.7861 15.3166 17.2593 16.2543 16.3217C17.192 15.384 17.7188 14.1122 17.7188 12.7861C17.7188 11.4601 17.192 10.1883 16.2543 9.2506C15.3166 8.31292 14.0448 7.78613 12.7188 7.78613ZM19.2188 7.53613C19.2188 7.20461 19.0871 6.88667 18.8526 6.65225C18.6182 6.41783 18.3003 6.28613 17.9688 6.28613C17.6372 6.28613 17.3193 6.41783 17.0849 6.65225C16.8504 6.88667 16.7188 7.20461 16.7188 7.53613C16.7188 7.86765 16.8504 8.1856 17.0849 8.42002C17.3193 8.65444 17.6372 8.78613 17.9688 8.78613C18.3003 8.78613 18.6182 8.65444 18.8526 8.42002C19.0871 8.1856 19.2188 7.86765 19.2188 7.53613ZM12.7188 9.78613C13.5144 9.78613 14.2775 10.1022 14.8401 10.6648C15.4027 11.2274 15.7188 11.9905 15.7188 12.7861C15.7188 13.5818 15.4027 14.3448 14.8401 14.9075C14.2775 15.4701 13.5144 15.7861 12.7188 15.7861C11.9231 15.7861 11.16 15.4701 10.5974 14.9075C10.0348 14.3448 9.71875 13.5818 9.71875 12.7861C9.71875 11.9905 10.0348 11.2274 10.5974 10.6648C11.16 10.1022 11.9231 9.78613 12.7188 9.78613Z" fill="white"/>
+                </g> </svg>
           </a>
-          <a href="#" class="text-light-text-tertiary dark:text-dark-text-tertiary hover:text-brand-red transition-colors">
+          <a href="#" class="dark:text-light-text-primary text-dark-text-primary hover:text-brand-red transition-colors">
             <svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
-            </svg>
+              <g id="youtube.24.icon_22zfT" clip-path="url(#clip0_3729_56160)">
+                <g id="Group">
+                <path id="Vector" fill-rule="evenodd" clip-rule="evenodd" d="M22.1187 5.29613C22.6233 5.43557 23.0826 5.7046 23.451 6.07651C23.8194 6.44842 24.0841 6.91026 24.2188 7.41613C24.7388 9.29613 24.7188 13.2161 24.7188 13.2161C24.7188 13.2161 24.7188 17.1061 24.2188 18.9761C24.0832 19.4832 23.8171 19.9458 23.4468 20.3178C23.0765 20.6899 22.6152 20.9582 22.1087 21.0961C20.2288 21.5961 12.7188 21.5961 12.7188 21.5961C12.7188 21.5961 5.21875 21.5961 3.32875 21.0761C2.82049 20.9397 2.35704 20.6721 1.98493 20.3C1.61282 19.9278 1.34513 19.4644 1.20875 18.9561C0.71875 17.1061 0.71875 13.1861 0.71875 13.1861C0.71875 13.1861 0.71875 9.28613 1.21875 7.41613C1.35664 6.90965 1.62208 6.44699 1.98974 6.07233C2.35739 5.69768 2.81496 5.42355 3.31875 5.27613C5.20875 4.78613 12.7188 4.78613 12.7188 4.78613C12.7188 4.78613 20.2288 4.78613 22.1087 5.29613H22.1187ZM10.3188 9.59613L16.5787 13.1961L10.3188 16.7861V9.58613V9.59613Z" fill="white"/>
+                </g>
+                </g>
+                <defs>
+                <clipPath id="clip0_3729_56160">
+                <rect width="24" height="24" fill="white" transform="translate(0.71875 0.786133)"/>
+                </clipPath>
+                </defs> </svg>
           </a>
-          <a href="#" class="text-light-text-tertiary dark:text-dark-text-tertiary hover:text-brand-red transition-colors">
+          <a href="#" class="text-light-text-primary dark:text-dark-text-primary hover:text-brand-red transition-colors">
             <svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 0C5.374 0 0 5.374 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.626-5.374-12-12-12z"/>
-            </svg>
+              <g id="tiktok.24.icon_2knTK">
+                <path id="Vector" d="M21.7205 10.9263C19.9505 10.9263 18.2205 10.3763 16.7905 9.34633V16.5263C16.7903 17.8558 16.3843 19.1536 15.6267 20.2462C14.8692 21.3388 13.7961 22.1741 12.5511 22.6404C11.3061 23.1068 9.94836 23.1821 8.65943 22.8561C7.37049 22.5301 6.21177 21.8185 5.33815 20.8163C4.46452 19.8141 3.91762 18.5691 3.77055 17.2477C3.62348 15.9264 3.88325 14.5916 4.51513 13.4219C5.14701 12.2521 6.1209 11.3031 7.30661 10.7017C8.49233 10.1003 9.83337 9.87512 11.1505 10.0563V13.6663C10.5472 13.4766 9.8994 13.4824 9.29961 13.6828C8.69981 13.8833 8.1787 14.2681 7.8107 14.7824C7.4427 15.2967 7.24665 15.9142 7.25053 16.5466C7.25442 17.179 7.45805 17.794 7.83234 18.3037C8.20662 18.8134 8.73243 19.1919 9.33464 19.3849C9.93685 19.578 10.5847 19.5758 11.1856 19.3787C11.7865 19.1816 12.3097 18.7996 12.6805 18.2873C13.0514 17.7751 13.2509 17.1587 13.2505 16.5263V2.48633H16.7905C16.7838 3.13514 16.9068 3.77875 17.1523 4.37936C17.3978 4.97997 17.7608 5.52547 18.2201 5.98381C18.6794 6.44214 19.2256 6.80409 19.8267 7.04837C20.4278 7.29265 21.0717 7.41436 21.7205 7.40633V10.9263Z" fill="white"/>
+                </g>  </svg>
           </a>
+        </div>
         </div>
 
         <!-- Copyright -->
-        <div class="text-light-text-tertiary dark:text-dark-text-tertiary text-mini-body">
+        <div class="h-[72px] w-[57%] text-light-text-tertiary dark:text-dark-text-tertiary text-mini-body leading-[16px]">
           Copyright © {new Date().getFullYear()} Youversity. All rights reserved.<br />
-          Youversity owns all content, technology, and intellectual property,<br />
-          protected under applicable copyright and trademark laws. Unauthorized<br />
-          use, reproduction, or distribution is strictly prohibited. We reserve the<br />
+          Youversity owns all content, technology, and intellectual property,
+          protected under applicable copyright and trademark laws. Unauthorized
+          use, reproduction, or distribution is strictly prohibited. We reserve the
           right to update, modify, or discontinue services as needed.
         </div>
       </div>
