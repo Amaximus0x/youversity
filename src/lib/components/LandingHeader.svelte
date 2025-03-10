@@ -2,6 +2,7 @@
   import { goto } from '$app/navigation';
   import { page } from '$app/stores';
   import { onMount } from 'svelte';
+  import MobileMenu from './MobileMenu.svelte';
   
   let isMenuOpen = false;
   let isMobile = false;
@@ -13,6 +14,10 @@
   
   function toggleMenu() {
     isMenuOpen = !isMenuOpen;
+  }
+
+  function closeMenu() {
+    isMenuOpen = false;
   }
   
   // Check if we're on mobile and handle scroll
@@ -35,6 +40,9 @@
     };
   });
 </script>
+
+<!-- Mobile Menu -->
+<MobileMenu isOpen={isMenuOpen} onClose={closeMenu} />
 
 <header class="w-full flex flex-col fixed top-0 left-0 right-0 z-50">
   <!-- Red Banner -->
@@ -176,35 +184,7 @@
       </div>
     </div>
   </div>
-  
-  <!-- Mobile Menu -->
-  {#if isMenuOpen && isMobile}
-    <div class="md:hidden bg-dark-bg-primary border-t border-dark-border">
-      <nav class="flex flex-col px-4 py-2">
-        <a 
-          href="/" 
-          class="py-2 text-brand-red hover:text-brand-red transition-colors font-medium {$page.url.pathname === '/' ? 'text-brand-red' : 'text-white'}"
-          on:click={() => isMenuOpen = false}
-        >
-          Home
-        </a>
-        <a 
-          href="/about" 
-          class="py-2 transition-colors font-medium {$page.url.pathname === '/about' ? 'text-brand-red' : 'text-white'}"
-          on:click={() => isMenuOpen = false}
-        >
-          About
-        </a>
-        <a 
-          href="/contact" 
-          class="py-2 transition-colors font-medium {$page.url.pathname === '/contact' ? 'text-brand-red' : 'text-white'}"
-          on:click={() => isMenuOpen = false}
-        >
-          Contact
-        </a>
-      </nav>
-    </div>
-  {/if}
+    
 </header>
 
 <!-- Spacer to prevent content from being hidden under the fixed header -->

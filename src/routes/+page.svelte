@@ -43,156 +43,111 @@
         >
           <!-- Action buttons for medium to large screens -->
           <div
-            class="hidden md:block absolute left-14 top-12 transform hover:scale-105 transition-transform"
+            class="hidden md:block absolute -left-[16rem] top-[11rem] transform hover:scale-105 transition-transform"
           >
             <div
-              class="bg-[#4CAF50] text-white px-4 py-2 rounded-lg flex items-center gap-2 shadow-md relative"
+              class="bg-[#4CD964] text-white px-2 py-1 rounded-[4px] flex items-center gap-2 shadow-md relative"
             >
               <span class="text-sm font-medium">Create Course</span>
-              <svg
-                width="16"
-                height="18"
-                viewBox="0 0 16 18"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
+            
+              <div
+                class="absolute -right-3 -top-[10%] -translate-y-1/2 transform rotate-90"
               >
-                <g
-                  id="8665632_location_arrow_icon 1"
-                  clip-path="url(#clip0_3741_47637)"
-                >
-                  <path
-                    id="Vector"
-                    d="M15.6234 3.45267L10.5926 15.796C10.2973 16.4707 9.67501 16.875 9.00001 16.875C7.9861 16.875 7.31181 16.0629 7.31181 15.2191V9.62575H1.68751C0.881026 9.62575 0.187393 9.05552 0.0320025 8.26345C-0.123986 7.47243 0.302284 6.71306 1.04872 6.37591L13.3921 1.34505C14.02 1.0869 14.7438 1.23297 15.2241 1.71419C15.7359 2.10021 15.8836 2.82302 15.6234 3.45267Z"
-                    fill="#4CD964"
-                  />
+              <svg width="16" height="18" viewBox="0 0 16 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <g id="8665632_location_arrow_icon 1" clip-path="url(#clip0_3571_46428)">
+                <path id="Vector" d="M0.126552 3.45273L5.15741 15.7961C5.45272 16.4707 6.07499 16.875 6.74999 16.875C7.7639 16.875 8.43819 16.0629 8.43819 15.2192V9.62581H14.0625C14.869 9.62581 15.5626 9.05558 15.718 8.26351C15.874 7.47249 15.4477 6.71312 14.7013 6.37597L2.35792 1.34511C1.73003 1.08696 1.00616 1.23303 0.525927 1.71425C0.0140514 2.10027 -0.133604 2.82308 0.126552 3.45273Z" 
+                fill="#4CD964"/>
                 </g>
                 <defs>
-                  <clipPath id="clip0_3741_47637">
-                    <rect width="15.75" height="18" fill="white" />
-                  </clipPath>
+                <clipPath id="clip0_3571_46428">
+                <rect width="15.75" height="18" fill="white" transform="matrix(-1 0 0 1 15.75 0)"/>
+                </clipPath>
                 </defs>
-              </svg>
-              <div
-                class="absolute -right-3 top-1/2 -translate-y-1/2 transform rotate-45"
-              >
-                <svg
-                  class="w-6 h-6 text-[#4CAF50]"
-                  viewBox="0 0 24 24"
-                  fill="currentColor"
-                >
-                  <polygon points="0,0 12,12 0,24" />
                 </svg>
               </div>
             </div>
           </div>
 
           <div
-            class="hidden md:block absolute -right-16 top-20 transform hover:scale-105 transition-transform"
+            class="hidden md:block absolute -right-[14rem] top-[11rem] transform hover:scale-105 transition-transform"
           >
             <div
-              class="bg-[#5B6AF0] text-white px-4 py-2 rounded-lg flex items-center gap-2 shadow-md relative"
+              class="bg-[#4C6DD9] text-white px-2 py-1 rounded-[4px] flex items-center gap-2 shadow-md relative"
             >
               <span class="text-sm font-medium">Take Quiz</span>
-              <svg
-                class="w-4 h-4"
-                viewBox="0 0 24 24"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  d="M5 12H19M19 12L12 5M19 12L12 19"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                />
-              </svg>
+              
               <div
-                class="absolute -left-3 top-1/2 -translate-y-1/2 transform -rotate-135"
+                class="absolute -left-3 -top-[10%] -translate-y-1/2 transform -rotate-135"
               >
-                <svg
-                  class="w-6 h-6 text-[#5B6AF0]"
-                  viewBox="0 0 24 24"
-                  fill="currentColor"
-                >
-                  <polygon points="0,0 12,12 0,24" />
+              <svg width="16" height="18" viewBox="0 0 16 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <g id="8665632_location_arrow_icon 1" clip-path="url(#clip0_3571_46428)">
+                <path id="Vector" d="M0.126552 3.45273L5.15741 15.7961C5.45272 16.4707 6.07499 16.875 6.74999 16.875C7.7639 16.875 8.43819 16.0629 8.43819 15.2192V9.62581H14.0625C14.869 9.62581 15.5626 9.05558 15.718 8.26351C15.874 7.47249 15.4477 6.71312 14.7013 6.37597L2.35792 1.34511C1.73003 1.08696 1.00616 1.23303 0.525927 1.71425C0.0140514 2.10027 -0.133604 2.82308 0.126552 3.45273Z" 
+                fill="#4C6DD9"/>
+                </g>
+                <defs>
+                <clipPath id="clip0_3571_46428">
+                <rect width="15.75" height="18" fill="white" transform="matrix(-1 0 0 1 15.75 0)"/>
+                </clipPath>
+                </defs>
                 </svg>
               </div>
             </div>
           </div>
 
           <div
-            class="hidden md:block absolute -left-24 bottom-20 transform hover:scale-105 transition-transform"
+            class="hidden md:block absolute -left-[9rem] bottom-[7rem] transform hover:scale-105 transition-transform"
           >
             <div
-              class="bg-[#9747FF] text-white px-4 py-2 rounded-lg flex items-center gap-2 shadow-md relative"
+              class="bg-[#804CD9] text-white px-2 py-1 rounded-[4px] flex items-center gap-2 shadow-md relative"
             >
               <span class="text-sm font-medium">Upvotes</span>
-              <svg
-                class="w-4 h-4"
-                viewBox="0 0 24 24"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  d="M12 19V5M12 5L5 12M12 5L19 12"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                />
-              </svg>
+            
               <div
-                class="absolute -right-3 top-1/2 -translate-y-1/2 transform rotate-45"
+                class="absolute -right-3 -top-[10%] -translate-y-1/2 transform rotate-90"
               >
-                <svg
-                  class="w-6 h-6 text-[#9747FF]"
-                  viewBox="0 0 24 24"
-                  fill="currentColor"
-                >
-                  <polygon points="0,0 12,12 0,24" />
+              <svg width="16" height="18" viewBox="0 0 16 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <g id="8665632_location_arrow_icon 1" clip-path="url(#clip0_3571_46428)">
+                <path id="Vector" d="M0.126552 3.45273L5.15741 15.7961C5.45272 16.4707 6.07499 16.875 6.74999 16.875C7.7639 16.875 8.43819 16.0629 8.43819 15.2192V9.62581H14.0625C14.869 9.62581 15.5626 9.05558 15.718 8.26351C15.874 7.47249 15.4477 6.71312 14.7013 6.37597L2.35792 1.34511C1.73003 1.08696 1.00616 1.23303 0.525927 1.71425C0.0140514 2.10027 -0.133604 2.82308 0.126552 3.45273Z" 
+                fill="#804CD9"/>
+                </g>
+                <defs>
+                <clipPath id="clip0_3571_46428">
+                <rect width="15.75" height="18" fill="white" transform="matrix(-1 0 0 1 15.75 0)"/>
+                </clipPath>
+                </defs>
                 </svg>
               </div>
             </div>
           </div>
 
           <div
-            class="hidden md:block absolute -right-32 bottom-20 transform hover:scale-105 transition-transform"
+            class="hidden md:block absolute -right-[9rem] bottom-24 transform hover:scale-105 transition-transform"
           >
             <div
-              class="bg-[#F59E0B] text-white px-4 py-2 rounded-lg flex items-center gap-2 shadow-md relative"
+              class="bg-[#FFA600] text-white px-2 py-1 rounded-[4px] flex items-center gap-2 shadow-md relative"
             >
               <span class="text-sm font-medium">Trending Course</span>
-              <svg
-                class="w-4 h-4"
-                viewBox="0 0 24 24"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  d="M5 12H19M19 12L12 5M19 12L12 19"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                />
-              </svg>
+              
               <div
-                class="absolute -left-3 top-1/2 -translate-y-1/2 transform -rotate-135"
+                class="absolute -left-3 -top-[10%] -translate-y-1/2 transform -rotate-135"
               >
-                <svg
-                  class="w-6 h-6 text-[#F59E0B]"
-                  viewBox="0 0 24 24"
-                  fill="currentColor"
-                >
-                  <polygon points="0,0 12,12 0,24" />
+              <svg width="16" height="18" viewBox="0 0 16 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <g id="8665632_location_arrow_icon 1" clip-path="url(#clip0_3571_46428)">
+                <path id="Vector" d="M0.126552 3.45273L5.15741 15.7961C5.45272 16.4707 6.07499 16.875 6.74999 16.875C7.7639 16.875 8.43819 16.0629 8.43819 15.2192V9.62581H14.0625C14.869 9.62581 15.5626 9.05558 15.718 8.26351C15.874 7.47249 15.4477 6.71312 14.7013 6.37597L2.35792 1.34511C1.73003 1.08696 1.00616 1.23303 0.525927 1.71425C0.0140514 2.10027 -0.133604 2.82308 0.126552 3.45273Z"
+                 fill="#FFA600"/>
+                </g>
+                <defs>
+                <clipPath id="clip0_3571_46428">
+                <rect width="15.75" height="18" fill="white" transform="matrix(-1 0 0 1 15.75 0)"/>
+                </clipPath>
+                </defs>
                 </svg>
               </div>
             </div>
           </div>
 
           <div
-            class="self-stretch inline-flex flex-col justify-start items-center gap-8"
+            class="self-stretch inline-flex flex-col justify-center items-center gap-8"
           >
             <div
               class="self-stretch relative text-center justify-center text-h1-landing-mobile md:text-h1-landing"
