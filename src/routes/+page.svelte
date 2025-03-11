@@ -30,21 +30,13 @@
 <div class="min-h-screen flex flex-col bg-gradient-light dark:bg-gradient-dark">
   <!-- Landing Header -->
   <LandingHeader />
-  <div
-    class="lg:flex lg:flex-col lg:gap-[120px] lg:justify-center lg:items-center mb-64"
-  >
+  <div class="flex flex-col gap-16 md:gap-[120px] mb-64 w-full overflow-hidden">
     <div>
       <!-- Hero Section -->
-      <section
-        class="flex-1 flex flex-col items-center justify-center px-4 pt-8 md:pt-20 relative"
-      >
-        <div
-          class="max-w-5xl mx-auto text-center flex flex-col items-center justify-center gap-14 relative"
-        >
+      <section class="flex-1 flex flex-col items-center justify-center px-4 pt-8 md:pt-20 relative w-full">
+        <div class="max-w-5xl mx-auto text-center flex flex-col items-center justify-center gap-14 relative w-full">
           <!-- Action buttons for medium to large screens -->
-          <div
-            class="hidden md:block absolute -left-[16rem] top-[11rem] transform hover:scale-105 transition-transform"
-          >
+          <div class="hidden md:block absolute -left-[4rem] top-[11rem]">
             <div
               class="bg-[#4CD964] text-white px-2 py-1 rounded-[4px] flex items-center gap-2 shadow-md relative"
             >
@@ -69,7 +61,7 @@
           </div>
 
           <div
-            class="hidden md:block absolute -right-[14rem] top-[11rem] transform hover:scale-105 transition-transform"
+            class="hidden md:block absolute -right-[4rem] top-[11rem]"
           >
             <div
               class="bg-[#4C6DD9] text-white px-2 py-1 rounded-[4px] flex items-center gap-2 shadow-md relative"
@@ -95,7 +87,7 @@
           </div>
 
           <div
-            class="hidden md:block absolute -left-[9rem] bottom-[7rem] transform hover:scale-105 transition-transform"
+            class="hidden md:block absolute left-[4rem] bottom-[7rem]"
           >
             <div
               class="bg-[#804CD9] text-white px-2 py-1 rounded-[4px] flex items-center gap-2 shadow-md relative"
@@ -121,7 +113,7 @@
           </div>
 
           <div
-            class="hidden md:block absolute -right-[9rem] bottom-24 transform hover:scale-105 transition-transform"
+            class="hidden md:block absolute right-[4rem] bottom-24"
           >
             <div
               class="bg-[#FFA600] text-white px-2 py-1 rounded-[4px] flex items-center gap-2 shadow-md relative"
@@ -147,7 +139,7 @@
           </div>
 
           <div
-            class="self-stretch inline-flex flex-col justify-center items-center gap-8"
+            class="w-full flex flex-col justify-center items-center gap-8"
           >
             <div
               class="self-stretch relative text-center justify-center text-h1-landing-mobile md:text-h1-landing"
@@ -170,7 +162,7 @@
             </div>
 
             <div
-              class="max-w-[529px] self-stretch relative text-center justify-center text-light-text-tertiary dark:text-dark-text-tertiary text-semi-body md:text-body leading-snug"
+              class="max-w-[529px]  relative text-center justify-center text-light-text-tertiary dark:text-dark-text-tertiary text-semi-body md:text-body leading-snug"
             >
               Turn those "just 5 more minutes" of YouTube into actual knowledge
               that matters. YouVersity transforms your watching habits into
@@ -243,7 +235,7 @@
       </section>
 
       <!-- Content image Section -->
-      <section class="pt-10 px-4 lg:px-24 relative overflow-hidden">
+      <section class="pt-10 px-4 md:px-8 lg:px-24 relative overflow-hidden w-full">
         <div class="relative">
           {#if $theme === "light"}
             <img
@@ -265,10 +257,10 @@
       </section>
     </div>
 
-    <!-- class="mb-64" will be a parent div containing all the features -->
-    <div>
+    <!-- Features Section -->
+    <div class="w-full">
       <!-- Features Section 1-->
-      <section class="px-4">
+      <section class="px-4 md:px-8 w-full">
         <div class="max-w-6xl mx-auto">
           <h2
             class="text-h2-landing-mobile md:text-h2-landing text-light-text-primary dark:text-dark-text-primary text-center mb-6 lg:mb-16"
@@ -381,112 +373,116 @@
           </div>
         </div>
       </section>
-      <!-- Features Section 2-->
-      <section class="pt-16 px-4 lg:mx-auto lg:max-w-6xl">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-16 lg:gap-24">
-          <div
-            class="min-w-[390px] inline-flex flex-col justify-start items-start gap-6"
-          >
-            <div
-              class="self-stretch relative justify-center text-[#ee3d4e] text-base font-semibold font-['Poppins'] leading-normal"
-            >
-              WATCH IT TRANSFORM
-            </div>
-            <div
-              class="self-stretch flex flex-col justify-start items-start gap-4"
-            >
-              <div
-                class="self-stretch relative justify-center text-light-text-secondary dark:text-dark-text-secondary text-2xl md:text-4xl font-bold font-['Poppins'] leading-loose"
-              >
-                AI-Powered Learning, Structured for You
-              </div>
-              <div
-                class="self-stretch relative justify-center text-light-text-tertiary dark:text-dark-text-tertiary text-sm md:text-base font-normal font-['Poppins'] leading-snug"
-              >
-                Our AI curates top YouTube content on your topic, structuring it
-                into a step-by-step course for seamless learning.
-              </div>
-            </div>
-            <div
-              class="self-stretch flex flex-col justify-start items-end gap-4"
-            >
-              <div
-                class="self-stretch p-4 bg-black/5 dark:bg-white/10 rounded-lg inline-flex justify-start items-start gap-2.5"
-              >
-                <div class="w-6 h-6 relative">
-                  <img
-                    src="/images/landing/ai-content-generator-01.svg"
-                    alt="Identify What You Want to Learn"
-                    class="w-full h-full"
-                  />
-                </div>
-                <div class="flex-1 relative justify-center">
-                  <span
-                    class="text-light-text-primary dark:text-dark-text-primary text-body-semibold leading-tight"
-                    >Curated Content:
-                  </span><span
-                    class="text-light-text-secondary dark:text-dark-text-secondary text-semi-body leading-tight"
-                    >AI selects high-quality videos tailored to your topic for
-                    the best learning experience.
-                  </span>
-                </div>
-              </div>
-              <div
-                class="self-stretch p-4 bg-black/5 dark:bg-white/10 rounded-lg inline-flex justify-start items-start gap-2.5"
-              >
-                <div class="w-6 h-6 relative">
-                  <img
-                    src="/images/landing/arrange.svg"
-                    alt="Input Prompt"
-                    class="w-full h-full"
-                  />
-                </div>
-                <div class="flex-1 relative justify-center">
-                  <span
-                    class="text-light-text-primary dark:text-dark-text-primary text-body-semibold leading-tight"
-                    >Smart Organization:
-                  </span><span
-                    class="text-light-text-secondary dark:text-dark-text-secondary text-semi-body leading-tight"
-                    >Your course follows a logical sequence, guiding you from
-                    basics to advanced concepts.</span
-                  >
-                </div>
-              </div>
-              <div
-                class="self-stretch p-4 bg-black/5 dark:bg-white/10 rounded-lg inline-flex justify-start items-start gap-2.5"
-              >
-                <div class="w-6 h-6 relative">
-                  <img
-                    src="/images/landing/online-learning-01.svg"
-                    alt="Input Prompt"
-                    class="w-full h-full"
-                  />
-                </div>
-                <div class="flex-1 relative justify-center">
-                  <span
-                    class="text-light-text-primary dark:text-dark-text-primary text-body-semibold leading-tight"
-                    >Instant Learning:
-                  </span><span
-                    class="text-light-text-secondary dark:text-dark-text-secondary text-semi-body leading-tight"
-                    >Get your structured course in seconds and start learning
-                    immediately.</span
-                  >
-                </div>
-              </div>
-            </div>
-          </div>
 
-          <div class="w-full min-w-[390px] h-auto">
-            <img
-              src="/images/landing/how-it-works-1.png"
-              alt="Course creation process illustration"
-              class="w-full h-auto"
-            />
+      <!-- Features Section 2-->
+      <section class="pt-16 px-4 md:px-8 w-full">
+        <div class="max-w-6xl mx-auto">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-16 lg:gap-24">
+            <div
+              class="min-w-[390px] inline-flex flex-col justify-start items-start gap-6"
+            >
+              <div
+                class="self-stretch relative justify-center text-[#ee3d4e] text-base font-semibold font-['Poppins'] leading-normal"
+              >
+                WATCH IT TRANSFORM
+              </div>
+              <div
+                class="self-stretch flex flex-col justify-start items-start gap-4"
+              >
+                <div
+                  class="self-stretch relative justify-center text-light-text-secondary dark:text-dark-text-secondary text-2xl md:text-4xl font-bold font-['Poppins'] leading-loose"
+                >
+                  AI-Powered Learning, Structured for You
+                </div>
+                <div
+                  class="self-stretch relative justify-center text-light-text-tertiary dark:text-dark-text-tertiary text-sm md:text-base font-normal font-['Poppins'] leading-snug"
+                >
+                  Our AI curates top YouTube content on your topic, structuring it
+                  into a step-by-step course for seamless learning.
+                </div>
+              </div>
+              <div
+                class="self-stretch flex flex-col justify-start items-end gap-4"
+              >
+                <div
+                  class="self-stretch p-4 bg-black/5 dark:bg-white/10 rounded-lg inline-flex justify-start items-start gap-2.5"
+                >
+                  <div class="w-6 h-6 relative">
+                    <img
+                      src="/images/landing/ai-content-generator-01.svg"
+                      alt="Identify What You Want to Learn"
+                      class="w-full h-full"
+                    />
+                  </div>
+                  <div class="flex-1 relative justify-center">
+                    <span
+                      class="text-light-text-primary dark:text-dark-text-primary text-body-semibold leading-tight"
+                      >Curated Content:
+                    </span><span
+                      class="text-light-text-secondary dark:text-dark-text-secondary text-semi-body leading-tight"
+                      >AI selects high-quality videos tailored to your topic for
+                      the best learning experience.
+                    </span>
+                  </div>
+                </div>
+                <div
+                  class="self-stretch p-4 bg-black/5 dark:bg-white/10 rounded-lg inline-flex justify-start items-start gap-2.5"
+                >
+                  <div class="w-6 h-6 relative">
+                    <img
+                      src="/images/landing/arrange.svg"
+                      alt="Input Prompt"
+                      class="w-full h-full"
+                    />
+                  </div>
+                  <div class="flex-1 relative justify-center">
+                    <span
+                      class="text-light-text-primary dark:text-dark-text-primary text-body-semibold leading-tight"
+                      >Smart Organization:
+                    </span><span
+                      class="text-light-text-secondary dark:text-dark-text-secondary text-semi-body leading-tight"
+                      >Your course follows a logical sequence, guiding you from
+                      basics to advanced concepts.</span
+                    >
+                  </div>
+                </div>
+                <div
+                  class="self-stretch p-4 bg-black/5 dark:bg-white/10 rounded-lg inline-flex justify-start items-start gap-2.5"
+                >
+                  <div class="w-6 h-6 relative">
+                    <img
+                      src="/images/landing/online-learning-01.svg"
+                      alt="Input Prompt"
+                      class="w-full h-full"
+                    />
+                  </div>
+                  <div class="flex-1 relative justify-center">
+                    <span
+                      class="text-light-text-primary dark:text-dark-text-primary text-body-semibold leading-tight"
+                      >Instant Learning:
+                    </span><span
+                      class="text-light-text-secondary dark:text-dark-text-secondary text-semi-body leading-tight"
+                      >Get your structured course in seconds and start learning
+                      immediately.</span
+                    >
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="w-full min-w-[390px] h-auto">
+              <img
+                src="/images/landing/how-it-works-1.png"
+                alt="Course creation process illustration"
+                class="w-full h-auto"
+              />
+            </div>
           </div>
         </div>
       </section>
+
       <!-- Features Section 3-->
-      <section class="pt-16 px-4 lg:mx-auto lg:max-w-6xl">
+      <section class="pt-16 px-4 md:px-8 w-full">
         <!-- Mobile layout (default) -->
         <div
           class="self-stretch inline-flex flex-col justify-center items-start gap-16 md:hidden"
@@ -732,9 +728,9 @@
         </div>
       </section>
     </div>
-    <!-- Learning Section -->
 
-    <section class="px-4 space-y-6 lg:space-y-16">
+    <!-- Learning Section -->
+    <section class="px-4 md:px-8 space-y-6 lg:space-y-16 w-full">
       <div class="self-stretch flex flex-col justify-center items-center gap-4">
         <h2
           class="text-h2-landing-mobile md:text-h2-landing text-light-text-primary dark:text-dark-text-primary text-center"
@@ -771,7 +767,7 @@
     </section>
 
     <!-- Testimonials Section -->
-    <section class="px-4 lg:px-24 lg:max-w-6xl lg:mx-auto">
+    <section class="px-4 md:px-8 lg:px-24 w-full">
       <div class="text-center mb-12">
         <h2
           class="text-h2-landing-mobile md:text-h2-landing text-light-text-secondary dark:text-dark-text-secondary"
@@ -888,56 +884,57 @@
       </div>
     </section>
 
-    <section class="px-4 lg:px-24 lg:max-w-6xl lg:mx-auto lg:w-full">
-      <div
-        class="min-w-[390px] lg:w-full py-8 bg-gradient-dark dark:bg-gradient-light rounded-[32px] flex flex-col justify-center items-center gap-16"
-      >
-        <div
-          class="self-stretch flex flex-col justify-center items-center gap-8"
-        >
-          <img
-            class="w-[100.97px] h-[108.74px] relative"
-            src="/YV.svg"
-            alt="Youversity Logo"
-          />
+    <!-- CTA Section -->
+    <section class="px-4 md:px-8 lg:px-24 w-full">
+      <div class="max-w-6xl mx-auto">
+        <div class="w-full py-8 bg-gradient-dark dark:bg-gradient-light rounded-[32px] flex flex-col justify-center items-center gap-16">
           <div
-            class="max-w-[442px] relative text-center justify-center dark:text-black text-white text-[32px] font-bold font-['Poppins'] capitalize leading-10"
+            class="self-stretch flex flex-col justify-center items-center gap-8"
           >
-            You can Discover and explore variety of trending courses.
+            <img
+              class="w-[100.97px] h-[108.74px] relative"
+              src="/YV.svg"
+              alt="Youversity Logo"
+            />
+            <div
+              class="max-w-[442px] relative text-center justify-center dark:text-black text-white text-[32px] font-bold font-['Poppins'] capitalize leading-10"
+            >
+              You can Discover and explore variety of trending courses.
+            </div>
           </div>
-        </div>
-        <div
-          class="w-[238px] px-8 pt-[15px] pb-4 bg-[#ee3d4e] rounded-lg shadow-[0px_4px_6px_-1px_rgba(99,55,174,0.25)] shadow-[0px_4px_6px_-1px_rgba(99,55,174,0.25)] shadow-[inset_0px_2px_4px_0px_rgba(99,55,174,0.25)] inline-flex justify-center items-center gap-4"
-        >
-          <svg
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <g id="arrow-up-right-03">
-              <path
-                id="Vector"
-                d="M16.5 7.5L6 18"
-                stroke="#ffffff"
-                stroke-width="1.5"
-                stroke-linecap="round"
-              />
-              <path
-                id="Vector_2"
-                d="M8 6.18791C8 6.18791 16.0479 5.50949 17.2692 6.73079C18.4906 7.95209 17.812 16 17.812 16"
-                stroke="#ffffff"
-                stroke-width="1.5"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-            </g>
-          </svg>
           <div
-            class="relative justify-center text-white text-base font-semibold font-['Poppins'] leading-normal"
+            class="w-[238px] px-8 pt-[15px] pb-4 bg-[#ee3d4e] rounded-lg shadow-[0px_4px_6px_-1px_rgba(99,55,174,0.25)] shadow-[0px_4px_6px_-1px_rgba(99,55,174,0.25)] shadow-[inset_0px_2px_4px_0px_rgba(99,55,174,0.25)] inline-flex justify-center items-center gap-4"
           >
-            Get Started
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <g id="arrow-up-right-03">
+                <path
+                  id="Vector"
+                  d="M16.5 7.5L6 18"
+                  stroke="#ffffff"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                />
+                <path
+                  id="Vector_2"
+                  d="M8 6.18791C8 6.18791 16.0479 5.50949 17.2692 6.73079C18.4906 7.95209 17.812 16 17.812 16"
+                  stroke="#ffffff"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </g>
+            </svg>
+            <div
+              class="relative justify-center text-white text-base font-semibold font-['Poppins'] leading-normal"
+            >
+              Get Started
+            </div>
           </div>
         </div>
       </div>

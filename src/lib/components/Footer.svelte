@@ -28,35 +28,35 @@
     <div class=" dark:bg-gradient-light bg-gradient-dark rounded-[32px] p-4 shadow-lg mx-5 border dark:border-light-border border-dark-border">
       <h2 class="text-[24px] lg:text-[36px] leading-[44px] lg:leading-[44px] font-semibold text-poppins dark:text-black text-white mb-2">Stay Updated on Trends</h2>
       <p class="text-light-text-tertiary dark:text-dark-text-tertiary text-semi-body lg:text-body mb-6">
-        Stay Informed with the Latest from Youversity
-      </p>
-      
+      Stay Informed with the Latest from Youversity
+    </p>
+    
       <form on:submit={handleSubmit} class="space-y-8">
-        <div>
+      <div>
           <label for="email" class="block dark:text-black text-white text-semibody-medium mb-2">Email address</label>
-          <input
-            type="email"
+        <input
+          type="email"
             id="email"
-            bind:value={email}
-            placeholder="Enter email address"
+          bind:value={email}
+          placeholder="Enter email address"
             class="w-full h-12 px-4 py-2 dark:bg-white bg-black border dark:border-light-border border-dark-border rounded-2xl focus:outline-none focus:border-brand-red placeholder:text-light-text-tertiary dark:placeholder:text-dark-text-tertiary dark:text-light-text-primary text-dark-text-primary  text-mini-body"
-            required
-          />
-        </div>
+          required
+        />
+      </div>
         <div>
-          <button
-            type="submit"
+      <button
+        type="submit"
             class="w-full h-[54px] text-body bg-brand-red text-white px-4 py-2 rounded-2xl  hover:bg-Button-hover transition-colors"
-        >
-          Subscribe
-        </button>
+      >
+        Subscribe
+      </button>
 
         <p class="pt-4 px-[33px] text-light-text-tertiary dark:text-dark-text-tertiary text-semi-body text-center">
-          By contacting us you agree with our <a href="/terms" class="text-brand-red hover:underline">Terms of service</a> and <a href="/privacy" class="text-brand-red hover:underline">Privacy Policy</a>
-        </p>
+        By contacting us you agree with our <a href="/terms" class="text-brand-red hover:underline">Terms of service</a> and <a href="/privacy" class="text-brand-red hover:underline">Privacy Policy</a>
+      </p>
         </div>
-      </form>
-    </div>
+    </form>
+  </div>
   </div>
 
   <!-- Footer -->
