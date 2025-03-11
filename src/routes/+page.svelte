@@ -804,7 +804,7 @@
               </div>
             </div>
             <div
-              class="self-stretch relative justify-center text-light-text-secondary dark:text-[#494848] text-sm font-medium font-['Poppins']"
+              class="self-stretch relative justify-center text-light-text-secondary dark:text-dark-text-secondary text-sm font-medium font-['Poppins']"
             >
               It is a long established fact that a reader will be distracted by
               the readable content of a page when looking at its layout. The
@@ -839,7 +839,7 @@
               </div>
             </div>
             <div
-              class="self-stretch relative justify-center text-light-text-secondary dark:text-[#494848] text-sm font-medium font-['Poppins']"
+              class="self-stretch relative justify-center text-light-text-secondary dark:text-dark-text-secondary text-sm font-medium font-['Poppins']"
             >
               It is a long established fact that a reader will be distracted by
               the readable content of a page when looking at its layout. The
@@ -872,7 +872,7 @@
               </div>
             </div>
             <div
-              class="self-stretch relative justify-center text-light-text-secondary dark:text-[#494848] text-sm font-medium font-['Poppins']"
+              class="self-stretch relative justify-center text-light-text-secondary dark:text-dark-text-secondary text-sm font-medium font-['Poppins']"
             >
               It is a long established fact that a reader will be distracted by
               the readable content of a page when looking at its layout. The

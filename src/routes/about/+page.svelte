@@ -4,134 +4,245 @@
   import { theme } from '$lib/stores/theme';
 </script>
 
-<div class="min-h-screen flex flex-col bg-content-gradient-light dark:bg-content-gradient-dark">
+<div class="min-h-screen flex flex-col bg-gradient-light dark:bg-gradient-dark">
   <!-- Landing Header -->
   <LandingHeader />
   
   <!-- About Content -->
-  <div class="flex flex-col px-4 lg:px-0 py-8 gap-16 lg:gap-30">
-    <div class="flex flex-col  gap-8">
+  <div class="flex flex-col px-4 pt-8 lg:pt-12 lg:px-16 pb-[9rem] lg:pb-[12rem] gap-16 lg:gap-30">
+    <div class="flex flex-col ">
     <!-- Hero Section -->
-    <div class="max-w-[818px] mx-auto">
+    <div class="max-w-[818px] mx-auto mb-8">
       <h1 class="text-h3-landing-mobile lg:text-h3-landing text-light-text-secondary dark:text-dark-text-secondary text-center mb-4">What is Youversity About?</h1>
-      <p class=" text-light-text-tertiary dark:text-dark-text-tertiary text-center">
-        Youversity is not just another learning platform—it's your gateway to transforming passive YouTube watching into structured, meaningful learning experiences. We curate and organize educational content from YouTube into coherent courses, making it easier for you to acquire new skills and knowledge in a systematic way.
-      </p>
+      <p class="text-dark-text-tertiary dark:text-dark-text-tertiary text-center">
+        Youversity is an AI-powered learning platform that lets you create and explore courses effortlessly. Search for curated content on any topic or generate your own structured course tailored to your learning goals. With AI-driven organization and personalization, Youversity makes learning flexible, accessible, and fully customizable to fit your needs.</p>
     </div>
       
-      <!-- Screenshot/Demo Image -->
-      <div class="relative rounded-xl overflow-hidden border border-light-border dark:border-dark-border mb-8">
-        {#if $theme === 'light'}
-          <img src="/images/landing/CourseModule-Enrolled-Light.png" alt="Youversity course module interface - light mode" class="w-full h-auto" />
-        {:else}
-          <img src="/images/landing/CourseModule-Enrolled.png" alt="Youversity course module interface - dark mode" class="w-full h-auto" />
-        {/if}
-        <div
-        class="absolute inset-0 w-full h-full mx-0 mt-[20px] lg:mt-[142px] bg-content-gradient-light dark:bg-content-gradient-dark pointer-events-none z-10"
+    <!-- Screenshot/Demo Image -->
+    <div class="relative rounded-xl overflow-hidden">
+      {#if $theme === 'light'}
+        <img src="/images/landing/CourseModule-Enrolled-Light.png" alt="Youversity course module interface - light mode" class="w-full h-auto" />
+      {:else}
+        <img src="/images/landing/CourseModule-Enrolled-dark.png" alt="Youversity course module interface - dark mode" class="w-full h-auto" />
+      {/if}
+      <div
+        class="absolute inset-0 w-full h-full mx-0 mt-[20px] lg:mt-[142px] bg-about-gradient-light dark:bg-about-gradient-dark pointer-events-none z-10"
       ></div>
-      </div>
-    
-    <!-- Mission Section -->
-    <div class="">
-      <h2 class="text-2xl font-bold text-black dark:text-white mb-4">Mission</h2>
-      <p class="text-semi-body text-light-text-secondary dark:text-dark-text-secondary">
-        Empower learners with AI-driven educational tools that transform random YouTube content into structured learning experiences, making education more accessible, engaging, and effective for everyone.
-      </p>
     </div>
     
-    <!-- Vision Section -->
-    <div class="">
-      <h2 class="text-2xl font-bold text-black dark:text-white mb-4">Vision</h2>
-      <p class="text-semi-body text-light-text-secondary dark:text-dark-text-secondary">
-        To create a world where learning is accessible to everyone, powered by intelligent technology that adapts to individual learning styles and preferences.
-      </p>
+    <!-- Mission and Vision Section - Side by side on larger screens -->
+    <div class="flex flex-col lg:flex-row lg:justify-between lg:gap-24 max-w-[1200px] mx-auto px-4 lg:px-0 pb-8 lg:pb-16">
+      <!-- Mission Section -->
+      <div class="w-full lg:w-[390px] mb-8 lg:mb-0">
+        <h2 class="text-h3-mobile lg:text-h2 font-semibold text-light-text-primary dark:text-dark-text-primary mb-4">Mission</h2>
+        <p class="text-body text-light-text-secondary dark:text-dark-text-secondary">
+          Empowering learners with AI-driven education that adapts to their pace, curates the best content, and turns learning into a seamless experience.
+        </p>
+      </div>
+      
+      <!-- Vision Section -->
+      <div class="w-full lg:w-[390px] lg:mt-14">
+        <h2 class="text-h3-mobile lg:text-h2 font-semibold text-light-text-primary dark:text-dark-text-primary mb-4">Vision</h2>
+        <p class="text-body text-light-text-secondary dark:text-dark-text-secondary">
+          To revolutionize digital learning by making high-quality education accessible, intelligent, and personalized—bridging the gap between curiosity and mastery.
+        </p>
+      </div>
     </div>
     </div>
 
      <!-- Why Choose Us Section -->
-     <div class="flex flex-col gap-6">
+      <section class="px-4 md:px-8 lg:px-24 w-full">
+     <div class="max-w-[968px] mx-auto flex flex-col gap-6">
       <h2 class="text-h3-landing-mobile lg:text-h3-landing text-light-text-secondary dark:text-dark-text-secondary text-center">Why Choose Us?</h2>
       <div class="space-y-8">
-        <div class="px-8 py-4 bg-black/5 dark:bg-white/10 rounded-2xl">
+        <div class="px-8 py-4 bg-Black/5 dark:bg-white/10 rounded-2xl">
           <p class="text-semi-body text-Green2 text-center">AI-powered content curation and organization</p>
         </div>
-        <div class="px-8 py-4 bg-black/5 dark:bg-white/10 rounded-2xl">
+        <div class="px-8 py-4 bg-Black/5 dark:bg-white/10 rounded-2xl">
           <p class="text-semi-body text-Green2 text-center">Structured learning paths for efficient skill acquisition</p>
         </div>
-        <div class="px-8 py-4 bg-black/5 dark:bg-white/10 rounded-2xl">
+        <div class="px-8 py-4 bg-Black/5 dark:bg-white/10 rounded-2xl">
           <p class="text-semi-body text-Green2 text-center">Learn at your own pace with personalized recommendations</p>
         </div>
       </div>
     </div> 
-    
+    </section>
    
     
     <!-- Testimonials Section -->
-    <div class="mb-12">
-      <h2 class="text-h3-landing-mobile lg:text-h3-landing text-light-text-secondary dark:text-dark-text-secondary text-center mb-6">What our Early Users Say</h2>
-      <div class="space-y-6">
-        <!-- Testimonial 1 -->
-        <div class="flex gap-4">
-          <div class="flex-shrink-0">
-            <img src="/images/landing/profile-picture.png" alt="User Avatar" class="w-10 h-10 rounded-full" />
-          </div>
-          <div>
-            <h3 class="font-semibold text-black dark:text-white">Chantal John</h3>
-            <p class="text-sm text-light-text-tertiary dark:text-dark-text-tertiary mb-2">Data Scientist</p>
-            <p class="text-light-text-secondary dark:text-dark-text-secondary">
-              "I was overwhelmed by the number of YouTube videos on machine learning. Youversity helped me organize my learning journey and I was able to complete a comprehensive ML course in just 3 weeks!"
-            </p>
+    <section class="px-4 md:px-8 lg:px-24 w-full">
+      <div class="text-center mb-12">
+        <h2
+          class="text-h2-landing-mobile md:text-h2-landing text-light-text-secondary dark:text-dark-text-secondary"
+        >
+          What our Early Users Say
+        </h2>
+      </div>
+
+      <div
+        class="flex flex-col md:flex-row md:flex-wrap md:justify-around md:gap-8"
+      >
+        <!-- First testimonial -->
+        <div
+          class="mb-6 md:mb-0 md:w-[454px] inline-flex justify-start items-start gap-4"
+        >
+          <img
+            class="w-11 h-11 relative rounded-full"
+            src="/images/landing/profile-picture.png"
+            alt="Chantal John"
+          />
+          <div
+            class="flex-1 md:w-[390px] inline-flex flex-col justify-start items-start gap-4"
+          >
+            <div class="flex flex-col justify-start items-start gap-2">
+              <div
+                class="w-[143px] relative justify-center text-light-text-primary dark:text-dark-text-primary text-xl font-semibold font-['Poppins'] leading-7"
+              >
+                Chantal John
+              </div>
+              <div
+                class="self-stretch relative justify-center text-light-text-tertiary dark:text-dark-text-tertiary text-sm font-medium font-['Poppins']"
+              >
+                Kia Student
+              </div>
+            </div>
+            <div
+              class="self-stretch relative justify-center text-light-text-secondary dark:text-dark-text-secondary text-sm font-medium font-['Poppins']"
+            >
+              It is a long established fact that a reader will be distracted by
+              the readable content of a page when looking at its layout. The
+              point of using Lorem Ipsum is that it has a more-or-less normal
+              distribution of letters, as opposed to using
+            </div>
           </div>
         </div>
-        
-        <!-- Testimonial 2 -->
-        <div class="flex gap-4">
-          <div class="flex-shrink-0">
-            <img src="/images/landing/profile-picture.png" alt="User Avatar" class="w-10 h-10 rounded-full" />
-          </div>
-          <div>
-            <h3 class="font-semibold text-black dark:text-white">Michael Chen</h3>
-            <p class="text-sm text-light-text-tertiary dark:text-dark-text-tertiary mb-2">Software Developer</p>
-            <p class="text-light-text-secondary dark:text-dark-text-secondary">
-              "The way Youversity structures content is amazing. I've been trying to learn React for months, jumping between random videos. With Youversity, I had a clear path and finally built my first full application."
-            </p>
+
+        <!-- Second testimonial (centered in desktop) -->
+        <div
+          class="mb-6 md:mb-0 md:w-[454px] md:mt-16 inline-flex justify-start items-start gap-4"
+        >
+          <img
+            class="w-11 h-11 relative rounded-full"
+            src="/images/landing/profile-picture.png"
+            alt="Chantal John"
+          />
+          <div
+            class="flex-1 md:w-[390px] inline-flex flex-col justify-start items-start gap-4"
+          >
+            <div class="flex flex-col justify-start items-start gap-2">
+              <div
+                class="w-[143px] relative justify-center text-light-text-primary dark:text-dark-text-primary text-xl font-semibold font-['Poppins'] leading-7"
+              >
+                Chantal John
+              </div>
+              <div
+                class="self-stretch relative justify-center text-light-text-tertiary dark:text-dark-text-tertiary text-sm font-medium font-['Poppins']"
+              >
+                Kia Student
+              </div>
+            </div>
+            <div
+              class="self-stretch relative justify-center text-light-text-secondary dark:text-dark-text-secondary text-sm font-medium font-['Poppins']"
+            >
+              It is a long established fact that a reader will be distracted by
+              the readable content of a page when looking at its layout. The
+              point of using Lorem Ipsum is that it has a more-or-less normal
+              distribution of letters, as opposed to using
+            </div>
           </div>
         </div>
-        
-        <!-- Testimonial 3 -->
-        <div class="flex gap-4">
-          <div class="flex-shrink-0">
-            <img src="/images/landing/profile-picture.png" alt="User Avatar" class="w-10 h-10 rounded-full" />
-          </div>
-          <div>
-            <h3 class="font-semibold text-black dark:text-white">Sarah Williams</h3>
-            <p class="text-sm text-light-text-tertiary dark:text-dark-text-tertiary mb-2">Digital Marketing Specialist</p>
-            <p class="text-light-text-secondary dark:text-dark-text-secondary">
-              "I love how Youversity takes the guesswork out of learning. The AI recommendations are spot-on, and I've discovered content I would never have found on my own. It's transformed how I approach professional development."
-            </p>
+
+        <!-- Third testimonial -->
+        <div class="md:w-[454px] inline-flex justify-start items-start gap-4">
+          <img
+            class="w-11 h-11 relative rounded-full"
+            src="/images/landing/profile-picture.png"
+            alt="Chantal John"
+          />
+          <div
+            class="flex-1 md:w-[390px] inline-flex flex-col justify-start items-start gap-4"
+          >
+            <div class="flex flex-col justify-start items-start gap-2">
+              <div
+                class="w-[143px] relative justify-center text-light-text-primary dark:text-dark-text-primary text-xl font-semibold font-['Poppins'] leading-7"
+              >
+                Chantal John
+              </div>
+              <div
+                class="self-stretch relative justify-center text-light-text-tertiary dark:text-dark-text-tertiary text-sm font-medium font-['Poppins']"
+              >
+                Kia Student
+              </div>
+            </div>
+            <div
+              class="self-stretch relative justify-center text-light-text-secondary dark:text-dark-text-secondary text-sm font-medium font-['Poppins']"
+            >
+              It is a long established fact that a reader will be distracted by
+              the readable content of a page when looking at its layout. The
+              point of using Lorem Ipsum is that it has a more-or-less normal
+              distribution of letters, as opposed to using
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </section>
     
     <!-- CTA Section -->
-    <div class="bg-gradient-dark dark:bg-gradient-light rounded-[32px] p-8 text-center mb-12">
-      <div class="flex flex-col items-center">
-        <img src="/YV.svg" alt="Youversity Logo" class="w-16 h-16 mb-4" />
-        <div class="flex flex-col text-2xl md:text-3xl font-bold dark:text-black text-white mb-4 "><span> Join Us On Your</span> <span>Learning Journey</span></div>
-        <p class="dark:text-light-text-secondary text-dark-text-secondary mb-6 max-w-lg mx-auto">
-          Whether you're picking up a new skill or mastering an advanced topic, we're here to make learning effortless, engaging, and effective.        </p>
-        <a href="/signup" class="bg-brand-red text-white px-8 py-4 gap-4 rounded-lg font-semibold hover:bg-opacity-90 transition-colors inline-flex items-center">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <g id="arrow-up-right-03">
-            <path id="Vector" d="M16.5 7.5L6 18" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round"/>
-            <path id="Vector_2" d="M8 6.18791C8 6.18791 16.0479 5.50949 17.2692 6.73079C18.4906 7.95209 17.812 16 17.812 16" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-            </g>
+    <section class="px-4 md:px-8 lg:px-24 w-full">
+      <div class="max-w-6xl mx-auto">
+        <div class="w-full py-8 bg-gradient-dark dark:bg-gradient-light rounded-[32px] flex flex-col justify-center items-center gap-16">
+          <div
+            class="self-stretch flex flex-col justify-center items-center gap-8"
+          >
+            <img
+              class="w-[100.97px] h-[108.74px] relative"
+              src="/YV.svg"
+              alt="Youversity Logo"
+            />
+            <div
+              class="max-w-[442px] relative text-center justify-center dark:text-black text-white text-[32px] font-bold font-['Poppins'] capitalize leading-10"
+            >
+            Join Us on Your<br>Learning Journey
+            </div>
+            <div class="max-w-[568px] text-center justify-center text-dark-text-tertiary dark:text-dark-text-tertiary text-body leading-snug">Whether you're picking up a new skill or mastering an advanced topic, we're here to make learning effortless, engaging, and effective.</div>
+          </div>
+          <div
+            class="w-[238px] px-8 pt-[15px] pb-4 bg-[#ee3d4e] rounded-lg shadow-[0px_4px_6px_-1px_rgba(99,55,174,0.25)] shadow-[0px_4px_6px_-1px_rgba(99,55,174,0.25)] shadow-[inset_0px_2px_4px_0px_rgba(99,55,174,0.25)] inline-flex justify-center items-center gap-4"
+          >
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <g id="arrow-up-right-03">
+                <path
+                  id="Vector"
+                  d="M16.5 7.5L6 18"
+                  stroke="#ffffff"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                />
+                <path
+                  id="Vector_2"
+                  d="M8 6.18791C8 6.18791 16.0479 5.50949 17.2692 6.73079C18.4906 7.95209 17.812 16 17.812 16"
+                  stroke="#ffffff"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </g>
             </svg>
-          <span>Get Started</span>
-        </a>
+            <div
+              class="relative justify-center text-white text-base font-semibold font-['Poppins'] leading-normal"
+            >
+              Get Started
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
+    </section>
   </div>
   
   <!-- Footer -->

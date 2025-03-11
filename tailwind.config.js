@@ -318,7 +318,10 @@ export default {
         'gradient-light': 'linear-gradient(to bottom, #FFF2F3, #EDFEFF)',
         'gradient-dark': 'linear-gradient(180deg, #241015 0%, #0E1313 100%)',
         'content-gradient-light': 'linear-gradient(179.73deg, rgba(255, 255, 255, 0.1) 52.62%, #F7EEEF 80.01%)',
-        'content-gradient-dark': 'linear-gradient(179.73deg, rgba(32, 17, 21, 0) 52.62%, #211115 80.01%)'
+        'content-gradient-dark': 'linear-gradient(179.73deg, rgba(32, 17, 21, 0) 52.62%, #211115 80.01%)',
+
+        'about-gradient-light': 'linear-gradient(179.73deg, rgba(255, 255, 255, 0.1) 22.85%, #F5F9F9 74.49%)',
+        'about-gradient-dark': 'linear-gradient(179.73deg, rgba(32, 17, 21, 0) 52.62%, #191214 80.01%)'
       }
     }
   },
