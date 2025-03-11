@@ -1,12 +1,34 @@
 <script lang="ts">
+  import ReCaptcha from '$lib/components/ReCaptcha.svelte';
+  import { onMount } from 'svelte';
+  import { initRecaptcha, recaptchaToken } from '$lib/stores/recaptcha';
+  import { RECAPTCHA_SITE_KEY } from '$lib/config/recaptcha';
+
   let firstName = "";
   let lastName = "";
   let email = "";
   let message = "";
   let loading = false;
   let formStatus: { success: boolean; message: string } | null = null;
+  let token: string | null = null;
+
+  recaptchaToken.subscribe((value) => {
+    token = value;
+  });
+
+  onMount(async () => {
+    await initRecaptcha(RECAPTCHA_SITE_KEY);
+  });
 
   async function handleSubmit() {
+    if (!token) {
+      formStatus = { 
+        success: false, 
+        message: 'Please complete the reCAPTCHA verification.' 
+      };
+      return;
+    }
+
     loading = true;
     formStatus = null;
     
@@ -16,7 +38,7 @@
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ firstName, lastName, email, message }),
+        body: JSON.stringify({ firstName, lastName, email, message, recaptchaToken: token }),
       });
       
       const result = await response.json();
@@ -28,6 +50,10 @@
         lastName = "";
         email = "";
         message = "";
+        // Reset reCAPTCHA
+        if (typeof window !== 'undefined' && window.grecaptcha) {
+          window.grecaptcha.reset();
+        }
       } else {
         formStatus = { success: false, message: result.message || 'Failed to send message. Please try again.' };
       }
@@ -159,6 +185,11 @@
               class="w-full h-[135px] px-4 py-2 bg-white dark:bg-dark-bg-primary rounded-2xl border border-light-border dark:border-dark-border text-semi-body placeholder:text-light-text-tertiary dark:placeholder:text-dark-text-tertiary resize-none"
               required
             />
+          </div>
+
+          <!-- ReCaptcha -->
+          <div class="flex justify-center">
+            <ReCaptcha siteKey={RECAPTCHA_SITE_KEY} />
           </div>
 
           <!-- Submit Button and Terms -->

@@ -2,8 +2,11 @@
 <script lang="ts">
   import LandingHeader from '$lib/components/LandingHeader.svelte';
   import Footer from '$lib/components/Footer.svelte';
+  import ReCaptcha from '$lib/components/ReCaptcha.svelte';
   import { onMount } from 'svelte';
   import { theme } from '$lib/stores/theme';
+  import { initRecaptcha, recaptchaToken } from '$lib/stores/recaptcha';
+  import { RECAPTCHA_SITE_KEY } from '$lib/config/recaptcha';
 
   let firstName = "";
   let lastName = "";
@@ -11,9 +14,27 @@
   let message = "";
   let loading = false;
   let formStatus: { success: boolean; message: string } | null = null;
+  let token: string | null = null;
+
+  recaptchaToken.subscribe((value) => {
+    token = value;
+  });
+
+  onMount(async () => {
+    await initRecaptcha(RECAPTCHA_SITE_KEY);
+  });
 
   async function handleSubmit(e: Event) {
     e.preventDefault();
+    
+    if (!token) {
+      formStatus = { 
+        success: false, 
+        message: 'Please complete the reCAPTCHA verification.' 
+      };
+      return;
+    }
+
     loading = true;
     formStatus = null;
     
@@ -23,7 +44,13 @@
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ firstName, lastName, email, message }),
+        body: JSON.stringify({ 
+          firstName, 
+          lastName, 
+          email, 
+          message,
+          recaptchaToken: token 
+        }),
       });
       
       const result = await response.json();
@@ -35,6 +62,10 @@
         lastName = "";
         email = "";
         message = "";
+        // Reset reCAPTCHA
+        if (typeof window !== 'undefined' && window.grecaptcha) {
+          window.grecaptcha.reset();
+        }
       } else {
         formStatus = { success: false, message: result.message || 'Failed to send message. Please try again.' };
       }
@@ -52,14 +83,14 @@
   <LandingHeader />
   
   <!-- Contact Content -->
-  <section class="flex-1 px-4 pt-5 md:pt-12 pb-[12rem] md:pb-[16rem]">
+  <section class="flex-1 px-4 pt-5 md:pt-12 pb-[20rem] ">
     <div class="max-w-[1160px] mx-auto">
       <!-- Header Text -->
       <div class="max-w-[800px] mx-auto text-center mb-12 lg:mb-16">
-        <h1 class="text-h2-landing-mobile md:text-h2-landing text-light-text-primary dark:text-dark-text-primary mb-4">
+        <h1 class="text-h2-landing-mobile md:text-h2-landing text-light-text-secondary dark:text-dark-text-secondary mb-4">
           Collaborate with us
         </h1>
-        <p class="text-light-text-tertiary dark:text-dark-text-tertiary text-semi-body md:text-body leading-snug">
+        <p class="text-light-text-tertiary dark:text-dark-text-tertiary text-mini-body md:text-body leading-snug">
           At Youversity, we're more than just a learning platform. We're a community driven by innovation and collaboration. We're eager to partner with educators, creators, and forward thinking businesses to shape the future of structured, AI-powered learning. Whether you have a partnership proposal, creative ideas, or simply want to explore collaboration opportunities, we'd love to hear from you. Please use the form below to reach out, and let's build something amazing together.
         </p>
       </div>
@@ -70,8 +101,8 @@
           <div class="w-full">
             <!-- Form Header -->
             <div class="flex flex-col gap-2 mb-6">
-              <h2 class="text-light-text-primary dark:text-dark-text-primary text-h2 font-medium">Get in touch</h2>
-              <p class="text-light-text-tertiary dark:text-dark-text-tertiary text-semi-body">You can reach us anytime</p>
+              <h2 class="text-light-text-secondary dark:text-dark-text-secondary text-[32px] md:text-[40px] font-bold font-['Poppins'] leading-[44px]">Get in touch</h2>
+              <p class="text-light-text-tertiary dark:text-dark-text-tertiary text-body">You can reach us anytime</p>
             </div>
             
             {#if formStatus}
@@ -80,7 +111,7 @@
               </div>
             {/if}
             
-            <form on:submit={handleSubmit} class="flex flex-col gap-6">
+            <form on:submit={handleSubmit} class="flex flex-col gap-5">
               <!-- Name Fields -->
               <div class="flex flex-col gap-1">
                 <div class="text-light-text-primary dark:text-dark-text-primary text-semibody-medium mb-1">
@@ -92,14 +123,14 @@
                     bind:value={firstName} 
                     required
                     placeholder="First name"
-                    class="w-full h-12 px-4 py-2 bg-white dark:bg-dark-bg-primary rounded-2xl border border-light-border dark:border-dark-border text-semi-body placeholder:text-light-text-tertiary dark:placeholder:text-dark-text-tertiary focus:outline-none focus:ring-2 focus:ring-brand-red focus:border-transparent"
+                    class="w-full h-12 px-4 py-2 text-light-text-primary dark:text-dark-text-primary bg-white dark:bg-dark-bg-primary rounded-2xl border border-light-border dark:border-dark-border text-semi-body placeholder:text-mini-body placeholder:text-light-text-tertiary dark:placeholder:text-dark-text-tertiary focus:outline-none focus:ring-2 focus:ring-brand-red focus:border-transparent"
                   />
                   <input 
                     type="text" 
                     bind:value={lastName} 
                     required
                     placeholder="Last name"
-                    class="w-full h-12 px-4 py-2 bg-white dark:bg-dark-bg-primary rounded-2xl border border-light-border dark:border-dark-border text-semi-body placeholder:text-light-text-tertiary dark:placeholder:text-dark-text-tertiary focus:outline-none focus:ring-2 focus:ring-brand-red focus:border-transparent"
+                    class="w-full h-12 px-4 py-2 text-light-text-primary dark:text-dark-text-primary bg-white dark:bg-dark-bg-primary rounded-2xl border border-light-border dark:border-dark-border text-semi-body placeholder:text-mini-body placeholder:text-light-text-tertiary dark:placeholder:text-dark-text-tertiary focus:outline-none focus:ring-2 focus:ring-brand-red focus:border-transparent"
                   />
                 </div>
               </div>
@@ -114,7 +145,7 @@
                   bind:value={email} 
                   required
                   placeholder="Enter email address"
-                  class="w-full h-12 px-4 py-2 bg-white dark:bg-dark-bg-primary rounded-2xl border border-light-border dark:border-dark-border text-semi-body placeholder:text-light-text-tertiary dark:placeholder:text-dark-text-tertiary focus:outline-none focus:ring-2 focus:ring-brand-red focus:border-transparent"
+                  class="w-full h-12 px-4 py-2 text-light-text-primary dark:text-dark-text-primary bg-white dark:bg-dark-bg-primary rounded-2xl border border-light-border dark:border-dark-border text-semi-body placeholder:text-mini-body placeholder:text-light-text-tertiary dark:placeholder:text-dark-text-tertiary focus:outline-none focus:ring-2 focus:ring-brand-red focus:border-transparent"
                 />
               </div>
               
@@ -126,9 +157,14 @@
                 <textarea 
                   bind:value={message} 
                   required
-                  placeholder="Type your message here..."
-                  class="w-full h-[135px] px-4 py-2 bg-white dark:bg-dark-bg-primary rounded-2xl border border-light-border dark:border-dark-border text-semi-body placeholder:text-light-text-tertiary dark:placeholder:text-dark-text-tertiary resize-none focus:outline-none focus:ring-2 focus:ring-brand-red focus:border-transparent"
+                  placeholder="How we can help?"
+                  class="w-full h-[135px] px-4 py-2 text-light-text-primary dark:text-dark-text-primary bg-white dark:bg-dark-bg-primary rounded-2xl border border-light-border dark:border-dark-border text-semi-body placeholder:text-mini-body placeholder:text-light-text-tertiary dark:placeholder:text-dark-text-tertiary resize-none focus:outline-none focus:ring-2 focus:ring-brand-red focus:border-transparent"
                 ></textarea>
+              </div>
+
+              <!-- ReCaptcha -->
+              <div class="flex justify-center">
+                <ReCaptcha siteKey={RECAPTCHA_SITE_KEY} />
               </div>
               
               <!-- Submit Button and Terms -->
@@ -145,7 +181,7 @@
                   {/if}
                 </button>
 
-                <div class="text-center">
+                <div class="text-center px-8">
                   <span class="text-light-text-tertiary dark:text-dark-text-tertiary text-semi-body">
                     By contacting us you agree with our{" "}
                   </span>

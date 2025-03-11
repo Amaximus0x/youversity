@@ -2,13 +2,41 @@ import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import nodemailer from 'nodemailer';
 
+const verifyRecaptcha = async (token: string) => {
+  const RECAPTCHA_SECRET_KEY = import.meta.env.VITE_RECAPTCHA_SECRET_KEY;
+  
+  try {
+    const response = await fetch('https://www.google.com/recaptcha/api/siteverify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: `secret=${RECAPTCHA_SECRET_KEY}&response=${token}`
+    });
+    
+    const result = await response.json();
+    return result.success;
+  } catch (error) {
+    console.error('reCAPTCHA verification failed:', error);
+    return false;
+  }
+};
+
 export const POST: RequestHandler = async ({ request }) => {
   try {
-    const { firstName, lastName, email, message } = await request.json();
+    const { firstName, lastName, email, message, recaptchaToken } = await request.json();
 
     // Validate input
     if (!firstName || !lastName || !email || !message) {
       return json({ success: false, message: 'All fields are required' }, { status: 400 });
+    }
+
+    // Verify reCAPTCHA
+    if (!recaptchaToken) {
+      return json({ success: false, message: 'reCAPTCHA verification required' }, { status: 400 });
+    }
+
+    const isValidCaptcha = await verifyRecaptcha(recaptchaToken);
+    if (!isValidCaptcha) {
+      return json({ success: false, message: 'reCAPTCHA verification failed' }, { status: 400 });
     }
 
     // Create a transporter for Zoho Mail
