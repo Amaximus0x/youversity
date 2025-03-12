@@ -236,24 +236,24 @@
 
       <!-- Content image Section -->
       <section class="pt-10 px-4 md:px-8 lg:px-24 relative overflow-hidden w-full">
-        <div class="relative">
-          {#if $theme === "light"}
-            <img
-              src="/images/landing/home-light.png"
-              alt="Youversity platform interface - light mode"
-              class="w-full h-auto"
-            />
-          {:else}
-            <img
-              src="/images/landing/home-dark.png"
-              alt="Youversity platform interface - dark mode"
-              class="w-full h-auto"
-            />
-          {/if}
+        <!-- Demo Video Section -->
+        <div class="relative w-full max-w-4xl mx-auto rounded-xl overflow-hidden shadow-lg">
+          <!-- YouTube Embed -->
+          <div class="aspect-video w-full">
+            <iframe
+              class="w-full h-full"
+              src="https://www.youtube.com/embed/LdWqyrSIb4s?autoplay=1&mute=1&loop=1&playlist=LdWqyrSIb4s&controls=0&showinfo=0&rel=0"
+              title="YouVersity Demo Video"
+              frameborder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowfullscreen>
+            </iframe>
+          </div>
         </div>
-        <div
+        
+        <!-- <div
           class="absolute inset-0 w-full h-full mt-[20px] lg:mt-[142px] bg-content-gradient-light dark:bg-content-gradient-dark pointer-events-none z-10"
-        ></div>
+        ></div> -->
       </section>
     </div>
 
