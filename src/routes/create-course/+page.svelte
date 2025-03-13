@@ -51,7 +51,8 @@
     } else {
       visitedModules[index] = true;
     }
-    visitedModules = [...visitedModules];
+    visitedModules = [...visitedModules]; // Trigger reactivity
+    // The nextModuleToVisit will automatically update due to the reactive declaration
   }
 
   function getNextUnvisitedModuleIndex() {
@@ -358,13 +359,13 @@
         >
           {#each courseStructure.OG_Module_Title as moduleTitle, index}
             {@const isActive = currentModuleIndex === index}
-            {@const isNextUnvisited = getNextUnvisitedModuleIndex() === index}
+            {@const isNextUnvisited = !visitedModules[index] && index === getNextUnvisitedModuleIndex()}
             <button
               class="px-4 py-2 rounded-lg whitespace-nowrap transition-all duration-200 
               {isActive
                 ? 'text-body-semibold bg-Green dark:bg-Green2 text-white'
                 : isNextUnvisited
-                  ? 'text-body bg-Black/5 dark:bg-White/10 text-Green dark:text-Green2 hover:bg-gray-200 border-2 border-Green2 animate-pulse'
+                  ? 'text-body bg-Black/5 dark:bg-White/10 text-Green dark:text-Green2 hover:bg-gray-200 border-2 border-Green2 animate-pulse-button'
                   : 'text-body bg-Black/5 dark:bg-White/10 text-Green dark:text-Green2 hover:bg-gray-200'}"
               on:click={() => selectModule(index)}
             >
@@ -464,13 +465,13 @@
         <div class="flex gap-2 overflow-x-auto scrollbar-hide">
           {#each courseStructure.OG_Module_Title as title, index}
             {@const isActive = currentModuleIndex === index}
-            {@const isNextUnvisited = getNextUnvisitedModuleIndex() === index}
+            {@const isNextUnvisited = !visitedModules[index] && index === getNextUnvisitedModuleIndex()}
             <button
               class="px-4 py-2 rounded-lg whitespace-nowrap transition-all duration-200 
               {isActive
                 ? 'text-body-semibold bg-Green dark:bg-Green2 text-white'
                 : isNextUnvisited
-                  ? 'text-body bg-Black/5 dark:bg-White/10 text-Green dark:text-Green2 hover:bg-gray-200 border-2 border-Green2 animate-pulse'
+                  ? 'text-body bg-Black/5 dark:bg-White/10 text-Green dark:text-Green2 hover:bg-gray-200 border-2 border-Green2 animate-pulse-button'
                   : 'text-body bg-Black/5 dark:bg-White/10 text-Green dark:text-Green2 hover:bg-gray-200'}"
               on:click={() => selectModule(index)}
             >
@@ -648,5 +649,24 @@
   
   .animate-pulse {
     animation: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+  
+  @keyframes pulse-button {
+    0%, 100% {
+      opacity: 1;
+      box-shadow: 0 0 0 0 rgba(65, 193, 203, 0.4);
+      text-shadow: 0 0 0 rgba(65, 193, 203, 0);
+      color: #41C1CB;
+    }
+    50% {
+      opacity: 0.9;
+      box-shadow: 0 0 0 4px rgba(65, 193, 203, 0.2);
+      text-shadow: 0 0 8px rgba(65, 193, 203, 0.5);
+      color: #2A4D61;
+    }
+  }
+  
+  .animate-pulse-button {
+    animation: pulse-button 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   }
 </style>
