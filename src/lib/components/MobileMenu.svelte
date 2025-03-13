@@ -1,5 +1,6 @@
 <!-- Mobile Menu component -->
 <script lang="ts">
+    import { goto } from '$app/navigation';
   import { page } from '$app/stores';
   export let isOpen = false;
   export let onClose: () => void;
@@ -63,6 +64,7 @@
             on:click={() => {
               onClose();
               // Add sign in navigation logic here
+              goto('/login');
             }}
           >
             Sign in

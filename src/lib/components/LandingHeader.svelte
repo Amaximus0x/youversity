@@ -152,7 +152,7 @@
       <div class="hidden md:block">
         <button 
           on:click={navigateToLogin}
-          class="px-8 py-4 text-h4 bg-brand-red text-white rounded-lg hover:bg-opacity-90 transition-all font-semibold"
+          class="px-8 py-4 text-h4 bg-brand-red text-white rounded-lg hover:bg-opacity-90 transition-all font-semibold text-nowrap"
         >
           Sign in
         </button>

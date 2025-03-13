@@ -187,7 +187,7 @@
             </div>
           </div>
 
-          <div class="flex flex-col md:flex-row gap-6 md:gap-16 justify-center">
+          <div class="flex justify-center">
             <button
               on:click={navigateToLogin}
               class=" px-10 md:px-8 py-4 bg-brand-red text-white rounded-lg transition-all text-body-semibold font-medium"
@@ -217,7 +217,7 @@
               </div>
             </button>
 
-            <button
+            <!-- <button
               on:click={() => {}}
               class="px-10 md:px-8 py-4 text-brand-turquoise rounded-lg bg-brand-turquoise/10 transition-all text-body-semibold font-medium"
             >
@@ -246,7 +246,7 @@
                 </svg>
                 <span>Watch Demo</span>
               </div>
-            </button>
+            </button> -->
           </div>
         </div>
       </section>
@@ -674,11 +674,12 @@
                 />
               </g>
             </svg>
-            <div
+            <button
+              on:click={navigateToLogin}
               class="relative justify-center text-white text-base font-semibold font-['Poppins'] leading-normal"
             >
               Get Started
-            </div>
+            </button>
           </div>
         </div>
       </div>
