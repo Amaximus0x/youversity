@@ -40,19 +40,24 @@
 
   function allModulesVisited() {
     if (!courseStructure) return false;
+    // Make sure we have the right length and all modules are visited
     return visitedModules.length === courseStructure.OG_Module_Title.length && 
-           visitedModules.every(visited => visited);
+           visitedModules.every(visited => visited === true);
   }
+
+  // Add a reactive variable to track if all modules have been visited
+  $: allModulesAreVisited = courseStructure && 
+     visitedModules.length === courseStructure.OG_Module_Title.length && 
+     visitedModules.every(visited => visited === true);
 
   function selectModule(index: number) {
     currentModuleIndex = index;
-    if (visitedModules[index] === undefined) {
-      visitedModules[index] = true;
-    } else {
-      visitedModules[index] = true;
-    }
-    visitedModules = [...visitedModules]; // Trigger reactivity
-    // The nextModuleToVisit will automatically update due to the reactive declaration
+    // Ensure the module is marked as visited
+    visitedModules[index] = true;
+    // Create a new array to trigger reactivity
+    visitedModules = [...visitedModules];
+    console.log("Visited modules:", visitedModules);
+    console.log("All modules visited:", allModulesAreVisited);
   }
 
   function getNextUnvisitedModuleIndex() {
@@ -280,6 +285,22 @@
         );
         initialLoadingState.setStep("Course structure generated successfully!");
         initialLoadingState.setProgress(20); // Initial course structure generation is exactly 20%
+
+        // Fetch videos for all modules
+        if (courseStructure) {
+          // Initialize visitedModules array
+          visitedModules = new Array(courseStructure.OG_Module_Title.length).fill(false);
+          visitedModules[0] = true; // Mark first module as visited since it's active by default
+          visitedModules = [...visitedModules]; // Trigger reactivity
+          console.log("Initial visitedModules:", visitedModules);
+          
+          for (let i = 0; i < courseStructure.OG_Module_Title.length; i++) {
+            await fetchVideosForModule(
+              courseStructure.OG_Module_YouTube_Search_Prompt[i],
+              i,
+            );
+          }
+        }
       } else {
         throw new Error("Invalid course structure received");
       }
@@ -303,21 +324,8 @@
       initialLoadingState.setStep("Analyzing your course objective...");
 
       await handleBuildCourse();
-
-      // Fetch videos for all modules
-      if (courseStructure) {
-        // Initialize visitedModules array
-        visitedModules = new Array(courseStructure.OG_Module_Title.length).fill(false);
-        visitedModules[0] = true; // Mark first module as visited since it's active by default
-        visitedModules = [...visitedModules]; // Trigger reactivity
-        
-        for (let i = 0; i < courseStructure.OG_Module_Title.length; i++) {
-          await fetchVideosForModule(
-            courseStructure.OG_Module_YouTube_Search_Prompt[i],
-            i,
-          );
-        }
-      }
+      
+      // The visitedModules array is already initialized in handleBuildCourse
     } else {
       goto("/");
     }
@@ -554,17 +562,17 @@
           class="px-4 py-2 rounded-2xl text-base shadow-lg flex items-center justify-center transition-all duration-200 min-w-[250px] gap-2 {!allModulesLoaded ||
           !courseStructure?.OG_Module_Title.every(
             (_, index) => selectedVideos[index] !== undefined,
-          ) || !allModulesVisited()
+          ) || !allModulesAreVisited
             ? 'bg-white cursor-not-allowed text-Grey'
             : 'bg-brand-red hover:bg-ButtonHover text-white'}"
           disabled={!allModulesLoaded ||
             !courseStructure?.OG_Module_Title.every(
               (_, index) => selectedVideos[index] !== undefined,
-            ) || !allModulesVisited()}
+            ) || !allModulesAreVisited}
         >
           <span class="text-body">Create Complete Course</span>
           <svg
-            class="w-5 h-5 {!allModulesLoaded || !allModulesVisited() ? 'fill-Grey' : ''}"
+            class="w-5 h-5 {!allModulesLoaded || !allModulesAreVisited ? 'fill-Grey' : ''}"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
@@ -594,19 +602,19 @@
       class="px-4 py-3 rounded-lg shadow-lg flex items-center justify-center transition-all duration-200 gap-2 {!allModulesLoaded ||
       !courseStructure?.OG_Module_Title.every(
         (_, index) => selectedVideos[index] !== undefined,
-      ) || !allModulesVisited()
+      ) || !allModulesAreVisited
         ? 'bg-white cursor-not-allowed text-Grey'
         : 'bg-brand-red hover:bg-ButtonHover text-white'}"
       on:click={handleSaveCourse}
       disabled={!allModulesLoaded ||
         !courseStructure?.OG_Module_Title.every(
           (_, index) => selectedVideos[index] !== undefined,
-        ) || !allModulesVisited()}
+        ) || !allModulesAreVisited}
     >
       <div class="flex items-center gap-2">
         <span class="text-body">Complete Creating Course</span>
         <svg
-          class="w-5 h-5 {!allModulesLoaded || !allModulesVisited() ? 'fill-Grey' : ''}"
+          class="w-5 h-5 {!allModulesLoaded || !allModulesAreVisited ? 'fill-Grey' : ''}"
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
