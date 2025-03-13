@@ -28,6 +28,7 @@
   let showCustomUrlInput = false;
   let moduleTranscripts: string[] = [];
   let allModulesLoaded = false;
+  let visitedModules: boolean[] = [];
 
   function checkAllModulesLoaded() {
     if (!courseStructure) return false;
@@ -35,6 +36,32 @@
       moduleVideos.length === courseStructure.OG_Module_Title.length &&
       moduleVideos.every((moduleVideo) => moduleVideo && moduleVideo.length > 0)
     );
+  }
+
+  function allModulesVisited() {
+    if (!courseStructure) return false;
+    return visitedModules.length === courseStructure.OG_Module_Title.length && 
+           visitedModules.every(visited => visited);
+  }
+
+  function selectModule(index: number) {
+    currentModuleIndex = index;
+    if (visitedModules[index] === undefined) {
+      visitedModules[index] = true;
+    } else {
+      visitedModules[index] = true;
+    }
+    visitedModules = [...visitedModules];
+  }
+
+  function getNextUnvisitedModuleIndex() {
+    if (!courseStructure) return -1;
+    for (let i = 0; i < courseStructure.OG_Module_Title.length; i++) {
+      if (!visitedModules[i]) {
+        return i;
+      }
+    }
+    return -1;
   }
 
   function handleCustomVideoAdd(
@@ -63,7 +90,7 @@
     if (!courseStructure) return;
 
     const moduleTitle = courseStructure.OG_Module_Title[moduleIndex];
-    initialLoadingState.setCurrentModule(moduleIndex + 1, moduleTitle);
+    initialLoadingState.setCurrentModule(moduleIndex + 1);
     initialLoadingState.setStep(
       `Searching videos for Module ${moduleIndex + 1}: ${moduleTitle}`,
     );
@@ -278,6 +305,11 @@
 
       // Fetch videos for all modules
       if (courseStructure) {
+        // Initialize visitedModules array
+        visitedModules = new Array(courseStructure.OG_Module_Title.length).fill(false);
+        visitedModules[0] = true; // Mark first module as visited since it's active by default
+        visitedModules = [...visitedModules]; // Trigger reactivity
+        
         for (let i = 0; i < courseStructure.OG_Module_Title.length; i++) {
           await fetchVideosForModule(
             courseStructure.OG_Module_YouTube_Search_Prompt[i],
@@ -291,7 +323,7 @@
 
     // Cleanup function to clear loading state when component is destroyed
     return () => {
-      initialLoadingState.clearState();
+      initialLoadingState.stopLoading();
     };
   });
 </script>
@@ -325,12 +357,16 @@
           class="flex gap-2 overflow-x-auto whitespace-nowrap pl-4 pb-2 scrollbar-hide"
         >
           {#each courseStructure.OG_Module_Title as moduleTitle, index}
+            {@const isActive = currentModuleIndex === index}
+            {@const isNextUnvisited = getNextUnvisitedModuleIndex() === index}
             <button
-              class="px-4 py-2 rounded-lg whitespace-nowrap transition-all duration-200 {currentModuleIndex ===
-              index
+              class="px-4 py-2 rounded-lg whitespace-nowrap transition-all duration-200 
+              {isActive
                 ? 'text-body-semibold bg-Green dark:bg-Green2 text-white'
-                : 'text-body bg-Black/5 dark:bg-White/10 text-Green dark:text-Green2 hover:bg-gray-200'}"
-              on:click={() => (currentModuleIndex = index)}
+                : isNextUnvisited
+                  ? 'text-body bg-Black/5 dark:bg-White/10 text-Green dark:text-Green2 hover:bg-gray-200 border-2 border-Green2 animate-pulse'
+                  : 'text-body bg-Black/5 dark:bg-White/10 text-Green dark:text-Green2 hover:bg-gray-200'}"
+              on:click={() => selectModule(index)}
             >
               Module {index + 1}
             </button>
@@ -427,12 +463,16 @@
         <!-- Module Navigation -->
         <div class="flex gap-2 overflow-x-auto scrollbar-hide">
           {#each courseStructure.OG_Module_Title as title, index}
+            {@const isActive = currentModuleIndex === index}
+            {@const isNextUnvisited = getNextUnvisitedModuleIndex() === index}
             <button
-              class="px-4 py-2 rounded-lg whitespace-nowrap transition-all duration-200 {currentModuleIndex ===
-              index
+              class="px-4 py-2 rounded-lg whitespace-nowrap transition-all duration-200 
+              {isActive
                 ? 'text-body-semibold bg-Green dark:bg-Green2 text-white'
-                : 'text-body bg-Black/5 dark:bg-White/10 text-Green dark:text-Green2 hover:bg-gray-200'}"
-              on:click={() => (currentModuleIndex = index)}
+                : isNextUnvisited
+                  ? 'text-body bg-Black/5 dark:bg-White/10 text-Green dark:text-Green2 hover:bg-gray-200 border-2 border-Green2 animate-pulse'
+                  : 'text-body bg-Black/5 dark:bg-White/10 text-Green dark:text-Green2 hover:bg-gray-200'}"
+              on:click={() => selectModule(index)}
             >
               Module {index + 1}
             </button>
@@ -513,17 +553,17 @@
           class="px-4 py-2 rounded-2xl text-base shadow-lg flex items-center justify-center transition-all duration-200 min-w-[250px] gap-2 {!allModulesLoaded ||
           !courseStructure?.OG_Module_Title.every(
             (_, index) => selectedVideos[index] !== undefined,
-          )
+          ) || !allModulesVisited()
             ? 'bg-white cursor-not-allowed text-Grey'
             : 'bg-brand-red hover:bg-ButtonHover text-white'}"
           disabled={!allModulesLoaded ||
             !courseStructure?.OG_Module_Title.every(
               (_, index) => selectedVideos[index] !== undefined,
-            )}
+            ) || !allModulesVisited()}
         >
           <span class="text-body">Create Complete Course</span>
           <svg
-            class="w-5 h-5 {!allModulesLoaded ? 'fill-Grey' : ''}"
+            class="w-5 h-5 {!allModulesLoaded || !allModulesVisited() ? 'fill-Grey' : ''}"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
@@ -553,19 +593,19 @@
       class="px-4 py-3 rounded-lg shadow-lg flex items-center justify-center transition-all duration-200 gap-2 {!allModulesLoaded ||
       !courseStructure?.OG_Module_Title.every(
         (_, index) => selectedVideos[index] !== undefined,
-      )
+      ) || !allModulesVisited()
         ? 'bg-white cursor-not-allowed text-Grey'
         : 'bg-brand-red hover:bg-ButtonHover text-white'}"
       on:click={handleSaveCourse}
       disabled={!allModulesLoaded ||
         !courseStructure?.OG_Module_Title.every(
           (_, index) => selectedVideos[index] !== undefined,
-        )}
+        ) || !allModulesVisited()}
     >
       <div class="flex items-center gap-2">
         <span class="text-body">Complete Creating Course</span>
         <svg
-          class="w-5 h-5 {!allModulesLoaded ? 'fill-Grey' : ''}"
+          class="w-5 h-5 {!allModulesLoaded || !allModulesVisited() ? 'fill-Grey' : ''}"
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
@@ -593,5 +633,20 @@
   .scrollbar-hide {
     -ms-overflow-style: none;
     scrollbar-width: none;
+  }
+  
+  @keyframes pulse {
+    0%, 100% {
+      opacity: 1;
+      box-shadow: 0 0 0 0 rgba(65, 193, 203, 0.4);
+    }
+    50% {
+      opacity: 0.8;
+      box-shadow: 0 0 0 4px rgba(65, 193, 203, 0.2);
+    }
+  }
+  
+  .animate-pulse {
+    animation: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   }
 </style>
