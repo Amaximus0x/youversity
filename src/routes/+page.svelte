@@ -21,16 +21,22 @@
       isMobile = true;
     }
     
-    // Remove thumbnail after 2 seconds
+    // Show thumbnail for 3 seconds, then show video
     setTimeout(() => {
-      const overlay = document.getElementById('thumbnailOverlay');
-      if (overlay) {
-        overlay.style.opacity = '0';
+      const thumbnailContainer = document.getElementById('thumbnailContainer');
+      const videoContainer = document.getElementById('videoContainer');
+      
+      if (videoContainer && thumbnailContainer) {
+        // First show the video container
+        videoContainer.style.display = 'block';
+        
+        // After the fade animation completes, hide the thumbnail completely
         setTimeout(() => {
-          overlay.style.display = 'none';
+
+          thumbnailContainer.style.display = 'none';
         }, 500);
       }
-    }, 2000);
+    }, 3000); // 3 seconds delay
   });
 
   function navigateToLogin() {
@@ -245,12 +251,27 @@
         </div>
       </section>
 
-      <!-- Content image Section -->
+
+
+       <!-- Content image Section -->
+       <section class="pt-10 px-4 md:px-8 lg:px-24 relative overflow-hidden w-full" id="thumbnailContainer" style="display: block;">
+        <div class="relative">
+            <img
+              src={$theme === "light" ? "/images/landing/home-light.png" : "/images/landing/home-dark.png"}
+              alt="Youversity platform interface - light mode"
+              class="w-full h-auto"
+            />
+        </div>
+        <div
+          class="absolute inset-0 w-full h-full mt-[20px] lg:mt-[142px] bg-content-gradient-light dark:bg-content-gradient-dark pointer-events-none z-10"
+        ></div>
+      </section>
+
       <section class="pt-10 px-4 md:px-8 lg:px-24 relative overflow-hidden w-full">
         <!-- Demo Video Section -->
-        <div class="relative w-full max-w-6xl mx-auto rounded-xl overflow-hidden shadow-lg">
+        <div class="relative w-full max-w-6xl mx-auto rounded-xl overflow-hidden">
           <!-- YouTube Embed with more parameters -->
-          <div class="aspect-video w-full">
+          <div class="aspect-video w-full" id="videoContainer" style="display: none;">
             <iframe
               class="w-full h-full pointer-events-none"
               src="https://www.youtube.com/embed/LdWqyrSIb4s?autoplay=1&mute=1&loop=1&playlist=LdWqyrSIb4s&controls=0&showinfo=0&rel=0&modestbranding=1&iv_load_policy=3&playsinline=1&enablejsapi=1&origin=localhost:3000&start=1&disablekb=1&fs=0&color=white&version=3&playlist=LdWqyrSIb4s"
@@ -259,24 +280,14 @@
               frameborder="0"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowfullscreen>
-              <!-- poster="/images/landing/home-light.png" -->
-               
-             
-
             </iframe>
           </div>
           
-          <!-- Custom Thumbnail Overlay -->
-          <div 
-            class="absolute inset-0  bg-cover bg-center transition-opacity duration-5000" 
-            style="background-image: url({$theme === 'light' ? '/images/landing/home-light.png' : '/images/landing/home-dark.png'});"
-            id="thumbnailOverlay">
-          </div>
-          <!-- <div
-            class="absolute inset-0 w-full h-full mt-[20px] lg:mt-[142px] bg-content-gradient-light dark:bg-content-gradient-dark pointer-events-none z-10 transition-opacity duration-5000"
-          ></div> -->
         </div>
         
+        <!-- <div
+          class="absolute inset-0 w-full h-full mt-[20px] lg:mt-[142px] bg-content-gradient-light dark:bg-content-gradient-dark pointer-events-none z-10"
+        ></div> -->
       </section>
     </div>
 
@@ -691,10 +702,11 @@
     display: none; /* Chrome, Safari and Opera */
   }
 
-  /* Add these styles for the thumbnail overlay */
+  /* Thumbnail overlay styles */
   #thumbnailOverlay {
     opacity: 1;
     pointer-events: none;
     z-index: 10;
+    transition: opacity 0.5s ease;
   }
 </style>
