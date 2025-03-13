@@ -74,6 +74,11 @@
         showProgress = state.showProgress ?? false;
         isBookmarked = state.isBookmarked ?? false;
         hasLiked = state.hasLiked ?? false;
+        
+        // Load creator profile if available
+        if (state.creatorProfile) {
+          creatorProfile = state.creatorProfile;
+        }
       }
     }
   }
@@ -86,6 +91,7 @@
         showProgress,
         isBookmarked,
         hasLiked,
+        creatorProfile,  // Include creator profile in saved state
         ...updates,
       };
       localStorage.setItem(
@@ -158,6 +164,18 @@
         isCreator = false;
         isEnrolled = false;
         showProgress = false;
+        
+        // Fetch creator profile for non-authenticated users
+        if (courseDetails?.createdBy) {
+          try {
+            creatorProfile = await getUserProfile(courseDetails.createdBy);
+            // Save state with creator profile
+            saveState();
+          } catch (profileError) {
+            console.error("Error fetching creator profile:", profileError);
+          }
+        }
+        
         // Set initial module to introduction for non-enrolled users
         if (!initialModuleSet) {
           currentModuleStore.set(-1);
@@ -288,6 +306,21 @@
   // Add this function with other functions
   function handleShare() {
     showShareModal = true;
+  }
+
+  // Add this function to check if all modules are completed
+  function hasCompletedAllModules() {
+    if (!courseDetails?.Final_Module_Title?.length) return false;
+    
+    if (isCreator) {
+      // For creators, check moduleProgress
+      return moduleProgress.filter(m => m?.completed).length === courseDetails.Final_Module_Title.length;
+    } else if (isEnrolled && enrollmentProgress?.completedModules) {
+      // For enrolled users, check enrollmentProgress
+      return enrollmentProgress.completedModules.length === courseDetails.Final_Module_Title.length;
+    }
+    
+    return false;
   }
 </script>
 
@@ -551,11 +584,6 @@
             {isCreator}
             {isEnrolled}
             showProgress={true}
-            completedModules={isCreator
-              ? moduleProgress
-                  .map((m, i) => (m?.completed ? i : -1))
-                  .filter((i) => i !== -1)
-              : enrollmentProgress?.completedModules || []}
             bind:currentModule
           />
         </div>
