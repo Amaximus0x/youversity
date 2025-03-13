@@ -37,7 +37,11 @@
     );
   }
 
-  function handleCustomVideoAdd(video: VideoItem, moduleIndex: number, addAtBeginning: boolean = false) {
+  function handleCustomVideoAdd(
+    video: VideoItem,
+    moduleIndex: number,
+    addAtBeginning: boolean = false,
+  ) {
     if (!moduleVideos[moduleIndex]) {
       moduleVideos[moduleIndex] = [];
     }
@@ -195,7 +199,7 @@
 
       finalLoadingState.setStep("Enrolling you in the course...");
       finalLoadingState.setProgress(95);
-      
+
       await enrollInCourse($user.uid, courseId);
 
       finalLoadingState.setStep("Course is ready!");
@@ -297,11 +301,11 @@
 >
   <!-- Fixed Header Section for Mobile -->
   <div
-    class="md:hidden fixed top-[70px] left-0 right-0 z-40  bg-light-bg-secondary dark:bg-dark-bg-secondary"
+    class="md:hidden fixed top-[70px] left-0 right-0 z-40 bg-light-bg-secondary dark:bg-dark-bg-secondary"
   >
     <div class=" pt-4 pb-4">
       <div class="px-4">
-    <CourseGenerationHeader />
+        <CourseGenerationHeader />
       </div>
 
       {#if courseStructure}
@@ -309,13 +313,17 @@
           <h1 class="text-h2-mobile-bold mt-4 mb-2 text-Black dark:text-White">
             {courseStructure.OG_Course_Title}
           </h1>
-        <p class="text-semi-body mb-4 opacity-80 text-light-text-secondary dark:text-dark-text-secondary">
-          {courseStructure.OG_Course_Objective}
-        </p>
+          <p
+            class="text-semi-body mb-4 opacity-80 text-light-text-secondary dark:text-dark-text-secondary"
+          >
+            {courseStructure.OG_Course_Objective}
+          </p>
         </div>
 
         <!-- Module Navigation -->
-        <div class="flex gap-2 overflow-x-auto whitespace-nowrap pl-4 pb-2 scrollbar-hide">
+        <div
+          class="flex gap-2 overflow-x-auto whitespace-nowrap pl-4 pb-2 scrollbar-hide"
+        >
           {#each courseStructure.OG_Module_Title as moduleTitle, index}
             <button
               class="px-4 py-2 rounded-lg whitespace-nowrap transition-all duration-200 {currentModuleIndex ===
@@ -332,14 +340,11 @@
     </div>
   </div>
   <!-- Mobile Scrollable Content -->
-  <div
-    class="md:hidden mt-[calc(140px+env(safe-area-inset-top)+294px)]  pb-32"
-  >
-  
+  <div class="md:hidden mt-[calc(140px+env(safe-area-inset-top)+294px)] pb-32">
     {#if courseStructure}
       <div class="space-y-6">
         <!-- Module Content -->
-        <div class=" rounded-xl ">
+        <div class=" rounded-xl">
           <div class="flex items-center gap-8 lg:justify-between mb-6">
             <div class="flex items-center justify-center gap-2 lg:gap-4">
               <h2
@@ -382,8 +387,10 @@
               <YoutubeUrlInput
                 moduleIndex={currentModuleIndex}
                 onVideoAdd={handleCustomVideoAdd}
-                moduleTitle={courseStructure?.OG_Module_Title[currentModuleIndex] || ''}
-                onClose={() => showCustomUrlInput = false}
+                moduleTitle={courseStructure?.OG_Module_Title[
+                  currentModuleIndex
+                ] || ""}
+                onClose={() => (showCustomUrlInput = false)}
               />
             </div>
           {/if}
@@ -410,7 +417,9 @@
           <h1 class="text-h2-mobile lg:text-h2 text-Black dark:text-White mb-2">
             {courseStructure.OG_Course_Title}
           </h1>
-          <p class="text-semi-body lg:text-body text-light-text-secondary dark:text-dark-text-secondary">
+          <p
+            class="text-semi-body lg:text-body text-light-text-secondary dark:text-dark-text-secondary"
+          >
             {courseStructure.OG_Course_Objective}
           </p>
         </div>
@@ -474,8 +483,10 @@
               <YoutubeUrlInput
                 moduleIndex={currentModuleIndex}
                 onVideoAdd={handleCustomVideoAdd}
-                moduleTitle={courseStructure?.OG_Module_Title[currentModuleIndex] || ''}
-                onClose={() => showCustomUrlInput = false}
+                moduleTitle={courseStructure?.OG_Module_Title[
+                  currentModuleIndex
+                ] || ""}
+                onClose={() => (showCustomUrlInput = false)}
               />
             </div>
           {/if}
@@ -535,8 +546,6 @@
       </div>
     {/if}
   </div>
-
-  
 
   <!-- Mobile Generate Course Button -->
   <div class="fixed md:hidden bottom-[8.5rem] z-50">
