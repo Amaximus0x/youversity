@@ -9,7 +9,7 @@
   } from "$lib/stores/loadingState";
   import { page } from "$app/stores";
   import { goto } from "$app/navigation";
-  import { Plus } from "lucide-svelte";
+  import { Plus, ChevronLeft, ChevronRight } from "lucide-svelte";
   import { fade, fly } from "svelte/transition";
   import { getVideoTranscript } from "$lib/services/transcriptUtils";
   import { auth } from "$lib/firebase";
@@ -29,6 +29,24 @@
   let moduleTranscripts: string[] = [];
   let allModulesLoaded = false;
   let visitedModules: boolean[] = [];
+
+  // Reference to the module navigation container for scrolling
+  let moduleNavContainer: HTMLElement;
+
+  // Function to scroll the module navigation
+  function scrollModuleNav(direction: 'left' | 'right') {
+    if (!moduleNavContainer) return;
+    
+    const scrollAmount = 200; // Adjust this value as needed
+    const currentScroll = moduleNavContainer.scrollLeft;
+    
+    moduleNavContainer.scrollTo({
+      left: direction === 'left' 
+        ? currentScroll - scrollAmount 
+        : currentScroll + scrollAmount,
+      behavior: 'smooth'
+    });
+  }
 
   function checkAllModulesLoaded() {
     if (!courseStructure) return false;
@@ -373,7 +391,7 @@
               {isActive
                 ? 'text-body-semibold bg-Green dark:bg-Green2 text-white'
                 : isNextUnvisited
-                  ? 'text-body bg-Black/5 dark:bg-White/10 text-Green dark:text-Green2 hover:bg-gray-200 border-2 border-Green2 animate-pulse-button'
+                  ? 'text-body bg-Black/5 dark:bg-White/10 hover:bg-gray-200 border-2 border-Green2 animate-text-only'
                   : 'text-body bg-Black/5 dark:bg-White/10 text-Green dark:text-Green2 hover:bg-gray-200'}"
               on:click={() => selectModule(index)}
             >
@@ -469,23 +487,47 @@
           </p>
         </div>
 
-        <!-- Module Navigation -->
-        <div class="flex gap-2 overflow-x-auto scrollbar-hide">
-          {#each courseStructure.OG_Module_Title as title, index}
-            {@const isActive = currentModuleIndex === index}
-            {@const isNextUnvisited = !visitedModules[index] && index === getNextUnvisitedModuleIndex()}
-            <button
-              class="px-4 py-2 rounded-lg whitespace-nowrap transition-all duration-200 
-              {isActive
-                ? 'text-body-semibold bg-Green dark:bg-Green2 text-white'
-                : isNextUnvisited
-                  ? 'text-body bg-Black/5 dark:bg-White/10 text-Green dark:text-Green2 hover:bg-gray-200 border-2 border-Green2 animate-pulse-button'
-                  : 'text-body bg-Black/5 dark:bg-White/10 text-Green dark:text-Green2 hover:bg-gray-200'}"
-              on:click={() => selectModule(index)}
-            >
-              Module {index + 1}
-            </button>
-          {/each}
+        <!-- Module Navigation with scroll buttons -->
+        <div class="relative flex items-center">
+          <!-- Left scroll button -->
+          <button 
+            class="absolute left-0 z-10 p-1 bg-white dark:bg-dark-bg-primary rounded-full shadow-md text-Green dark:text-Green2 hover:bg-gray-100 dark:hover:bg-dark-bg-secondary"
+            on:click={() => scrollModuleNav('left')}
+            aria-label="Scroll left"
+          >
+            <ChevronLeft class="w-5 h-5" />
+          </button>
+          
+          <!-- Module navigation container -->
+          <div 
+            bind:this={moduleNavContainer}
+            class="flex gap-2 overflow-x-auto scrollbar-hide mx-8 py-2 scroll-smooth"
+          >
+            {#each courseStructure.OG_Module_Title as title, index}
+              {@const isActive = currentModuleIndex === index}
+              {@const isNextUnvisited = !visitedModules[index] && index === getNextUnvisitedModuleIndex()}
+              <button
+                class="px-4 py-2 rounded-lg whitespace-nowrap transition-all duration-200 flex-shrink-0
+                {isActive
+                  ? 'text-body-semibold bg-Green dark:bg-Green2 text-white'
+                  : isNextUnvisited
+                    ? 'text-body bg-Black/5 dark:bg-White/10 hover:bg-gray-200 border-2 border-Green2 animate-text-only'
+                    : 'text-body bg-Black/5 dark:bg-White/10 text-Green dark:text-Green2 hover:bg-gray-200'}"
+                on:click={() => selectModule(index)}
+              >
+                Module {index + 1}
+              </button>
+            {/each}
+          </div>
+          
+          <!-- Right scroll button -->
+          <button 
+            class="absolute right-0 z-10 p-1 bg-white dark:bg-dark-bg-primary rounded-full shadow-md text-Green dark:text-Green2 hover:bg-gray-100 dark:hover:bg-dark-bg-secondary"
+            on:click={() => scrollModuleNav('right')}
+            aria-label="Scroll right"
+          >
+            <ChevronRight class="w-5 h-5" />
+          </button>
         </div>
 
         <!-- Current Module Content -->
@@ -644,37 +686,20 @@
     scrollbar-width: none;
   }
   
-  @keyframes pulse {
-    0%, 100% {
-      opacity: 1;
-      box-shadow: 0 0 0 0 rgba(65, 193, 203, 0.4);
-    }
-    50% {
-      opacity: 0.8;
-      box-shadow: 0 0 0 4px rgba(65, 193, 203, 0.2);
-    }
-  }
+
   
-  .animate-pulse {
-    animation: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-  }
-  
-  @keyframes pulse-button {
+  @keyframes text-only-animation {
     0%, 100% {
-      opacity: 1;
-      box-shadow: 0 0 0 0 rgba(65, 193, 203, 0.4);
-      text-shadow: 0 0 0 rgba(65, 193, 203, 0);
       color: #41C1CB;
+      text-shadow: 0 0 0 rgba(65, 193, 203, 0);
     }
     50% {
-      opacity: 0.9;
-      box-shadow: 0 0 0 4px rgba(65, 193, 203, 0.2);
-      text-shadow: 0 0 8px rgba(65, 193, 203, 0.5);
       color: #2A4D61;
+      text-shadow: 0 0 8px rgba(65, 193, 203, 0.5);
     }
   }
   
-  .animate-pulse-button {
-    animation: pulse-button 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  .animate-text-only {
+    animation: text-only-animation 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   }
 </style>
