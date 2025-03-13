@@ -186,6 +186,26 @@
             </button>
         </div>
         {/if}
+
+        <!-- module button for mobile on course page conclu -->
+         <!-- module button for mobile on course page conclusion -->
+        {#if isCoursePage && $currentModuleStore === courseDetails?.Final_Module_Title?.length}
+        <div class="lg:hidden">
+            <button
+            on:click={() => {
+                goto(`/course/${courseDetails.id}/module?tab=modules`);
+            }}
+                class="px-4 py-2 text-body text-brand-turquoise hover:text-brand-turquoise/80 flex items-center gap-1"
+            >
+                Modules
+                <img
+                    src="/icons/arrow-right.svg"
+                    alt="Introduction"
+                    class="w-6 h-6"
+                />
+            </button>
+        </div>
+    {/if}
     </div>
 
 </div>
