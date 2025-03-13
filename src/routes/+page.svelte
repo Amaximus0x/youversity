@@ -20,6 +20,17 @@
     if (window.innerWidth < 768) {
       isMobile = true;
     }
+    
+    // Remove thumbnail after 2 seconds
+    setTimeout(() => {
+      const overlay = document.getElementById('thumbnailOverlay');
+      if (overlay) {
+        overlay.style.opacity = '0';
+        setTimeout(() => {
+          overlay.style.display = 'none';
+        }, 500);
+      }
+    }, 2000);
   });
 
   function navigateToLogin() {
@@ -237,135 +248,95 @@
       <!-- Content image Section -->
       <section class="pt-10 px-4 md:px-8 lg:px-24 relative overflow-hidden w-full">
         <!-- Demo Video Section -->
-        <div class="relative w-full max-w-4xl mx-auto rounded-xl overflow-hidden shadow-lg">
-          <!-- YouTube Embed -->
+        <div class="relative w-full max-w-6xl mx-auto rounded-xl overflow-hidden shadow-lg">
+          <!-- YouTube Embed with more parameters -->
           <div class="aspect-video w-full">
             <iframe
-              class="w-full h-full"
-              src="https://www.youtube.com/embed/LdWqyrSIb4s?autoplay=1&mute=1&loop=1&playlist=LdWqyrSIb4s&controls=0&showinfo=0&rel=0"
+              class="w-full h-full pointer-events-none"
+              src="https://www.youtube.com/embed/LdWqyrSIb4s?autoplay=1&mute=1&loop=1&playlist=LdWqyrSIb4s&controls=0&showinfo=0&rel=0&modestbranding=1&iv_load_policy=3&playsinline=1&enablejsapi=1&origin=localhost:3000&start=1&disablekb=1&fs=0&color=white&version=3&playlist=LdWqyrSIb4s"
               title="YouVersity Demo Video"
+              loading="lazy"
               frameborder="0"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowfullscreen>
+              <!-- poster="/images/landing/home-light.png" -->
+               
+             
+
             </iframe>
           </div>
+          
+          <!-- Custom Thumbnail Overlay -->
+          <div 
+            class="absolute inset-0  bg-cover bg-center transition-opacity duration-5000" 
+            style="background-image: url({$theme === 'light' ? '/images/landing/home-light.png' : '/images/landing/home-dark.png'});"
+            id="thumbnailOverlay">
+          </div>
+          <!-- <div
+            class="absolute inset-0 w-full h-full mt-[20px] lg:mt-[142px] bg-content-gradient-light dark:bg-content-gradient-dark pointer-events-none z-10 transition-opacity duration-5000"
+          ></div> -->
         </div>
         
-        <!-- <div
-          class="absolute inset-0 w-full h-full mt-[20px] lg:mt-[142px] bg-content-gradient-light dark:bg-content-gradient-dark pointer-events-none z-10"
-        ></div> -->
       </section>
     </div>
 
     <!-- Features Section -->
     <div class="w-full">
       <!-- Features Section 1-->
-      <section class="px-4 md:px-8 w-full">
+      <section class="px-4 md:px-8 lg:px-24 w-full">
         <div class="max-w-6xl mx-auto">
-          <h2
-            class="text-h2-landing-mobile md:text-h2-landing text-light-text-primary dark:text-dark-text-primary text-center mb-6 lg:mb-16"
-          >
+          <h2 class="text-h2-landing-mobile md:text-h2-landing text-light-text-primary dark:text-dark-text-primary text-center mb-6 lg:mb-16">
             How it Works
           </h2>
 
           <!-- Feature 1 -->
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-16 lg:gap-24">
-            <div class="w-full min-h-[390px] lg:min-h-[466px]">
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-24 items-center">
+            <div class="w-full h-auto order-2 lg:order-1">
               <img
-                src="/images/landing/how-it-works-1.png"
+                src={$theme === "light" ? "/images/landing/how-it-works-light.png" : "/images/landing/how-it-works-dark.png"}
                 alt="Course creation process illustration"
                 class="w-full h-auto"
               />
             </div>
 
-            <div
-              class="min-w-[390px] inline-flex flex-col justify-start items-start gap-6"
-            >
-              <div
-                class="self-stretch relative justify-center text-[#ee3d4e] text-base font-semibold font-['Poppins'] leading-normal"
-              >
+            <div class="flex flex-col justify-start items-start gap-6 order-1 lg:order-2">
+              <div class="text-brand-red text-base font-semibold">
                 CREATE YOUR COURSE
               </div>
-              <div
-                class="self-stretch flex flex-col justify-start items-start gap-4"
-              >
-                <div
-                  class="self-stretch relative justify-center text-light-text-secondary dark:text-dark-text-secondary text-2xl md:text-4xl font-bold font-['Poppins'] leading-loose"
-                >
+              <div class="flex flex-col justify-start items-start gap-4">
+                <h3 class="text-2xl lg:text-4xl font-bold text-light-text-secondary dark:text-dark-text-secondary leading-tight">
                   Start Learning Simply enter what you Want to Learn
-                </div>
-                <div
-                  class="self-stretch relative justify-center text-light-text-tertiary dark:text-dark-text-tertiary text-sm md:text-base font-normal font-['Poppins'] leading-snug"
-                >
-                  Learning something new is easier than ever. Just enter a
-                  topic, and we'll provide personalized resources to guide you
-                  every step of the way.
-                </div>
+                </h3>
+                <p class="text-light-text-tertiary dark:text-dark-text-tertiary text-sm lg:text-base">
+                  Learning something new is easier than ever. Just enter a topic, and we'll provide personalized resources to guide you every step of the way.
+                </p>
               </div>
-              <div
-                class="self-stretch flex flex-col justify-start items-end gap-4"
-              >
-                <div
-                  class="self-stretch p-4 bg-black/5 dark:bg-white/10 rounded-lg inline-flex justify-start items-start gap-2.5"
-                >
-                  <div class="w-6 h-6 relative">
-                    <img
-                      src="/images/landing/idea.svg"
-                      alt="Identify What You Want to Learn"
-                      class="w-full h-full"
-                    />
+              <div class="flex flex-col gap-4 w-full">
+                <div class="p-4 bg-black/5 dark:bg-white/10 rounded-lg flex items-start gap-2.5">
+                  <div class="w-6 h-6 flex-shrink-0">
+                    <img src="/images/landing/idea.svg" alt="Identify What You Want to Learn" class="w-full h-full" />
                   </div>
-                  <div class="flex-1 relative justify-center">
-                    <span
-                      class="text-light-text-primary dark:text-dark-text-primary text-body-semibold leading-tight"
-                      >Identify What You Want to Learn:
-                    </span><span
-                      class="text-light-text-secondary dark:text-dark-text-secondary text-semi-body leading-tight"
-                      >Decide on the skill, subject, or topic you want to
-                      explore.
-                    </span>
+                  <div>
+                    <span class="text-light-text-primary dark:text-dark-text-primary text-body-semibold">Identify What You Want to Learn: </span>
+                    <span class="text-light-text-secondary dark:text-dark-text-secondary text-semi-body">Decide on the skill, subject, or topic you want to explore.</span>
                   </div>
                 </div>
-                <div
-                  class="self-stretch p-4 bg-black/5 dark:bg-white/10 rounded-lg inline-flex justify-start items-start gap-2.5"
-                >
-                  <div class="w-6 h-6 relative">
-                    <img
-                      src="/images/landing/keyboard.svg"
-                      alt="Input Prompt"
-                      class="w-full h-full"
-                    />
+                <div class="p-4 bg-black/5 dark:bg-white/10 rounded-lg flex items-start gap-2.5">
+                  <div class="w-6 h-6 flex-shrink-0">
+                    <img src="/images/landing/keyboard.svg" alt="Input Prompt" class="w-full h-full" />
                   </div>
-                  <div class="flex-1 relative justify-center">
-                    <span
-                      class="text-light-text-primary dark:text-dark-text-primary text-body-semibold leading-tight"
-                      >Input Prompt:
-                    </span><span
-                      class="text-light-text-secondary dark:text-dark-text-secondary text-semi-body leading-tight"
-                      >Enter a clear and specific prompt describing your
-                      learning objective.</span
-                    >
+                  <div>
+                    <span class="text-light-text-primary dark:text-dark-text-primary text-body-semibold">Input Prompt: </span>
+                    <span class="text-light-text-secondary dark:text-dark-text-secondary text-semi-body">Enter a clear and specific prompt describing your learning objective.</span>
                   </div>
                 </div>
-                <div
-                  class="self-stretch p-4 bg-black/5 dark:bg-white/10 rounded-lg inline-flex justify-start items-start gap-2.5"
-                >
-                  <div class="w-6 h-6 relative">
-                    <img
-                      src="/icons/arrow-right.svg"
-                      alt="Input Prompt"
-                      class="w-full h-full"
-                    />
+                <div class="p-4 bg-black/5 dark:bg-white/10 rounded-lg flex items-start gap-2.5">
+                  <div class="w-6 h-6 flex-shrink-0">
+                    <img src="/icons/arrow-right.svg" alt="Click Create Course" class="w-full h-full" />
                   </div>
-                  <div class="flex-1 relative justify-center">
-                    <span
-                      class="text-light-text-primary dark:text-dark-text-primary text-body-semibold leading-tight"
-                      >Click on Create Course:
-                    </span><span
-                      class="text-light-text-secondary dark:text-dark-text-secondary text-semi-body leading-tight"
-                      >Select "Create Course" to instantly generate a structured
-                      course with lessons and resources.</span
-                    >
+                  <div>
+                    <span class="text-light-text-primary dark:text-dark-text-primary text-body-semibold">Click on Create Course: </span>
+                    <span class="text-light-text-secondary dark:text-dark-text-secondary text-semi-body">Select "Create Course" to instantly generate a structured course with lessons and resources.</span>
                   </div>
                 </div>
               </div>
@@ -375,104 +346,55 @@
       </section>
 
       <!-- Features Section 2-->
-      <section class="pt-16 px-4 md:px-8 w-full">
+      <section class="pt-16 px-4 md:px-8 lg:px-24 w-full">
         <div class="max-w-6xl mx-auto">
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-16 lg:gap-24">
-            <div
-              class="min-w-[390px] inline-flex flex-col justify-start items-start gap-6"
-            >
-              <div
-                class="self-stretch relative justify-center text-[#ee3d4e] text-base font-semibold font-['Poppins'] leading-normal"
-              >
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-24 items-center">
+            <div class="flex flex-col justify-start items-start gap-6">
+              <div class="text-brand-red text-base font-semibold">
                 WATCH IT TRANSFORM
               </div>
-              <div
-                class="self-stretch flex flex-col justify-start items-start gap-4"
-              >
-                <div
-                  class="self-stretch relative justify-center text-light-text-secondary dark:text-dark-text-secondary text-2xl md:text-4xl font-bold font-['Poppins'] leading-loose"
-                >
+              <div class="flex flex-col justify-start items-start gap-4">
+                <h3 class="text-2xl lg:text-4xl font-bold text-light-text-secondary dark:text-dark-text-secondary leading-tight">
                   AI-Powered Learning, Structured for You
-                </div>
-                <div
-                  class="self-stretch relative justify-center text-light-text-tertiary dark:text-dark-text-tertiary text-sm md:text-base font-normal font-['Poppins'] leading-snug"
-                >
-                  Our AI curates top YouTube content on your topic, structuring it
-                  into a step-by-step course for seamless learning.
-                </div>
+                </h3>
+                <p class="text-light-text-tertiary dark:text-dark-text-tertiary text-sm lg:text-base">
+                  Our AI curates top YouTube content on your topic, structuring it into a step-by-step course for seamless learning.
+                </p>
               </div>
-              <div
-                class="self-stretch flex flex-col justify-start items-end gap-4"
-              >
-                <div
-                  class="self-stretch p-4 bg-black/5 dark:bg-white/10 rounded-lg inline-flex justify-start items-start gap-2.5"
-                >
-                  <div class="w-6 h-6 relative">
-                    <img
-                      src="/images/landing/ai-content-generator-01.svg"
-                      alt="Identify What You Want to Learn"
-                      class="w-full h-full"
-                    />
+              <div class="flex flex-col gap-4 w-full">
+                <div class="p-4 bg-black/5 dark:bg-white/10 rounded-lg flex items-start gap-2.5">
+                  <div class="w-6 h-6 flex-shrink-0">
+                    <img src="/images/landing/ai-content-generator-01.svg" alt="Curated Content" class="w-full h-full" />
                   </div>
-                  <div class="flex-1 relative justify-center">
-                    <span
-                      class="text-light-text-primary dark:text-dark-text-primary text-body-semibold leading-tight"
-                      >Curated Content:
-                    </span><span
-                      class="text-light-text-secondary dark:text-dark-text-secondary text-semi-body leading-tight"
-                      >AI selects high-quality videos tailored to your topic for
-                      the best learning experience.
-                    </span>
+                  <div>
+                    <span class="text-light-text-primary dark:text-dark-text-primary text-body-semibold">Curated Content: </span>
+                    <span class="text-light-text-secondary dark:text-dark-text-secondary text-semi-body">AI selects high-quality videos tailored to your topic for the best learning experience.</span>
                   </div>
                 </div>
-                <div
-                  class="self-stretch p-4 bg-black/5 dark:bg-white/10 rounded-lg inline-flex justify-start items-start gap-2.5"
-                >
-                  <div class="w-6 h-6 relative">
-                    <img
-                      src="/images/landing/arrange.svg"
-                      alt="Input Prompt"
-                      class="w-full h-full"
-                    />
+                <div class="p-4 bg-black/5 dark:bg-white/10 rounded-lg flex items-start gap-2.5">
+                  <div class="w-6 h-6 flex-shrink-0">
+                    <img src="/images/landing/arrange.svg" alt="Smart Organization" class="w-full h-full" />
                   </div>
-                  <div class="flex-1 relative justify-center">
-                    <span
-                      class="text-light-text-primary dark:text-dark-text-primary text-body-semibold leading-tight"
-                      >Smart Organization:
-                    </span><span
-                      class="text-light-text-secondary dark:text-dark-text-secondary text-semi-body leading-tight"
-                      >Your course follows a logical sequence, guiding you from
-                      basics to advanced concepts.</span
-                    >
+                  <div>
+                    <span class="text-light-text-primary dark:text-dark-text-primary text-body-semibold">Smart Organization: </span>
+                    <span class="text-light-text-secondary dark:text-dark-text-secondary text-semi-body">Your course follows a logical sequence, guiding you from basics to advanced concepts.</span>
                   </div>
                 </div>
-                <div
-                  class="self-stretch p-4 bg-black/5 dark:bg-white/10 rounded-lg inline-flex justify-start items-start gap-2.5"
-                >
-                  <div class="w-6 h-6 relative">
-                    <img
-                      src="/images/landing/online-learning-01.svg"
-                      alt="Input Prompt"
-                      class="w-full h-full"
-                    />
+                <div class="p-4 bg-black/5 dark:bg-white/10 rounded-lg flex items-start gap-2.5">
+                  <div class="w-6 h-6 flex-shrink-0">
+                    <img src="/images/landing/online-learning-01.svg" alt="Instant Learning" class="w-full h-full" />
                   </div>
-                  <div class="flex-1 relative justify-center">
-                    <span
-                      class="text-light-text-primary dark:text-dark-text-primary text-body-semibold leading-tight"
-                      >Instant Learning:
-                    </span><span
-                      class="text-light-text-secondary dark:text-dark-text-secondary text-semi-body leading-tight"
-                      >Get your structured course in seconds and start learning
-                      immediately.</span
-                    >
+                  <div>
+                    <span class="text-light-text-primary dark:text-dark-text-primary text-body-semibold">Instant Learning: </span>
+                    <span class="text-light-text-secondary dark:text-dark-text-secondary text-semi-body">Get your structured course in seconds and start learning immediately.</span>
                   </div>
                 </div>
               </div>
             </div>
 
-            <div class="w-full min-w-[390px] h-auto">
+            <div class="w-full h-auto">
               <img
-                src="/images/landing/how-it-works-1.png"
+                src={$theme === "light" ? "/images/landing/how-it-works-light-2.png" : "/images/landing/how-it-works-dark-2.png"}
                 alt="Course creation process illustration"
                 class="w-full h-auto"
               />
@@ -482,245 +404,56 @@
       </section>
 
       <!-- Features Section 3-->
-      <section class="pt-16 px-4 md:px-8 w-full">
-        <!-- Mobile layout (default) -->
-        <div
-          class="self-stretch inline-flex flex-col justify-center items-start gap-16 md:hidden"
-        >
-          <div
-            class="self-stretch h-[390px] bg-black/5 dark:bg-white/10 rounded-[32px] inline-flex justify-start items-center overflow-hidden"
-          >
-            {#if $theme === "light"}
+      <section class="pt-16 px-4 md:px-8 lg:px-24 w-full">
+        <div class="max-w-6xl mx-auto">
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-24 items-center">
+            <div class="w-full h-auto order-2 lg:order-1">
               <img
-                class="w-[464.97px] h-[351px] relative rounded-2xl"
-                src="/images/landing/CourseModuleEnrolled.svg"
-                alt="Youversity course module interface - light mode"
+                src={$theme === "light" ? "/images/landing/how-it-works-light-3.png" : "/images/landing/how-it-works-dark-3.png"}
+                alt="Course creation process illustration"
+                class="w-full h-auto"
               />
-            {:else}
-              <img
-                class="w-[464.97px] h-[351px] relative rounded-2xl"
-                src="/images/landing/CourseModuleEnrolled.svg"
-                alt="Youversity course module interface - dark mode"
-              />
-            {/if}
-          </div>
-          <div class="w-[390px] flex flex-col justify-start items-start gap-6">
-            <div
-              class="self-stretch relative justify-center text-[#ee3d4e] text-base font-semibold font-['Poppins'] leading-normal"
-            >
-              LEARN YOUR WAY
             </div>
-            <div
-              class="self-stretch flex flex-col justify-start items-start gap-4"
-            >
-              <div
-                class="self-stretch relative justify-center text-light-text-secondary dark:text-dark-text-secondary text-2xl font-bold font-['Poppins'] leading-loose"
-              >
-                Personalized Learning at Your Own Pace
-              </div>
-              <div
-                class="self-stretch relative justify-center text-light-text-tertiary dark:text-dark-text-tertiary text-sm font-normal font-['Poppins'] leading-snug"
-              >
-                Take charge of your learning. Move at your pace, track progress,
-                and reinforce knowledge with auto-generated quizzes.
-              </div>
-            </div>
-            <div
-              class="self-stretch flex flex-col justify-start items-end gap-4"
-            >
-              <div
-                class="self-stretch p-4 bg-black/5 dark:bg-white/10 rounded-lg inline-flex justify-start items-start gap-2.5"
-              >
-                <div class="w-6 h-6 relative">
-                  <img
-                    src="/images/landing/rocket-01.svg"
-                    alt="Self-Paced Learning"
-                    class="w-full h-full"
-                  />
-                </div>
-                <div class="flex-1 relative justify-center">
-                  <span
-                    class="text-light-text-primary dark:text-dark-text-primary text-xs font-bold font-['Poppins'] leading-tight"
-                  >
-                    Self-Paced Learning:
-                  </span>
-                  <span
-                    class="text-light-text-secondary dark:text-dark-text-secondary text-xs font-normal font-['Poppins'] leading-tight"
-                  >
-                    Move through lessons at a comfortable pace, allowing for a
-                    flexible and stress-free experience.
-                  </span>
-                </div>
-              </div>
-              <div
-                class="self-stretch p-4 bg-black/5 dark:bg-white/10 rounded-lg inline-flex justify-start items-start gap-2.5"
-              >
-                <div class="w-6 h-6 relative">
-                  <img
-                    src="/images/landing/progress-04.svg"
-                    alt="Progress Tracking"
-                    class="w-full h-full"
-                  />
-                </div>
-                <div class="flex-1 relative justify-center">
-                  <span
-                    class="text-light-text-primary dark:text-dark-text-primary text-xs font-bold font-['Poppins'] leading-tight"
-                  >
-                    Progress Tracking:
-                  </span>
-                  <span
-                    class="text-light-text-secondary dark:text-dark-text-secondary text-xs font-normal font-['Poppins'] leading-tight"
-                  >
-                    Monitor your learning milestones and stay motivated with
-                    real-time progress updates.
-                  </span>
-                </div>
-              </div>
-              <div
-                class="self-stretch p-4 bg-black/5 dark:bg-white/10 rounded-lg inline-flex justify-start items-start gap-2.5"
-              >
-                <div class="w-6 h-6 relative">
-                  <img
-                    src="/images/landing/knowledge-02.svg"
-                    alt="Knowledge Reinforcement"
-                    class="w-full h-full"
-                  />
-                </div>
-                <div class="flex-1 relative justify-center">
-                  <span
-                    class="text-light-text-primary dark:text-dark-text-primary text-xs font-bold font-['Poppins'] leading-tight"
-                  >
-                    Knowledge Reinforcement:
-                  </span>
-                  <span
-                    class="text-light-text-secondary dark:text-dark-text-secondary text-xs font-normal font-['Poppins'] leading-tight"
-                  >
-                    Test your knowledge with AI-generated quizzes for better
-                    retention and mastery.
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
 
-        <!-- Desktop layout -->
-        <div
-          class="hidden md:inline-flex self-stretch justify-start items-center gap-[97px]"
-        >
-          <div
-            class="w-[562.50px] h-[531px] bg-black/5 dark:bg-white/10 rounded-[32px] flex justify-start items-center overflow-hidden"
-          >
-            {#if $theme === "light"}
-              <img
-                class="w-[658.38px] h-[497px] relative rounded-2xl"
-                src="/images/landing/CourseModuleEnrolled.svg"
-                alt="Youversity course module interface - light mode"
-              />
-            {:else}
-              <img
-                class="w-[658.38px] h-[497px] relative rounded-2xl"
-                src="/images/landing/CourseModuleEnrolled.svg"
-                alt="Youversity course module interface - dark mode"
-              />
-            {/if}
-          </div>
-          <div
-            class="w-[501px] inline-flex flex-col justify-start items-start gap-8"
-          >
-            <div
-              class="self-stretch relative justify-center text-[#ee3d4e] text-base font-semibold font-['Poppins'] leading-normal"
-            >
-              LEARN YOUR WAY
-            </div>
-            <div
-              class="w-[476px] flex flex-col justify-start items-start gap-4"
-            >
-              <div
-                class="self-stretch relative justify-center text-light-text-secondary dark:text-dark-text-secondary text-[32px] font-bold font-['Poppins'] leading-10"
-              >
-                Personalized Learning at Your Own Pace
+            <div class="flex flex-col justify-start items-start gap-6 order-1 lg:order-2">
+              <div class="text-brand-red text-base font-semibold">
+                LEARN YOUR WAY
               </div>
-              <div
-                class="w-[439px] relative justify-center text-light-text-tertiary dark:text-dark-text-tertiary text-base font-normal font-['Poppins'] leading-normal"
-              >
-                Take charge of your learning. Move at your pace, track progress,
-                and reinforce knowledge with auto-generated quizzes.
+              <div class="flex flex-col justify-start items-start gap-4">
+                <h3 class="text-2xl lg:text-4xl font-bold text-light-text-secondary dark:text-dark-text-secondary leading-tight">
+                  Personalized Learning at Your Own Pace
+                </h3>
+                <p class="text-light-text-tertiary dark:text-dark-text-tertiary text-sm lg:text-base">
+                  Take charge of your learning. Move at your pace, track progress, and reinforce knowledge with auto-generated quizzes.
+                </p>
               </div>
-            </div>
-            <div
-              class="self-stretch flex flex-col justify-start items-end gap-4"
-            >
-              <div
-                class="self-stretch p-4 bg-black/5 dark:bg-white/10 rounded-lg inline-flex justify-start items-start gap-2.5"
-              >
-                <div class="w-6 h-6 relative">
-                  <img
-                    src="/images/landing/rocket-01.svg"
-                    alt="Self-Paced Learning"
-                    class="w-full h-full"
-                  />
+              <div class="flex flex-col gap-4 w-full">
+                <div class="p-4 bg-black/5 dark:bg-white/10 rounded-lg flex items-start gap-2.5">
+                  <div class="w-6 h-6 flex-shrink-0">
+                    <img src="/images/landing/rocket-01.svg" alt="Self-Paced Learning" class="w-full h-full" />
+                  </div>
+                  <div>
+                    <span class="text-light-text-primary dark:text-dark-text-primary text-body-semibold">Self-Paced Learning: </span>
+                    <span class="text-light-text-secondary dark:text-dark-text-secondary text-semi-body">Move through lessons at a comfortable pace, allowing for a flexible and stress-free experience.</span>
+                  </div>
                 </div>
-                <div class="w-[439px] relative justify-center">
-                  <span
-                    class="text-light-text-primary dark:text-dark-text-primary text-base font-semibold font-['Poppins'] leading-normal"
-                  >
-                    Self-Paced Learning:
-                  </span>
-                  <span
-                    class="text-light-text-secondary dark:text-dark-text-secondary text-sm font-normal font-['Poppins'] leading-normal"
-                  >
-                    Move through lessons at a comfortable pace, allowing for a
-                    flexible and stress-free experience.
-                  </span>
+                <div class="p-4 bg-black/5 dark:bg-white/10 rounded-lg flex items-start gap-2.5">
+                  <div class="w-6 h-6 flex-shrink-0">
+                    <img src="/images/landing/progress-04.svg" alt="Progress Tracking" class="w-full h-full" />
+                  </div>
+                  <div>
+                    <span class="text-light-text-primary dark:text-dark-text-primary text-body-semibold">Progress Tracking: </span>
+                    <span class="text-light-text-secondary dark:text-dark-text-secondary text-semi-body">Monitor your learning milestones and stay motivated with real-time progress updates.</span>
+                  </div>
                 </div>
-              </div>
-              <div
-                class="self-stretch p-4 bg-black/5 dark:bg-white/10 rounded-lg inline-flex justify-start items-start gap-2.5"
-              >
-                <div class="w-6 h-6 relative">
-                  <img
-                    src="/images/landing/progress-04.svg"
-                    alt="Progress Tracking"
-                    class="w-full h-full"
-                  />
-                </div>
-                <div class="w-[439px] relative justify-center">
-                  <span
-                    class="text-light-text-primary dark:text-dark-text-primary text-base font-semibold font-['Poppins'] leading-normal"
-                  >
-                    Progress Tracking:
-                  </span>
-                  <span
-                    class="text-light-text-secondary dark:text-dark-text-secondary text-sm font-normal font-['Poppins'] leading-normal"
-                  >
-                    Monitor your learning milestones and stay motivated with
-                    real-time progress updates.
-                  </span>
-                </div>
-              </div>
-              <div
-                class="self-stretch p-4 bg-black/5 dark:bg-white/10 rounded-lg inline-flex justify-start items-start gap-2.5"
-              >
-                <div class="w-6 h-6 relative">
-                  <img
-                    src="/images/landing/knowledge-02.svg"
-                    alt="Knowledge Reinforcement"
-                    class="w-full h-full"
-                  />
-                </div>
-                <div class="w-[439px] relative justify-center">
-                  <span
-                    class="text-light-text-primary dark:text-dark-text-primary text-base font-semibold font-['Poppins'] leading-normal"
-                  >
-                    Knowledge Reinforcement:
-                  </span>
-                  <span
-                    class="text-light-text-secondary dark:text-dark-text-secondary text-sm font-normal font-['Poppins'] leading-normal"
-                  >
-                    Test your knowledge with AI-generated quizzes for better
-                    retention and mastery.
-                  </span>
+                <div class="p-4 bg-black/5 dark:bg-white/10 rounded-lg flex items-start gap-2.5">
+                  <div class="w-6 h-6 flex-shrink-0">
+                    <img src="/images/landing/knowledge-02.svg" alt="Knowledge Reinforcement" class="w-full h-full" />
+                  </div>
+                  <div>
+                    <span class="text-light-text-primary dark:text-dark-text-primary text-body-semibold">Knowledge Reinforcement: </span>
+                    <span class="text-light-text-secondary dark:text-dark-text-secondary text-semi-body">Test your knowledge with AI-generated quizzes for better retention and mastery.</span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -956,5 +689,12 @@
 
   .hide-scrollbar::-webkit-scrollbar {
     display: none; /* Chrome, Safari and Opera */
+  }
+
+  /* Add these styles for the thumbnail overlay */
+  #thumbnailOverlay {
+    opacity: 1;
+    pointer-events: none;
+    z-index: 10;
   }
 </style>
