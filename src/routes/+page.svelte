@@ -21,20 +21,27 @@
       isMobile = true;
     }
     
-    // Show thumbnail for 3 seconds, then show video
+    // Show thumbnail for 3 seconds, then transition to video
     setTimeout(() => {
       const thumbnailContainer = document.getElementById('thumbnailContainer');
       const videoContainer = document.getElementById('videoContainer');
       
       if (videoContainer && thumbnailContainer) {
-        // First show the video container
-        videoContainer.style.display = 'block';
+        // First fade out the thumbnail
+        thumbnailContainer.style.opacity = '0';
+        thumbnailContainer.style.transition = 'opacity 0.5s ease';
         
-        // After the fade animation completes, hide the thumbnail completely
+        // After the fade out completes, hide thumbnail and show video
         setTimeout(() => {
-
           thumbnailContainer.style.display = 'none';
-        }, 500);
+          videoContainer.style.display = 'block';
+          // Optional: fade in the video
+          videoContainer.style.opacity = '0';
+          videoContainer.style.transition = 'opacity 0.5s ease';
+          requestAnimationFrame(() => {
+            videoContainer.style.opacity = '1';
+          });
+        }, 500); // Wait for fade out to complete
       }
     }, 3000); // 3 seconds delay
   });
@@ -267,27 +274,25 @@
         ></div>
       </section>
 
-      <section class="pt-10 px-4 md:px-8 lg:px-24 relative overflow-hidden w-full">
+      <section class="py-20 px-4 md:px-8 lg:px-24 relative overflow-hidden w-full">
         <!-- Demo Video Section -->
-        <div class="relative w-full max-w-6xl mx-auto rounded-xl overflow-hidden">
-          <!-- YouTube Embed with more parameters -->
-          <div class="aspect-video w-full" id="videoContainer" style="display: none;">
-            <iframe
-              class="w-full h-full pointer-events-none"
-              src="https://www.youtube.com/embed/LdWqyrSIb4s?autoplay=1&mute=1&loop=1&playlist=LdWqyrSIb4s&controls=0&showinfo=0&rel=0&modestbranding=1&iv_load_policy=3&playsinline=1&enablejsapi=1&origin=localhost:3000&start=1&disablekb=1&fs=0&color=white&version=3&playlist=LdWqyrSIb4s"
-              title="YouVersity Demo Video"
-              loading="lazy"
-              frameborder="0"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowfullscreen>
-            </iframe>
+        <div class="video-wrapper relative w-full max-w-[1200px] mx-auto">
+          <div class="notch"></div>
+          <div class="relative w-full rounded-2xl overflow-hidden border-[19px] border-[#303030] shadow-[0px_0px_68px_0px_#00000052]" id="videoContainer" style="display: none;">
+            <!-- YouTube Embed with more parameters -->
+            <div class="aspect-video w-full">
+              <iframe
+                class="w-full h-full pointer-events-none"
+                src="https://www.youtube.com/embed/LdWqyrSIb4s?autoplay=1&mute=1&loop=1&playlist=LdWqyrSIb4s&controls=0&showinfo=0&rel=0&modestbranding=1&iv_load_policy=3&playsinline=1&enablejsapi=1&origin=localhost:3000&start=1&disablekb=1&fs=0&color=white&version=3&playlist=LdWqyrSIb4s"
+                title="YouVersity Demo Video"
+                loading="lazy"
+                frameborder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowfullscreen>
+              </iframe>
+            </div>
           </div>
-          
         </div>
-        
-        <!-- <div
-          class="absolute inset-0 w-full h-full mt-[20px] lg:mt-[142px] bg-content-gradient-light dark:bg-content-gradient-dark pointer-events-none z-10"
-        ></div> -->
       </section>
     </div>
 
@@ -703,11 +708,73 @@
     display: none; /* Chrome, Safari and Opera */
   }
 
-  /* Thumbnail overlay styles */
-  #thumbnailOverlay {
+  /* Initial styles for containers */
+  #thumbnailContainer {
     opacity: 1;
-    pointer-events: none;
-    z-index: 10;
     transition: opacity 0.5s ease;
+  }
+
+  #videoContainer {
+    opacity: 0;
+    transition: opacity 0.5s ease;
+  }
+
+  .video-wrapper {
+    position: relative;
+  }
+
+  .notch {
+    position: absolute;
+    top: 1px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100px;
+    height: 30px;
+    background-color: #303030;
+    border-radius: 8px;
+    z-index: 10;
+    transition: all 0.3s ease;
+  }
+
+  .notch::before {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 60%;
+    transform: translate(-50%, -50%);
+    width: 6px;
+    height: 6px;
+    background-color: #D9D9D9;
+    border-radius: 100%;
+    transition: all 0.3s ease;
+  }
+
+  /* Tablet screens */
+  @media (min-width: 768px) {
+    .notch {
+      width: 130px;
+      height: 38px;
+      border-radius: 10px;
+    }
+
+    .notch::before {
+      width: 7px;
+      height: 7px;
+    }
+  }
+
+  /* Desktop screens */
+  @media (min-width: 1024px) {
+    .notch {
+      width: 157px;
+      height: 47px;
+      border-radius: 12px;
+    }
+
+    .notch::before {
+      width: 9px;
+      height: 9px;
+      top: 32px;
+    }
   }
 </style>
