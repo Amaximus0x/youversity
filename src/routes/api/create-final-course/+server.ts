@@ -7,6 +7,8 @@ import type { CourseStructure, FinalCourseStructure, VideoItem, Quiz, QuizQuesti
 import { getVideoTranscript } from '$lib/services/transcriptUtils';
 import pLimit from 'p-limit';
 import { OPENAI_CONFIG } from '$lib/config/openai';
+import { db } from '$lib/server/firebase-admin'; 
+import { v4 as uuidv4 } from 'uuid';
 
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -464,6 +466,21 @@ function validateCourseStructure(data: any): data is CourseStructure {
     
     return true;
 }
+
+// Add a HEAD handler
+export const HEAD: RequestHandler = async ({ request, locals }) => {
+  console.log("API: HEAD request to /api/create-final-course endpoint");
+  
+  // Return a simple 200 OK response with CORS headers
+  return new Response(null, {
+    status: 200,
+    headers: {
+      'Access-Control-Allow-Origin': request.headers.get('origin') || '',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Firebase-Token, X-Server-Auth-UID',
+      'Access-Control-Allow-Credentials': 'true'
+    }
+  });
+};
 
 export const POST: RequestHandler = async ({ request, locals }) => {
     try {

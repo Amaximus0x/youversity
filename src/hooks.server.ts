@@ -25,6 +25,9 @@ const publicApiRoutes = [
   '/api/public'
 ];
 
+// Define if we're in development mode for easier checks
+const isDevelopment = process.env.NODE_ENV === 'development';
+
 export const handle: Handle = async ({ event, resolve }) => {
   // Handle health checks
   if (event.url.pathname === '/health') {
@@ -59,6 +62,14 @@ export const handle: Handle = async ({ event, resolve }) => {
       }
     }
     
+    // Use development mode token if in development
+    if (!token && isDevelopment) {
+      console.log(`DEV MODE: Using mock token for ${event.url.pathname}`);
+      // Create a mock token that won't be verified but will be recognized in dev
+      token = 'dev-mode-mock-token';
+      tokenSource = 'dev_mode_mock';
+    }
+    
     // If still no token and this is a POST request, check the request body
     if (!token && event.request.method === 'POST' && 
         event.request.headers.get('Content-Type')?.includes('application/json')) {
@@ -80,41 +91,58 @@ export const handle: Handle = async ({ event, resolve }) => {
     if (token) {
       console.log(`Token found for ${event.url.pathname} from ${tokenSource}. Token length: ${token.length}`);
       
-      console.log('AdminApp type:', typeof adminApp);
-      console.log('AdminApp has auth method:', !!adminApp.auth);
-      
-      if (adminApp.auth) {
-        const auth = getAuth(adminApp);
-        try {
-          console.log(`Verifying token for ${event.url.pathname}...`);
-          const decodedToken = await auth.verifyIdToken(token);
-          event.locals.user = decodedToken;
-          console.log(`User authenticated for ${event.url.pathname}:`, decodedToken.uid);
-        } catch (tokenError) {
-          console.error(`Token verification error for ${event.url.pathname}:`, tokenError);
-          console.error(`Token that failed verification [first 20 chars]: ${token.substring(0, 20)}...`);
-          
-          // Try to parse the token to see if it's well-formed
+      // In development mode, skip token verification to avoid Firebase issues
+      if (isDevelopment && tokenSource === 'dev_mode_mock') {
+        console.log(`DEV MODE: Skipping token verification for ${event.url.pathname}`);
+        event.locals.user = {
+          uid: 'dev-default-user-id',
+          email: 'dev-test@example.com',
+          email_verified: true,
+          aud: 'youversity-c8632',
+          auth_time: Math.floor(Date.now() / 1000),
+          exp: Math.floor(Date.now() / 1000) + 3600,
+          firebase: { sign_in_provider: 'custom', identities: {} },
+          iat: Math.floor(Date.now() / 1000),
+          iss: 'https://securetoken.google.com/youversity-c8632',
+          sub: 'dev-default-user-id'
+        };
+      } else {
+        console.log('AdminApp type:', typeof adminApp);
+        console.log('AdminApp has auth method:', !!adminApp.auth);
+        
+        if (adminApp.auth) {
+          const auth = getAuth(adminApp);
           try {
-            const tokenParts = token.split('.');
-            if (tokenParts.length === 3) {
-              const payload = JSON.parse(atob(tokenParts[1]));
-              console.log('Token payload:', payload);
-              console.log('Token expiration timestamp:', payload.exp);
-              console.log('Current timestamp:', Math.floor(Date.now() / 1000));
-              console.log('Token expired:', payload.exp < Math.floor(Date.now() / 1000));
-            } else {
-              console.error('Token is not in correct JWT format');
+            console.log(`Verifying token for ${event.url.pathname}...`);
+            const decodedToken = await auth.verifyIdToken(token);
+            event.locals.user = decodedToken;
+            console.log(`User authenticated for ${event.url.pathname}:`, decodedToken.uid);
+          } catch (tokenError) {
+            console.error(`Token verification error for ${event.url.pathname}:`, tokenError);
+            console.error(`Token that failed verification [first 20 chars]: ${token.substring(0, 20)}...`);
+            
+            // Try to parse the token to see if it's well-formed
+            try {
+              const tokenParts = token.split('.');
+              if (tokenParts.length === 3) {
+                const payload = JSON.parse(atob(tokenParts[1]));
+                console.log('Token payload:', payload);
+                console.log('Token expiration timestamp:', payload.exp);
+                console.log('Current timestamp:', Math.floor(Date.now() / 1000));
+                console.log('Token expired:', payload.exp < Math.floor(Date.now() / 1000));
+              } else {
+                console.error('Token is not in correct JWT format');
+              }
+            } catch (parseError) {
+              console.error('Error parsing token:', parseError);
             }
-          } catch (parseError) {
-            console.error('Error parsing token:', parseError);
+            
+            event.locals.user = null;
           }
-          
+        } else {
+          console.error(`Admin app auth not available for ${event.url.pathname}`);
           event.locals.user = null;
         }
-      } else {
-        console.error(`Admin app auth not available for ${event.url.pathname}`);
-        event.locals.user = null;
       }
     } else {
       console.log(`No token found for ${event.url.pathname} from any source`);
@@ -125,17 +153,46 @@ export const handle: Handle = async ({ event, resolve }) => {
     event.locals.user = null;
   }
 
-  // Check if this is a protected API route that requires authentication
+  // Check if this is a protected API route
   const isProtectedApiRoute = protectedApiRoutes.some(route => 
     event.url.pathname.startsWith(route)
   );
   
+  // Check if this is a public API route
   const isPublicApiRoute = publicApiRoutes.some(route => 
     event.url.pathname.startsWith(route)
   );
   
+  // Special handling for development mode
+  if (isDevelopment && event.url.pathname.startsWith('/api/')) {
+    console.log(`DEV MODE: Special handling for API request to ${event.url.pathname}`);
+    
+    // Always set a dev user in locals when in development mode for API routes
+    // This helps prevent Firestore auth issues in development
+    if (!event.locals.user && isProtectedApiRoute) {
+      const devTestUID = event.request.headers.get('X-Dev-Test-UID') || 'dev-default-user-id';
+      console.log(`DEV MODE: Creating test user with UID ${devTestUID} for ${event.url.pathname}`);
+      
+      event.locals.user = {
+        uid: devTestUID,
+        email: 'dev-test@example.com',
+        email_verified: true,
+        aud: 'youversity-c8632',
+        auth_time: Math.floor(Date.now() / 1000),
+        exp: Math.floor(Date.now() / 1000) + 3600,
+        firebase: { sign_in_provider: 'custom', identities: {} },
+        iat: Math.floor(Date.now() / 1000),
+        iss: 'https://securetoken.google.com/youversity-c8632',
+        sub: devTestUID
+      };
+      
+      // Skip further token verification in development mode for API routes
+      return await resolve(event);
+    }
+  }
+  
   // For development, allow a dev-test-uid header for testing
-  if (!event.locals.user && process.env.NODE_ENV === 'development') {
+  if (!event.locals.user && isDevelopment) {
     // Check for test UID header
     const devTestUID = event.request.headers.get('X-Dev-Test-UID');
     

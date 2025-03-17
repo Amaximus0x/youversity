@@ -5,6 +5,21 @@ import axios from 'axios';
 import type { CourseStructure } from '$lib/types/course';
 import { OPENAI_CONFIG } from '$lib/config/openai';
 
+// Add a HEAD handler
+export const HEAD: RequestHandler = async ({ request, locals }) => {
+  console.log("API: HEAD request to /api/generate-course endpoint");
+  
+  // Return a simple 200 OK response with CORS headers
+  return new Response(null, {
+    status: 200,
+    headers: {
+      'Access-Control-Allow-Origin': request.headers.get('origin') || '',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Firebase-Token, X-Server-Auth-UID',
+      'Access-Control-Allow-Credentials': 'true'
+    }
+  });
+};
+
 export const POST: RequestHandler = async ({ request, locals }) => {
   console.log("API: /api/generate-course endpoint called");
   console.log("API: Request method:", request.method);

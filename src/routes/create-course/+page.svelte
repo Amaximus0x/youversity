@@ -431,20 +431,26 @@
         headers["X-Server-Auth-UID"] = serverAuthuid;
       }
       
-      // Try a direct request without credentials first to debug
-      console.log("Attempting direct request to check server response headers...");
+      // Debug check to verify server connection and CORS setup
+      console.log("Checking API endpoint connection...");
       try {
         const headersCheckResponse = await fetch("/api/generate-course", { 
           method: "HEAD",
-          credentials: 'include'
+          credentials: 'include',
+          headers: {
+            "Authorization": token ? `Bearer ${token}` : "",
+            "X-Firebase-Token": token || "",
+            ...headers
+          }
         });
-        console.log("Headers check response:", headersCheckResponse.status, headersCheckResponse.statusText);
-        console.log("Headers check response headers:", Object.fromEntries([...headersCheckResponse.headers.entries()]));
+        console.log("API connection check:", headersCheckResponse.status, headersCheckResponse.statusText);
+        console.log("API headers:", Object.fromEntries([...headersCheckResponse.headers.entries()]));
+        // The 405 error is expected if we haven't implemented HEAD yet, so we catch and handle it
       } catch (headersError) {
-        console.error("Headers check failed:", headersError);
+        console.log("API connection check failed (this is usually fine):", headersError.message);
       }
       
-      // Try a user ID-only request if other methods fail
+      // Make the actual API request
       console.log("Making actual API request...");
       const response = await fetch("/api/generate-course", {
         method: "POST",
