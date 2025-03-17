@@ -1,6 +1,8 @@
 <script lang="ts">
   import { onMount } from "svelte";
+  // @ts-ignore - Svelte component import 
   import ModuleVideoGrid from "$lib/components/ModuleVideoGrid.svelte";
+  // @ts-ignore - Svelte component import
   import YoutubeUrlInput from "$lib/components/YoutubeUrlInput.svelte";
   import type { CourseStructure, VideoItem } from "$lib/types/course";
   import {
@@ -12,11 +14,27 @@
   import { Plus, ChevronLeft, ChevronRight } from "lucide-svelte";
   import { fade, fly } from "svelte/transition";
   import { getVideoTranscript } from "$lib/services/transcriptUtils";
-  import { auth } from "$lib/firebase";
+  import { auth, setAuthTokenCookie, refreshToken } from "$lib/firebase";
   import { saveCourseToFirebase, enrollInCourse } from "$lib/firebase";
   import { user, isAuthenticated } from "$lib/stores/auth";
+  // @ts-ignore - Svelte component import
   import CourseGenerationHeader from "$lib/components/CourseGenerationHeader.svelte";
+  // @ts-ignore - Svelte component import
   import CourseGenerationModal from "$lib/components/CourseGenerationModal.svelte";
+  import type { PageData } from './$types';
+
+  // Define interface that describes the server data
+  interface ServerAuthData {
+    serverAuth: {
+      user: { uid: string; email: string; isAuthenticated: boolean } | null;
+      tokenFound: boolean;
+      isAuthenticated: boolean;
+    };
+  }
+
+  // Get data from +page.server.ts
+  export let data: ServerAuthData;
+  console.log("SVELTE: Server auth data:", data.serverAuth);
 
   let courseObjective = "";
   let courseStructure: CourseStructure | null = null;
@@ -106,6 +124,52 @@
     showCustomUrlInput = false;
   }
 
+  // Function to ensure we have a fresh token
+  async function ensureFreshToken(): Promise<string | null> {
+    console.log("Requesting fresh auth token...");
+    
+    if (!auth.currentUser) {
+      console.error("No authenticated user found in auth.currentUser");
+      error = "You must be logged in to create courses.";
+      return null;
+    }
+    
+    console.log("Current user UID:", auth.currentUser.uid);
+    
+    try {
+      // Use our centralized token refresh function
+      const token = await refreshToken();
+      if (!token) {
+        throw new Error("Failed to refresh token");
+      }
+      
+      console.log("Token refresh successful. Token length:", token.length);
+      console.log("Token JWT format check:", token.split('.').length === 3 ? "Valid JWT format" : "Invalid JWT format");
+      
+      // Double check token cookie was set
+      const cookies = document.cookie.split(';');
+      let tokenCookieFound = false;
+      for (const cookie of cookies) {
+        const [name, value] = cookie.trim().split('=');
+        if (name === 'firebase-token') {
+          tokenCookieFound = true;
+          console.log("Token cookie verified. Length:", value.length);
+          break;
+        }
+      }
+      
+      if (!tokenCookieFound) {
+        console.warn("Token cookie not found after refresh!");
+      }
+      
+      return token;
+    } catch (err) {
+      console.error("Error refreshing token:", err);
+      error = "Authentication error. Please try logging in again.";
+      return null;
+    }
+  }
+
   async function fetchVideosForModule(
     searchPrompt: string,
     moduleIndex: number,
@@ -125,13 +189,44 @@
         throw new Error("Search prompt is required");
       }
 
+      // Get a fresh token
+      const token = await ensureFreshToken();
+      if (!token) return;
+      
+      // Create query URL with parameters
+      const queryParams = new URLSearchParams({
+        query: searchPrompt.trim(),
+        moduleTitle: moduleTitle,
+        moduleIndex: moduleIndex.toString(),
+        retry: retryCount.toString()
+      });
+      
+      // Prepare headers with multiple sources of auth
+      const headers: Record<string, string> = {
+        Accept: "application/json",
+        "Cross-Origin-Opener-Policy": "same-origin",
+        "Authorization": `Bearer ${token}`
+      };
+      
+      // Add server auth as backup
+      const serverAuthuid = data?.serverAuth?.user?.uid as string | undefined;
+      console.log("Server auth UID:", serverAuthuid || "None");
+      
+      if (serverAuthuid) {
+        headers["X-Server-Auth-UID"] = serverAuthuid;
+      }
+      
+      // In development mode, also add a test user ID header
+      if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+        console.log("Adding development mode test header");
+        headers["X-Dev-Test-UID"] = auth.currentUser?.uid || "dev-test-user";
+      }
+      
       const response = await fetch(
-        `/api/search-videos?query=${encodeURIComponent(searchPrompt.trim())}&moduleTitle=${encodeURIComponent(moduleTitle)}&moduleIndex=${moduleIndex}&retry=${retryCount}`,
+        `/api/search-videos?${queryParams.toString()}`,
         {
-          headers: {
-            Accept: "application/json",
-            "Cross-Origin-Opener-Policy": "same-origin",
-          },
+          headers,
+          credentials: 'include' // Include cookies with the request
         },
       );
 
@@ -139,10 +234,10 @@
         const errorData = await response.json();
         throw new Error(errorData.error || "Failed to fetch videos");
       }
-      const data = await response.json();
+      const responseData = await response.json();
 
       // Update the videos for this module
-      moduleVideos[moduleIndex] = data.videos;
+      moduleVideos[moduleIndex] = responseData.videos;
       moduleVideos = [...moduleVideos]; // Trigger reactivity
 
       // Check if all modules are loaded after this update
@@ -218,29 +313,51 @@
         moduleTitle: courseStructure?.OG_Module_Title[index],
       }));
 
+      // Get a fresh token
+      const token = await ensureFreshToken();
+      if (!token) return;
+
+      // Prepare headers with multiple sources of auth
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      };
+      
+      // Add server auth as backup
+      const serverAuthuid = data?.serverAuth?.user?.uid as string | undefined;
+      if (serverAuthuid) {
+        headers["X-Server-Auth-UID"] = serverAuthuid;
+      }
+
       const response = await fetch("/api/create-final-course", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify({
           courseStructure,
           selectedVideos: selectedVideosList,
           moduleTranscripts,
+          // Include server auth info
+          serverAuthInfo: data?.serverAuth ? {
+            uid: data.serverAuth.user?.uid as string | undefined,
+            isAuthenticated: data.serverAuth.isAuthenticated as boolean
+          } : null
         }),
+        credentials: 'include' // Include cookies with the request
       });
 
       finalLoadingState.setProgress(80);
       finalLoadingState.setStep("Processing course content...");
 
-      const data = await response.json();
-      if (!data.success)
-        throw new Error(data.error || "Failed to create final course");
+      const responseData = await response.json();
+      if (!responseData.success)
+        throw new Error(responseData.error || "Failed to create final course");
 
       finalLoadingState.setStep("Saving your course...");
       finalLoadingState.setProgress(90);
 
       // Save to Firebase
       const courseId = await saveCourseToFirebase($user.uid, {
-        ...data.course,
+        ...responseData.course,
         isPublic: false,
         createdBy: $user.uid,
         createdAt: new Date(),
@@ -273,22 +390,91 @@
     selectedVideos = [];
 
     try {
+      // Get a fresh token
+      const token = await ensureFreshToken();
+      if (!token) return;
+      
+      console.log("Making API request with token length:", token.length);
+      console.log("First 20 chars of token:", token.substring(0, 20));
+      
+      // Make sure the token is properly formatted
+      if (!token.includes('.')) {
+        console.error("Invalid token format - not a JWT");
+        error = "Authentication error: Invalid token format";
+        return;
+      }
+      
+      // Check auth state directly
+      console.log("Current auth user:", auth.currentUser ? `UID: ${auth.currentUser.uid}` : "Not signed in");
+      
+      // More thorough logging to debug authorization issues
+      console.log("Making API request to /api/generate-course with token");
+      console.log("Cookie state before request:", document.cookie.split(';').map(c => c.trim()).filter(c => c.startsWith('firebase-token=')).length > 0 ? "Token cookie exists" : "No token cookie found");
+      console.log("Server auth data:", data?.serverAuth ? JSON.stringify(data.serverAuth) : "No server auth data");
+      
+      // Include server auth info to help debug
+      const serverAuthuid = data?.serverAuth?.user?.uid as string | undefined;
+      console.log("Server auth UID:", serverAuthuid || "None");
+      
+      // Re-set the cookie right before the fetch to ensure it's fresh
+      document.cookie = `firebase-token=${token}; path=/; max-age=3600; SameSite=Lax`;
+      
+      // Prepare headers with multiple sources of auth
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`,
+        "X-Firebase-Token": token
+      };
+      
+      // Try adding server auth as a backup
+      if (serverAuthuid) {
+        headers["X-Server-Auth-UID"] = serverAuthuid;
+      }
+      
+      // Try a direct request without credentials first to debug
+      console.log("Attempting direct request to check server response headers...");
+      try {
+        const headersCheckResponse = await fetch("/api/generate-course", { 
+          method: "HEAD",
+          credentials: 'include'
+        });
+        console.log("Headers check response:", headersCheckResponse.status, headersCheckResponse.statusText);
+        console.log("Headers check response headers:", Object.fromEntries([...headersCheckResponse.headers.entries()]));
+      } catch (headersError) {
+        console.error("Headers check failed:", headersError);
+      }
+      
+      // Try a user ID-only request if other methods fail
+      console.log("Making actual API request...");
       const response = await fetch("/api/generate-course", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ courseInput: courseObjective }),
+        headers,
+        body: JSON.stringify({ 
+          courseInput: courseObjective,
+          // Include auth info in the request body as well
+          serverAuthInfo: data?.serverAuth ? {
+            uid: data.serverAuth.user?.uid as string | undefined,
+            isAuthenticated: data.serverAuth.isAuthenticated as boolean
+          } : null,
+          // Include the token and user ID directly in the request body
+          token: token,
+          userId: auth.currentUser?.uid
+        }),
+        credentials: 'include', // Important: include cookies with the request
+        mode: 'same-origin', // Ensure the request goes to same origin
       });
+      
+      console.log("API response status:", response.status);
+      console.log("API response headers:", Object.fromEntries([...response.headers.entries()]));
+      
+      const responseData = await response.json();
+      console.log("Course structure:", responseData);
 
-      const data = await response.json();
-      console.log("Course structure:", data);
-
-      if (!data.success) {
-        throw new Error(data.error || "Failed to generate course");
+      if (!responseData.success) {
+        throw new Error(responseData.error || "Failed to generate course");
       }
 
-      courseStructure = data.courseStructure;
+      courseStructure = responseData.courseStructure;
       if (courseStructure) {
         // Initialize arrays with the correct length
         moduleVideos = new Array(courseStructure.OG_Module_Title.length).fill(
@@ -332,22 +518,26 @@
   }
 
   // Get the objective from URL parameters on mount
-  onMount(async () => {
-    const urlObjective = $page.url.searchParams.get("objective");
-    if (urlObjective) {
-      courseObjective = decodeURIComponent(urlObjective);
+  onMount(() => {
+    const initPageData = async () => {
+      const urlObjective = $page.url.searchParams.get("objective");
+      if (urlObjective) {
+        courseObjective = decodeURIComponent(urlObjective);
 
-      // Start loading state for course generation
-      initialLoadingState.startLoading();
-      initialLoadingState.setStep("Analyzing your course objective...");
+        // Start loading state for course generation
+        initialLoadingState.startLoading();
+        initialLoadingState.setStep("Analyzing your course objective...");
 
-      await handleBuildCourse();
-      
-      // The visitedModules array is already initialized in handleBuildCourse
-    } else {
-      goto("/");
-    }
-
+        await handleBuildCourse();
+        
+        // The visitedModules array is already initialized in handleBuildCourse
+      } else {
+        goto("/");
+      }
+    };
+    
+    initPageData();
+    
     // Cleanup function to clear loading state when component is destroyed
     return () => {
       initialLoadingState.stopLoading();

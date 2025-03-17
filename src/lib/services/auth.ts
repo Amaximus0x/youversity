@@ -1,57 +1,66 @@
-import { GoogleAuthProvider, signInWithPopup, signOut, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail, updateProfile, EmailAuthProvider, reauthenticateWithCredential, reauthenticateWithPopup } from 'firebase/auth';
-import { auth, db } from '$lib/firebase';
+import { GoogleAuthProvider, signInWithPopup, signOut, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail, updateProfile, EmailAuthProvider, reauthenticateWithCredential, reauthenticateWithPopup, getIdToken } from 'firebase/auth';
+import { auth, db, setAuthTokenCookie } from '$lib/firebase';
 import { goto } from '$app/navigation';
 import { createUserProfile, getUserProfile } from './profile';
 import type { UserProfile } from './profile';
 import { doc, deleteDoc, collection, query, where, getDocs, writeBatch, getDoc, setDoc } from 'firebase/firestore';
 import { NotificationService } from './notificationService';
+import { tokenService } from './tokenService';
+import { user } from '$lib/stores/auth';
 
 const provider = new GoogleAuthProvider();
 
 export const signInWithGoogle = async (callbackUrl?: string) => {
   try {
     const result = await signInWithPopup(auth, provider);
-    const user = result.user;
+    const firebaseUser = result.user;
+
+    // Get ID token for secure auth and save to cookie
+    const idToken = await firebaseUser.getIdToken(true);
+    
+    // Store token securely in both cookie and tokenService
+    await setAuthTokenCookie();
+    tokenService.setToken(idToken);
 
     // Check if this is a new user by looking up their profile
-    const userDoc = await getDoc(doc(db, 'users', user.uid));
+    const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
     const isNewUser = !userDoc.exists();
 
     // Create or update user document
-    await setDoc(doc(db, 'users', user.uid), {
-      uid: user.uid,
-      email: user.email,
-      displayName: user.displayName,
-      photoURL: user.photoURL,
-      username: user.email?.split('@')[0],
+    await setDoc(doc(db, 'users', firebaseUser.uid), {
+      uid: firebaseUser.uid,
+      email: firebaseUser.email,
+      displayName: firebaseUser.displayName,
+      photoURL: firebaseUser.photoURL,
+      username: firebaseUser.email?.split('@')[0],
       createdAt: isNewUser ? new Date() : userDoc.data()?.createdAt,
       updatedAt: new Date()
     }, { merge: true });
 
     // Create user profile if it doesn't exist
-    const existingProfile = await getUserProfile(user.uid);
+    const existingProfile = await getUserProfile(firebaseUser.uid);
     if (!existingProfile) {
-      await createUserProfile(user.uid, {
-        displayName: user.displayName || '',
-        email: user.email || '',
-        photoURL: user.photoURL || '',
+      await createUserProfile(firebaseUser.uid, {
+        displayName: firebaseUser.displayName || '',
+        email: firebaseUser.email || '',
+        photoURL: firebaseUser.photoURL || '',
         createdAt: new Date(),
         updatedAt: new Date()
       });
 
       // Create welcome notification for new users
       if (isNewUser) {
-        await NotificationService.createWelcomeNotification(user.uid);
-        await NotificationService.createFirstCourseNotification(user.uid);
+        await NotificationService.createWelcomeNotification(firebaseUser.uid);
+        await NotificationService.createFirstCourseNotification(firebaseUser.uid);
       }
     }
 
     if (callbackUrl && callbackUrl !== '/') {
-      window.location.href = callbackUrl;
+      goto(callbackUrl);
     } else {
-      window.location.href = '/dashboard';
+      goto('/dashboard');
     }
-    return user;
+    return firebaseUser;
   } catch (error) {
     console.error('Error signing in with Google:', error);
     throw error;
@@ -139,25 +148,33 @@ async function getUserProfileByEmail(email: string): Promise<(UserProfile & { us
 export const signInWithEmail = async (email: string, password: string, callbackUrl?: string) => {
   try {
     const result = await signInWithEmailAndPassword(auth, email, password);
+    const firebaseUser = result.user;
+    
+    // Get ID token for secure auth and save to cookie
+    const idToken = await firebaseUser.getIdToken(true);
+    
+    // Store token securely in both cookie and tokenService
+    await setAuthTokenCookie();
+    tokenService.setToken(idToken);
     
     // Check if user profile exists, if not create one
-    const existingProfile = await getUserProfile(result.user.uid);
+    const existingProfile = await getUserProfile(firebaseUser.uid);
     if (!existingProfile) {
-      await createUserProfile(result.user.uid, {
-        displayName: result.user.displayName || '',
-        email: result.user.email || '',
-        photoURL: result.user.photoURL || '',
+      await createUserProfile(firebaseUser.uid, {
+        displayName: firebaseUser.displayName || '',
+        email: firebaseUser.email || '',
+        photoURL: firebaseUser.photoURL || '',
         createdAt: new Date(),
         updatedAt: new Date()
       });
     }
     
     if (callbackUrl && callbackUrl !== '/') {
-      window.location.href = callbackUrl;
+      goto(callbackUrl);
     } else {
-      window.location.href = '/dashboard';
+      goto('/dashboard');
     }
-    return result.user;
+    return firebaseUser;
   } catch (error) {
     console.error('Error signing in with email:', error);
     throw error;
@@ -166,7 +183,19 @@ export const signInWithEmail = async (email: string, password: string, callbackU
 
 export const signOutUser = async () => {
   try {
+    // Clear secure tokens first
+    tokenService.clearTokens();
+    
+    // Update user store to null
+    user.set(null);
+    
+    // Clear auth cookie
+    document.cookie = 'firebase-token=; path=/; max-age=0';
+    
+    // Sign out from Firebase
     await signOut(auth);
+    
+    // Redirect to login page
     await goto('/login');
   } catch (error) {
     console.error('Error signing out:', error);

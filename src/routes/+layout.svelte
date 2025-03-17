@@ -2,36 +2,54 @@
   import { page } from "$app/stores";
   import { user, isAuthenticated } from "$lib/stores/auth";
   import { signOutUser } from "$lib/services/auth";
-  import Skeleton from "$lib/components/Skeleton.svelte";
   import { theme } from "$lib/stores/theme";
   import "../app.css";
   import { goto } from "$app/navigation";
-  import NoInternet from "$lib/components/NoInternet.svelte";
   import { onMount, onDestroy } from "svelte";
   import { fade } from "svelte/transition";
-  import FilterModal from "$lib/components/FilterModal.svelte";
   import {
     saveRecentSearch,
     getRecentSearches,
     clearRecentSearches,
     getSearchRecommendations,
   } from "$lib/services/search";
-  import CourseGenerationModal from "$lib/components/CourseGenerationModal.svelte";
   import { loadingState } from "$lib/stores/loadingState";
   import { modalState } from "$lib/stores/modalState";
   import { browser } from "$app/environment";
-  import { auth } from '$lib/firebase';
+  import { auth, refreshToken } from '$lib/firebase';
   import { notifications } from '$lib/stores/notificationStore';
   import { onAuthStateChanged } from 'firebase/auth';
-  import NotificationButton from "$lib/components/NotificationButton.svelte";
   import { NotificationService } from "$lib/services/notificationService";
   import { get } from "svelte/store";
   import { isOnline } from "$lib/stores/network";
-  import SearchModal from "$lib/components/modals/SearchModal.svelte";
   import { createEventDispatcher } from 'svelte';
   import type { SearchFilter } from "$lib/types/search";
   import { DeploymentAnnouncements } from "$lib/services/deploymentAnnouncements";
-  import SideMenu from "$lib/components/SideMenu.svelte";
+
+  // Import the components directly by their paths
+  // @ts-ignore - Svelte component imports
+  import SideMenu from "../lib/components/SideMenu.svelte";
+  // @ts-ignore - Svelte component imports
+  import NotificationButton from "../lib/components/NotificationButton.svelte";
+  // @ts-ignore - Svelte component imports
+  import FilterModal from "../lib/components/FilterModal.svelte";
+  // @ts-ignore - Svelte component imports
+  import CourseGenerationModal from "../lib/components/CourseGenerationModal.svelte";
+  // @ts-ignore - Svelte component imports
+  import NoInternet from "../lib/components/NoInternet.svelte";
+  // @ts-ignore - Svelte component imports
+  import SearchModal from "../lib/components/modals/SearchModal.svelte";
+  
+  // Assign the components
+  const SideMenuComponent = SideMenu;
+  const NotificationButtonComponent = NotificationButton;
+  const FilterModalComponent = FilterModal;
+  const CourseGenerationModalComponent = CourseGenerationModal;
+  const NoInternetComponent = NoInternet;
+  const SearchModalComponent = SearchModal;
+
+  // Get auth state from page data
+  export let data;
 
   // State variables
   let isSearchPage = false;
@@ -119,8 +137,8 @@
 
   let unsubscribeNotifications: (() => void) | null = null;
 
-  // Add reactive statement for user changes
-  $: if ($user) {
+  // Add reactive statement for user changes and data.isAuthenticated
+  $: if ($user && data.isAuthenticated) {
     loadRecentSearches();
   }
 
@@ -138,9 +156,16 @@
     }
   }
 
-  // Load data on mount
-  onMount(async () => {
-    const cleanup = async () => {
+  // Fix for onMount type error
+  function updateOnlineStatus() {
+    if (browser) {
+      // This function is already handled by the network store
+    }
+  }
+
+  // Load data on mount with proper typing
+  onMount(() => {
+    const init = async () => {
       isMounted = true;
       updateOnlineStatus();
       window.addEventListener("online", updateOnlineStatus);
@@ -211,7 +236,7 @@
       await DeploymentAnnouncements.checkAndSendDeploymentAnnouncements();
     };
 
-    cleanup();
+    init();
 
     return () => {
       window.removeEventListener("online", updateOnlineStatus);
@@ -235,7 +260,7 @@
     });
   });
 
-  // Reactive declarations
+  // Reactive declarations for page navigation
   $: if (isMounted && $page?.url?.pathname) {
     isSearchPage = $page.url.pathname === "/search";
     if (isSearchPage) {
@@ -245,6 +270,24 @@
         currentFilter = filter;
       }
     }
+    
+    // Check authentication state for protected routes
+    const authOnlyRoutes = ['/create-course', '/my-courses', '/settings', '/profile'];
+    const isAuthRoute = authOnlyRoutes.some(route => $page.url.pathname.startsWith(route));
+    
+    if (isAuthRoute && $user && browser) {
+      // Refresh token for auth-required routes to prevent token expiration issues
+      console.log("Auth-only route detected, ensuring fresh token");
+      refreshToken().then(token => {
+        if (!token) {
+          console.error("Token refresh failed on auth route, redirecting to login");
+          goto('/login?redirectTo=' + encodeURIComponent($page.url.pathname));
+        }
+      }).catch(error => {
+        console.error("Error refreshing token:", error);
+      });
+    }
+    
     // Clear search if navigating away from search page
     if (prevPath === "/search" && $page.url.pathname !== "/search") {
       if (!$page.url.pathname.startsWith("/search")) {
@@ -258,17 +301,11 @@
       previous: prevPath,
       searchQuery,
       recentSearches: recentSearches.length,
+      isAuthenticated: data.isAuthenticated
     });
   }
 
   // Event handlers
-  function updateOnlineStatus() {
-    if (browser) {
-      // Use the imported updateOnlineStatus function instead
-      // This line is now handled by the network store
-    }
-  }
-
   function toggleMenu() {
     menuOpen = !menuOpen;
   }
@@ -281,6 +318,7 @@
     toggleProfileModal();
     if ($user) {
       await signOutUser();
+      // We don't need to navigate to login since signOutUser handles that
     } else {
       const redirectTo = $page?.url?.pathname || "/";
       goto(`/login?redirectTo=${encodeURIComponent(redirectTo)}`);

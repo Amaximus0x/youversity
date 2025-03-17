@@ -1,11 +1,19 @@
 import { initializeApp } from 'firebase/app';
 import { getFirestore, collection, addDoc, query, where, getDocs, doc, getDoc, updateDoc, setDoc, serverTimestamp, orderBy, limit, deleteDoc, Timestamp } from 'firebase/firestore';
-import { getAuth, setPersistence, browserLocalPersistence, signInWithPopup, GoogleAuthProvider, signOut } from 'firebase/auth';
+import { getAuth, setPersistence, browserLocalPersistence, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from 'firebase/auth';
 import { getStorage } from 'firebase/storage';
 import type { CourseEnrollment, EnrollmentProgress, FinalCourseStructure, ModuleProgress, CourseRating, QuizResult } from './types/course';
 import { getUserProfile } from '$lib/services/profile';
 import { NotificationService } from '$lib/services/notificationService';
 import { NotificationType } from '$lib/types/notification';
+import { user } from '$lib/stores/auth';
+import { browser } from '$app/environment';
+import type { Writable } from 'svelte/store';
+import type { Course, CompleteCourse } from './types/course';
+import type { Firestore } from 'firebase/firestore';
+import type { Auth } from 'firebase/auth';
+import type { FirebaseStorage } from 'firebase/storage';
+import type { FirebaseApp } from 'firebase/app';
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -13,13 +21,15 @@ const firebaseConfig = {
   projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
   storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
   messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
 };
 
-// Validate Firebase config
-const missingEnvVars = Object.entries(firebaseConfig)
-  .filter(([_, value]) => !value)
-  .map(([key]) => key);
+// Validate Firebase config - with required fields only
+const requiredEnvVars = ['apiKey', 'authDomain', 'projectId', 'storageBucket', 'messagingSenderId', 'appId'];
+const missingEnvVars = requiredEnvVars
+  .filter(key => !firebaseConfig[key as keyof typeof firebaseConfig])
+  .map(key => key);
 
 if (missingEnvVars.length > 0) {
   console.error('Missing Firebase configuration variables:', missingEnvVars);
@@ -32,19 +42,51 @@ console.log('Initializing Firebase with config:', {
 });
 
 // Initialize Firebase
-export const app = initializeApp(firebaseConfig);
-export const db = getFirestore(app);
-export const auth = getAuth(app);
-export const storage = getStorage(app);
+let app: FirebaseApp;
+let auth: Auth;
+let db: Firestore;
+let storage: FirebaseStorage;
 
-// Enable persistence
-setPersistence(auth, browserLocalPersistence)
-  .then(() => {
-    console.log('Firebase Auth persistence enabled');
-  })
-  .catch((error) => {
-    console.error('Auth persistence error:', error);
-  });
+// Check if we're in a browser context
+if (browser) {
+  try {
+    console.log('Initializing Firebase client...');
+    app = initializeApp(firebaseConfig);
+    auth = getAuth(app);
+    db = getFirestore(app);
+    storage = getStorage(app);
+    
+    // Set up auth state listener to update token cookie
+    onAuthStateChanged(auth, async (currentUser) => {
+      console.log("Auth state changed:", currentUser ? `User ${currentUser.uid} logged in` : "User logged out");
+      
+      if (currentUser) {
+        try {
+          // Get fresh token
+          const token = await currentUser.getIdToken(true);
+          console.log(`Setting token cookie for user ${currentUser.uid}, token length: ${token.length}`);
+          
+          // Set cookie with auth token - use SameSite=Lax for better compatibility
+          document.cookie = `firebase-token=${token}; path=/; max-age=3600; SameSite=Lax${location.protocol === 'https:' ? '; Secure' : ''}`;
+        } catch (error) {
+          console.error("Error getting user token:", error);
+        }
+      } else {
+        // Clear token cookie on logout
+        console.log("Clearing token cookie due to logout");
+        document.cookie = 'firebase-token=; path=/; max-age=0';
+      }
+    });
+    
+    console.log('Firebase client initialized successfully');
+  } catch (err) {
+    console.error('Firebase initialization error:', err);
+  }
+} else {
+  console.log('Not in browser context, skipping Firebase client initialization');
+}
+
+export { app, auth, db, storage };
 
 // Firebase utility functions
 export async function saveCourseToFirebase(userId: string, courseData: any) {
@@ -1297,4 +1339,60 @@ export async function getPublicCoursesByCreator(creatorId: string) {
     console.error('Error fetching creator courses:', error);
     throw new Error('Failed to fetch creator courses');
   }
+}
+
+/**
+ * Sets the current user's authentication token in a cookie
+ * to be accessible by server-side code
+ */
+export async function setAuthTokenCookie(): Promise<void> {
+  if (!browser || !auth?.currentUser) return;
+  
+  try {
+    console.log('Setting auth token cookie...');
+    const token = await auth.currentUser.getIdToken(true);
+    document.cookie = `firebase-token=${token}; path=/; max-age=3600; SameSite=Strict${location.protocol === 'https:' ? '; Secure' : ''}`;
+    console.log('Auth token cookie set successfully');
+  } catch (error) {
+    console.error('Error setting auth token cookie:', error);
+  }
+}
+
+/**
+ * Force refresh the user's token and return the new token
+ * This is useful when you need to ensure you have the latest token
+ * before making an authenticated request
+ */
+export async function refreshToken(): Promise<string | null> {
+  if (!browser || !auth?.currentUser) return null;
+  
+  try {
+    console.log('Forcing token refresh...');
+    
+    // Clear any existing token cookie
+    document.cookie = "firebase-token=; path=/; max-age=0";
+    
+    // Get a completely fresh token with force=true
+    const token = await auth.currentUser.getIdToken(true);
+    console.log(`Token refreshed successfully. Length: ${token.length}`);
+    
+    // Set the token in the cookie for server-side auth - use SameSite=Lax to ensure the cookie is sent with requests
+    document.cookie = `firebase-token=${token}; path=/; max-age=3600; SameSite=Lax${location.protocol === 'https:' ? '; Secure' : ''}`;
+    console.log('Token cookie updated');
+    
+    return token;
+  } catch (error) {
+    console.error('Error refreshing token:', error);
+    return null;
+  }
+}
+
+// Automatically set token cookie when this module loads
+// Delay this to ensure everything is initialized properly
+if (browser) {
+  setTimeout(() => {
+    if (auth?.currentUser) {
+      setAuthTokenCookie().catch(console.error);
+    }
+  }, 1000);
 }

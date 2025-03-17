@@ -5,9 +5,118 @@ import axios from 'axios';
 import type { CourseStructure } from '$lib/types/course';
 import { OPENAI_CONFIG } from '$lib/config/openai';
 
-export const POST: RequestHandler = async ({ request }) => {
+export const POST: RequestHandler = async ({ request, locals }) => {
+  console.log("API: /api/generate-course endpoint called");
+  console.log("API: Request method:", request.method);
+  console.log("API: Request headers:", Object.fromEntries([...request.headers.entries()]));
+  console.log("API: User in locals:", locals.user ? `User ${locals.user.uid} authenticated` : "No user in locals");
+  
+  // DEVELOPMENT MODE SHORTCUT - Allow all requests in development mode if desired
+  if (process.env.NODE_ENV === 'development' && !locals.user) {
+    console.log("API: Development mode - creating mock user authentication");
+    
+    // Check if there's a test header first
+    const devTestUID = request.headers.get('X-Dev-Test-UID');
+    const now = Math.floor(Date.now() / 1000);
+    
+    if (devTestUID) {
+      console.log(`API: Using X-Dev-Test-UID header value: ${devTestUID}`);
+      locals.user = { 
+        uid: devTestUID,
+        email: 'dev-test@example.com',
+        email_verified: true,
+        aud: 'mock-project-id',
+        auth_time: now,
+        exp: now + 3600,
+        firebase: { sign_in_provider: 'custom', identities: {} },
+        iat: now,
+        iss: 'https://securetoken.google.com/mock-project-id',
+        sub: devTestUID
+      };
+    } else {
+      console.log("API: Using default development test user");
+      locals.user = { 
+        uid: 'dev-test-user',
+        email: 'dev-test@example.com',
+        email_verified: true,
+        aud: 'mock-project-id',
+        auth_time: now,
+        exp: now + 3600,
+        firebase: { sign_in_provider: 'custom', identities: {} },
+        iat: now,
+        iss: 'https://securetoken.google.com/mock-project-id',
+        sub: 'dev-test-user'
+      };
+    }
+  }
+  
+  // Debug cookies and headers
+  const authHeader = request.headers.get('Authorization');
+  console.log("API: Authorization header:", authHeader ? `${authHeader.substring(0, 20)}...` : "None");
+  
+  // Get custom server auth header
+  const serverAuthUID = request.headers.get('X-Server-Auth-UID');
+  console.log("API: Server Auth UID header:", serverAuthUID || "None");
+  
+  // Get Firebase token header
+  const firebaseTokenHeader = request.headers.get('X-Firebase-Token');
+  console.log("API: X-Firebase-Token header:", firebaseTokenHeader ? `Found (length: ${firebaseTokenHeader.length})` : "None");
+  
+  // Debug request body for auth info
+  let requestData: any;
+  let serverAuthInfo: { uid?: string; isAuthenticated?: boolean } | null = null;
+  let tokenFromBody: string | null = null;
+  let userIdFromBody: string | null = null;
+  
   try {
-    const { courseInput } = await request.json();
+    // Clone request to read and then restore for later use
+    const clonedRequest = request.clone();
+    requestData = await clonedRequest.json();
+    serverAuthInfo = requestData.serverAuthInfo || null;
+    tokenFromBody = requestData.token || null;
+    userIdFromBody = requestData.userId || null;
+    
+    console.log("API: Server auth info from request body:", serverAuthInfo ? JSON.stringify(serverAuthInfo) : "None");
+    console.log("API: Token from request body:", tokenFromBody ? `Found (length: ${tokenFromBody.length})` : "None");
+    console.log("API: User ID from request body:", userIdFromBody || "None");
+  } catch (error) {
+    console.error("API: Error parsing request data:", error);
+  }
+
+  // Use auth info from the best available source
+  const userFromLocals = locals.user;
+  const userFromServerAuth = serverAuthInfo?.uid ? { uid: serverAuthInfo.uid } : null;
+  const userFromDirectId = userIdFromBody ? { uid: userIdFromBody } : null;
+  
+  // Combine auth sources (prefer locals)
+  const authenticatedUser = userFromLocals || userFromServerAuth || userFromDirectId;
+  
+  if (!authenticatedUser) {
+    console.log("API: Unauthorized - No authenticated user found from any source");
+    // Detailed error response for debugging
+    return json({ 
+      success: false, 
+      error: 'Unauthorized', 
+      message: 'Authentication required to access this resource',
+      authSources: {
+        locals: !!userFromLocals,
+        serverAuth: !!userFromServerAuth,
+        directId: !!userFromDirectId,
+        authHeader: !!authHeader,
+        serverAuthHeader: !!serverAuthUID,
+        firebaseTokenHeader: !!firebaseTokenHeader,
+        tokenFromBody: !!tokenFromBody
+      },
+      help: 'Ensure you are signed in and the token is being correctly passed in the Authorization header, X-Firebase-Token header, request body, or cookie'
+    }, { status: 401 });
+  }
+  
+  console.log("API: Processing request from user:", authenticatedUser.uid);
+  
+  try {
+    // Re-clone the request to get fresh body
+    const freshRequest = request.clone();
+    const { courseInput } = await freshRequest.json();
 
     if (!courseInput?.trim()) {
       return json({ 
