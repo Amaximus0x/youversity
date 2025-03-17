@@ -691,10 +691,12 @@
   @keyframes text-only-animation {
     0%, 100% {
       color: #41C1CB;
+      border-color: #41C1CB;
       text-shadow: 0 0 0 rgba(65, 193, 203, 0);
     }
     50% {
       color: #2A4D61;
+      border-color: #2A4D61;
       text-shadow: 0 0 8px rgba(65, 193, 203, 0.5);
     }
   }
