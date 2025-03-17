@@ -7,7 +7,7 @@
     resetPassword,
   } from "$lib/services/auth";
   import { page } from "$app/stores";
-  import OnboardingCarousel from "$lib/components/OnboardingCarousel.svelte";
+  import { default as OnboardingCarousel } from "$lib/components/OnboardingCarousel.svelte";
 
   let error: string | null = null;
   let successMessage: string | null = null;
@@ -20,6 +20,8 @@
   let showPassword = false;
   let passwordInput: HTMLInputElement;
   let termsAccepted = false;
+  let isLoading = false;
+  let isGoogleLoading = false;
 
   function getReadableErrorMessage(err: any): string {
     if (!(err instanceof Error)) return "Authentication failed";
@@ -55,11 +57,14 @@
 
   async function handleSignIn() {
     try {
+      isGoogleLoading = true;
       const redirectTo = $page.url.searchParams.get("redirectTo") || "/";
       await signInWithGoogle(redirectTo);
     } catch (err) {
       console.error("Sign in error:", err);
       error = getReadableErrorMessage(err);
+    } finally {
+      isGoogleLoading = false;
     }
   }
 
@@ -81,6 +86,8 @@
     }
 
     error = null;
+    isLoading = true;
+    
     try {
       const redirectTo = $page.url.searchParams.get("redirectTo") || "/";
       if (isRegistering) {
@@ -104,6 +111,8 @@
     } catch (err) {
       console.error("Authentication error:", err);
       error = getReadableErrorMessage(err);
+    } finally {
+      isLoading = false;
     }
   }
 
@@ -115,6 +124,8 @@
 
     error = null;
     successMessage = null;
+    isLoading = true;
+    
     try {
       await resetPassword(email);
       successMessage = "Password reset email sent. Please check your inbox.";
@@ -122,6 +133,8 @@
     } catch (err) {
       console.error("Password reset error:", err);
       error = getReadableErrorMessage(err);
+    } finally {
+      isLoading = false;
     }
   }
 
@@ -435,6 +448,8 @@
                   variant="primary"
                   fullWidth
                   textClass="text-body"
+                  loading={isLoading}
+                  disabled={isLoading}
                 >
                   {isRegistering ? "Sign up" : "Sign in"}
                 </Button>
@@ -452,20 +467,26 @@
                     tabindex="0"
                     on:click={handleSignIn}
                     on:keydown={(e) => e.key === "Enter" && handleSignIn()}
-                    class="grow shrink basis-0 px-4 py-2 rounded-[10px] border border-light-border dark:border-dark-border flex-col justify-center items-center gap-2.5 inline-flex overflow-hidden transition-colors bg-light-bg-primary dark:bg-dark-bg-primary"
+                    class="grow shrink basis-0 px-4 py-2 rounded-[10px] border border-light-border dark:border-dark-border flex-col justify-center items-center gap-2.5 inline-flex overflow-hidden transition-colors bg-light-bg-primary dark:bg-dark-bg-primary {isGoogleLoading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}"
                   >
                     <div
                       class="justify-start items-center gap-2.5 inline-flex w-full"
                     >
-                      <div
-                        class="w-6 h-6 relative overflow-hidden flex-shrink-0"
-                      >
-                        <img
-                          src="/google-icon.svg"
-                          alt="Google"
-                          class="w-full h-full"
-                        />
-                      </div>
+                      {#if isGoogleLoading}
+                        <div class="w-6 h-6 flex items-center justify-center">
+                          <div class="w-4 h-4 border-2 border-t-transparent rounded-full animate-spin border-light-text-primary dark:border-dark-text-primary"></div>
+                        </div>
+                      {:else}
+                        <div
+                          class="w-6 h-6 relative overflow-hidden flex-shrink-0"
+                        >
+                          <img
+                            src="/google-icon.svg"
+                            alt="Google"
+                            class="w-full h-full"
+                          />
+                        </div>
+                      {/if}
                       <div
                         class="text-light-text-primary dark:text-dark-text-primary text-sm-button whitespace-nowrap"
                       >
@@ -680,6 +701,8 @@
                   variant="primary"
                   fullWidth
                   textClass="text-body"
+                  loading={isLoading}
+                  disabled={isLoading}
                 >
                   {isRegistering ? "Sign up" : "Sign in"}
                 </Button>
@@ -697,20 +720,26 @@
                     tabindex="0"
                     on:click={handleSignIn}
                     on:keydown={(e) => e.key === "Enter" && handleSignIn()}
-                    class="grow shrink basis-0 px-4 py-2 rounded-[10px] border border-light-border dark:border-dark-border flex-col justify-center items-center gap-2.5 inline-flex overflow-hidden transition-colors bg-light-bg-primary dark:bg-dark-bg-primary"
+                    class="grow shrink basis-0 px-4 py-2 rounded-[10px] border border-light-border dark:border-dark-border flex-col justify-center items-center gap-2.5 inline-flex overflow-hidden transition-colors bg-light-bg-primary dark:bg-dark-bg-primary {isGoogleLoading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}"
                   >
                     <div
                       class="justify-start items-center gap-2.5 inline-flex w-full"
                     >
-                      <div
-                        class="w-6 h-6 relative overflow-hidden flex-shrink-0"
-                      >
-                        <img
-                          src="/google-icon.svg"
-                          alt="Google"
-                          class="w-full h-full"
-                        />
-                      </div>
+                      {#if isGoogleLoading}
+                        <div class="w-6 h-6 flex items-center justify-center">
+                          <div class="w-4 h-4 border-2 border-t-transparent rounded-full animate-spin border-light-text-primary dark:border-dark-text-primary"></div>
+                        </div>
+                      {:else}
+                        <div
+                          class="w-6 h-6 relative overflow-hidden flex-shrink-0"
+                        >
+                          <img
+                            src="/google-icon.svg"
+                            alt="Google"
+                            class="w-full h-full"
+                          />
+                        </div>
+                      {/if}
                       <div
                         class="text-light-text-primary dark:text-dark-text-primary text-sm-button whitespace-nowrap"
                       >
@@ -743,7 +772,7 @@
                             fill="currentColor"
                           />
                           <path
-                            d="M6.2564 6.13441C6.6764 6.13441 7.6514 6.33504 8.3114 6.56941C8.9714 6.80379 9.66703 7.07941 10.4864 7.07941C11.287 7.07941 11.9208 6.80191 12.5414 6.56941C13.162 6.33691 13.7808 6.13441 14.7014 6.13441C15.9033 6.13441 17.2027 6.75879 18.2264 7.84441C16.5877 9.00129 15.8208 10.805 15.9764 12.5544C16.132 14.3225 17.197 16.0007 18.9464 16.8744L18.9389 16.8907C18.5643 17.7066 18.3146 18.2507 17.7614 19.0944C17.302 19.7938 16.7564 20.5588 16.1564 21.1344C15.5564 21.71 14.9208 22.0738 14.2814 22.0794C13.6645 22.085 13.3139 21.9013 12.7814 21.6594C12.2489 21.4175 11.5608 21.14 10.5014 21.1494C9.4439 21.155 8.7464 21.4213 8.2064 21.6594C7.6664 21.8975 7.31203 22.085 6.6914 22.0794C6.03515 22.0738 5.42578 21.755 4.8464 21.2244C4.26703 20.6938 3.7439 19.97 3.2864 19.2744C0.766404 15.4344 0.563905 10.9232 2.0114 8.69941C3.07265 7.06629 5.8364 6.13441 6.2564 6.13441Z"
+                            d="M6.2564 6.13441C6.6764 6.13441 7.6514 6.33504 8.3114 6.56941C8.9714 6.80379 9.66703 7.07941 10.4864 7.07941C11.287 7.07941 11.9208 6.80191 12.5414 6.56941C13.162 6.33691 13.7808 6.13441 14.7014 6.13441C15.9033 6.13441 17.2027 6.75879 18.2264 7.84441C16.5877 9.00129 15.8208 10.805 15.9764 12.5544C16.132 14.3225 17.197 16.0007 18.9464 16.8744C18.9439 16.8799 18.9414 16.8853 18.9389 16.8907C18.5643 17.7066 18.3146 18.2507 17.7614 19.0944C17.302 19.7938 16.7564 20.5588 16.1564 21.1344C15.5564 21.71 14.9208 22.0738 14.2814 22.0794C13.6645 22.085 13.3139 21.9013 12.7814 21.6594C12.2489 21.4175 11.5608 21.14 10.5014 21.1494C9.4439 21.155 8.7464 21.4213 8.2064 21.6594C7.6664 21.8975 7.31203 22.085 6.6914 22.0794C6.03515 22.0738 5.42578 21.755 4.8464 21.2244C4.26703 20.6938 3.7439 19.97 3.2864 19.2744C0.766404 15.4344 0.563905 10.9232 2.0114 8.69941C3.07265 7.06629 5.8364 6.13441 6.2564 6.13441Z"
                             fill="currentColor"
                           />
                           <path
