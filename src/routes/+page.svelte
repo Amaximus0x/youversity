@@ -25,8 +25,9 @@
     setTimeout(() => {
       const thumbnailContainer = document.getElementById('thumbnailContainer');
       const videoContainer = document.getElementById('videoContainer');
-      
-      if (videoContainer && thumbnailContainer) {
+      const videoNotch = document.getElementById('videoNotch');
+
+      if (videoContainer && thumbnailContainer && videoNotch) {
         // First fade out the thumbnail
         thumbnailContainer.style.opacity = '0';
         thumbnailContainer.style.transition = 'opacity 0.5s ease';
@@ -35,11 +36,15 @@
         setTimeout(() => {
           thumbnailContainer.style.display = 'none';
           videoContainer.style.display = 'block';
+          videoNotch.style.display = 'block';
           // Optional: fade in the video
           videoContainer.style.opacity = '0';
+          videoNotch.style.opacity = '0';
           videoContainer.style.transition = 'opacity 0.5s ease';
+          videoNotch.style.transition = 'opacity 0.5s ease';
           requestAnimationFrame(() => {
             videoContainer.style.opacity = '1';
+            videoNotch.style.opacity = '1';
           });
         }, 500); // Wait for fade out to complete
       }
@@ -261,7 +266,7 @@
 
 
        <!-- Content image Section -->
-       <section class="pt-10 px-4 md:px-8 lg:px-24 relative overflow-hidden w-full" id="thumbnailContainer" style="display: block;">
+       <section class="pt-10 mb-28 px-4 md:px-8 lg:px-24 relative overflow-hidden w-full" id="thumbnailContainer" style="display: block;">
         <div class="relative">
             <img
               src={$theme === "light" ? "/images/landing/home-light.png" : "/images/landing/home-dark.png"}
@@ -274,11 +279,11 @@
         ></div>
       </section>
 
-      <section class="py-20 px-4 md:px-8 lg:px-24 relative overflow-hidden w-full">
+      <section class="py-20 px-4 md:px-8 lg:px-24 relative overflow-hidden w-full" id="videoContainer" style="display: none;">
         <!-- Demo Video Section -->
         <div class="video-wrapper relative w-full max-w-[1200px] mx-auto">
-          <div class="notch"></div>
-          <div class="relative w-full rounded-2xl overflow-hidden border-[19px] border-[#303030] shadow-[0px_0px_68px_0px_#00000052]" id="videoContainer" style="display: none;">
+          <div class="notch" id="videoNotch" style="display: none;"></div>
+          <div class="relative w-full rounded-2xl overflow-hidden border-[19px] border-[#303030] shadow-[0px_0px_68px_0px_#00000052]" >
             <!-- YouTube Embed with more parameters -->
             <div class="aspect-video w-full">
               <iframe
@@ -294,10 +299,9 @@
           </div>
         </div>
       </section>
-    </div>
 
-    <!-- Features Section -->
-    <div class="w-full">
+          <!-- Features Section -->
+    <div class="w-full ">
       <!-- Features Section 1-->
       <section class="px-4 md:px-8 lg:px-24 w-full">
         <div class="max-w-6xl mx-auto">
@@ -477,6 +481,9 @@
         </div>
       </section>
     </div>
+    </div>
+
+
 
     <!-- Learning Section -->
     <section class="px-4 md:px-8 space-y-6 lg:space-y-16 w-full">
@@ -734,6 +741,7 @@
     border-radius: 8px;
     z-index: 10;
     transition: all 0.3s ease;
+    opacity: 0;
   }
 
   .notch::before {
