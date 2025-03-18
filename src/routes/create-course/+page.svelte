@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from "svelte";
+  import { browser } from "$app/environment";
   // @ts-ignore - Svelte component import 
   import ModuleVideoGrid from "$lib/components/ModuleVideoGrid.svelte";
   // @ts-ignore - Svelte component import
@@ -10,7 +11,7 @@
     finalLoadingState,
   } from "$lib/stores/loadingState";
   import { page } from "$app/stores";
-  import { goto } from "$app/navigation";
+  import { goto, afterNavigate } from "$app/navigation";
   import { Plus, ChevronLeft, ChevronRight } from "lucide-svelte";
   import { fade, fly } from "svelte/transition";
   import { getVideoTranscript } from "$lib/services/transcriptUtils";
@@ -51,6 +52,110 @@
   // Reference to the module navigation container for scrolling
   let moduleNavContainer: HTMLElement;
 
+  // Enable persistence by saving course state to localStorage
+  function saveStateToStorage() {
+    if (browser) {
+      try {
+        // Save essential course creation state
+        localStorage.setItem('youversity_course_objective', courseObjective);
+        
+        // Save course structure if available
+        if (courseStructure) {
+          localStorage.setItem('youversity_course_structure', JSON.stringify(courseStructure));
+        }
+        
+        // Save module videos state
+        if (moduleVideos.length > 0) {
+          localStorage.setItem('youversity_module_videos', JSON.stringify(moduleVideos));
+        }
+        
+        // Save selected videos
+        if (selectedVideos.length > 0) {
+          localStorage.setItem('youversity_selected_videos', JSON.stringify(selectedVideos));
+        }
+        
+        // Save visited modules
+        if (visitedModules.length > 0) {
+          localStorage.setItem('youversity_visited_modules', JSON.stringify(visitedModules));
+        }
+        
+        // Save current module index
+        localStorage.setItem('youversity_current_module_index', currentModuleIndex.toString());
+        
+        console.log('Course state saved to localStorage');
+      } catch (e) {
+        console.error('Error saving course state to localStorage:', e);
+      }
+    }
+  }
+
+  // Function to load state from localStorage
+  function loadStateFromStorage() {
+    if (browser) {
+      try {
+        // Restore course objective
+        const savedObjective = localStorage.getItem('youversity_course_objective');
+        if (savedObjective) {
+          courseObjective = savedObjective;
+        }
+        
+        // Restore course structure
+        const savedStructure = localStorage.getItem('youversity_course_structure');
+        if (savedStructure) {
+          courseStructure = JSON.parse(savedStructure);
+        }
+        
+        // Restore module videos
+        const savedModuleVideos = localStorage.getItem('youversity_module_videos');
+        if (savedModuleVideos) {
+          moduleVideos = JSON.parse(savedModuleVideos);
+        }
+        
+        // Restore selected videos
+        const savedSelectedVideos = localStorage.getItem('youversity_selected_videos');
+        if (savedSelectedVideos) {
+          selectedVideos = JSON.parse(savedSelectedVideos);
+        }
+        
+        // Restore visited modules
+        const savedVisitedModules = localStorage.getItem('youversity_visited_modules');
+        if (savedVisitedModules) {
+          visitedModules = JSON.parse(savedVisitedModules);
+        }
+        
+        // Restore current module index
+        const savedModuleIndex = localStorage.getItem('youversity_current_module_index');
+        if (savedModuleIndex) {
+          currentModuleIndex = parseInt(savedModuleIndex);
+        }
+        
+        // If we have course structure but no objective from URL, use the stored one
+        if (courseStructure && !courseObjective) {
+          console.log('Using stored course objective:', courseObjective);
+        }
+        
+        console.log('Course state loaded from localStorage');
+        return !!courseStructure; // Return true if we restored a valid course
+      } catch (e) {
+        console.error('Error loading course state from localStorage:', e);
+        return false;
+      }
+    }
+    return false;
+  }
+
+  // Clear state in localStorage when needed (e.g., after successful course creation)
+  function clearStoredState() {
+    if (browser) {
+      localStorage.removeItem('youversity_course_objective');
+      localStorage.removeItem('youversity_course_structure');
+      localStorage.removeItem('youversity_module_videos');
+      localStorage.removeItem('youversity_selected_videos');
+      localStorage.removeItem('youversity_visited_modules');
+      localStorage.removeItem('youversity_current_module_index');
+    }
+  }
+
   // Function to scroll the module navigation
   function scrollModuleNav(direction: 'left' | 'right') {
     if (!moduleNavContainer) return;
@@ -86,6 +191,11 @@
      visitedModules.length === courseStructure.OG_Module_Title.length && 
      visitedModules.every(visited => visited === true);
 
+  // Save state whenever important variables change
+  $: if (courseObjective || courseStructure || moduleVideos.length > 0 || selectedVideos.length > 0) {
+    saveStateToStorage();
+  }
+
   function selectModule(index: number) {
     currentModuleIndex = index;
     // Ensure the module is marked as visited
@@ -94,6 +204,12 @@
     visitedModules = [...visitedModules];
     console.log("Visited modules:", visitedModules);
     console.log("All modules visited:", allModulesAreVisited);
+    
+    // Save current module index to localStorage
+    if (browser) {
+      localStorage.setItem('youversity_current_module_index', index.toString());
+      localStorage.setItem('youversity_visited_modules', JSON.stringify(visitedModules));
+    }
   }
 
   function getNextUnvisitedModuleIndex() {
@@ -373,6 +489,9 @@
       finalLoadingState.setStep("Course is ready!");
       finalLoadingState.setProgress(100);
       finalLoadingState.setCourseId(courseId);
+
+      // Clear stored state after successful course creation
+      clearStoredState();
     } catch (err: any) {
       console.error("Error saving course:", err);
       error = err.message;
@@ -524,31 +643,118 @@
     }
   }
 
+  // Function to ensure the URL contains the objective parameter
+  function ensureObjectiveInUrl() {
+    if (browser && window.history && courseObjective) {
+      const url = new URL(window.location.href);
+      // Only add if not already there or if it's different
+      if (url.searchParams.get('objective') !== encodeURIComponent(courseObjective)) {
+        url.searchParams.set('objective', courseObjective);
+        window.history.replaceState({}, '', url.toString());
+        console.log("Updated URL with course objective");
+      }
+    }
+  }
+
   // Get the objective from URL parameters on mount
   onMount(() => {
     const initPageData = async () => {
       const urlObjective = $page.url.searchParams.get("objective");
+      let courseLoaded = false;
+      
+      // First try to load from localStorage to have data ready
+      courseLoaded = loadStateFromStorage();
+      console.log("Initial state loaded from storage:", courseLoaded);
+      
       if (urlObjective) {
+        // If we have a URL objective, use it (this takes precedence)
         courseObjective = decodeURIComponent(urlObjective);
-
-        // Start loading state for course generation
-        initialLoadingState.startLoading();
-        initialLoadingState.setStep("Analyzing your course objective...");
-
-        await handleBuildCourse();
         
-        // The visitedModules array is already initialized in handleBuildCourse
+        // Update the URL to preserve the objective parameter
+        ensureObjectiveInUrl();
+        
+        // If we already have a course structure but the objective has changed,
+        // we should restart the course generation
+        if (courseStructure && courseObjective !== localStorage.getItem('youversity_course_objective')) {
+          console.log('Objective changed, rebuilding course');
+          // Start loading state for course generation
+          initialLoadingState.startLoading();
+          initialLoadingState.setStep("Analyzing your course objective...");
+          await handleBuildCourse();
+        } else if (!courseStructure || moduleVideos.length === 0) {
+          // No valid state, build the course
+          console.log('No valid course structure found, building new course');
+          initialLoadingState.startLoading();
+          initialLoadingState.setStep("Analyzing your course objective...");
+          await handleBuildCourse();
+        } else {
+          console.log('Using existing course structure with URL objective');
+          // Update objective in localStorage
+          localStorage.setItem('youversity_course_objective', courseObjective);
+          
+          // Update the loading state to show we're using saved data
+          initialLoadingState.setTotalModules(courseStructure.OG_Module_Title.length);
+          initialLoadingState.setStep("Course structure restored from previous session");
+          initialLoadingState.setProgress(100);
+          allModulesLoaded = checkAllModulesLoaded();
+        }
+      } else if (courseLoaded && courseObjective) {
+        console.log("Restored course from localStorage:", courseObjective);
+        
+        // Update URL with the saved objective to preserve state on refresh
+        ensureObjectiveInUrl();
+        
+        // If we have a course structure already, update the loading state
+        if (courseStructure && moduleVideos.length > 0) {
+          initialLoadingState.setTotalModules(courseStructure.OG_Module_Title.length);
+          initialLoadingState.setStep("Course structure restored from previous session");
+          initialLoadingState.setProgress(100);
+          allModulesLoaded = checkAllModulesLoaded();
+        } else {
+          // No course structure yet, redirect to home to get objective
+          goto("/");
+        }
       } else {
+        // No stored course, redirect to home
         goto("/");
       }
     };
     
     initPageData();
     
-    // Cleanup function to clear loading state when component is destroyed
-    return () => {
-      initialLoadingState.stopLoading();
-    };
+    // Set up event listener to clear state when navigating away
+    if (browser) {
+      const handleBeforeUnload = () => {
+        // Save state for page reloads
+        saveStateToStorage();
+        console.log("Saved state during beforeunload");
+      };
+      
+      // Add listeners
+      window.addEventListener('beforeunload', handleBeforeUnload);
+      
+      // Cleanup
+      return () => {
+        window.removeEventListener('beforeunload', handleBeforeUnload);
+        initialLoadingState.stopLoading();
+      };
+    }
+  });
+
+  // Handle SvelteKit navigation events with afterNavigate
+  afterNavigate(({ from, to }) => {
+    if (browser) {
+      console.log(`Navigation from ${from?.url.pathname || 'initial'} to ${to?.url.pathname || 'unknown'}`);
+      
+      // If we're coming from create-course (prevent clearing during initial load)
+      if (from && from.url.pathname.startsWith('/create-course')) {
+        // Check if we're navigating away from create-course
+        if (to && to.url.pathname && !to.url.pathname.startsWith('/create-course')) {
+          console.log('Navigating away from create-course, clearing state');
+          clearStoredState();
+        }
+      }
+    }
   });
 </script>
 

@@ -25,6 +25,8 @@
   import { createEventDispatcher } from 'svelte';
   import type { SearchFilter } from "$lib/types/search";
   import { DeploymentAnnouncements } from "$lib/services/deploymentAnnouncements";
+  import { afterNavigate } from '$app/navigation';
+  import { isCreateCoursePage, clearCreateCourseState } from '$lib/utils/navigation';
 
   // Import the components directly by their paths
   // @ts-ignore - Svelte component imports
@@ -456,6 +458,33 @@
         window.removeEventListener('profileUpdate', handleProfileUpdate as EventListener);
       }
     };
+  });
+
+  // Listen for navigation away from create-course page to clear state
+  let lastPath = '';
+  
+  onMount(() => {
+    if (browser) {
+      // Store the current path when component mounts
+      lastPath = window.location.pathname;
+    }
+  });
+  
+  // Use afterNavigate to detect navigation changes
+  afterNavigate(({ from, to }) => {
+    if (browser) {
+      const fromPath = from?.url.pathname || lastPath;
+      const toPath = to?.url.pathname || window.location.pathname;
+      
+      // Check if we're navigating away from create-course
+      if (isCreateCoursePage(fromPath) && !isCreateCoursePage(toPath)) {
+        console.log('Layout detected navigation away from create-course, clearing state');
+        clearCreateCourseState();
+      }
+      
+      // Update last path
+      lastPath = toPath;
+    }
   });
 </script>
 
