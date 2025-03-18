@@ -171,7 +171,7 @@
                 <span
                   class="text-mini-body font-medium text-light-text-primary dark:text-dark-text-primary uppercase"
                 >
-                  {creatorProfile.username[0] || "?"}
+                  {creatorProfile.username[0] || ""}
                 </span>
               {/if}
             </div>
