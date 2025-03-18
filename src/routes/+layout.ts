@@ -104,8 +104,33 @@ export const load: Load = async ({ url, route }) => {
     // Always wait for auth state to be initialized, but wait longer for auth-required routes
     if (isAuthRoute) {
       console.log(`Auth required route detected: ${path}`);
+      
+      // Check token in localStorage first - might be faster than waiting for Firebase
+      const hasTokenInStorage = browser && localStorage.getItem('youversity_auth_token');
+      if (hasTokenInStorage) {
+        console.log(`Token found in localStorage for ${path}, skipping redirect`);
+        // Don't redirect if we have a token, assume authentication is valid
+        // The token refresh will happen in the background
+        
+        // Proactively try to get the current user
+        if (auth.currentUser) {
+          console.log(`User already authenticated: ${auth.currentUser.uid}`);
+        } else if (!get(user)) {
+          // Wait for auth to initialize but don't redirect if it fails
+          await waitForAuthState(3000);
+        }
+        
+        // Refresh token in the background
+        tokenService.refreshTokenIfNeeded().catch(console.error);
+        
+        return {
+          hideNav: path === '/',
+          isAuthenticated: true
+        };
+      }
+      
       // Wait for auth state to be fully initialized with longer timeout
-      await waitForAuthState(2500);
+      await waitForAuthState(3000);
     } else if (isLoginPage) {
       // For login page we need to know auth state to redirect if already logged in
       await waitForAuthState(2000);
@@ -137,6 +162,21 @@ export const load: Load = async ({ url, route }) => {
       };
     }
     
+    // Check token in localStorage and cookie as well before redirecting
+    if (browser) {
+      const hasToken = localStorage.getItem('youversity_auth_token') || 
+                       document.cookie.includes('firebase-token=');
+      
+      if (hasToken) {
+        console.log(`Token found in storage but auth not initialized yet, staying on ${path}`);
+        // Return and assume auth will initialize properly
+        return {
+          hideNav: path === '/',
+          isAuthenticated: true // Assume authenticated since we have a token
+        };
+      }
+    }
+    
     // If authenticated route but user is not authenticated, redirect to login
     const redirectUrl = `/login?redirectTo=${encodeURIComponent(path)}`;
     console.log(`Auth guard: Redirecting unauthenticated user from ${path} to ${redirectUrl}`);
@@ -145,8 +185,15 @@ export const load: Load = async ({ url, route }) => {
   
   // If user is on login page but is already authenticated, redirect to dashboard
   if (isLoginPage && isUserAuthenticated) {
-    console.log('Auth guard: Redirecting authenticated user from login to dashboard');
-    redirect(302, '/dashboard');
+    // Check if there's a redirectTo parameter
+    const redirectTo = url.searchParams.get('redirectTo');
+    if (redirectTo) {
+      console.log(`Auth guard: Redirecting authenticated user from login to ${redirectTo}`);
+      redirect(302, redirectTo);
+    } else {
+      console.log('Auth guard: Redirecting authenticated user from login to dashboard');
+      redirect(302, '/dashboard');
+    }
   }
   
   // Return data for the layout

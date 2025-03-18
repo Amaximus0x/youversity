@@ -57,18 +57,35 @@ if (browser) {
     db = getFirestore(app);
     storage = getStorage(app);
     
+    // Enable persistent authentication to help with page refreshes
+    setPersistence(auth, browserLocalPersistence)
+      .then(() => {
+        console.log('Firebase auth persistence enabled');
+      })
+      .catch((error) => {
+        console.error('Error enabling auth persistence:', error);
+      });
+      
     // Set up auth state listener to update token cookie
     onAuthStateChanged(auth, async (currentUser) => {
       console.log("Auth state changed:", currentUser ? `User ${currentUser.uid} logged in` : "User logged out");
       
       if (currentUser) {
         try {
+          // Store the authentication state in sessionStorage
+          // This is faster than localStorage for page refreshes but doesn't persist across browser sessions
+          sessionStorage.setItem('youversity_auth_state', 'authenticated');
+          
           // Get fresh token
           const token = await currentUser.getIdToken(true);
           console.log(`Setting token cookie for user ${currentUser.uid}, token length: ${token.length}`);
           
           // Set cookie with auth token - use SameSite=Lax for better compatibility
           document.cookie = `firebase-token=${token}; path=/; max-age=3600; SameSite=Lax${location.protocol === 'https:' ? '; Secure' : ''}`;
+          
+          // Store token in localStorage for quicker access on page refresh
+          localStorage.setItem('youversity_auth_token', token);
+          localStorage.setItem('youversity_token_expiry', (Date.now() + 3600 * 1000).toString());
           
           // Proactively update user store if it doesn't match
           setTimeout(async () => {
@@ -92,6 +109,9 @@ if (browser) {
         // Clear token cookie on logout
         console.log("Clearing token cookie due to logout");
         document.cookie = 'firebase-token=; path=/; max-age=0';
+        localStorage.removeItem('youversity_auth_token');
+        localStorage.removeItem('youversity_token_expiry');
+        sessionStorage.removeItem('youversity_auth_state');
       }
     });
     
