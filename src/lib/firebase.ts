@@ -14,6 +14,7 @@ import type { Firestore } from 'firebase/firestore';
 import type { Auth } from 'firebase/auth';
 import type { FirebaseStorage } from 'firebase/storage';
 import type { FirebaseApp } from 'firebase/app';
+import { get } from 'svelte/store';
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -68,6 +69,22 @@ if (browser) {
           
           // Set cookie with auth token - use SameSite=Lax for better compatibility
           document.cookie = `firebase-token=${token}; path=/; max-age=3600; SameSite=Lax${location.protocol === 'https:' ? '; Secure' : ''}`;
+          
+          // Proactively update user store if it doesn't match
+          setTimeout(async () => {
+            const currentUserFromStore = get(user);
+            if (!currentUserFromStore || currentUserFromStore.uid !== currentUser.uid) {
+              console.log(`Proactively updating user store for ${currentUser.uid}`);
+              try {
+                // Force a user store refresh through our refresh method
+                if ('refresh' in user) {
+                  await (user as any).refresh();
+                }
+              } catch (storeError) {
+                console.error("Error updating user store:", storeError);
+              }
+            }
+          }, 100);
         } catch (error) {
           console.error("Error getting user token:", error);
         }
@@ -1350,9 +1367,15 @@ export async function setAuthTokenCookie(): Promise<void> {
   
   try {
     console.log('Setting auth token cookie...');
+    // Force token refresh to ensure we have the latest token
     const token = await auth.currentUser.getIdToken(true);
-    document.cookie = `firebase-token=${token}; path=/; max-age=3600; SameSite=Strict${location.protocol === 'https:' ? '; Secure' : ''}`;
+    
+    // Set the token with SameSite=Lax to ensure it's sent with cross-site requests
+    document.cookie = `firebase-token=${token}; path=/; max-age=3600; SameSite=Lax${location.protocol === 'https:' ? '; Secure' : ''}`;
     console.log('Auth token cookie set successfully');
+    
+    // Return to ensure any pending Firestore connections have time to authenticate
+    await new Promise(resolve => setTimeout(resolve, 300));
   } catch (error) {
     console.error('Error setting auth token cookie:', error);
   }
@@ -1369,20 +1392,40 @@ export async function refreshToken(): Promise<string | null> {
   try {
     console.log('Forcing token refresh...');
     
-    // Clear any existing token cookie
+    // Clear any existing token cookie first
     document.cookie = "firebase-token=; path=/; max-age=0";
     
-    // Get a completely fresh token with force=true
-    const token = await auth.currentUser.getIdToken(true);
+    // Force a token refresh by the Firebase Auth SDK
+    await auth.currentUser.getIdToken(true);
+    
+    // Ensure we get a fresh token after the force refresh
+    const token = await auth.currentUser.getIdToken();
     console.log(`Token refreshed successfully. Length: ${token.length}`);
     
-    // Set the token in the cookie for server-side auth - use SameSite=Lax to ensure the cookie is sent with requests
+    // Set the token in the cookie for server-side auth
     document.cookie = `firebase-token=${token}; path=/; max-age=3600; SameSite=Lax${location.protocol === 'https:' ? '; Secure' : ''}`;
     console.log('Token cookie updated');
+    
+    // Allow time for Firestore connections to authenticate with the new token
+    await new Promise(resolve => setTimeout(resolve, 300));
     
     return token;
   } catch (error) {
     console.error('Error refreshing token:', error);
+    
+    // If there's an error, attempt to re-authenticate the user with Firestore
+    try {
+      if (auth.currentUser) {
+        // Get a token without forcing refresh
+        const recoveryToken = await auth.currentUser.getIdToken(false);
+        document.cookie = `firebase-token=${recoveryToken}; path=/; max-age=3600; SameSite=Lax${location.protocol === 'https:' ? '; Secure' : ''}`;
+        console.log('Recovery token set after error');
+        return recoveryToken;
+      }
+    } catch (recoveryError) {
+      console.error('Recovery attempt failed:', recoveryError);
+    }
+    
     return null;
   }
 }

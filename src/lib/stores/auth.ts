@@ -3,6 +3,7 @@ import type { User } from 'firebase/auth';
 import { auth } from '$lib/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import { getUserProfile } from '$lib/services/profile';
+import { browser } from '$app/environment';
 
 // Define a type for our user that includes additional fields
 export interface ExtendedUser extends User {
@@ -14,12 +15,26 @@ export interface ExtendedUser extends User {
   about?: string;
 }
 
+// Restore user from localStorage if available
+const storedUser = browser ? localStorage.getItem('youversity_user') : null;
+const initialUser = storedUser ? JSON.parse(storedUser) : null;
+
 function createUserStore() {
-  const { subscribe, set, update } = writable<ExtendedUser | null>(null);
+  const { subscribe, set, update } = writable<ExtendedUser | null>(initialUser);
 
   return {
     subscribe,
-    set,
+    set: (newUser: ExtendedUser | null) => {
+      // Save to localStorage if in browser
+      if (browser) {
+        if (newUser) {
+          localStorage.setItem('youversity_user', JSON.stringify(newUser));
+        } else {
+          localStorage.removeItem('youversity_user');
+        }
+      }
+      set(newUser);
+    },
     update,
     // Add a method to refresh the user data
     async refresh() {
@@ -46,15 +61,15 @@ function createUserStore() {
           };
           
           console.log('Setting user store with extended user:', extendedUser);
-          set(extendedUser);
+          this.set(extendedUser);
 
           return extendedUser;
         } catch (error) {
           console.error('Error refreshing user profile:', error);
-          set(currentUser as ExtendedUser);
+          this.set(currentUser as ExtendedUser);
         }
       } else {
-        set(null);
+        this.set(null);
       }
     }
   };
@@ -65,6 +80,12 @@ export const isAuthenticated = derived(user, $user => $user !== null);
 
 // Initialize auth state listener
 if (typeof window !== 'undefined') {
+  // Check localStorage first for quick restore
+  if (initialUser) {
+    console.log('Found user in localStorage, pre-loading auth state');
+    user.set(initialUser);
+  }
+  
   onAuthStateChanged(auth, async (firebaseUser) => {
     if (firebaseUser) {
       await user.refresh();

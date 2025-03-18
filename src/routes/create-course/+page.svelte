@@ -447,7 +447,8 @@
         console.log("API headers:", Object.fromEntries([...headersCheckResponse.headers.entries()]));
         // The 405 error is expected if we haven't implemented HEAD yet, so we catch and handle it
       } catch (headersError) {
-        console.log("API connection check failed (this is usually fine):", headersError.message);
+        console.log("API connection check failed (this is usually fine):", 
+          headersError instanceof Error ? headersError.message : "Unknown error");
       }
       
       // Make the actual API request

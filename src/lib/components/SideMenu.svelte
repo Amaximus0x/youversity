@@ -126,7 +126,7 @@
                     (item.href.includes('/settings') &&
                         $page?.url?.pathname === '/settings')
                         ? ''
-                        : 'opacity-60 group-hover:opacity-100 group-hover:[filter:invert(45%)_sepia(95%)_saturate(1648%)_hue-rotate(325deg)_brightness(97%)_contrast(91%)] dark:opacity-100 dark:invert dark:brightness-200 dark:group-hover:opacity-100 dark:group-hover:invert-0 dark:group-hover:brightness-100'}"
+                        : 'opacity-60 group-hover:opacity-100 group-hover:[filter:invert(45%)_sepia(95%)_saturate(1648%)_hue-rotate(325deg)_brightness(97%)_contrast(91%)] dark:opacity-100 dark:invert dark:brightness-200 '}"
                 />
                 <span
                     class="{$page?.url?.pathname === item.href.split('?')[0] ||
