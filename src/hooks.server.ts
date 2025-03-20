@@ -36,232 +36,159 @@ export const handle: Handle = async ({ event, resolve }) => {
   
   // Handle authentication
   try {
-    // First try to get token from cookie
-    let token = event.cookies.get('firebase-token');
-    let tokenSource = token ? 'cookie' : '';
-    
-    // If no cookie token, check for Authorization header with Bearer token
-    if (!token) {
-      const authHeader = event.request.headers.get('Authorization');
-      if (authHeader && authHeader.startsWith('Bearer ')) {
-        token = authHeader.substring(7); // Remove 'Bearer ' prefix
-        tokenSource = 'auth_header';
-        console.log(`Using Bearer token from Authorization header for ${event.url.pathname}`);
-      }
-    } else {
-      console.log(`Using token from cookie for ${event.url.pathname}`);
-    }
-    
-    // If still no token, check for X-Firebase-Token header
-    if (!token) {
-      const firebaseTokenHeader = event.request.headers.get('X-Firebase-Token');
-      if (firebaseTokenHeader) {
-        token = firebaseTokenHeader;
-        tokenSource = 'x_firebase_header';
-        console.log(`Using token from X-Firebase-Token header for ${event.url.pathname}`);
-      }
-    }
-    
-    // Use development mode token if in development
-    if (!token && isDevelopment) {
-      console.log(`DEV MODE: Using mock token for ${event.url.pathname}`);
-      // Create a mock token that won't be verified but will be recognized in dev
-      token = 'dev-mode-mock-token';
-      tokenSource = 'dev_mode_mock';
-    }
-    
-    // If still no token and this is a POST request, check the request body
-    if (!token && event.request.method === 'POST' && 
-        event.request.headers.get('Content-Type')?.includes('application/json')) {
-      try {
-        // Clone the request to avoid consuming the body
-        const clonedRequest = event.request.clone();
-        const body = await clonedRequest.json();
-        
-        if (body.token) {
-          token = body.token;
-          tokenSource = 'request_body';
-          console.log(`Using token from request body for ${event.url.pathname}`);
-        }
-      } catch (bodyReadError) {
-        console.error(`Error reading request body for token: ${bodyReadError}`);
-      }
-    }
+    // Extract the token using a centralized approach (cookie first, then headers)
+    const token = getAuthToken(event);
+    const tokenSource = token ? (token === 'dev-mode-mock-token' ? 'dev_mode' : 'valid_token') : 'no_token';
     
     if (token) {
-      console.log(`Token found for ${event.url.pathname} from ${tokenSource}. Token length: ${token.length}`);
-      
-      // In development mode, skip token verification to avoid Firebase issues
-      if (isDevelopment && tokenSource === 'dev_mode_mock') {
-        console.log(`DEV MODE: Skipping token verification for ${event.url.pathname}`);
-        event.locals.user = {
-          uid: 'dev-default-user-id',
-          email: 'dev-test@example.com',
-          email_verified: true,
-          aud: 'youversity-c8632',
-          auth_time: Math.floor(Date.now() / 1000),
-          exp: Math.floor(Date.now() / 1000) + 3600,
-          firebase: { sign_in_provider: 'custom', identities: {} },
-          iat: Math.floor(Date.now() / 1000),
-          iss: 'https://securetoken.google.com/youversity-c8632',
-          sub: 'dev-default-user-id'
-        };
-      } else {
-        console.log('AdminApp type:', typeof adminApp);
-        console.log('AdminApp has auth method:', !!adminApp.auth);
-        
-        if (adminApp.auth) {
+      // In development mode with mock token, create a fake user
+      if (isDevelopment && token === 'dev-mode-mock-token') {
+        event.locals.user = createDevUser('dev-default-user-id');
+      } 
+      // In all other cases, verify the token with Firebase Admin
+      else {
+        try {
           const auth = getAuth(adminApp);
-          try {
-            console.log(`Verifying token for ${event.url.pathname}...`);
-            const decodedToken = await auth.verifyIdToken(token);
-            event.locals.user = decodedToken;
-            console.log(`User authenticated for ${event.url.pathname}:`, decodedToken.uid);
-          } catch (tokenError) {
-            console.error(`Token verification error for ${event.url.pathname}:`, tokenError);
-            console.error(`Token that failed verification [first 20 chars]: ${token.substring(0, 20)}...`);
-            
-            // Try to parse the token to see if it's well-formed
-            try {
-              const tokenParts = token.split('.');
-              if (tokenParts.length === 3) {
-                const payload = JSON.parse(atob(tokenParts[1]));
-                console.log('Token payload:', payload);
-                console.log('Token expiration timestamp:', payload.exp);
-                console.log('Current timestamp:', Math.floor(Date.now() / 1000));
-                console.log('Token expired:', payload.exp < Math.floor(Date.now() / 1000));
-              } else {
-                console.error('Token is not in correct JWT format');
-              }
-            } catch (parseError) {
-              console.error('Error parsing token:', parseError);
-            }
-            
-            event.locals.user = null;
-          }
-        } else {
-          console.error(`Admin app auth not available for ${event.url.pathname}`);
+          const decodedToken = await auth.verifyIdToken(token);
+          event.locals.user = decodedToken;
+        } catch (tokenError) {
+          console.error(`Token verification failed for ${event.url.pathname}:`, tokenError);
           event.locals.user = null;
         }
       }
     } else {
-      console.log(`No token found for ${event.url.pathname} from any source`);
       event.locals.user = null;
+    }
+    
+    // Special handling for development
+    if (isDevelopment && !event.locals.user) {
+      // Handle X-Dev-Test-UID header for development testing
+      const devTestUID = event.request.headers.get('X-Dev-Test-UID');
+      
+      if (devTestUID) {
+        event.locals.user = createDevUser(devTestUID);
+      }
+      // Auto-create a dev user for protected API routes in development
+      else if (isProtectedApiEndpoint(event.url.pathname) && !isPublicApiEndpoint(event.url.pathname)) {
+        event.locals.user = createDevUser('dev-default-user-id');
+      }
+    }
+
+    // Handle unauthorized access to protected endpoints
+    if (isProtectedApiEndpoint(event.url.pathname) && 
+        !isPublicApiEndpoint(event.url.pathname) && 
+        !event.locals.user) {
+      return createErrorResponse(401, 'Authentication required to access this resource');
     }
   } catch (error) {
     console.error(`Auth error in hooks for ${event.url.pathname}:`, error);
     event.locals.user = null;
-  }
-
-  // Check if this is a protected API route
-  const isProtectedApiRoute = protectedApiRoutes.some(route => 
-    event.url.pathname.startsWith(route)
-  );
-  
-  // Check if this is a public API route
-  const isPublicApiRoute = publicApiRoutes.some(route => 
-    event.url.pathname.startsWith(route)
-  );
-  
-  // Special handling for development mode
-  if (isDevelopment && event.url.pathname.startsWith('/api/')) {
-    console.log(`DEV MODE: Special handling for API request to ${event.url.pathname}`);
     
-    // Always set a dev user in locals when in development mode for API routes
-    // This helps prevent Firestore auth issues in development
-    if (!event.locals.user && isProtectedApiRoute) {
-      const devTestUID = event.request.headers.get('X-Dev-Test-UID') || 'dev-default-user-id';
-      console.log(`DEV MODE: Creating test user with UID ${devTestUID} for ${event.url.pathname}`);
-      
-      event.locals.user = {
-        uid: devTestUID,
-        email: 'dev-test@example.com',
-        email_verified: true,
-        aud: 'youversity-c8632',
-        auth_time: Math.floor(Date.now() / 1000),
-        exp: Math.floor(Date.now() / 1000) + 3600,
-        firebase: { sign_in_provider: 'custom', identities: {} },
-        iat: Math.floor(Date.now() / 1000),
-        iss: 'https://securetoken.google.com/youversity-c8632',
-        sub: devTestUID
-      };
-      
-      // Skip further token verification in development mode for API routes
-      return await resolve(event);
+    // If this is a protected route and auth failed, return 401
+    if (isProtectedApiEndpoint(event.url.pathname) && !isPublicApiEndpoint(event.url.pathname)) {
+      return createErrorResponse(401, 'Authentication failed');
     }
   }
-  
-  // For development, allow a dev-test-uid header for testing
-  if (!event.locals.user && isDevelopment) {
-    // Check for test UID header
-    const devTestUID = event.request.headers.get('X-Dev-Test-UID');
-    
-    if (devTestUID) {
-      console.log(`DEV MODE: Using test UID ${devTestUID} for ${event.url.pathname}`);
-      event.locals.user = {
-        uid: devTestUID,
-        email: 'dev-test@example.com',
-        email_verified: true,
-        aud: 'mock-project-id',
-        auth_time: Math.floor(Date.now() / 1000),
-        exp: Math.floor(Date.now() / 1000) + 3600,
-        firebase: { sign_in_provider: 'custom', identities: {} },
-        iat: Math.floor(Date.now() / 1000),
-        iss: 'https://securetoken.google.com/mock-project-id',
-        sub: devTestUID
-      };
-    } 
-    // If we're in development mode and no X-Dev-Test-UID header, create a mock user for protected routes
-    else if (isProtectedApiRoute) {
-      console.log(`DEV MODE: Creating default test user for ${event.url.pathname}`);
-      event.locals.user = {
-        uid: 'dev-default-user-id',
-        email: 'dev-test@example.com',
-        email_verified: true,
-        aud: 'mock-project-id',
-        auth_time: Math.floor(Date.now() / 1000),
-        exp: Math.floor(Date.now() / 1000) + 3600,
-        firebase: { sign_in_provider: 'custom', identities: {} },
-        iat: Math.floor(Date.now() / 1000),
-        iss: 'https://securetoken.google.com/mock-project-id',
-        sub: 'dev-default-user-id'
-      };
-    }
-  }
-  
-  // If it's a protected API route and user is not authenticated, return 401
-  if (isProtectedApiRoute && !isPublicApiRoute && !event.locals.user) {
-    console.error(`Unauthorized access to ${event.url.pathname}`);
-    return new Response(JSON.stringify({ 
-      error: 'Unauthorized', 
-      message: 'Authentication required to access this resource' 
-    }), {
-      status: 401,
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': event.request.headers.get('origin') || '',
-        'Access-Control-Allow-Credentials': 'true',
-      }
-    });
-  }
 
-  // Add CORS headers
+  // Handle CORS preflight requests
   if (event.request.method === 'OPTIONS') {
-    return new Response(null, {
-      headers: {
-        'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-        'Access-Control-Allow-Origin': event.request.headers.get('origin') || '',
-        'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Firebase-Token, X-Server-Auth-UID',
-        'Access-Control-Allow-Credentials': 'true'
-      }
-    });
+    return createCorsResponse(null);
   }
 
   // Add CORS headers to all responses
   const response = await resolve(event);
+  return addCorsHeaders(response, event);
+};
+
+// Helper function to extract auth token from various sources
+function getAuthToken(event: any): string | null {
+  // Try cookie first (most secure)
+  const cookieToken = event.cookies.get('firebase-token');
+  if (cookieToken) {
+    return cookieToken;
+  }
+  
+  // Try Authorization header
+  const authHeader = event.request.headers.get('Authorization');
+  if (authHeader?.startsWith('Bearer ')) {
+    return authHeader.substring(7);
+  }
+  
+  // Try custom header
+  const customTokenHeader = event.request.headers.get('X-Firebase-Token');
+  if (customTokenHeader) {
+    return customTokenHeader;
+  }
+  
+  // For development mode only
+  if (isDevelopment) {
+    return 'dev-mode-mock-token';
+  }
+  
+  // No token found
+  return null;
+}
+
+// Helper function to create a development user
+function createDevUser(uid: string) {
+  return {
+    uid,
+    email: 'dev-test@example.com',
+    email_verified: true,
+    aud: 'youversity-c8632',
+    auth_time: Math.floor(Date.now() / 1000),
+    exp: Math.floor(Date.now() / 1000) + 3600,
+    firebase: { sign_in_provider: 'custom', identities: {} },
+    iat: Math.floor(Date.now() / 1000),
+    iss: 'https://securetoken.google.com/youversity-c8632',
+    sub: uid
+  };
+}
+
+// Check if a route is a protected API endpoint
+function isProtectedApiEndpoint(pathname: string): boolean {
+  return protectedApiRoutes.some(route => pathname.startsWith(route));
+}
+
+// Check if a route is a public API endpoint
+function isPublicApiEndpoint(pathname: string): boolean {
+  return publicApiRoutes.some(route => pathname.startsWith(route));
+}
+
+// Create a standardized error response with CORS headers
+function createErrorResponse(status: number, message: string): Response {
+  return createCorsResponse(JSON.stringify({ 
+    error: status === 401 ? 'Unauthorized' : 'Error', 
+    message 
+  }), {
+    status,
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  });
+}
+
+// Create a response with CORS headers
+function createCorsResponse(body: any, options: ResponseInit = {}): Response {
+  return new Response(body, {
+    ...options,
+    headers: {
+      ...options.headers,
+      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Firebase-Token, X-Server-Auth-UID, X-Dev-Test-UID',
+      'Access-Control-Allow-Credentials': 'true'
+    }
+  });
+}
+
+// Add CORS headers to an existing response
+function addCorsHeaders(response: Response, event: any): Response {
+  const origin = event.request.headers.get('origin') || '*';
   const newHeaders = new Headers(response.headers);
-  newHeaders.set('Access-Control-Allow-Origin', event.request.headers.get('origin') || '');
-  newHeaders.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Firebase-Token, X-Server-Auth-UID');
+  
+  newHeaders.set('Access-Control-Allow-Origin', origin);
+  newHeaders.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Firebase-Token, X-Server-Auth-UID, X-Dev-Test-UID');
   newHeaders.set('Access-Control-Allow-Credentials', 'true');
   
   return new Response(response.body, {
@@ -269,7 +196,7 @@ export const handle: Handle = async ({ event, resolve }) => {
     statusText: response.statusText,
     headers: newHeaders
   });
-};
+}
 
 // Set port for production
 if (process.env.NODE_ENV === 'production') {

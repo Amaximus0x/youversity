@@ -8,6 +8,9 @@
   } from "$lib/services/auth";
   import { page } from "$app/stores";
   import { default as OnboardingCarousel } from "$lib/components/OnboardingCarousel.svelte";
+  import { user, isAuthenticated, isAuthLoading, AuthStatus } from "$lib/stores/auth";
+  import { onMount } from "svelte";
+  import { goto } from "$app/navigation";
 
   let error: string | null = null;
   let successMessage: string | null = null;
@@ -55,15 +58,34 @@
     }
   }
 
+  // Check if user is already authenticated, redirect to dashboard
+  onMount(() => {
+    // Subscribe to auth state to detect when auth is complete
+    const unsubscribe = isAuthenticated.subscribe(($isAuthenticated) => {
+      // Get the intended redirect URL
+      const redirectTo = $page.url.searchParams.get("redirectTo") || "/dashboard";
+      
+      // Redirect user if they're already logged in
+      if ($isAuthenticated) {
+        goto(redirectTo);
+      }
+    });
+    
+    return unsubscribe;
+  });
+
   async function handleSignIn() {
     try {
       isGoogleLoading = true;
-      const redirectTo = $page.url.searchParams.get("redirectTo") || "/";
+      error = null;
+      
+      const redirectTo = $page.url.searchParams.get("redirectTo") || "/dashboard";
       await signInWithGoogle(redirectTo);
+      
+      // The redirect will be handled by onAuthStateChanged in auth.ts
     } catch (err) {
       console.error("Sign in error:", err);
       error = getReadableErrorMessage(err);
-    } finally {
       isGoogleLoading = false;
     }
   }
@@ -89,29 +111,32 @@
     isLoading = true;
     
     try {
-      const redirectTo = $page.url.searchParams.get("redirectTo") || "/";
+      const redirectTo = $page.url.searchParams.get("redirectTo") || "/dashboard";
+      
       if (isRegistering) {
         try {
           await registerWithEmail(email, password, redirectTo, {
             firstName,
             lastName,
           });
+          // Registration redirects automatically on success
         } catch (err: any) {
           if (err?.message?.includes("auth/email-already-in-use")) {
             isRegistering = false;
             error = "This email is already registered. Please sign in instead.";
             password = "";
+            isLoading = false;
             return;
           }
           throw err;
         }
       } else {
         await signInWithEmail(email, password, redirectTo);
+        // Login redirects automatically on success
       }
     } catch (err) {
       console.error("Authentication error:", err);
       error = getReadableErrorMessage(err);
-    } finally {
       isLoading = false;
     }
   }
@@ -130,10 +155,10 @@
       await resetPassword(email);
       successMessage = "Password reset email sent. Please check your inbox.";
       isResettingPassword = false;
+      isLoading = false;
     } catch (err) {
       console.error("Password reset error:", err);
       error = getReadableErrorMessage(err);
-    } finally {
       isLoading = false;
     }
   }
