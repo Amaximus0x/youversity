@@ -1,6 +1,7 @@
 <script lang="ts">
     import { page } from "$app/stores";
     import { goto } from "$app/navigation";
+    import { isAuthenticated } from "$lib/stores/auth";
 
     // Sidebar items configuration
     const sidebarItems = [
@@ -40,7 +41,7 @@
         class="w-[230px] pb-[24px] pt-[24px] flex flex-col items-start justify-center px-4"
     >
         <div class="w-[160px] h-[48.4px] relative">
-            <a href="/">
+            <a href={$isAuthenticated ? "/dashboard" : "/"}>
                 <div class="flex justify-start items-center">
                     <img
                         src="/YV.svg"
