@@ -5,6 +5,7 @@
     import { goto } from "$app/navigation";
     import { page } from "$app/stores";
     import { NotificationType } from "$lib/types/notification";
+    import { isAuthenticated } from "$lib/stores/auth";
 
     let selectedId: string | null = null;
 
@@ -62,7 +63,8 @@
             class="flex items-center justify-between p-4 pb-2 border-b border-light-border dark:border-dark-border"
         >
             <div class="flex items-center gap-2">
-                <button class="p-2" on:click={() => goto("/")}>
+                <!-- href={$isAuthenticated ? "/dashboard" : "/"} -->
+                <button class="p-2" on:click={() => $isAuthenticated ? goto("/dashboard") : goto("/")}>
                     <svg class="w-6 h-6 text-light-text-primary dark:text-dark-text-primary" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M4 12H20" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                         <path d="M8.99997 17C8.99997 17 4.00002 13.3176 4 12C3.99999 10.6824 9 7 9 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>

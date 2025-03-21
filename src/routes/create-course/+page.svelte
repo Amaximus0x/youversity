@@ -1042,6 +1042,7 @@
   </div>
 
   <!-- Mobile Generate Course Button -->
+   {#if allModulesLoaded && allModulesAreVisited}
   <div class="fixed md:hidden bottom-[8.5rem] z-50">
     <button
       class="px-4 py-3 rounded-lg shadow-lg flex items-center justify-center transition-all duration-200 gap-2 {!allModulesLoaded ||
@@ -1074,6 +1075,7 @@
       </div>
     </button>
   </div>
+  {/if}
 </div>
 
 <!-- Keep this for complete course generation -->
