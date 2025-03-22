@@ -325,10 +325,10 @@
               </div>
               <div class="flex flex-col justify-start items-start gap-4">
                 <h3 class="text-2xl lg:text-4xl font-bold text-light-text-secondary dark:text-dark-text-secondary leading-tight">
-                  Start Learning Simply enter what you Want to Learn
+                  Start Learning – Simply enter what you want to learn
                 </h3>
                 <p class="text-light-text-tertiary dark:text-dark-text-tertiary text-sm lg:text-base">
-                  Learning something new is easier than ever. Just enter a topic, and we'll provide personalized resources to guide you every step of the way.
+                  Learning something new has never been easier. Simply enter a topic, and we'll provide personalized resources to guide you every step of the way.
                 </p>
               </div>
               <div class="flex flex-col gap-4 w-full">
@@ -523,8 +523,8 @@
     </section>
 
     <!-- Testimonials Section -->
-    <section class="px-4 md:px-8 lg:px-24 w-full">
-      <div class="text-center mb-12">
+    <section class="px-4 md:px-8  mx-auto w-full max-w-6xl">
+      <div class="text-center mb-6 lg:mb-16">
         <h2
           class="text-h2-landing-mobile md:text-h2-landing text-light-text-secondary dark:text-dark-text-secondary"
         >
@@ -551,21 +551,18 @@
               <div
                 class="w-[143px] relative justify-center text-light-text-primary dark:text-white text-xl font-semibold font-['Poppins'] leading-7"
               >
-                Chantal John
+              Marie Klaus
               </div>
               <div
                 class="self-stretch relative justify-center text-light-text-tertiary dark:text-[#a2a2a2] text-sm font-medium font-['Poppins']"
               >
-                Kia Student
+              Digital Marketer
               </div>
             </div>
             <div
               class="self-stretch relative justify-center text-light-text-secondary dark:text-dark-text-secondary text-sm font-medium font-['Poppins']"
             >
-              It is a long established fact that a reader will be distracted by
-              the readable content of a page when looking at its layout. The
-              point of using Lorem Ipsum is that it has a more-or-less normal
-              distribution of letters, as opposed to using
+            Learning has been so interesting and easy since I started using Youversity. The quizzes make me pay more attention to the courses and understand them better, unlike just watching from YouTube.
             </div>
           </div>
         </div>
@@ -586,21 +583,18 @@
               <div
                 class="w-[143px] relative justify-center text-light-text-primary dark:text-white text-xl font-semibold font-['Poppins'] leading-7"
               >
-                Chantal John
+              James Larry
               </div>
               <div
                 class="self-stretch relative justify-center text-light-text-tertiary dark:text-[#a2a2a2] text-sm font-medium font-['Poppins']"
               >
-                Kia Student
+              Video Editor
               </div>
             </div>
             <div
               class="self-stretch relative justify-center text-light-text-secondary dark:text-dark-text-secondary text-sm font-medium font-['Poppins']"
             >
-              It is a long established fact that a reader will be distracted by
-              the readable content of a page when looking at its layout. The
-              point of using Lorem Ipsum is that it has a more-or-less normal
-              distribution of letters, as opposed to using
+            I’ve explored so many topics with Youversity. It’s simple, intuitive, and helps me learn at my own pace.
             </div>
           </div>
         </div>
@@ -619,21 +613,18 @@
               <div
                 class="w-[143px] relative justify-center text-light-text-primary dark:text-white text-xl font-semibold font-['Poppins'] leading-7"
               >
-                Chantal John
+              Jemilah
               </div>
               <div
                 class="self-stretch relative justify-center text-light-text-tertiary dark:text-[#a2a2a2] text-sm font-medium font-['Poppins']"
               >
-                Kia Student
+                Student
               </div>
             </div>
             <div
               class="self-stretch relative justify-center text-light-text-secondary dark:text-dark-text-secondary text-sm font-medium font-['Poppins']"
             >
-              It is a long established fact that a reader will be distracted by
-              the readable content of a page when looking at its layout. The
-              point of using Lorem Ipsum is that it has a more-or-less normal
-              distribution of letters, as opposed to using
+            Youversity makes learning so effortless. I love how I can dive into any topic and get structured guidance instantly.
             </div>
           </div>
         </div>
