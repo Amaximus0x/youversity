@@ -540,9 +540,9 @@
           class="mb-6 md:mb-0 md:w-[454px] inline-flex justify-start items-start gap-4"
         >
           <img
-            class="w-11 h-11 relative rounded-full"
-            src="/images/landing/profile-picture.png"
-            alt="Chantal John"
+            class="w-11 h-11 relative rounded-full object-cover"
+            src="/images/landing/Marie-Klaus.jpeg"
+            alt="Marie Klaus"
           />
           <div
             class="flex-1 md:w-[390px] inline-flex flex-col justify-start items-start gap-4"
@@ -572,9 +572,9 @@
           class="mb-6 md:mb-0 md:w-[454px] md:mt-16 inline-flex justify-start items-start gap-4"
         >
           <img
-            class="w-11 h-11 relative rounded-full"
-            src="/images/landing/profile-picture.png"
-            alt="Chantal John"
+            class="w-11 h-11 relative rounded-full object-cover"
+            src="/images/landing/James-Larry.jpeg"
+            alt="James Larry"
           />
           <div
             class="flex-1 md:w-[390px] inline-flex flex-col justify-start items-start gap-4"
@@ -602,9 +602,9 @@
         <!-- Third testimonial -->
         <div class="md:w-[454px] inline-flex justify-start items-start gap-4">
           <img
-            class="w-11 h-11 relative rounded-full"
-            src="/images/landing/profile-picture.png"
-            alt="Chantal John"
+            class="w-11 h-11 relative rounded-full object-cover"
+            src="/images/landing/Jemilah.jpeg"
+            alt="Jemilah"
           />
           <div
             class="flex-1 md:w-[390px] inline-flex flex-col justify-start items-start gap-4"
