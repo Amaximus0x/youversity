@@ -151,9 +151,9 @@
               
               <!-- Message Field -->
               <div class="flex flex-col gap-1">
-                <div class="text-light-text-primary dark:text-dark-text-primary text-semibody-medium mb-1">
+                <!-- <div class="text-light-text-primary dark:text-dark-text-primary text-semibody-medium mb-1">
                   How we can help?
-                </div>
+                </div> -->
                 <textarea 
                   bind:value={message} 
                   required
