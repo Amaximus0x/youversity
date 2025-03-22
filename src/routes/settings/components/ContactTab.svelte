@@ -150,14 +150,14 @@
                 type="text"
                 bind:value={firstName}
                 placeholder="First name"
-                class="w-full h-12 px-4 py-2 bg-white dark:bg-dark-bg-primary rounded-2xl border border-light-border dark:border-dark-border text-semi-body placeholder:text-light-text-tertiary dark:placeholder:text-dark-text-tertiary"
+                class="w-full h-12 px-4 py-2 text-light-text-primary dark:text-dark-text-primary bg-white dark:bg-dark-bg-primary rounded-2xl border border-light-border dark:border-dark-border text-semi-body placeholder:text-light-text-tertiary dark:placeholder:text-dark-text-tertiary"
                 required
               />
               <input
                 type="text"
                 bind:value={lastName}
                 placeholder="Last name"
-                class="w-full h-12 px-4 py-2 bg-white dark:bg-dark-bg-primary rounded-2xl border border-light-border dark:border-dark-border text-semi-body placeholder:text-light-text-tertiary dark:placeholder:text-dark-text-tertiary"
+                class="w-full h-12 px-4 py-2 text-light-text-primary dark:text-dark-text-primary bg-white dark:bg-dark-bg-primary rounded-2xl border border-light-border dark:border-dark-border text-semi-body placeholder:text-light-text-tertiary dark:placeholder:text-dark-text-tertiary"
                 required
               />
             </div>
@@ -172,7 +172,7 @@
               type="email"
               bind:value={email}
               placeholder="Enter email address"
-              class="w-full h-12 px-4 py-2 bg-white dark:bg-dark-bg-primary rounded-2xl border border-light-border dark:border-dark-border text-semi-body placeholder:text-light-text-tertiary dark:placeholder:text-dark-text-tertiary"
+              class="w-full h-12 px-4 py-2 text-light-text-primary dark:text-dark-text-primary bg-white dark:bg-dark-bg-primary rounded-2xl border border-light-border dark:border-dark-border text-semi-body placeholder:text-light-text-tertiary dark:placeholder:text-dark-text-tertiary"
               required
             />
           </div>
@@ -182,7 +182,7 @@
             <textarea
               bind:value={message}
               placeholder="How we can help?"
-              class="w-full h-[135px] px-4 py-2 bg-white dark:bg-dark-bg-primary rounded-2xl border border-light-border dark:border-dark-border text-semi-body placeholder:text-light-text-tertiary dark:placeholder:text-dark-text-tertiary resize-none"
+              class="w-full h-[135px] px-4 py-2 text-light-text-primary dark:text-dark-text-primary bg-white dark:bg-dark-bg-primary rounded-2xl border border-light-border dark:border-dark-border text-semi-body placeholder:text-light-text-tertiary dark:placeholder:text-dark-text-tertiary resize-none"
               required
             />
           </div>
