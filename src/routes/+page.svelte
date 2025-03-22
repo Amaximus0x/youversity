@@ -541,7 +541,7 @@
         >
           <img
             class="w-11 h-11 relative rounded-full object-cover"
-            src="/images/landing/Marie Klaus.jpeg"
+            src="/images/landing/Marie-Klaus.jpeg"
             alt="Marie Klaus"
           />
           <div
@@ -573,7 +573,7 @@
         >
           <img
             class="w-11 h-11 relative rounded-full object-cover"
-            src="/images/landing/James Larry.jpeg"
+            src="/images/landing/James-Larry.jpeg"
             alt="James Larry"
           />
           <div
