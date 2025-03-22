@@ -20,6 +20,7 @@
   let showQuizResult = false;
   let quizScore = 0;
   let startTime: Date;
+  let isLoading = false;
 
   // Track if all questions are answered
   $: isAllAnswered = quiz?.quiz.every((_, index) => selectedAnswers[index] !== undefined) || false;
@@ -47,6 +48,7 @@
   }
 
   async function handleSubmit() {
+    isLoading = true;
     const endTime = new Date();
     const timeSpent = Math.round((endTime.getTime() - startTime.getTime()) / 1000); // in seconds
     quizScore = calculateScore();
@@ -89,6 +91,8 @@
       }
     } catch (error) {
       console.error('Error updating quiz result:', error);
+    } finally {
+      isLoading = false;
     }
     
     // Store quiz data in the store for the result page
@@ -135,21 +139,20 @@
 
 <div class="w-full -mx-5 min-h-[calc(100vh-85px)] flex flex-col">
   <!-- Mobile Layout -->
-  <div class="lg:hidden flex flex-col min-h-[calc(100vh-85px)]">
+  <div class="lg:hidden flex flex-col min-h-[calc(100vh-70px)]">
       <!-- Mobile header -->
-      <div class="w-[calc(100%+40px)] -mr-5 sticky top-[85px] z-40 bg-BackgroundRed">
-          <div class="px-5 pt-1 pb-4">
+      <div class="w-[calc(100%+40px)] -mr-5 sticky top-[70px] z-40 bg-light-bg-secondary dark:bg-dark-bg-secondary">
+          <div class="px-5 pt-6 pb-4">
               <div class="flex  gap-2 items-start">
                   <!-- back button -->
                   <button
                       class="flex items-center gap-2 text-Black hover:opacity-70"
                       on:click={() => goto(`/course/${$page.params.id}`)}
                   >
-                      <img
-                          src="/icons/arrow-left.svg"
-                          alt="Back"
-                          class="w-6 h-6"
-                      />
+                  <svg class="w-6 h-6 text-light-text-primary dark:text-dark-text-primary" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M4 12H20" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M8.99997 17C8.99997 17 4.00002 13.3176 4 12C3.99999 10.6824 9 7 9 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
                   </button>
                   <!-- quiz title -->
                   
@@ -166,7 +169,7 @@
           <!-- Questions -->
           <div class="space-y-8">
               {#each quiz.quiz as question, index}
-                  <div class="flex flex-col gap-4 text-body-semibold">
+                  <div class="flex flex-col gap-4 text-body-semibold text-light-text-primary dark:text-dark-text-primary">
                       <div class="flex items-start gap-2">
                           <p>
                               {index + 1}. 
@@ -199,7 +202,7 @@
                                           </svg>
                                       </div>
                                   </div>
-                                  <span class="text-semi-body text-Black group-hover:opacity-90">
+                                  <span class="text-semi-body text-light-text-secondary dark:text-dark-text-secondary group-hover:opacity-90">
                                       {value}
                                   </span>
                               </label>
@@ -214,17 +217,22 @@
               <button
                   class="w-full px-4 py-2 rounded-lg text-body transition-colors flex items-center justify-center gap-2 {isAllAnswered 
                       ? 'bg-brand-red hover:bg-ButtonHover text-white' 
-                      : 'bg-Black/5 text-light-text-tertiary'}"
-                  disabled={!isAllAnswered}
+                      : 'bg-Black/5 dark:bg-White/10 text-light-text-tertiary dark:text-dark-text-tertiary'}"
+                  disabled={!isAllAnswered || isLoading}
                   on:click={handleSubmit}
               >
-                  Submit
-                  <svg width="25" height="24" viewBox="0 0 25 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <g id="arrow-right">
-                      <path id="Vector" d="M20.5 12H4.50002" stroke={isAllAnswered ? "white" : "Grey"} stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                      <path id="Vector_2" d="M15.5 17C15.5 17 20.5 13.3176 20.5 12C20.5 10.6824 15.5 7 15.5 7" stroke={isAllAnswered ? "white" : "Grey"} stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                  </g>
-              </svg>
+                  {#if isLoading}
+                    <div class="spinner w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <span>Submitting...</span>
+                  {:else}
+                    <span>Submit</span>
+                    <svg width="25" height="24" viewBox="0 0 25 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <g id="arrow-right">
+                        <path id="Vector" d="M20.5 12H4.50002" stroke={isAllAnswered ? "white" : "Grey"} stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path id="Vector_2" d="M15.5 17C15.5 17 20.5 13.3176 20.5 12C20.5 10.6824 15.5 7 15.5 7" stroke={isAllAnswered ? "white" : "Grey"} stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                      </g>
+                    </svg>
+                  {/if}
               </button>
           </div>
       </div>
@@ -251,6 +259,9 @@
   color: rgba(0, 0, 0, 0.2);
   transition: all 0.2s ease-in-out;
 }
+:global(.dark) .radio-circle {
+        color: rgba(255, 255, 255, 0.1);
+    }
 
 input[type="radio"]:checked + .radio-circle {
   color: #EE434A;  /* brand-red color */
@@ -297,5 +308,21 @@ input[type="radio"]:focus + .radio-circle {
   background-color: #EE434A;
   border-radius: 20px;
   border: none;
+}
+
+.spinner {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 2px solid #ffffff;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 </style>

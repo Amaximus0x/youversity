@@ -125,15 +125,15 @@
             <div
                 class="pt-4 h-[122px] flex-col justify-start items-center inline-flex"
             >
-                <div class="px-2.5 py-1 bg-black/5 rounded-[20px]">
+                <div class="px-2.5 py-1 bg-black/5 dark:bg-White/10 rounded-[20px]">
                     <div
-                        class="text-black text-base font-normal font-['Poppins'] leading-normal"
+                        class="text-black dark:text-white text-base font-normal font-['Poppins'] leading-normal"
                     >
                         Your score
                     </div>
                 </div>
                 <div
-                    class="w-[123px] h-[90px] text-center text-black text-5xl font-bold font-['Poppins'] leading-[104px]"
+                    class="w-[123px] h-[90px] text-center text-black dark:text-white text-5xl font-bold font-['Poppins'] leading-[104px]"
                 >
                     {score}%
                 </div>
@@ -154,10 +154,10 @@
 
         <!-- Footer -->
         <div
-            class="w-full mt-4 px-4 lg:px-2.5 py-4 flex flex-col gap-2.5 items-center justify-center border-t border-light-border dark:border-dark-border"
+            class="w-full mt-4 px-4 lg:px-2.5 py-4 flex flex-col gap-2.5 items-center justify-center"
         >
             {#if score >= 80}
-                <div class="flex flex-col gap-2.5">
+                <div class="w-full flex flex-col gap-2.5">
                     <button
                         class="w-full lg:w-[300px] px-4 py-2 bg-brand-red hover:bg-ButtonHover text-white rounded-2xl text-semi-body transition-colors"
                         on:click={handleContinue}
@@ -169,7 +169,7 @@
                         {/if}
                     </button>
                     <button
-                        class="w-full lg:w-[300px] px-4 py-2 bg-Green text-dark-text-primary dark:text-dark-text-primary rounded-2xl text-semi-body transition-colors"
+                        class="w-full lg:w-[300px] px-4 py-2 bg-Green dark:bg-Green2 text-dark-text-primary dark:text-dark-text-primary rounded-2xl text-semi-body transition-colors"
                         on:click={handleReview}
                         >Review answers
                     </button>
