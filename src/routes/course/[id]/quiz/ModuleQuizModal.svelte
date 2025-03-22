@@ -397,7 +397,7 @@
 
                     <!-- Footer with Submit Button -->
                     <div
-                        class="flex-shrink-0 flex justify-end items-center px-2.5 py-4 border-t border-light-border dark:border-dark-border"
+                        class="flex-shrink-0 flex justify-end items-center px-2.5 pt-4 border-t border-light-border dark:border-dark-border"
                     >
                 <button
                     class="px-4 py-2 rounded-lg text-semibody-medium transition-colors flex items-center justify-center gap-2 {isAllAnswered 
