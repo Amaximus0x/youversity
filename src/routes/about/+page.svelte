@@ -2,6 +2,7 @@
   import LandingHeader from '$lib/components/LandingHeader.svelte';
   import Footer from '$lib/components/Footer.svelte';
   import { theme } from '$lib/stores/theme';
+    import { goto } from '$app/navigation';
 </script>
 
 <div class="min-h-screen flex flex-col bg-gradient-light dark:bg-gradient-dark">
@@ -19,7 +20,7 @@
     </div>
       
     <!-- Screenshot/Demo Image -->
-    <div class="relative rounded-xl overflow-hidden">
+    <div class="relative rounded-xl overflow-hidden max-w-[1200 px] mx-auto">
       {#if $theme === 'light'}
         <img src="/images/landing/CourseModule-Enrolled-Light.png" alt="Youversity course module interface - light mode" class="w-full h-auto" />
       {:else}
@@ -70,7 +71,7 @@
    
     
     <!-- Testimonials Section -->
-    <section class="px-4 md:px-8 lg:px-24 w-full">
+    <section class="px-4  w-full max-w-[1200px] mx-auto">
       <div class="text-center mb-12">
         <h2
           class="text-h2-landing-mobile md:text-h2-landing text-light-text-secondary dark:text-dark-text-secondary"
@@ -86,11 +87,11 @@
         <div
           class="mb-6 md:mb-0 md:w-[454px] inline-flex justify-start items-start gap-4"
         >
-          <img
-            class="w-11 h-11 relative rounded-full"
-            src="/images/landing/profile-picture.png"
-            alt="Chantal John"
-          />
+        <img
+        class="w-11 h-11 relative rounded-full object-cover"
+        src="/images/landing/Marie-Klaus.jpeg"
+        alt="Marie Klaus"
+      />
           <div
             class="flex-1 md:w-[390px] inline-flex flex-col justify-start items-start gap-4"
           >
@@ -98,21 +99,18 @@
               <div
                 class="w-[143px] relative justify-center text-light-text-primary dark:text-dark-text-primary text-xl font-semibold font-['Poppins'] leading-7"
               >
-                Chantal John
+                Marie Klaus
               </div>
               <div
                 class="self-stretch relative justify-center text-light-text-tertiary dark:text-dark-text-tertiary text-sm font-medium font-['Poppins']"
               >
-                Kia Student
+                Digital Marketer
               </div>
             </div>
             <div
               class="self-stretch relative justify-center text-light-text-secondary dark:text-dark-text-secondary text-sm font-medium font-['Poppins']"
             >
-              It is a long established fact that a reader will be distracted by
-              the readable content of a page when looking at its layout. The
-              point of using Lorem Ipsum is that it has a more-or-less normal
-              distribution of letters, as opposed to using
+              Learning has been so interesting and easy since I started using Youversity. The quizzes make me pay more attention to the courses and understand them better, unlike just watching from YouTube.
             </div>
           </div>
         </div>
@@ -121,11 +119,11 @@
         <div
           class="mb-6 md:mb-0 md:w-[454px] md:mt-16 inline-flex justify-start items-start gap-4"
         >
-          <img
-            class="w-11 h-11 relative rounded-full"
-            src="/images/landing/profile-picture.png"
-            alt="Chantal John"
-          />
+        <img
+        class="w-11 h-11 relative rounded-full object-cover"
+        src="/images/landing/James-Larry.jpeg"
+        alt="James Larry"
+      />
           <div
             class="flex-1 md:w-[390px] inline-flex flex-col justify-start items-start gap-4"
           >
@@ -133,21 +131,18 @@
               <div
                 class="w-[143px] relative justify-center text-light-text-primary dark:text-dark-text-primary text-xl font-semibold font-['Poppins'] leading-7"
               >
-                Chantal John
+                James Larry
               </div>
               <div
                 class="self-stretch relative justify-center text-light-text-tertiary dark:text-dark-text-tertiary text-sm font-medium font-['Poppins']"
               >
-                Kia Student
+                Video Editor
               </div>
             </div>
             <div
               class="self-stretch relative justify-center text-light-text-secondary dark:text-dark-text-secondary text-sm font-medium font-['Poppins']"
             >
-              It is a long established fact that a reader will be distracted by
-              the readable content of a page when looking at its layout. The
-              point of using Lorem Ipsum is that it has a more-or-less normal
-              distribution of letters, as opposed to using
+              I’ve explored so many topics with Youversity. It’s simple, intuitive, and helps me learn at my own pace.
             </div>
           </div>
         </div>
@@ -155,9 +150,9 @@
         <!-- Third testimonial -->
         <div class="md:w-[454px] inline-flex justify-start items-start gap-4">
           <img
-            class="w-11 h-11 relative rounded-full"
-            src="/images/landing/profile-picture.png"
-            alt="Chantal John"
+            class="w-11 h-11 relative rounded-full object-cover"
+            src="/images/landing/Jemilah.jpeg"
+            alt="Jemilah"
           />
           <div
             class="flex-1 md:w-[390px] inline-flex flex-col justify-start items-start gap-4"
@@ -166,21 +161,18 @@
               <div
                 class="w-[143px] relative justify-center text-light-text-primary dark:text-dark-text-primary text-xl font-semibold font-['Poppins'] leading-7"
               >
-                Chantal John
+                Jemilah
               </div>
               <div
                 class="self-stretch relative justify-center text-light-text-tertiary dark:text-dark-text-tertiary text-sm font-medium font-['Poppins']"
               >
-                Kia Student
+                Student
               </div>
             </div>
             <div
               class="self-stretch relative justify-center text-light-text-secondary dark:text-dark-text-secondary text-sm font-medium font-['Poppins']"
             >
-              It is a long established fact that a reader will be distracted by
-              the readable content of a page when looking at its layout. The
-              point of using Lorem Ipsum is that it has a more-or-less normal
-              distribution of letters, as opposed to using
+              Youversity makes learning so effortless. I love how I can dive into any topic and get structured guidance instantly.
             </div>
           </div>
         </div>
@@ -234,11 +226,12 @@
                 />
               </g>
             </svg>
-            <div
+            <button
+              on:click={() => goto("/login")}
               class="relative justify-center text-white text-base font-semibold font-['Poppins'] leading-normal"
             >
               Get Started
-            </div>
+            </button>
           </div>
         </div>
       </div>
