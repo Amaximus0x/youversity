@@ -761,115 +761,157 @@
 <div
   class="min-h-screen bg-light-background-secondary md:bg-light-background-secondary"
 >
-  <!-- Fixed Header Section for Mobile -->
-  <div
-    class="md:hidden fixed top-[70px] left-0 right-0 z-40 bg-light-bg-secondary dark:bg-dark-bg-secondary"
-  >
-    <div class=" pt-4 pb-4">
-      <div class="px-4">
-        <CourseGenerationHeader />
-      </div>
-
-      {#if courseStructure}
+  <div class="md:hidden flex flex-col min-h-screen">
+    <!-- Top Navigation Bar Space -->
+    <div class=" w-full"></div>
+    
+    <!-- Fixed Header Section for Mobile -->
+    <div
+      class="md:hidden sticky  top-[70px] z-40 bg-light-bg-secondary dark:bg-dark-bg-secondary shadow-sm"
+    >
+      <div class="pt-4 pb-4">
         <div class="px-4">
-          <h1 class="text-h2-mobile-bold mt-4 mb-2 text-Black dark:text-White">
-            {courseStructure.OG_Course_Title}
-          </h1>
-          <p
-            class="text-semi-body mb-4 opacity-80 text-light-text-secondary dark:text-dark-text-secondary"
-          >
-            {courseStructure.OG_Course_Objective}
-          </p>
+          <CourseGenerationHeader />
         </div>
 
-        <!-- Module Navigation -->
-        <div
-          class="flex gap-2 overflow-x-auto whitespace-nowrap pl-4 pb-2 scrollbar-hide"
-        >
-          {#each courseStructure.OG_Module_Title as moduleTitle, index}
-            {@const isActive = currentModuleIndex === index}
-            {@const isNextUnvisited = !visitedModules[index] && index === getNextUnvisitedModuleIndex()}
-            <button
-              class="px-4 py-2 rounded-lg whitespace-nowrap transition-all duration-200 
-              {isActive
-                ? 'text-body-semibold bg-Green dark:bg-Green2 text-white'
-                : isNextUnvisited
-                  ? 'text-body bg-Black/5 dark:bg-White/10 hover:bg-gray-200 border-2 border-Green2 animate-text-only'
-                  : 'text-body bg-Black/5 dark:bg-White/10 text-Green dark:text-Green2 hover:bg-gray-200'}"
-              on:click={() => selectModule(index)}
+        {#if courseStructure}
+          <div class="px-4">
+            <h1 class="text-h2-mobile-bold mt-4 mb-2 text-Black dark:text-White">
+              {courseStructure.OG_Course_Title}
+            </h1>
+            <p
+              class="text-semi-body mb-4 opacity-80 text-light-text-secondary dark:text-dark-text-secondary"
             >
-              Module {index + 1}
-            </button>
-          {/each}
+              {courseStructure.OG_Course_Objective}
+            </p>
+          </div>
+
+          <!-- Module Navigation -->
+          <div
+            class="flex gap-2 overflow-x-auto whitespace-nowrap pl-4 pb-2 scrollbar-hide"
+          >
+            {#each courseStructure.OG_Module_Title as moduleTitle, index}
+              {@const isActive = currentModuleIndex === index}
+              {@const isNextUnvisited = !visitedModules[index] && index === getNextUnvisitedModuleIndex()}
+              <button
+                class="px-4 py-2 rounded-lg whitespace-nowrap transition-all duration-200 
+                {isActive
+                  ? 'text-body-semibold bg-Green dark:bg-Green2 text-white'
+                  : isNextUnvisited
+                    ? 'text-body bg-Black/5 dark:bg-White/10 hover:bg-gray-200 border-2 border-Green2 animate-text-only'
+                    : 'text-body bg-Black/5 dark:bg-White/10 text-Green dark:text-Green2 hover:bg-gray-200'}"
+                on:click={() => selectModule(index)}
+              >
+                Module {index + 1}
+              </button>
+            {/each}
+          </div>
+        {/if}
+      </div>
+    </div>
+
+    <!-- Mobile Scrollable Content -->
+    <div class="md:hidden flex-1 px-4 pb-32">
+      {#if courseStructure}
+        <div class="space-y-6 pt-6">
+          <!-- Module Content -->
+          <div class="rounded-xl mb-20">
+            <div class="flex items-center gap-8 lg:justify-between mb-6">
+              <div class="flex items-center justify-center gap-2 lg:gap-4">
+                <h2
+                  class="text-body-semibold lg:text-h4-medium text-Black dark:text-White"
+                >
+                  Module {currentModuleIndex + 1}: {courseStructure
+                    .OG_Module_Title[currentModuleIndex]}
+                </h2>
+                <button
+                  class=" text-[#42C1C8] hover:text-[#2A4D61] rounded-full transition-colors duration-200"
+                  on:click={() =>
+                    handleRegenerateModuleVideos(currentModuleIndex)}
+                >
+                  <svg
+                    class="w-5 h-5"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M15.1667 1L15.7646 2.11777C16.1689 2.87346 16.371 3.25131 16.2374 3.41313C16.1037 3.57495 15.6635 3.44426 14.7831 3.18288C13.9029 2.92155 12.9684 2.78095 12 2.78095C6.75329 2.78095 2.5 6.90846 2.5 12C2.5 13.6791 2.96262 15.2535 3.77093 16.6095M8.83333 23L8.23536 21.8822C7.83108 21.1265 7.62894 20.7486 7.7626 20.5868C7.89627 20.425 8.33649 20.5557 9.21689 20.8171C10.0971 21.0784 11.0316 21.219 12 21.219C17.2467 21.219 21.5 17.0915 21.5 12C21.5 10.3208 21.0374 8.74647 20.2291 7.39047"
+                    />
+                  </svg>
+                </button>
+              </div>
+              <button
+                class="text-nowrap bg-brand-red hover:bg-ButtonHover text-mini-body lg:text-semi-body text-white px-2 py-2 rounded-lg flex items-center gap-2 transition-colors duration-200"
+                on:click={() => (showCustomUrlInput = true)}
+              >
+                Add Custom Video
+                <Plus class="w-4 h-4 lg:w-6 lg:h-6" />
+              </button>
+            </div>
+
+            {#if showCustomUrlInput}
+              <div class="mb-6">
+                <YoutubeUrlInput
+                  moduleIndex={currentModuleIndex}
+                  onVideoAdd={handleCustomVideoAdd}
+                  moduleTitle={courseStructure?.OG_Module_Title[
+                    currentModuleIndex
+                  ] || ""}
+                  onClose={() => (showCustomUrlInput = false)}
+                />
+              </div>
+            {/if}
+
+            <ModuleVideoGrid
+              {courseStructure}
+              bind:moduleVideos
+              bind:selectedVideos
+              {currentModuleIndex}
+              {error}
+            />
+          </div>
         </div>
       {/if}
     </div>
-  </div>
-  <!-- Mobile Scrollable Content -->
-  <div class="md:hidden mt-[calc(140px+env(safe-area-inset-top)+294px)] pb-32">
-    {#if courseStructure}
-      <div class="space-y-6">
-        <!-- Module Content -->
-        <div class=" rounded-xl">
-          <div class="flex items-center gap-8 lg:justify-between mb-6">
-            <div class="flex items-center justify-center gap-2 lg:gap-4">
-              <h2
-                class="text-body-semibold lg:text-h4-medium text-Black dark:text-White"
-              >
-                Module {currentModuleIndex + 1}: {courseStructure
-                  .OG_Module_Title[currentModuleIndex]}
-              </h2>
-              <button
-                class=" text-[#42C1C8] hover:text-[#2A4D61] rounded-full transition-colors duration-200"
-                on:click={() =>
-                  handleRegenerateModuleVideos(currentModuleIndex)}
-              >
-                <svg
-                  class="w-5 h-5"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    d="M15.1667 1L15.7646 2.11777C16.1689 2.87346 16.371 3.25131 16.2374 3.41313C16.1037 3.57495 15.6635 3.44426 14.7831 3.18288C13.9029 2.92155 12.9684 2.78095 12 2.78095C6.75329 2.78095 2.5 6.90846 2.5 12C2.5 13.6791 2.96262 15.2535 3.77093 16.6095M8.83333 23L8.23536 21.8822C7.83108 21.1265 7.62894 20.7486 7.7626 20.5868C7.89627 20.425 8.33649 20.5557 9.21689 20.8171C10.0971 21.0784 11.0316 21.219 12 21.219C17.2467 21.219 21.5 17.0915 21.5 12C21.5 10.3208 21.0374 8.74647 20.2291 7.39047"
-                  />
-                </svg>
-              </button>
-            </div>
-            <button
-              class="text-nowrap bg-brand-red hover:bg-ButtonHover text-mini-body lg:text-semi-body text-white px-2 py-2 rounded-lg flex items-center gap-2 transition-colors duration-200"
-              on:click={() => (showCustomUrlInput = true)}
-            >
-              Add Custom Video
-              <Plus class="w-4 h-4 lg:w-6 lg:h-6" />
-            </button>
-          </div>
 
-          {#if showCustomUrlInput}
-            <div class="mb-6">
-              <YoutubeUrlInput
-                moduleIndex={currentModuleIndex}
-                onVideoAdd={handleCustomVideoAdd}
-                moduleTitle={courseStructure?.OG_Module_Title[
-                  currentModuleIndex
-                ] || ""}
-                onClose={() => (showCustomUrlInput = false)}
-              />
-            </div>
-          {/if}
-
-          <ModuleVideoGrid
-            {courseStructure}
-            bind:moduleVideos
-            bind:selectedVideos
-            {currentModuleIndex}
-            {error}
-          />
+    <!-- Mobile Generate Course Button -->
+    {#if allModulesLoaded && allModulesAreVisited}
+    <div class="fixed md:hidden bottom-[8.5rem] z-50">
+      <button
+        class="px-4 py-3 rounded-lg shadow-lg flex items-center justify-center transition-all duration-200 gap-2 {!allModulesLoaded ||
+        !courseStructure?.OG_Module_Title.every(
+          (_, index) => selectedVideos[index] !== undefined,
+        ) || !allModulesAreVisited
+          ? 'bg-white cursor-not-allowed text-Grey'
+          : 'bg-brand-red hover:bg-ButtonHover text-white'}"
+        on:click={handleSaveCourse}
+        disabled={!allModulesLoaded ||
+          !courseStructure?.OG_Module_Title.every(
+            (_, index) => selectedVideos[index] !== undefined,
+          ) || !allModulesAreVisited}
+      >
+        <div class="flex items-center gap-2">
+          <span class="text-body">Complete Creating Course</span>
+          <svg
+            class="w-5 h-5 {!allModulesLoaded || !allModulesAreVisited ? 'fill-Grey' : ''}"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M14 5l7 7m0 0l-7 7m7-7H3"
+            />
+          </svg>
         </div>
-      </div>
+      </button>
+    </div>
     {/if}
   </div>
 
@@ -1042,7 +1084,7 @@
   </div>
 
   <!-- Mobile Generate Course Button -->
-   {#if allModulesLoaded && allModulesAreVisited}
+   <!-- {#if allModulesLoaded && allModulesAreVisited}
   <div class="fixed md:hidden bottom-[8.5rem] z-50">
     <button
       class="px-4 py-3 rounded-lg shadow-lg flex items-center justify-center transition-all duration-200 gap-2 {!allModulesLoaded ||
@@ -1075,7 +1117,7 @@
       </div>
     </button>
   </div>
-  {/if}
+  {/if} -->
 </div>
 
 <!-- Keep this for complete course generation -->
@@ -1091,7 +1133,10 @@
     scrollbar-width: none;
   }
   
-
+  /* Add dynamic header height class */
+  .h-header {
+    height: var(--header-height, 220px);
+  }
   
   @keyframes text-only-animation {
     0%, 100% {
