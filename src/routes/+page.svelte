@@ -266,7 +266,7 @@
 
 
        <!-- Content image Section -->
-       <section class="pt-10 mb-28 px-4 md:px-8 lg:px-24 relative overflow-hidden w-full" id="thumbnailContainer" style="display: block;">
+       <section class="pt-10 mb-28 px-4 md:px-8 lg:px-24 relative overflow-hidden w-full max-w-[1400px] mx-auto" id="thumbnailContainer" style="display: block;">
         <div class="relative">
             <img
               src={$theme === "light" ? "/images/landing/home-light.png" : "/images/landing/home-dark.png"}
