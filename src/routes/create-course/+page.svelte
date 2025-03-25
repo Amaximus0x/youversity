@@ -767,15 +767,15 @@
     
     <!-- Fixed Header Section for Mobile -->
     <div
-      class="md:hidden sticky  top-[70px] z-40 bg-light-bg-secondary dark:bg-dark-bg-secondary shadow-sm"
+      class="md:hidden sticky  top-[70px] z-40 bg-light-bg-secondary dark:bg-dark-bg-secondary shadow-sm -mx-6"
     >
-      <div class="pt-4 pb-4">
-        <div class="px-4">
+      <div class="pt-4 pb-2 ">
+        <div class="px-6">
           <CourseGenerationHeader />
         </div>
 
         {#if courseStructure}
-          <div class="px-4">
+          <div class="px-6">
             <h1 class="text-h2-mobile-bold mt-4 mb-2 text-Black dark:text-White">
               {courseStructure.OG_Course_Title}
             </h1>
@@ -811,12 +811,12 @@
     </div>
 
     <!-- Mobile Scrollable Content -->
-    <div class="md:hidden flex-1 px-4 pb-32">
+    <div class="md:hidden flex-1 mb-[-100px]">
       {#if courseStructure}
         <div class="space-y-6 pt-6">
           <!-- Module Content -->
           <div class="rounded-xl mb-20">
-            <div class="flex items-center gap-8 lg:justify-between mb-6">
+            <div class="flex items-center gap-4 lg:gap-8 lg:justify-between mb-6">
               <div class="flex items-center justify-center gap-2 lg:gap-4">
                 <h2
                   class="text-body-semibold lg:text-h4-medium text-Black dark:text-White"
