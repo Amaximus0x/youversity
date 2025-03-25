@@ -279,7 +279,7 @@
         ></div>
       </section>
 
-      <section class="py-20 px-4 md:px-8 lg:px-24 relative overflow-hidden w-full" id="videoContainer" style="display: none;">
+      <section class="py-16 px-4 md:px-8 lg:px-24 relative overflow-hidden w-full" id="videoContainer" style="display: none;">
         <!-- Demo Video Section -->
         <div class="video-wrapper relative w-full max-w-[1200px] mx-auto">
           <div class="notch" id="videoNotch" style="display: none;"></div>
