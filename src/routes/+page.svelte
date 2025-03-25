@@ -11,6 +11,7 @@
   let isMobile = false;
   let showLoadingOverlay = false;
   let showCreationOverlay = false;
+  let videoUrl = "https://cdn.shopify.com/videos/c/o/v/a455dbe294d94b78aa66d58d672f9845.mp4"
 
   // Redirect authenticated users to dashboard
   onMount(() => {
@@ -279,22 +280,23 @@
         ></div>
       </section>
 
-      <section class="py-20 px-4 md:px-8 lg:px-24 relative overflow-hidden w-full" id="videoContainer" style="display: none;">
+      <section class="py-16 px-4 md:px-8 lg:px-24 relative overflow-hidden w-full" id="videoContainer" style="display: none;">
         <!-- Demo Video Section -->
         <div class="video-wrapper relative w-full max-w-[1200px] mx-auto">
           <div class="notch" id="videoNotch" style="display: none;"></div>
           <div class="relative w-full rounded-2xl overflow-hidden border-[19px] border-[#303030] shadow-[0px_0px_68px_0px_#00000052]" >
             <!-- YouTube Embed with more parameters -->
             <div class="aspect-video w-full">
-              <iframe
+              <video
                 class="w-full h-full pointer-events-none"
-                src="https://www.youtube.com/embed/LdWqyrSIb4s?autoplay=1&mute=1&loop=1&playlist=LdWqyrSIb4s&controls=0&showinfo=0&rel=0&modestbranding=1&iv_load_policy=3&playsinline=1&enablejsapi=1&origin=localhost:3000&start=1&disablekb=1&fs=0&color=white&version=3&playlist=LdWqyrSIb4s"
+                src={videoUrl}
                 title="YouVersity Demo Video"
-                loading="lazy"
-                frameborder="0"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowfullscreen>
-              </iframe>
+                autoplay
+                loop
+                playsinline
+              >
+                Your browser does not support the video tag.
+              </video>
             </div>
           </div>
         </div>

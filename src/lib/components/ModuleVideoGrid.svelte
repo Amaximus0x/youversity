@@ -68,7 +68,7 @@
 
     <div
       bind:this={sliderRef}
-      class="flex flex-col md:flex-row gap-6 overflow-y-auto md:overflow-x-auto scrollbar-hide pb-16 px-2 pt-2"
+      class="flex flex-col md:flex-row gap-4 overflow-y-auto md:overflow-x-auto scrollbar-hide pb-4 md:pb-16 px-0.5 md:px-2 pt-2"
       on:scroll={updateArrows}
     >
       {#each moduleVideos[currentModuleIndex] as video, videoIndex}
@@ -125,7 +125,7 @@
             <!-- Mobile Layout - Hidden on md+ screens -->
             <div class="flex md:hidden items-center w-full">
               <!-- Left side: Title and Duration -->
-              <div class="flex-1 min-w-0 flex flex-col justify-between mr-4">
+              <div class="flex-1 min-w-0 flex flex-col justify-between mr-2">
                 <span class="text-semibody-medium text-light-text-secondary line-clamp-2">
                   <span class="text-light-text-secondary dark:text-dark-text-secondary">{String(videoIndex + 1).padStart(2, '0')}: </span>
                   <span class="text-light-text-primary dark:text-dark-text-primary"> {video.title}</span>
@@ -136,7 +136,7 @@
               </div>
               
               <!-- Right side: Thumbnail -->
-              <div class="w-[165px] h-[78px] relative rounded-lg overflow-hidden shrink-0">
+              <div class="w-[132px] h-[78px] relative rounded-lg overflow-hidden shrink-0">
                 <img
                   src={video.thumbnailUrl}
                   alt={video.title}
