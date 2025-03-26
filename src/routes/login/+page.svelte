@@ -8,7 +8,7 @@
   } from "$lib/services/auth";
   import { page } from "$app/stores";
   import { default as OnboardingCarousel } from "$lib/components/OnboardingCarousel.svelte";
-  import { user, isAuthenticated, isAuthLoading, AuthStatus } from "$lib/stores/auth";
+  import { user, isAuthenticated, isAuthLoading } from "$lib/stores/auth";
   import { onMount } from "svelte";
   import { goto } from "$app/navigation";
 
@@ -62,12 +62,14 @@
   onMount(() => {
     // Subscribe to auth state to detect when auth is complete
     const unsubscribe = isAuthenticated.subscribe(($isAuthenticated) => {
-      // Get the intended redirect URL
-      const redirectTo = $page.url.searchParams.get("redirectTo") || "/dashboard";
-      
-      // Redirect user if they're already logged in
-      if ($isAuthenticated) {
-        goto(redirectTo);
+      if (!$isAuthLoading) {
+        // Get the intended redirect URL
+        const redirectTo = $page.url.searchParams.get("redirectTo") || "/dashboard";
+        
+        // Redirect user if they're already logged in
+        if ($isAuthenticated) {
+          goto(redirectTo);
+        }
       }
     });
     
