@@ -187,6 +187,8 @@
             <a
               href="https://www.facebook.com/profile.php?id=61573035193235&mibextid=ZbWKwL"
               class="text-light-text-primary dark:text-dark-text-primary"
+              target="_blank"
+              rel="noopener noreferrer"
             >
               <svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
                 <g id="facebook.24.icon_1wRfb">
@@ -202,6 +204,8 @@
             <a
               href="https://x.com/YouversityApp?t=V0ac7dMudPrWf8RdQkinoQ&s=09"
               class="text-light-text-primary dark:text-dark-text-primary"
+              target="_blank"
+              rel="noopener noreferrer"
             >
               <svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
                 <g id="twitter.24.icon_34Z4B">
@@ -217,6 +221,8 @@
             <a
               href="https://www.linkedin.com/showcase/youversity/"
               class="text-light-text-primary dark:text-dark-text-primary"
+              target="_blank"
+              rel="noopener noreferrer"
             >
               <svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
                 <g id="linkedin.24.icon_baq3k">
@@ -232,6 +238,8 @@
             <a
               href="https://www.youtube.com/@YouVersity-io"
               class="text-light-text-primary dark:text-dark-text-primary"
+              target="_blank"
+              rel="noopener noreferrer"
             >
               <svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
                 <g
