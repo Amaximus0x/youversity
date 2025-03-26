@@ -263,48 +263,53 @@
   });
 
   // Reactive declarations for page navigation
-  $: if (isMounted && $page?.url?.pathname) {
-    isSearchPage = $page.url.pathname === "/search";
-    if (isSearchPage) {
-      const urlParams = new URLSearchParams($page.url.search);
-      const filter = urlParams.get("filter") as SearchFilter;
-      if (filter) {
-        currentFilter = filter;
-      }
-    }
-    
-    // Check authentication state for protected routes
-    const authOnlyRoutes = ['/create-course', '/my-courses', '/settings', '/profile'];
-    const isAuthRoute = authOnlyRoutes.some(route => $page.url.pathname.startsWith(route));
-    
-    if (isAuthRoute && $user && browser) {
-      // Refresh token for auth-required routes to prevent token expiration issues
-      console.log("Auth-only route detected, ensuring fresh token");
-      refreshToken().then(token => {
-        if (!token) {
-          console.error("Token refresh failed on auth route, redirecting to login");
-          goto('/login?redirectTo=' + encodeURIComponent($page.url.pathname));
+  $: if (isMounted && $page && $page.url) {
+    try {
+      const pathname = $page.url.pathname;
+      isSearchPage = pathname === "/search";
+      if (isSearchPage) {
+        const urlParams = new URLSearchParams($page.url.search);
+        const filter = urlParams.get("filter") as SearchFilter;
+        if (filter) {
+          currentFilter = filter;
         }
-      }).catch(error => {
-        console.error("Error refreshing token:", error);
-      });
-    }
-    
-    // Clear search if navigating away from search page
-    if (prevPath === "/search" && $page.url.pathname !== "/search") {
-      if (!$page.url.pathname.startsWith("/search")) {
-        searchQuery = "";
-        showMobileSearch = false;
       }
+      
+      // Check authentication state for protected routes
+      const authOnlyRoutes = ['/create-course', '/my-courses', '/settings', '/profile'];
+      const isAuthRoute = authOnlyRoutes.some(route => pathname.startsWith(route));
+      
+      if (isAuthRoute && $user && browser) {
+        // Refresh token for auth-required routes to prevent token expiration issues
+        console.log("Auth-only route detected, ensuring fresh token");
+        refreshToken().then(token => {
+          if (!token) {
+            console.error("Token refresh failed on auth route, redirecting to login");
+            goto('/login?redirectTo=' + encodeURIComponent(pathname));
+          }
+        }).catch(error => {
+          console.error("Error refreshing token:", error);
+        });
+      }
+      
+      // Clear search if navigating away from search page
+      if (prevPath === "/search" && pathname !== "/search") {
+        if (!pathname.startsWith("/search")) {
+          searchQuery = "";
+          showMobileSearch = false;
+        }
+      }
+      prevPath = pathname;
+      console.log("URL changed:", {
+        current: pathname,
+        previous: prevPath,
+        searchQuery,
+        recentSearches: recentSearches.length,
+        isAuthenticated: data.isAuthenticated
+      });
+    } catch (error) {
+      console.error("Error in page navigation:", error);
     }
-    prevPath = $page.url.pathname;
-    console.log("URL changed:", {
-      current: $page.url.pathname,
-      previous: prevPath,
-      searchQuery,
-      recentSearches: recentSearches.length,
-      isAuthenticated: data.isAuthenticated
-    });
   }
 
   // Event handlers

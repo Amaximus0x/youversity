@@ -1,20 +1,11 @@
-import { initializeApp } from 'firebase/app';
-import { getFirestore, collection, addDoc, query, where, getDocs, doc, getDoc, updateDoc, setDoc, serverTimestamp, orderBy, limit, deleteDoc, Timestamp } from 'firebase/firestore';
-import { getAuth, setPersistence, browserLocalPersistence, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from 'firebase/auth';
-import { getStorage } from 'firebase/storage';
+import { initializeApp, type FirebaseApp } from 'firebase/app';
+import { getFirestore, collection, addDoc, query, where, getDocs, doc, getDoc, updateDoc, setDoc, serverTimestamp, orderBy, limit, deleteDoc, Timestamp, type Firestore } from 'firebase/firestore';
+import { getAuth, type Auth, setPersistence, browserLocalPersistence } from 'firebase/auth';
+import { getStorage, type FirebaseStorage } from 'firebase/storage';
 import type { CourseEnrollment, EnrollmentProgress, FinalCourseStructure, ModuleProgress, CourseRating, QuizResult } from './types/course';
 import { getUserProfile } from '$lib/services/profile';
 import { NotificationService } from '$lib/services/notificationService';
-import { NotificationType } from '$lib/types/notification';
-import { user } from '$lib/stores/auth';
 import { browser } from '$app/environment';
-import type { Writable } from 'svelte/store';
-import type { Course, CompleteCourse } from './types/course';
-import type { Firestore } from 'firebase/firestore';
-import type { Auth } from 'firebase/auth';
-import type { FirebaseStorage } from 'firebase/storage';
-import type { FirebaseApp } from 'firebase/app';
-import { get } from 'svelte/store';
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -26,102 +17,105 @@ const firebaseConfig = {
   measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
 };
 
-// Validate Firebase config - with required fields only
-const requiredEnvVars = ['apiKey', 'authDomain', 'projectId', 'storageBucket', 'messagingSenderId', 'appId'];
-const missingEnvVars = requiredEnvVars
-  .filter(key => !firebaseConfig[key as keyof typeof firebaseConfig])
-  .map(key => key);
+// Validate required environment variables
+const requiredEnvVars = [
+  'VITE_FIREBASE_API_KEY',
+  'VITE_FIREBASE_AUTH_DOMAIN',
+  'VITE_FIREBASE_PROJECT_ID',
+  'VITE_FIREBASE_STORAGE_BUCKET',
+  'VITE_FIREBASE_MESSAGING_SENDER_ID',
+  'VITE_FIREBASE_APP_ID'
+];
+
+const missingEnvVars = requiredEnvVars.filter(
+  (envVar) => !import.meta.env[envVar]
+);
 
 if (missingEnvVars.length > 0) {
-  console.error('Missing Firebase configuration variables:', missingEnvVars);
-  throw new Error(`Missing required Firebase configuration: ${missingEnvVars.join(', ')}`);
+  console.error('Missing required environment variables:', missingEnvVars);
+  throw new Error(`Missing required environment variables: ${missingEnvVars.join(', ')}`);
 }
 
-console.log('Initializing Firebase with config:', {
-  ...firebaseConfig,
-  apiKey: '***' // Hide API key in logs
-});
-
-// Initialize Firebase
+// Initialize Firebase only in browser context
 let app: FirebaseApp;
 let auth: Auth;
 let db: Firestore;
 let storage: FirebaseStorage;
 
-// Check if we're in a browser context
-if (browser) {
+// Create a promise to track Firebase initialization
+export const firebaseInitialized = new Promise<{
+  app: FirebaseApp;
+  auth: Auth;
+  db: Firestore;
+  storage: FirebaseStorage;
+}>(async (resolve, reject) => {
   try {
-    console.log('Initializing Firebase client...');
-    app = initializeApp(firebaseConfig);
-    auth = getAuth(app);
-    db = getFirestore(app);
-    storage = getStorage(app);
-    
-    // Enable persistent authentication to help with page refreshes
-    setPersistence(auth, browserLocalPersistence)
-      .then(() => {
-        console.log('Firebase auth persistence enabled');
-      })
-      .catch((error) => {
-        console.error('Error enabling auth persistence:', error);
-      });
-      
-    // Set up auth state listener to update token cookie
-    onAuthStateChanged(auth, async (currentUser) => {
-      console.log("Auth state changed:", currentUser ? `User ${currentUser.uid} logged in` : "User logged out");
-      
-      if (currentUser) {
-        try {
-          // Store the authentication state in sessionStorage for quick checks
-          sessionStorage.setItem('youversity_auth_state', 'authenticated');
-          
-          // Get fresh token with force refresh
-          const token = await currentUser.getIdToken(true);
-          
-          // Set secure token cookie with appropriate attributes
-          const secure = location.protocol === 'https:' ? '; Secure' : '';
-          const maxAge = 3600; // 1 hour expiration matching Firebase default
-          document.cookie = `firebase-token=${token}; path=/; max-age=${maxAge}; SameSite=Lax${secure}`;
-          
-          // Store token expiry time to enable proactive refresh
-          const expiryTime = Date.now() + (maxAge * 1000);
-          localStorage.setItem('youversity_token_expiry', expiryTime.toString());
-          
-          console.log(`Token set for user ${currentUser.uid}, expires at ${new Date(expiryTime).toISOString()}`);
-          
-          // Update user store
-          setTimeout(async () => {
-            const currentUserFromStore = get(user);
-            if (!currentUserFromStore || currentUserFromStore.uid !== currentUser.uid) {
-              try {
-                if ('refresh' in user) {
-                  await (user as any).refresh();
-                }
-              } catch (storeError) {
-                console.error("Error updating user store:", storeError);
-              }
-            }
-          }, 100);
-        } catch (error) {
-          console.error("Error getting user token:", error);
-        }
-      } else {
-        // Clear all auth data on logout
-        document.cookie = 'firebase-token=; path=/; max-age=0';
-        localStorage.removeItem('youversity_token_expiry');
-        sessionStorage.removeItem('youversity_auth_state');
-      }
-    });
-    
-    console.log('Firebase client initialized successfully');
-  } catch (err) {
-    console.error('Firebase initialization error:', err);
+    if (browser) {
+      app = initializeApp(firebaseConfig);
+      auth = getAuth(app);
+      db = getFirestore(app);
+      storage = getStorage(app);
+
+      // Set persistence to local
+      await setPersistence(auth, browserLocalPersistence);
+      console.log('Firebase initialized successfully');
+      resolve({ app, auth, db, storage });
+    } else {
+      // For SSR, provide empty objects
+      app = {} as FirebaseApp;
+      auth = {} as Auth;
+      db = {} as Firestore;
+      storage = {} as FirebaseStorage;
+      resolve({ app, auth, db, storage });
+    }
+  } catch (error) {
+    console.error('Error initializing Firebase:', error);
+    reject(error);
   }
-} else {
-  console.log('Not in browser context, skipping Firebase client initialization');
+});
+
+// Export initialized instances
+export { app, auth, db, storage };
+
+// Function to refresh the auth token
+export async function refreshToken(): Promise<string | null> {
+  try {
+    const { auth } = await firebaseInitialized;
+    const currentUser = auth.currentUser;
+    if (!currentUser) {
+      console.log('No user signed in to refresh token');
+      return null;
+    }
+    const token = await currentUser.getIdToken(true);
+    return token;
+  } catch (error) {
+    console.error('Error refreshing token:', error);
+    return null;
+  }
 }
 
-export { app, auth, db, storage };
+// Function to set the auth token cookie
+export async function setAuthTokenCookie(): Promise<void> {
+  try {
+    const { auth } = await firebaseInitialized;
+    const currentUser = auth.currentUser;
+    if (!currentUser) {
+      console.log('No user signed in to set token cookie');
+      return;
+    }
+
+    const token = await currentUser.getIdToken(true);
+    const secure = location.protocol === 'https:' ? '; Secure' : '';
+    const maxAge = 3600; // 1 hour expiration
+    document.cookie = `firebase-token=${token}; path=/; max-age=${maxAge}; SameSite=Lax${secure}`;
+
+    // Store token expiry time
+    const expiryTime = Date.now() + (maxAge * 1000);
+    localStorage.setItem('youversity_token_expiry', expiryTime.toString());
+  } catch (error) {
+    console.error('Error setting auth token cookie:', error);
+  }
+}
 
 // Firebase utility functions
 export async function saveCourseToFirebase(userId: string, courseData: any) {
@@ -1374,123 +1368,4 @@ export async function getPublicCoursesByCreator(creatorId: string) {
     console.error('Error fetching creator courses:', error);
     throw new Error('Failed to fetch creator courses');
   }
-}
-
-/**
- * Sets the current user's authentication token in a cookie
- * to be accessible by server-side code
- */
-export async function setAuthTokenCookie(): Promise<void> {
-  if (!browser || !auth?.currentUser) return;
-  
-  try {
-    // Check if we need to refresh the token
-    const expiryTimeStr = localStorage.getItem('youversity_token_expiry');
-    const expiryTime = expiryTimeStr ? parseInt(expiryTimeStr, 10) : 0;
-    const timeRemaining = expiryTime - Date.now();
-    
-    // Refresh if token expires in less than 5 minutes or isn't set
-    const shouldRefresh = !expiryTimeStr || timeRemaining < 5 * 60 * 1000;
-    
-    console.log(`Token status: ${shouldRefresh ? 'Refreshing' : 'Using existing'} token. ${
-      expiryTimeStr ? `Expires in ${Math.floor(timeRemaining / 1000)}s` : 'No expiry set'}`);
-    
-    // Get token with conditional refresh
-    const token = await auth.currentUser.getIdToken(shouldRefresh);
-    
-    // Set cookie with appropriate security attributes
-    const secure = location.protocol === 'https:' ? '; Secure' : '';
-    const maxAge = 3600; // 1 hour expiration
-    document.cookie = `firebase-token=${token}; path=/; max-age=${maxAge}; SameSite=Lax${secure}`;
-    
-    // Update expiry time if refreshed
-    if (shouldRefresh) {
-      const newExpiryTime = Date.now() + (maxAge * 1000);
-      localStorage.setItem('youversity_token_expiry', newExpiryTime.toString());
-      console.log(`Token refreshed, new expiry: ${new Date(newExpiryTime).toISOString()}`);
-    }
-    
-    // Allow time for propagation
-    if (shouldRefresh) {
-      await new Promise(resolve => setTimeout(resolve, 300));
-    }
-    
-    return;
-  } catch (error) {
-    console.error('Error setting auth token cookie:', error);
-    throw error; // Propagate error for better handling
-  }
-}
-
-/**
- * Force refresh the user's token and return the new token
- */
-export async function refreshToken(): Promise<string | null> {
-  if (!browser || !auth?.currentUser) return null;
-  
-  try {
-    console.log('Forcing token refresh...');
-    
-    // Force a token refresh
-    const token = await auth.currentUser.getIdToken(true);
-    
-    // Set cookie with refreshed token
-    const secure = location.protocol === 'https:' ? '; Secure' : '';
-    const maxAge = 3600; // 1 hour expiration
-    document.cookie = `firebase-token=${token}; path=/; max-age=${maxAge}; SameSite=Lax${secure}`;
-    
-    // Update expiry time
-    const expiryTime = Date.now() + (maxAge * 1000);
-    localStorage.setItem('youversity_token_expiry', expiryTime.toString());
-    
-    console.log(`Token refreshed successfully. Expires at: ${new Date(expiryTime).toISOString()}`);
-    
-    // Allow time for propagation
-    await new Promise(resolve => setTimeout(resolve, 300));
-    
-    return token;
-  } catch (error) {
-    console.error('Error refreshing token:', error);
-    
-    // Clear invalid token state
-    document.cookie = 'firebase-token=; path=/; max-age=0';
-    localStorage.removeItem('youversity_token_expiry');
-    
-    return null;
-  }
-}
-
-// Automatically refresh token when needed
-if (browser) {
-  // Set initial token if user is already logged in
-  setTimeout(async () => {
-    if (auth?.currentUser) {
-      try {
-        await setAuthTokenCookie();
-      } catch (err) {
-        console.error('Initial token setup failed:', err);
-      }
-    }
-  }, 1000);
-  
-  // Set up periodic token refresh check every 5 minutes
-  setInterval(async () => {
-    if (auth?.currentUser) {
-      const expiryTimeStr = localStorage.getItem('youversity_token_expiry');
-      if (expiryTimeStr) {
-        const expiryTime = parseInt(expiryTimeStr, 10);
-        const timeRemaining = expiryTime - Date.now();
-        
-        // Refresh if token expires in less than 10 minutes
-        if (timeRemaining < 10 * 60 * 1000) {
-          console.log('Token expiring soon, refreshing...');
-          try {
-            await refreshToken();
-          } catch (err) {
-            console.error('Periodic token refresh failed:', err);
-          }
-        }
-      }
-    }
-  }, 5 * 60 * 1000); // Check every 5 minutes
 }

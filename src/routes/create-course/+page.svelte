@@ -48,6 +48,7 @@
   let moduleTranscripts: string[] = [];
   let allModulesLoaded = false;
   let visitedModules: boolean[] = [];
+  let moduleRegenerating: Record<number, boolean> = {};
 
   // Reference to the module navigation container for scrolling
   let moduleNavContainer: HTMLElement;
@@ -290,14 +291,18 @@
     searchPrompt: string,
     moduleIndex: number,
     retryCount = 0,
+    isRegeneration = false,
   ) {
     if (!courseStructure) return;
 
-    const moduleTitle = courseStructure.OG_Module_Title[moduleIndex];
-    initialLoadingState.setCurrentModule(moduleIndex + 1);
-    initialLoadingState.setStep(
-      `Searching videos for Module ${moduleIndex + 1}: ${moduleTitle}`,
-    );
+    // Only update loading state if it's not a regeneration
+    if (!isRegeneration) {
+      initialLoadingState.setCurrentModule(moduleIndex + 1);
+      initialLoadingState.setStep(
+        `Searching videos for Module ${moduleIndex + 1}: ${courseStructure.OG_Module_Title[moduleIndex]}`,
+      );
+    }
+    
     const maxRetries = 3;
 
     try {
@@ -312,7 +317,7 @@
       // Create query URL with parameters
       const queryParams = new URLSearchParams({
         query: searchPrompt.trim(),
-        moduleTitle: moduleTitle,
+        moduleTitle: courseStructure.OG_Module_Title[moduleIndex],
         moduleIndex: moduleIndex.toString(),
         retry: retryCount.toString()
       });
@@ -326,23 +331,15 @@
       
       // Add server auth as backup
       const serverAuthuid = data?.serverAuth?.user?.uid as string | undefined;
-      console.log("Server auth UID:", serverAuthuid || "None");
-      
       if (serverAuthuid) {
         headers["X-Server-Auth-UID"] = serverAuthuid;
-      }
-      
-      // In development mode, also add a test user ID header
-      if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-        console.log("Adding development mode test header");
-        headers["X-Dev-Test-UID"] = auth.currentUser?.uid || "dev-test-user";
       }
       
       const response = await fetch(
         `/api/search-videos?${queryParams.toString()}`,
         {
           headers,
-          credentials: 'include' // Include cookies with the request
+          credentials: 'include'
         },
       );
 
@@ -359,32 +356,40 @@
       // Check if all modules are loaded after this update
       allModulesLoaded = checkAllModulesLoaded();
 
-      // Calculate progress: 20% for structure + 80% for modules
-      // Each module takes an equal share of the remaining 80%
-      const moduleProgress =
-        (moduleIndex + 1) / courseStructure.OG_Module_Title.length;
-      const totalProgress = 20 + moduleProgress * 80;
-      initialLoadingState.setProgress(totalProgress);
+      // Only update progress if it's not a regeneration
+      if (!isRegeneration) {
+        // Calculate progress: 20% for structure + 80% for modules
+        // Each module takes an equal share of the remaining 80%
+        const moduleProgress =
+          (moduleIndex + 1) / courseStructure.OG_Module_Title.length;
+        const totalProgress = 20 + moduleProgress * 80;
+        initialLoadingState.setProgress(totalProgress);
+      }
     } catch (err: any) {
       console.error(`Error in module ${moduleIndex + 1}:`, err);
       error = err.message;
-      initialLoadingState.setError(error);
-      initialLoadingState.stopLoading();
+      if (!isRegeneration) {
+        initialLoadingState.setError(error);
+        initialLoadingState.stopLoading();
+      }
     }
   }
 
   async function handleRegenerateModuleVideos(moduleIndex: number) {
     try {
       error = null;
+      moduleRegenerating[moduleIndex] = true;
       const searchPrompt =
         courseStructure!.OG_Module_YouTube_Search_Prompt[moduleIndex];
-      await fetchVideosForModule(searchPrompt, moduleIndex);
+      await fetchVideosForModule(searchPrompt, moduleIndex, 0, true); // Pass true for isRegeneration
     } catch (err: any) {
       console.error(
         `Error regenerating videos for module ${moduleIndex + 1}:`,
         err,
       );
       error = `Failed to regenerate videos for module ${moduleIndex + 1}`;
+    } finally {
+      moduleRegenerating[moduleIndex] = false;
     }
   }
 
@@ -825,23 +830,27 @@
                     .OG_Module_Title[currentModuleIndex]}
                 </h2>
                 <button
-                  class=" text-[#42C1C8] hover:text-[#2A4D61] rounded-full transition-colors duration-200"
-                  on:click={() =>
-                    handleRegenerateModuleVideos(currentModuleIndex)}
+                  class="text-[#42C1C8] hover:text-[#2A4D61] rounded-full transition-colors duration-200 {moduleRegenerating[currentModuleIndex] ? 'cursor-not-allowed opacity-50' : ''}"
+                  on:click={() => handleRegenerateModuleVideos(currentModuleIndex)}
+                  disabled={moduleRegenerating[currentModuleIndex]}
                 >
-                  <svg
-                    class="w-5 h-5"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      d="M15.1667 1L15.7646 2.11777C16.1689 2.87346 16.371 3.25131 16.2374 3.41313C16.1037 3.57495 15.6635 3.44426 14.7831 3.18288C13.9029 2.92155 12.9684 2.78095 12 2.78095C6.75329 2.78095 2.5 6.90846 2.5 12C2.5 13.6791 2.96262 15.2535 3.77093 16.6095M8.83333 23L8.23536 21.8822C7.83108 21.1265 7.62894 20.7486 7.7626 20.5868C7.89627 20.425 8.33649 20.5557 9.21689 20.8171C10.0971 21.0784 11.0316 21.219 12 21.219C17.2467 21.219 21.5 17.0915 21.5 12C21.5 10.3208 21.0374 8.74647 20.2291 7.39047"
-                    />
-                  </svg>
+                  {#if moduleRegenerating[currentModuleIndex]}
+                    <img src="/images/loading-spin.gif" alt="Loading" class="w-5 h-5" />
+                  {:else}
+                    <svg
+                      class="w-5 h-5"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M15.1667 1L15.7646 2.11777C16.1689 2.87346 16.371 3.25131 16.2374 3.41313C16.1037 3.57495 15.6635 3.44426 14.7831 3.18288C13.9029 2.92155 12.9684 2.78095 12 2.78095C6.75329 2.78095 2.5 6.90846 2.5 12C2.5 13.6791 2.96262 15.2535 3.77093 16.6095M8.83333 23L8.23536 21.8822C7.83108 21.1265 7.62894 20.7486 7.7626 20.5868C7.89627 20.425 8.33649 20.5557 9.21689 20.8171C10.0971 21.0784 11.0316 21.219 12 21.219C17.2467 21.219 21.5 17.0915 21.5 12C21.5 10.3208 21.0374 8.74647 20.2291 7.39047"
+                      />
+                    </svg>
+                  {/if}
                 </button>
               </div>
               <button
@@ -986,23 +995,27 @@
                   .OG_Module_Title[currentModuleIndex]}
               </h2>
               <button
-                class=" text-[#42C1C8] hover:text-[#2A4D61] rounded-full transition-colors duration-200"
-                on:click={() =>
-                  handleRegenerateModuleVideos(currentModuleIndex)}
+                class="text-[#42C1C8] hover:text-[#2A4D61] rounded-full transition-colors duration-200 {moduleRegenerating[currentModuleIndex] ? 'cursor-not-allowed opacity-50' : ''}"
+                on:click={() => handleRegenerateModuleVideos(currentModuleIndex)}
+                disabled={moduleRegenerating[currentModuleIndex]}
               >
-                <svg
-                  class="w-5 h-5"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    d="M15.1667 1L15.7646 2.11777C16.1689 2.87346 16.371 3.25131 16.2374 3.41313C16.1037 3.57495 15.6635 3.44426 14.7831 3.18288C13.9029 2.92155 12.9684 2.78095 12 2.78095C6.75329 2.78095 2.5 6.90846 2.5 12C2.5 13.6791 2.96262 15.2535 3.77093 16.6095M8.83333 23L8.23536 21.8822C7.83108 21.1265 7.62894 20.7486 7.7626 20.5868C7.89627 20.425 8.33649 20.5557 9.21689 20.8171C10.0971 21.0784 11.0316 21.219 12 21.219C17.2467 21.219 21.5 17.0915 21.5 12C21.5 10.3208 21.0374 8.74647 20.2291 7.39047"
-                  />
-                </svg>
+                {#if moduleRegenerating[currentModuleIndex]}
+                  <img src="/images/loading-spin.gif" alt="Loading" class="w-5 h-5" />
+                {:else}
+                  <svg
+                    class="w-5 h-5"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M15.1667 1L15.7646 2.11777C16.1689 2.87346 16.371 3.25131 16.2374 3.41313C16.1037 3.57495 15.6635 3.44426 14.7831 3.18288C13.9029 2.92155 12.9684 2.78095 12 2.78095C6.75329 2.78095 2.5 6.90846 2.5 12C2.5 13.6791 2.96262 15.2535 3.77093 16.6095M8.83333 23L8.23536 21.8822C7.83108 21.1265 7.62894 20.7486 7.7626 20.5868C7.89627 20.425 8.33649 20.5557 9.21689 20.8171C10.0971 21.0784 11.0316 21.219 12 21.219C17.2467 21.219 21.5 17.0915 21.5 12C21.5 10.3208 21.0374 8.74647 20.2291 7.39047"
+                    />
+                  </svg>
+                {/if}
               </button>
             </div>
             <button

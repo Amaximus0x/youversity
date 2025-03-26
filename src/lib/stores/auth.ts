@@ -1,10 +1,9 @@
-import { writable, derived } from 'svelte/store';
+import { writable } from 'svelte/store';
 import type { User } from 'firebase/auth';
-import { auth } from '$lib/firebase';
+import { browser } from '$app/environment';
+import { firebaseInitialized, setAuthTokenCookie } from '$lib/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import { getUserProfile } from '$lib/services/profile';
-import { browser } from '$app/environment';
-import { setAuthTokenCookie, refreshToken } from '$lib/firebase';
 
 // Define a type for our user that includes additional fields
 export interface ExtendedUser extends User {
@@ -16,168 +15,87 @@ export interface ExtendedUser extends User {
   about?: string;
 }
 
-// Auth status enum for better type safety
-export enum AuthStatus {
-  LOADING = 'loading',
-  AUTHENTICATED = 'authenticated',
-  UNAUTHENTICATED = 'unauthenticated'
-}
+// Create the base store with initial value
+export const user = writable<ExtendedUser | null>(null);
 
-// Restore user from localStorage if available
-const storedUser = browser ? localStorage.getItem('youversity_user') : null;
-const initialUser = storedUser ? JSON.parse(storedUser) : null;
+// Define loading state
+export const isAuthLoading = writable(true);
 
-function createUserStore() {
-  // Create the base store with initial value (may be null)
-  const { subscribe, set, update } = writable<ExtendedUser | null>(initialUser);
-  
-  // Create the auth status store - starts with LOADING if we have a stored user
-  const authStatus = writable<AuthStatus>(
-    initialUser ? AuthStatus.LOADING : AuthStatus.UNAUTHENTICATED
-  );
+// Create authentication status store
+export const isAuthenticated = writable(false);
 
-  return {
-    subscribe,
-    authStatus: {
-      subscribe: authStatus.subscribe
-    },
-    set: (newUser: ExtendedUser | null) => {
-      // Update auth status first
-      if (newUser) {
-        authStatus.set(AuthStatus.AUTHENTICATED);
-      } else {
-        authStatus.set(AuthStatus.UNAUTHENTICATED);
-      }
-      
-      // Save to localStorage if in browser
-      if (browser) {
-        if (newUser) {
-          localStorage.setItem('youversity_user', JSON.stringify(newUser));
-        } else {
-          localStorage.removeItem('youversity_user');
-        }
-      }
-      set(newUser);
-    },
-    update,
-    
-    // Add a method to refresh the user data
-    async refresh() {
-      const currentUser = auth.currentUser;
-      
-      // Mark as loading during refresh
-      authStatus.set(AuthStatus.LOADING);
-      
-      if (currentUser) {
-        try {
-          // Force reload the current user's data from Firebase Auth
-          await currentUser.reload();
-          
-          // Get the user profile from Firestore
-          const userProfile = await getUserProfile(currentUser.uid);
-          
-          // Get fresh user data after reload
-          const freshUser = auth.currentUser; // This might have changed after reload
-          
-          // Create extended user with combined data
-          const extendedUser: ExtendedUser = {
-            ...(freshUser || currentUser),
-            username: userProfile?.username || '',
-            displayName: userProfile?.displayName || freshUser?.displayName || '',
-            photoURL: userProfile?.photoURL || freshUser?.photoURL || '',
-            email: freshUser?.email || currentUser.email || '',
-            about: userProfile?.about || '',
-            uid: currentUser.uid
-          };
-          
-          // Update the Firebase token cookie
-          await setAuthTokenCookie();
-          
-          // Update the store with new user data
-          this.set(extendedUser);
-          return extendedUser;
-        } catch (error) {
-          console.error('Error refreshing user profile:', error);
-          
-          // If refresh fails but we still have a current user, use that
-          if (auth.currentUser) {
-            this.set(auth.currentUser as ExtendedUser);
-            return auth.currentUser as ExtendedUser;
-          } else {
-            // User is no longer authenticated
-            this.set(null);
-            return null;
-          }
-        }
-      } else {
-        // User is not authenticated
-        this.set(null);
-        return null;
-      }
-    },
-    
-    // Method to force token refresh
-    async refreshToken() {
-      try {
-        // If not authenticated, nothing to do
-        if (!auth.currentUser) {
-          return null;
-        }
-        
-        // Get fresh token
-        const newToken = await refreshToken();
-        
-        // Also refresh user data
-        await this.refresh();
-        
-        return newToken;
-      } catch (error) {
-        console.error('Error refreshing token:', error);
-        return null;
-      }
-    }
-  };
-}
-
-export const user = createUserStore();
-export const isAuthenticated = derived(
-  [user, user.authStatus], 
-  ([$user, $authStatus]) => $authStatus === AuthStatus.AUTHENTICATED
-);
-export const isAuthLoading = derived(
-  user.authStatus,
-  ($authStatus) => $authStatus === AuthStatus.LOADING
-);
+// Subscribe to user store to update authentication status
+user.subscribe(($user) => {
+  isAuthenticated.set($user !== null);
+});
 
 // Initialize auth state listener
 if (browser) {
-  // Check localStorage first for quick restore
-  if (initialUser) {
-    console.log('Found user in localStorage, pre-loading auth state');
-    user.set(initialUser);
-  }
-  
-  // Set up Firebase auth state listener
-  onAuthStateChanged(auth, async (firebaseUser) => {
-    if (firebaseUser) {
-      // User is logged in, refresh full profile
-      await user.refresh();
-    } else {
-      // User is logged out
-      user.set(null);
-    }
-  });
-  
-  // Set up token refresh interval (every 30 minutes)
-  if (initialUser) {
-    setInterval(async () => {
-      if (auth.currentUser) {
-        try {
-          await user.refreshToken();
-        } catch (err) {
-          console.error('Scheduled token refresh failed:', err);
-        }
+  // Wait for Firebase to be initialized before setting up auth listener
+  firebaseInitialized.then(({ auth }) => {
+    // Restore user from localStorage if available
+    const storedUser = localStorage.getItem('youversity_user');
+    if (storedUser) {
+      try {
+        const parsedUser = JSON.parse(storedUser);
+        user.set(parsedUser);
+      } catch (error) {
+        console.error('Error parsing stored user:', error);
+        localStorage.removeItem('youversity_user');
       }
-    }, 30 * 60 * 1000); // 30 minutes
-  }
-} 
+    }
+
+    // Set up auth state listener
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      if (currentUser) {
+        try {
+          // Get user profile from Firestore
+          const userProfile = await getUserProfile(currentUser.uid);
+          
+          // Create extended user with combined data
+          const extendedUser: ExtendedUser = {
+            ...currentUser,
+            username: userProfile?.username || '',
+            displayName: userProfile?.displayName || currentUser.displayName || '',
+            photoURL: userProfile?.photoURL || currentUser.photoURL || '',
+            email: currentUser.email || '',
+            about: userProfile?.about || '',
+            uid: currentUser.uid
+          };
+
+          // Update user store
+          user.set(extendedUser);
+          
+          // Store user data in localStorage
+          localStorage.setItem('youversity_user', JSON.stringify(extendedUser));
+          
+          // Set auth token cookie
+          await setAuthTokenCookie();
+        } catch (error) {
+          console.error('Error updating user profile:', error);
+          // If there's an error, still set the basic user data
+          user.set(currentUser as ExtendedUser);
+        }
+      } else {
+        // Clear user store and localStorage
+        user.set(null);
+        localStorage.removeItem('youversity_user');
+      }
+      isAuthLoading.set(false);
+    });
+
+    // Clean up listener on app unmount
+    window.addEventListener('unload', () => {
+      unsubscribe();
+    });
+  }).catch(error => {
+    console.error('Error initializing auth store:', error);
+    isAuthLoading.set(false);
+  });
+} else {
+  // For SSR, set loading to false
+  isAuthLoading.set(false);
+}
+
+// Export the stores
+export { user as default }; 
