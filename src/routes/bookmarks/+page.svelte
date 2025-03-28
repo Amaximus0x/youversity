@@ -11,6 +11,7 @@
   let loading = true;
   let sortBy = 'newest';
   let authChecked = false;
+  let showSortDropdown = false;
 
   // Subscribe to auth state changes
   user.subscribe(currentUser => {
@@ -22,6 +23,20 @@
     }
   });
 
+  // Function to handle sort option selection
+  function handleSortSelect(option: 'newest' | 'oldest') {
+    sortBy = option;
+    showSortDropdown = false;
+  }
+
+  // Function to handle click outside of dropdown
+  function handleClickOutside(event: MouseEvent) {
+    const target = event.target as HTMLElement;
+    if (!target.closest('.sort-dropdown')) {
+      showSortDropdown = false;
+    }
+  }
+
   onMount(() => {
     // Mark auth as checked after initial mount
     authChecked = true;
@@ -30,6 +45,12 @@
     if ($user) {
       fetchBookmarkedCourses();
     }
+
+    // Add click outside listener
+    document.addEventListener('click', handleClickOutside);
+    return () => {
+      document.removeEventListener('click', handleClickOutside);
+    };
   });
 
   async function fetchBookmarkedCourses() {
@@ -132,17 +153,46 @@
           </div>
           
           <!-- Sort Dropdown -->
-          <div class="relative">
-            <button class="flex items-center gap-2 px-2 py-4 text-semibody-medium rounded-lg bg-Black/5 dark:bg-white/10 ">
-              <span class=" text-light-text-secondary dark:text-dark-text-secondary">Sort by</span>
-              <select
-                bind:value={sortBy}
-                class="bg-transparent outline-none cursor-pointer text-light-text-secondary dark:text-dark-text-secondary"
-              >
-                <option class="text-light-text-secondary dark:text-dark-text-secondary" value="newest">Newest</option>
-                <option class="text-light-text-secondary dark:text-dark-text-secondary" value="oldest">Oldest</option>
-              </select>
+          <div class="sort-dropdown relative">
+            <button 
+              class="h-[42px] px-4 py-2 bg-black/5 dark:bg-white/10 rounded-lg justify-start items-center gap-[17px] inline-flex"
+              on:click|stopPropagation={() => showSortDropdown = !showSortDropdown}
+            >
+              <div class="text-light-text-secondary dark:text-dark-text-secondary">Sort by</div>
+              <div data-svg-wrapper class="relative">
+                <svg class="text-light-text-primary dark:text-dark-text-primary" width="16" height="27" viewBox="0 0 16 27" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M12 10.5C12 10.5 9.05403 6.50001 7.99997 6.5C6.9459 6.49999 4 10.5 4 10.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M12 16.5C12 16.5 9.05403 20.5 7.99997 20.5C6.9459 20.5 4 16.5 4 16.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
             </button>
+
+            {#if showSortDropdown}
+              <div class="absolute right-0 mt-2 w-48 bg-light-bg-secondary dark:bg-dark-bg-secondary rounded-lg shadow-lg border border-light-border dark:border-dark-border z-50">
+                <button
+                  class="w-full px-4 py-2 text-left text-light-text-primary dark:text-dark-text-primary hover:bg-light-bg-secondary dark:hover:bg-dark-bg-secondary transition-colors flex items-center justify-between {sortBy === 'newest' ? 'bg-black/5 dark:bg-white/10' : ''}"
+                  on:click={() => handleSortSelect('newest')}
+                >
+                  <span>Newest</span>
+                  {#if sortBy === 'newest'}
+                    <svg class="w-4 h-4 text-Green dark:text-TransparentGreen2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                  {/if}
+                </button>
+                <button
+                  class="w-full px-4 py-2 text-left text-light-text-primary dark:text-dark-text-primary hover:bg-light-bg-secondary dark:hover:bg-dark-bg-secondary transition-colors flex items-center justify-between {sortBy === 'oldest' ? 'bg-black/5 dark:bg-white/10' : ''}"
+                  on:click={() => handleSortSelect('oldest')}
+                >
+                  <span>Oldest</span>
+                  {#if sortBy === 'oldest'}
+                    <svg class="w-4 h-4 text-Green dark:text-TransparentGreen2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                  {/if}
+                </button>
+              </div>
+            {/if}
           </div>
         </div>
       </div>
