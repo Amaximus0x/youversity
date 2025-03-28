@@ -18,6 +18,9 @@
   let showShareModal = false;
   let selectedCourseId = '';
   let initialLoad = true;
+  let showSortDropdown = false;
+  let sortOption: 'newest' | 'oldest' = 'newest';
+  let displayedCourses: (FinalCourseStructure & { id: string; progress?: number })[] = [];
 
   // Subscribe to auth state changes
   user.subscribe(async (userData) => {
@@ -148,6 +151,12 @@
     } else {
       console.log('No user data on mount, waiting for auth state');
     }
+
+    // Add click outside listener
+    document.addEventListener('click', handleClickOutside);
+    return () => {
+      document.removeEventListener('click', handleClickOutside);
+    };
   });
 
   function handleShare(courseId: string) {
@@ -155,14 +164,67 @@
     showShareModal = true;
   }
 
-  // Reactive statement to determine which courses to display based on active tab
-  $: displayedCourses = activeTab === 'all' 
-    ? allCourses 
-    : activeTab === 'enrolled' 
-      ? enrolledCourses 
-      : createdCourses;
+  // Reactive statement to determine which courses to display based on active tab and sort option
+  $: {
+    console.log('Sorting triggered:', { activeTab, sortOption });
+    let courses = activeTab === 'all' 
+      ? [...allCourses] 
+      : activeTab === 'enrolled' 
+        ? [...enrolledCourses] 
+        : [...createdCourses];
 
-  // Update course counts reactively
+    console.log('Courses before sorting:', courses.map(c => ({ 
+      title: c.Final_Course_Title, 
+      createdAt: c.createdAt 
+    })));
+
+    if (sortOption === 'newest') {
+      courses.sort((a, b) => {
+        // Convert Firestore Timestamp to milliseconds for comparison
+        const dateA = a.createdAt?.toMillis() || 0;
+        const dateB = b.createdAt?.toMillis() || 0;
+        console.log('Comparing dates:', {
+          titleA: a.Final_Course_Title,
+          dateA,
+          titleB: b.Final_Course_Title,
+          dateB,
+          result: dateB - dateA
+        });
+        return dateB - dateA;
+      });
+    } else if (sortOption === 'oldest') {
+      courses.sort((a, b) => {
+        // Convert Firestore Timestamp to milliseconds for comparison
+        const dateA = a.createdAt?.toMillis() || 0;
+        const dateB = b.createdAt?.toMillis() || 0;
+        return dateA - dateB;
+      });
+    }
+
+    console.log('Courses after sorting:', courses.map(c => ({ 
+      title: c.Final_Course_Title, 
+      createdAt: c.createdAt 
+    })));
+    
+    displayedCourses = courses;
+  }
+
+  // Function to handle sort option selection
+  function handleSortSelect(option: 'newest' | 'oldest') {
+    console.log('Sort option selected:', option);
+    sortOption = option;
+    showSortDropdown = false;
+  }
+
+  // Function to handle click outside of dropdown
+  function handleClickOutside(event: MouseEvent) {
+    const target = event.target as HTMLElement;
+    if (!target.closest('.sort-dropdown')) {
+      showSortDropdown = false;
+    }
+  }
+
+  // Reactive statement to determine which courses to display based on active tab
   $: courseCount = {
     all: allCourses.length,
     enrolled: enrolledCourses.length,
@@ -256,18 +318,48 @@
         <!-- Sort and Create Course Section - Desktop -->
         <div class="hidden lg:flex items-center gap-4 absolute right-0 top-[-8px]   h-full ">
           <!-- Sort Dropdown -->
+          <div class="sort-dropdown relative">
+            <button 
+              class="h-[42px] px-4 py-2 bg-white/10 rounded-lg justify-start items-center gap-[17px] inline-flex"
+              on:click|stopPropagation={() => showSortDropdown = !showSortDropdown}
+            >
+              <div class="text-[#dddada] text-sm font-medium font-['Poppins']">Sort by</div>
+              <div data-svg-wrapper class="relative">
+                <svg width="16" height="27" viewBox="0 0 16 27" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M12 10.5C12 10.5 9.05403 6.50001 7.99997 6.5C6.9459 6.49999 4 10.5 4 10.5" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M12 16.5C12 16.5 9.05403 20.5 7.99997 20.5C6.9459 20.5 4 16.5 4 16.5" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
+            </button>
 
-          <div class="h-[42px] px-4 py-2 bg-white/10 rounded-lg justify-start items-center gap-[17px] inline-flex">
-            <div class="text-[#dddada] text-sm font-medium font-['Poppins']">Sort by</div>
-            <div data-svg-wrapper class="relative">
-            <svg width="16" height="27" viewBox="0 0 16 27" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M12 10.5C12 10.5 9.05403 6.50001 7.99997 6.5C6.9459 6.49999 4 10.5 4 10.5" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M12 16.5C12 16.5 9.05403 20.5 7.99997 20.5C6.9459 20.5 4 16.5 4 16.5" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-            </div>
-        </div>
+            {#if showSortDropdown}
+              <div class="absolute right-0 mt-2 w-48 bg-light-bg-primary dark:bg-dark-bg-primary rounded-lg shadow-lg border border-light-border dark:border-dark-border z-50">
+                <button
+                  class="w-full px-4 py-2 text-left text-light-text-primary dark:text-dark-text-primary hover:bg-light-bg-secondary dark:hover:bg-dark-bg-secondary transition-colors flex items-center justify-between {sortOption === 'newest' ? 'bg-light-bg-secondary dark:bg-dark-bg-secondary' : ''}"
+                  on:click={() => handleSortSelect('newest')}
+                >
+                  <span>Newest</span>
+                  {#if sortOption === 'newest'}
+                    <svg class="w-4 h-4 text-Green dark:text-TransparentGreen2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                  {/if}
+                </button>
+                <button
+                  class="w-full px-4 py-2 text-left text-light-text-primary dark:text-dark-text-primary hover:bg-light-bg-secondary dark:hover:bg-dark-bg-secondary transition-colors flex items-center justify-between {sortOption === 'oldest' ? 'bg-light-bg-secondary dark:bg-dark-bg-secondary' : ''}"
+                  on:click={() => handleSortSelect('oldest')}
+                >
+                  <span>Oldest</span>
+                  {#if sortOption === 'oldest'}
+                    <svg class="w-4 h-4 text-Green dark:text-TransparentGreen2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                  {/if}
+                </button>
+              </div>
+            {/if}
+          </div>
           
-
           <!-- Create Course Button -->
           <button 
             class="flex items-center gap-2 px-2 pl-4 py-2 bg-brand-red text-white rounded-lg hover:bg-ButtonHover transition-colors"
@@ -284,15 +376,47 @@
     <!-- Sort and Create Course Section - Mobile -->
     <div class="flex lg:hidden items-center justify-end gap-4 mt-4">
       <!-- Sort Dropdown -->
-      <div class="h-[42px] px-4 py-2 bg-white/10 rounded-lg justify-start items-center gap-[17px] inline-flex">
-        <div class="text-[#dddada] text-sm font-medium font-['Poppins']">Sort by</div>
-        <div data-svg-wrapper class="relative">
-        <svg width="16" height="27" viewBox="0 0 16 27" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M12 10.5C12 10.5 9.05403 6.50001 7.99997 6.5C6.9459 6.49999 4 10.5 4 10.5" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-        <path d="M12 16.5C12 16.5 9.05403 20.5 7.99997 20.5C6.9459 20.5 4 16.5 4 16.5" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-        </div>
-    </div>
+      <div class="sort-dropdown relative">
+        <button 
+          class="h-[42px] px-4 py-2 bg-white/10 rounded-lg justify-start items-center gap-[17px] inline-flex"
+          on:click|stopPropagation={() => showSortDropdown = !showSortDropdown}
+        >
+          <div class="text-[#dddada] text-sm font-medium font-['Poppins']">Sort by</div>
+          <div data-svg-wrapper class="relative">
+            <svg width="16" height="27" viewBox="0 0 16 27" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 10.5C12 10.5 9.05403 6.50001 7.99997 6.5C6.9459 6.49999 4 10.5 4 10.5" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M12 16.5C12 16.5 9.05403 20.5 7.99997 20.5C6.9459 20.5 4 16.5 4 16.5" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+        </button>
+
+        {#if showSortDropdown}
+          <div class="absolute right-0 mt-2 w-48 bg-light-bg-primary dark:bg-dark-bg-primary rounded-lg shadow-lg border border-light-border dark:border-dark-border z-50">
+            <button
+              class="w-full px-4 py-2 text-left text-light-text-primary dark:text-dark-text-primary hover:bg-light-bg-secondary dark:hover:bg-dark-bg-secondary transition-colors flex items-center justify-between {sortOption === 'newest' ? 'bg-light-bg-secondary dark:bg-dark-bg-secondary' : ''}"
+              on:click={() => handleSortSelect('newest')}
+            >
+              <span>Newest</span>
+              {#if sortOption === 'newest'}
+                <svg class="w-4 h-4 text-Green dark:text-TransparentGreen2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+              {/if}
+            </button>
+            <button
+              class="w-full px-4 py-2 text-left text-light-text-primary dark:text-dark-text-primary hover:bg-light-bg-secondary dark:hover:bg-dark-bg-secondary transition-colors flex items-center justify-between {sortOption === 'oldest' ? 'bg-light-bg-secondary dark:bg-dark-bg-secondary' : ''}"
+              on:click={() => handleSortSelect('oldest')}
+            >
+              <span>Oldest</span>
+              {#if sortOption === 'oldest'}
+                <svg class="w-4 h-4 text-Green dark:text-TransparentGreen2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+              {/if}
+            </button>
+          </div>
+        {/if}
+      </div>
 
       <!-- Create Course Button -->
       <button 
