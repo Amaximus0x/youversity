@@ -849,7 +849,7 @@
                         >Removing Enrollment...</span
                       >
                     {:else}
-                      <span class="text-semibody">Remove Course</span>
+                      <span class="text-semibody">Unenroll from Course</span>
                       <img
                         src="/icons/delete.svg"
                         alt="Remove"
@@ -973,7 +973,7 @@
                         >Removing Course...</span
                       >
                     {:else}
-                      <span class="text-semibody">Remove Course</span>
+                      <span class="text-semibody">Unenroll from Course</span>
                       <img
                         src="/icons/delete.svg"
                         alt="Unenroll"
