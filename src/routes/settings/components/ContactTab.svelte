@@ -84,16 +84,12 @@
         <div class="text-light-text-tertiary dark:text-dark-text-tertiary text-semi-body">
           team@youversity.io
         </div>
-        <div class="text-light-text-tertiary dark:text-dark-text-tertiary text-semi-body">
-          411-334-567
-        </div>
+       
       </div>
 
       <!-- Customer Support Section -->
       <div class="flex flex-col gap-4">
-        <div class="text-light-text-primary dark:text-dark-text-primary text-body underline">
-          Customer support
-        </div>
+        
         <div class="flex flex-col gap-[18px]">
           <div class="flex flex-col gap-2">
             <div class="text-light-text-primary dark:text-dark-text-primary text-body-semibold">
