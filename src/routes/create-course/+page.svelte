@@ -49,6 +49,7 @@
   let allModulesLoaded = false;
   let visitedModules: boolean[] = [];
   let moduleRegenerating: Record<number, boolean> = {};
+  let nextUnvisitedModuleIndex: number = -1;
 
   // Reference to the module navigation container for scrolling
   let moduleNavContainer: HTMLElement;
@@ -197,14 +198,30 @@
     saveStateToStorage();
   }
 
+  // Update nextUnvisitedModuleIndex whenever visitedModules changes
+  $: {
+    if (visitedModules.length > 0) {
+      nextUnvisitedModuleIndex = getNextUnvisitedModuleIndex();
+      console.log("Next unvisited module index updated:", nextUnvisitedModuleIndex);
+    }
+  }
+
   function selectModule(index: number) {
+    if (index < 0 || !courseStructure || index >= courseStructure.OG_Module_Title.length) {
+      console.warn("Invalid module index:", index);
+      return;
+    }
+    
+    console.log("Selecting module:", index);
     currentModuleIndex = index;
+    
     // Ensure the module is marked as visited
     visitedModules[index] = true;
     // Create a new array to trigger reactivity
     visitedModules = [...visitedModules];
-    console.log("Visited modules:", visitedModules);
-    console.log("All modules visited:", allModulesAreVisited);
+    
+    console.log("Visited modules after selection:", visitedModules);
+    console.log("All modules visited:", allModulesVisited());
     
     // Save current module index to localStorage
     if (browser) {
@@ -820,7 +837,7 @@
       {#if courseStructure}
         <div class="space-y-6 pt-6">
           <!-- Module Content -->
-          <div class="rounded-xl mb-20">
+          <div class="rounded-xl mb-32">
             <div class="flex items-center gap-4 lg:gap-8 lg:justify-between mb-6">
               <div class="flex items-center justify-center gap-2 lg:gap-4">
                 <h2
@@ -888,40 +905,49 @@
     </div>
 
     <!-- Mobile Generate Course Button -->
-    {#if allModulesLoaded && allModulesAreVisited}
-    <div class="fixed md:hidden bottom-[8.5rem] z-50">
-      <button
-        class="px-4 py-3 rounded-lg shadow-lg flex items-center justify-center transition-all duration-200 gap-2 {!allModulesLoaded ||
-        !courseStructure?.OG_Module_Title.every(
-          (_, index) => selectedVideos[index] !== undefined,
-        ) || !allModulesAreVisited
-          ? 'bg-white cursor-not-allowed text-Grey'
-          : 'bg-brand-red hover:bg-ButtonHover text-white'}"
-        on:click={handleSaveCourse}
-        disabled={!allModulesLoaded ||
-          !courseStructure?.OG_Module_Title.every(
-            (_, index) => selectedVideos[index] !== undefined,
-          ) || !allModulesAreVisited}
-      >
-        <div class="flex items-center gap-2">
-          <span class="text-body">Complete Creating Course</span>
-          <svg
-            class="w-5 h-5 {!allModulesLoaded || !allModulesAreVisited ? 'fill-Grey' : ''}"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              d="M14 5l7 7m0 0l-7 7m7-7H3"
-            />
-          </svg>
-        </div>
-      </button>
+    <div class="fixed md:hidden bottom-[5.5rem] z-50">
+      {#if !allModulesAreVisited}
+        <button
+          class="px-4 py-3 rounded-lg shadow-lg flex items-center justify-center transition-all duration-200 gap-2 {!allModulesLoaded ? 'bg-white cursor-not-allowed text-Grey' : 'bg-brand-turquoise hover:bg-brand-navy text-white'}"
+          on:click={() => selectModule(nextUnvisitedModuleIndex)}
+          disabled={!allModulesLoaded || nextUnvisitedModuleIndex === -1}
+        >
+          <div class="flex items-center gap-2">
+            <span class="text-body">Select Module {nextUnvisitedModuleIndex !== -1 ? nextUnvisitedModuleIndex + 1 : ''}</span>
+            <ChevronRight class="w-5 h-5" />
+          </div>
+        </button>
+      {:else if allModulesLoaded}
+        <button
+          class="px-4 py-2 rounded-lg shadow-lg flex items-center justify-center transition-all duration-200 gap-2 {!courseStructure?.OG_Module_Title.every(
+            (_, index) => selectedVideos[index] !== undefined
+          )
+            ? 'bg-white cursor-not-allowed text-Grey'
+            : 'bg-brand-red hover:bg-ButtonHover text-white'}"
+          on:click={handleSaveCourse}
+          disabled={!courseStructure?.OG_Module_Title.every(
+            (_, index) => selectedVideos[index] !== undefined
+          )}
+        >
+          <div class="flex items-center gap-2">
+            <span class="text-mini-body">Complete Creating Course</span>
+            <svg
+              class="w-5 h-5"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M14 5l7 7m0 0l-7 7m7-7H3"
+              />
+            </svg>
+          </div>
+        </button>
+      {/if}
     </div>
-    {/if}
   </div>
 
   <!-- Desktop Layout -->
@@ -959,13 +985,13 @@
           >
             {#each courseStructure.OG_Module_Title as title, index}
               {@const isActive = currentModuleIndex === index}
-              {@const isNextUnvisited = !visitedModules[index] && index === getNextUnvisitedModuleIndex()}
+              {@const isNextUnvisited = !visitedModules[index] && index === nextUnvisitedModuleIndex}
               <button
                 class="px-4 py-2 rounded-lg whitespace-nowrap transition-all duration-200 flex-shrink-0
                 {isActive
                   ? 'text-body-semibold bg-Green dark:bg-Green2 text-white'
                   : isNextUnvisited
-                    ? 'text-body bg-Black/5 dark:bg-White/10 hover:bg-gray-200 border-2 border-Green2 animate-text-only'
+                    ? 'text-body bg-Black/5 dark:bg-White/10 text-Green dark:text-Green2 hover:bg-gray-200 border-2 border-Green2 animate-pulse shadow-md'
                     : 'text-body bg-Black/5 dark:bg-White/10 text-Green dark:text-Green2 hover:bg-gray-200'}"
                 on:click={() => selectModule(index)}
               >
@@ -1057,34 +1083,45 @@
         in:fly={{ y: 20, duration: 500, delay: 200 }}
         out:fade
       >
-        <button
-          on:click={handleSaveCourse}
-          class="px-4 py-2 rounded-2xl text-base shadow-lg flex items-center justify-center transition-all duration-200 min-w-[250px] gap-2 {!allModulesLoaded ||
-          !courseStructure?.OG_Module_Title.every(
-            (_, index) => selectedVideos[index] !== undefined,
-          ) || !allModulesAreVisited
-            ? 'bg-white cursor-not-allowed text-Grey'
-            : 'bg-brand-red hover:bg-ButtonHover text-white'}"
-          disabled={!allModulesLoaded ||
-            !courseStructure?.OG_Module_Title.every(
-              (_, index) => selectedVideos[index] !== undefined,
-            ) || !allModulesAreVisited}
-        >
-          <span class="text-body">Create Complete Course</span>
-          <svg
-            class="w-5 h-5 {!allModulesLoaded || !allModulesAreVisited ? 'fill-Grey' : ''}"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
+        {#if !allModulesAreVisited}
+          <button
+            on:click={() => selectModule(nextUnvisitedModuleIndex)}
+            class="px-4 py-2 rounded-2xl text-base shadow-lg flex items-center justify-center transition-all duration-200 min-w-[250px] gap-2 {!allModulesLoaded ? 'bg-white cursor-not-allowed text-Grey' : 'bg-brand-turquoise hover:bg-brand-navy text-white'}"
+            disabled={!allModulesLoaded || nextUnvisitedModuleIndex === -1}
           >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              d="M14 5l7 7m0 0l-7 7m7-7H3"
-            />
-          </svg>
-        </button>
+            <span class="text-body">Select Module {nextUnvisitedModuleIndex !== -1 ? nextUnvisitedModuleIndex + 1 : ''}</span>
+            <ChevronRight class="w-5 h-5" />
+          </button>
+        {:else}
+          <button
+            on:click={handleSaveCourse}
+            class="px-4 py-2 rounded-2xl text-base shadow-lg flex items-center justify-center transition-all duration-200 min-w-[250px] gap-2 {!allModulesLoaded ||
+            !courseStructure?.OG_Module_Title.every(
+              (_, index) => selectedVideos[index] !== undefined
+            )
+              ? 'bg-white cursor-not-allowed text-Grey'
+              : 'bg-brand-red hover:bg-ButtonHover text-white'}"
+            disabled={!allModulesLoaded ||
+              !courseStructure?.OG_Module_Title.every(
+                (_, index) => selectedVideos[index] !== undefined
+              )}
+          >
+            <span class="text-body">Create Complete Course</span>
+            <svg
+              class="w-5 h-5 {!allModulesLoaded ? 'fill-Grey' : ''}"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M14 5l7 7m0 0l-7 7m7-7H3"
+              />
+            </svg>
+          </button>
+        {/if}
       </div>
     {:else}
       <div class="max-w-2xl mx-auto text-center">
@@ -1096,41 +1133,6 @@
     {/if}
   </div>
 
-  <!-- Mobile Generate Course Button -->
-   <!-- {#if allModulesLoaded && allModulesAreVisited}
-  <div class="fixed md:hidden bottom-[8.5rem] z-50">
-    <button
-      class="px-4 py-3 rounded-lg shadow-lg flex items-center justify-center transition-all duration-200 gap-2 {!allModulesLoaded ||
-      !courseStructure?.OG_Module_Title.every(
-        (_, index) => selectedVideos[index] !== undefined,
-      ) || !allModulesAreVisited
-        ? 'bg-white cursor-not-allowed text-Grey'
-        : 'bg-brand-red hover:bg-ButtonHover text-white'}"
-      on:click={handleSaveCourse}
-      disabled={!allModulesLoaded ||
-        !courseStructure?.OG_Module_Title.every(
-          (_, index) => selectedVideos[index] !== undefined,
-        ) || !allModulesAreVisited}
-    >
-      <div class="flex items-center gap-2">
-        <span class="text-body">Complete Creating Course</span>
-        <svg
-          class="w-5 h-5 {!allModulesLoaded || !allModulesAreVisited ? 'fill-Grey' : ''}"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            d="M14 5l7 7m0 0l-7 7m7-7H3"
-          />
-        </svg>
-      </div>
-    </button>
-  </div>
-  {/if} -->
 </div>
 
 <!-- Keep this for complete course generation -->

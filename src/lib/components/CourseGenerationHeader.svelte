@@ -46,7 +46,7 @@
 
   <p class="text-semi-body ">
     {#if isComplete}
-      <span class="text-Green2">Select a video for each module</span>
+      <span class="text-brand-red">Select a video for each module</span>
     {:else}
       <span class="text-Black dark:text-White">{getProgressMessage($initialLoadingState)}</span>
     {/if}
