@@ -257,7 +257,7 @@
         }}
       >
         <div class="flex items-center justify-center gap-4">
-          <span class="text-[#FF0000] text-semi-body">Remove from Bookmark</span>
+          <span class="text-[#FF0000] text-semi-body">Remove Bookmark</span>
           <img src="/icons/delete.svg" alt="Remove" class="w-6 h-6" />
         </div>
       </button>

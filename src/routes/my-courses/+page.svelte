@@ -8,16 +8,34 @@
   import { goto } from '$app/navigation';
   import { get } from 'svelte/store';
 
-  let allCourses: (FinalCourseStructure & { id: string; progress?: number })[] = [];
-  let enrolledCourses: (FinalCourseStructure & { id: string; progress?: number })[] = [];
-  let createdCourses: (FinalCourseStructure & { id: string; progress?: number })[] = [];
+  // Define an interface for the Firestore Timestamp
+  interface FirestoreTimestamp {
+    toMillis(): number;
+  }
+
+  // Extend the course type to include the timestamp
+  type CourseWithProgress = FinalCourseStructure & { 
+    id: string; 
+    progress?: number;
+    createdAt?: FirestoreTimestamp | Date | null;
+    isCompleted?: boolean;
+  };
+
+  let allCourses: CourseWithProgress[] = [];
+  let enrolledCourses: CourseWithProgress[] = [];
+  let createdCourses: CourseWithProgress[] = [];
+  let completedCourses: CourseWithProgress[] = [];
   let loading = true;
   let error: string | null = null;
-  let activeTab: 'all' | 'enrolled' | 'created' = 'all';
+  let activeTab: 'all' | 'enrolled' | 'created' | 'completed' = 'all';
   let sortBy = '';
   let showShareModal = false;
   let selectedCourseId = '';
+  let selectedCourseName = '';
   let initialLoad = true;
+  let showSortDropdown = false;
+  let sortOption: 'newest' | 'oldest' = 'newest';
+  let displayedCourses: CourseWithProgress[] = [];
 
   // Subscribe to auth state changes
   user.subscribe(async (userData) => {
@@ -32,6 +50,7 @@
       allCourses = [];
       enrolledCourses = [];
       createdCourses = [];
+      completedCourses = [];
       if (!initialLoad) {
         // Only redirect if this isn't the initial page load
         goto('/login');
@@ -106,9 +125,13 @@
       
       // Get enrolled courses that are not created by the user
       enrolledCourses = coursesWithProgress.filter(
-        course => course.isEnrolled && !course.isCreator && course.createdBy !== userData.uid
+        course => course.isEnrolled && !(course.isCreator || course.createdBy === userData.uid)
       );
       console.log('Enrolled courses:', enrolledCourses);
+      
+      // Get completed courses
+      completedCourses = coursesWithProgress.filter(course => course.isCompleted);
+      console.log('Completed courses:', completedCourses);
       
       // All courses should show both created and enrolled courses without duplicates
       // Use a Map to deduplicate by course ID
@@ -138,35 +161,132 @@
     }
   }
 
-  onMount(async () => {
+  onMount(() => {
     console.log('My courses page mounted');
     initialLoad = true;
     // Get initial user state
     const userData = get(user);
     if (userData) {
-      await loadCourses();
+      loadCourses();
     } else {
       console.log('No user data on mount, waiting for auth state');
     }
+
+    // Add click outside listener
+    document.addEventListener('click', handleClickOutside);
+    return () => {
+      document.removeEventListener('click', handleClickOutside);
+    };
   });
 
-  function handleShare(courseId: string) {
+  function handleShare(courseId: string, courseName: string = '') {
     selectedCourseId = courseId;
+    selectedCourseName = courseName;
     showShareModal = true;
   }
 
-  // Reactive statement to determine which courses to display based on active tab
-  $: displayedCourses = activeTab === 'all' 
-    ? allCourses 
-    : activeTab === 'enrolled' 
-      ? enrolledCourses 
-      : createdCourses;
+  // Reactive statement to determine which courses to display based on active tab and sort option
+  $: {
+    console.log('Sorting triggered:', { activeTab, sortOption });
+    let courses = activeTab === 'all' 
+      ? [...allCourses] 
+      : activeTab === 'enrolled' 
+        ? [...enrolledCourses] 
+        : activeTab === 'completed'
+          ? [...completedCourses]
+          : [...createdCourses];
 
-  // Update course counts reactively
+    console.log('Courses before sorting:', courses.map(c => ({ 
+      title: c.Final_Course_Title, 
+      createdAt: c.createdAt 
+    })));
+
+    if (sortOption === 'newest') {
+      courses.sort((a, b) => {
+        // Handle different timestamp types
+        let dateA = 0;
+        let dateB = 0;
+        
+        if (a.createdAt) {
+          if ('toMillis' in a.createdAt) {
+            dateA = a.createdAt.toMillis();
+          } else if (a.createdAt instanceof Date) {
+            dateA = a.createdAt.getTime();
+          }
+        }
+        
+        if (b.createdAt) {
+          if ('toMillis' in b.createdAt) {
+            dateB = b.createdAt.toMillis();
+          } else if (b.createdAt instanceof Date) {
+            dateB = b.createdAt.getTime();
+          }
+        }
+        
+        console.log('Comparing dates:', {
+          titleA: a.Final_Course_Title,
+          dateA,
+          titleB: b.Final_Course_Title,
+          dateB,
+          result: dateB - dateA
+        });
+        return dateB - dateA;
+      });
+    } else if (sortOption === 'oldest') {
+      courses.sort((a, b) => {
+        // Handle different timestamp types
+        let dateA = 0;
+        let dateB = 0;
+        
+        if (a.createdAt) {
+          if ('toMillis' in a.createdAt) {
+            dateA = a.createdAt.toMillis();
+          } else if (a.createdAt instanceof Date) {
+            dateA = a.createdAt.getTime();
+          }
+        }
+        
+        if (b.createdAt) {
+          if ('toMillis' in b.createdAt) {
+            dateB = b.createdAt.toMillis();
+          } else if (b.createdAt instanceof Date) {
+            dateB = b.createdAt.getTime();
+          }
+        }
+        
+        return dateA - dateB;
+      });
+    }
+
+    console.log('Courses after sorting:', courses.map(c => ({ 
+      title: c.Final_Course_Title, 
+      createdAt: c.createdAt 
+    })));
+    
+    displayedCourses = courses;
+  }
+
+  // Function to handle sort option selection
+  function handleSortSelect(option: 'newest' | 'oldest') {
+    console.log('Sort option selected:', option);
+    sortOption = option;
+    showSortDropdown = false;
+  }
+
+  // Function to handle click outside of dropdown
+  function handleClickOutside(event: MouseEvent) {
+    const target = event.target as HTMLElement;
+    if (!target.closest('.sort-dropdown')) {
+      showSortDropdown = false;
+    }
+  }
+
+  // Reactive statement to determine which courses to display based on active tab
   $: courseCount = {
     all: allCourses.length,
     enrolled: enrolledCourses.length,
-    created: createdCourses.length
+    created: createdCourses.length,
+    completed: completedCourses.length
   };
 
   // Add this function to handle create course navigation
@@ -204,9 +324,9 @@
     <div class="relative border-b border-light-border dark:border-dark-border">
       <div class="container max-w-auto">
         <!-- Tabs -->
-        <div class="flex gap-8">
+        <div class="flex gap-4 sm:gap-6 lg:gap-8 overflow-x-auto pb-1">
           <button 
-            class="pb-4 relative {activeTab === 'all' 
+            class="pb-4 relative whitespace-nowrap {activeTab === 'all' 
               ? 'text-Green dark:text-TransparentGreen2 text-body-semibold' 
               : 'text-light-text-tertiary dark:text-dark-text-tertiary text-body'}"
             on:click={() => activeTab = 'all'}
@@ -222,7 +342,7 @@
             {/if}
           </button>
           <button 
-            class="pb-4 relative {activeTab === 'enrolled' 
+            class="pb-4 relative whitespace-nowrap {activeTab === 'enrolled' 
               ? 'text-Green dark:text-TransparentGreen2 text-body-semibold' 
               : 'text-light-text-tertiary dark:text-dark-text-tertiary text-body'}"
             on:click={() => activeTab = 'enrolled'}
@@ -237,7 +357,22 @@
             {/if}
           </button>
           <button 
-            class="pb-4 relative {activeTab === 'created' 
+            class="pb-4 relative whitespace-nowrap {activeTab === 'completed' 
+              ? 'text-Green dark:text-TransparentGreen2 text-body-semibold' 
+              : 'text-light-text-tertiary dark:text-dark-text-tertiary text-body'}"
+            on:click={() => activeTab = 'completed'}
+          >
+            <span class="hidden lg:inline">Completed Courses</span>
+            <span class="lg:hidden">Completed</span>
+            <span class="ml-2 px-2 py-0.5 bg-Black/5 dark:bg-dark-bg-secondary rounded-full text-semibody-medium">
+              {courseCount.completed}
+            </span>
+            {#if activeTab === 'completed'}
+              <div class="absolute bottom-0 left-0 right-0 h-0.5 bg-Green dark:bg-TransparentGreen2"></div>
+            {/if}
+          </button>
+          <button 
+            class="pb-4 relative whitespace-nowrap {activeTab === 'created' 
               ? 'text-Green dark:text-TransparentGreen2 text-body-semibold' 
               : 'text-light-text-tertiary dark:text-dark-text-tertiary text-body'}"
             on:click={() => activeTab = 'created'}
@@ -256,18 +391,48 @@
         <!-- Sort and Create Course Section - Desktop -->
         <div class="hidden lg:flex items-center gap-4 absolute right-0 top-[-8px]   h-full ">
           <!-- Sort Dropdown -->
+          <div class="sort-dropdown relative">
+            <button 
+              class="h-[42px] px-4 py-2 bg-black/5 dark:bg-white/10 rounded-lg justify-start items-center gap-[17px] inline-flex"
+              on:click|stopPropagation={() => showSortDropdown = !showSortDropdown}
+            >
+              <div class="text-light-text-secondary dark:text-dark-text-secondary">Sort by</div>
+              <div data-svg-wrapper class="relative">
+                <svg class="text-light-text-primary dark:text-dark-text-primary" width="16" height="27" viewBox="0 0 16 27" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M12 10.5C12 10.5 9.05403 6.50001 7.99997 6.5C6.9459 6.49999 4 10.5 4 10.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M12 16.5C12 16.5 9.05403 20.5 7.99997 20.5C6.9459 20.5 4 16.5 4 16.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
+            </button>
 
-          <div class="h-[42px] px-4 py-2 bg-white/10 rounded-lg justify-start items-center gap-[17px] inline-flex">
-            <div class="text-[#dddada] text-sm font-medium font-['Poppins']">Sort by</div>
-            <div data-svg-wrapper class="relative">
-            <svg width="16" height="27" viewBox="0 0 16 27" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M12 10.5C12 10.5 9.05403 6.50001 7.99997 6.5C6.9459 6.49999 4 10.5 4 10.5" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M12 16.5C12 16.5 9.05403 20.5 7.99997 20.5C6.9459 20.5 4 16.5 4 16.5" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-            </div>
-        </div>
+            {#if showSortDropdown}
+              <div class="absolute right-0 mt-2 w-48 bg-light-bg-secondary dark:bg-dark-bg-secondary rounded-lg shadow-lg border border-light-border dark:border-dark-border z-50">
+                <button
+                  class="w-full px-4 py-2 text-left text-light-text-primary dark:text-dark-text-primary hover:bg-light-bg-secondary dark:hover:bg-dark-bg-secondary transition-colors flex items-center justify-between {sortOption === 'newest' ? 'bg-black/5 dark:bg-white/10' : ''}"
+                  on:click={() => handleSortSelect('newest')}
+                >
+                  <span>Newest</span>
+                  {#if sortOption === 'newest'}
+                    <svg class="w-4 h-4 text-Green dark:text-TransparentGreen2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                  {/if}
+                </button>
+                <button
+                  class="w-full px-4 py-2 text-left text-light-text-primary dark:text-dark-text-primary hover:bg-light-bg-secondary dark:hover:bg-dark-bg-secondary transition-colors flex items-center justify-between {sortOption === 'oldest' ? 'bg-black/5 dark:bg-white/10' : ''}"
+                  on:click={() => handleSortSelect('oldest')}
+                >
+                  <span>Oldest</span>
+                  {#if sortOption === 'oldest'}
+                    <svg class="w-4 h-4 text-Green dark:text-TransparentGreen2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                  {/if}
+                </button>
+              </div>
+            {/if}
+          </div>
           
-
           <!-- Create Course Button -->
           <button 
             class="flex items-center gap-2 px-2 pl-4 py-2 bg-brand-red text-white rounded-lg hover:bg-ButtonHover transition-colors"
@@ -284,15 +449,47 @@
     <!-- Sort and Create Course Section - Mobile -->
     <div class="flex lg:hidden items-center justify-end gap-4 mt-4">
       <!-- Sort Dropdown -->
-      <div class="h-[42px] px-4 py-2 bg-white/10 rounded-lg justify-start items-center gap-[17px] inline-flex">
-        <div class="text-[#dddada] text-sm font-medium font-['Poppins']">Sort by</div>
-        <div data-svg-wrapper class="relative">
-        <svg width="16" height="27" viewBox="0 0 16 27" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M12 10.5C12 10.5 9.05403 6.50001 7.99997 6.5C6.9459 6.49999 4 10.5 4 10.5" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-        <path d="M12 16.5C12 16.5 9.05403 20.5 7.99997 20.5C6.9459 20.5 4 16.5 4 16.5" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-        </div>
-    </div>
+      <div class="sort-dropdown relative">
+        <button 
+          class="h-[42px] px-4 py-2 bg-black/5 dark:bg-white/10 rounded-lg justify-start items-center gap-[17px] inline-flex"
+          on:click|stopPropagation={() => showSortDropdown = !showSortDropdown}
+        >
+          <div class="text-light-text-secondary dark:text-dark-text-secondary ">Sort by</div>
+          <div data-svg-wrapper class="relative">
+            <svg class="text-black dark:text-white" width="16" height="27" viewBox="0 0 16 27" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 10.5C12 10.5 9.05403 6.50001 7.99997 6.5C6.9459 6.49999 4 10.5 4 10.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M12 16.5C12 16.5 9.05403 20.5 7.99997 20.5C6.9459 20.5 4 16.5 4 16.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+        </button>
+
+        {#if showSortDropdown}
+          <div class="absolute right-0 mt-2 w-48 bg-light-bg-secondary dark:bg-dark-bg-secondary rounded-lg shadow-lg border border-light-border dark:border-dark-border z-50">
+            <button
+              class="w-full px-4 py-2 text-left text-light-text-primary dark:text-dark-text-primary hover:bg-light-bg-secondary dark:hover:bg-dark-bg-secondary transition-colors flex items-center justify-between {sortOption === 'newest' ? 'bg-black/5 dark:bg-white/10' : ''}"
+              on:click={() => handleSortSelect('newest')}
+            >
+              <span>Newest</span>
+              {#if sortOption === 'newest'}
+                <svg class="w-4 h-4 text-Green dark:text-TransparentGreen2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+              {/if}
+            </button>
+            <button
+              class="w-full px-4 py-2 text-left text-light-text-primary dark:text-dark-text-primary hover:bg-light-bg-secondary dark:hover:bg-dark-bg-secondary transition-colors flex items-center justify-between {sortOption === 'oldest' ? 'bg-black/5 dark:bg-white/10' : ''}"
+              on:click={() => handleSortSelect('oldest')}
+            >
+              <span>Oldest</span>
+              {#if sortOption === 'oldest'}
+                <svg class="w-4 h-4 text-Green dark:text-TransparentGreen2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+              {/if}
+            </button>
+          </div>
+        {/if}
+      </div>
 
       <!-- Create Course Button -->
       <button 
@@ -358,13 +555,17 @@
     {:else if displayedCourses.length === 0}
       <div class="col-span-full text-center py-12">
         <p class="text-light-text-secondary dark:text-dark-text-secondary text-lg">
-          No courses found in this category.
+          {#if activeTab === 'completed'}
+            You haven't completed any courses yet. Keep learning!
+          {:else}
+            No courses found in this category.
+          {/if}
         </p>
       </div>
     {:else}
       {#each displayedCourses as course (course.id)}
         <div class="w-full">
-          <UserCourseCard {course} onShare={handleShare} />
+          <UserCourseCard {course} onShare={(id) => handleShare(id, course.Final_Course_Title)} />
         </div>
       {/each}
     {/if}
@@ -378,6 +579,7 @@
     shareType="course"
     id={selectedCourseId}
     courseId={selectedCourseId}
+    courseName={selectedCourseName}
     onClose={() => showShareModal = false}
   />
 {/if} 

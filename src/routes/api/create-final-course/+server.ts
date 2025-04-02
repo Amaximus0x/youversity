@@ -26,6 +26,10 @@ function preprocessTranscript(transcript: string): string {
     .replace(/<[^>]*>/g, '')
     // Remove URLs
     .replace(/https?:\/\/[^\s]+/g, '')
+    // Remove [Music] and similar markers
+    .replace(/\[Music\]/g, '')
+    .replace(/\[Applause\]/g, '')
+    .replace(/\[Laughter\]/g, '')
     // Remove redundant newlines while preserving paragraph structure
     .split('\n')
     .map(line => line.trim())
@@ -94,7 +98,7 @@ async function makeOpenAIRequest(prompt: string, retries = 2) {
   });
 }
 
-async function generateQuiz(transcript: string, moduleTitle: string, isFinalQuiz: boolean = false): Promise<Quiz | null> {
+async function generateQuiz(transcript: string, moduleTitle: string, isFinalQuiz: boolean = false, moduleQuizzes: Quiz[] = []): Promise<Quiz | null> {
   try {
     if (typeof transcript !== 'string') {
       console.error('Invalid transcript type:', typeof transcript);
@@ -112,13 +116,18 @@ async function generateQuiz(transcript: string, moduleTitle: string, isFinalQuiz
     console.log(`Starting quiz generation for: ${moduleTitle}`);
     console.log(`Processed transcript length: ${processedTranscript.length} characters`);
 
-    const prompt = `You are an AI language model tasked with creating a 5-question quiz based on the provided YouTube video transcript. The quiz should be in a rigid JSON format for coding purposes.
+    const questionCount = isFinalQuiz ? 20 : 5;
+    // Use more transcript content for final quiz
+    const transcriptLength = isFinalQuiz ? 24000 : 4000;
+    const truncatedTranscript = processedTranscript.substring(0, transcriptLength);
+
+    const prompt = `You are an AI language model tasked with creating a ${questionCount}-question quiz based on the provided YouTube video transcript. The quiz should be in a rigid JSON format for coding purposes.
 
 Instructions:
 
 Quiz Structure:
 
-The quiz must contain exactly 5 questions.
+CRITICAL: You MUST generate EXACTLY ${questionCount} questions. This is a strict requirement that cannot be violated.
 Each question can be either:
 Multiple Choice: Up to 4 options labeled "a", "b", "c", "d".
 True/False: Options labeled "a" (True) and "b" (False).
@@ -140,7 +149,17 @@ The output must be a JSON object with the following structure:
     }
   ]
 }
-Note: For True/False questions, include only options "a" and "b".
+
+IMPORTANT FORMATTING RULES:
+1. For True/False questions:
+   - DO NOT include "True or False:" or "True/False:" at the start of the question
+   - Simply state the fact or statement
+   - Example: "The Earth is round." (NOT "True or False: The Earth is round.")
+2. For Multiple Choice questions:
+   - Make the question clear and concise
+   - Ensure all options are plausible
+   - Avoid obvious wrong answers
+
 Content Guidelines:
 
 Base all questions and answers strictly on the information provided in the transcript.
@@ -159,14 +178,73 @@ Use clear and concise language suitable for a general audience.
 Avoid ambiguous or misleading questions and options.
 
 Transcript:
-${processedTranscript.substring(0, 4000)}`;
+${truncatedTranscript}`;
 
     try {
       const quiz = await makeOpenAIRequest(prompt);
       
-      if (!quiz.quiz || !Array.isArray(quiz.quiz) || quiz.quiz.length !== 5) {
-        console.error(`Invalid quiz structure for ${moduleTitle}`);
+      // Add detailed logging for debugging
+      console.log(`Quiz response for ${moduleTitle}:`, JSON.stringify(quiz, null, 2));
+      
+      // Validate quiz structure
+      if (!quiz) {
+        console.error(`Null quiz response for ${moduleTitle}`);
         return null;
+      }
+      
+      if (!quiz.quiz) {
+        console.error(`Missing quiz array in response for ${moduleTitle}`);
+        return null;
+      }
+      
+      if (!Array.isArray(quiz.quiz)) {
+        console.error(`Quiz is not an array for ${moduleTitle}`);
+        return null;
+      }
+
+      // For final quiz, if we don't get exactly 20 questions, supplement with module questions
+      if (isFinalQuiz && quiz.quiz.length < questionCount) {
+        console.log(`Supplementing final quiz with ${questionCount - quiz.quiz.length} questions from module quizzes`);
+        
+        // Get all questions from module quizzes
+        const moduleQuestions: QuizQuestion[] = [];
+        moduleQuizzes.forEach(moduleQuiz => {
+          if (moduleQuiz && moduleQuiz.quiz) {
+            moduleQuestions.push(...moduleQuiz.quiz);
+          }
+        });
+
+        // Randomly select questions to supplement
+        const questionsNeeded = questionCount - quiz.quiz.length;
+        const shuffledQuestions = moduleQuestions.sort(() => Math.random() - 0.5);
+        const selectedQuestions = shuffledQuestions.slice(0, questionsNeeded);
+
+        // Add selected questions to the final quiz
+        quiz.quiz.push(...selectedQuestions);
+        
+        console.log(`Final quiz now has ${quiz.quiz.length} questions after supplementation`);
+      }
+      
+      if (quiz.quiz.length !== questionCount) {
+        console.error(`Incorrect number of questions for ${moduleTitle}. Expected ${questionCount}, got ${quiz.quiz.length}`);
+        return null;
+      }
+
+      // Validate each question
+      for (let i = 0; i < quiz.quiz.length; i++) {
+        const question = quiz.quiz[i];
+        if (!question.question || !question.type || !question.options || !question.answer) {
+          console.error(`Invalid question structure at index ${i} for ${moduleTitle}`);
+          return null;
+        }
+        if (!['multiple-choice', 'true/false'].includes(question.type)) {
+          console.error(`Invalid question type at index ${i} for ${moduleTitle}: ${question.type}`);
+          return null;
+        }
+        // Remove "True or False:" or "True/False:" from questions if present
+        if (question.type === 'true/false') {
+          question.question = question.question.replace(/^(True or False:|True\/False:)\s*/i, '');
+        }
       }
 
       return quiz;
@@ -386,8 +464,10 @@ async function generateAllQuizzes(moduleTranscripts: string[], courseStructure: 
   if (validTranscriptCount > 0) {
     console.log('Generating final course quiz...');
     try {
-      const finalTranscript = preprocessTranscript(validTranscripts).substring(0, 4000);
-      const finalQuiz = await generateQuiz(finalTranscript, courseStructure.OG_Course_Title, true);
+      // For final quiz, we'll use more of the transcript content
+      const finalTranscript = preprocessTranscript(validTranscripts).substring(0, 24000);
+      console.log(`Final quiz transcript length: ${finalTranscript.length} characters`);
+      const finalQuiz = await generateQuiz(finalTranscript, courseStructure.OG_Course_Title, true, moduleQuizzes);
       return { moduleQuizzes, finalQuiz };
     } catch (error) {
       console.error('Error generating final quiz:', error);
