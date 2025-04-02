@@ -31,6 +31,7 @@
   let sortBy = '';
   let showShareModal = false;
   let selectedCourseId = '';
+  let selectedCourseName = '';
   let initialLoad = true;
   let showSortDropdown = false;
   let sortOption: 'newest' | 'oldest' = 'newest';
@@ -178,8 +179,9 @@
     };
   });
 
-  function handleShare(courseId: string) {
+  function handleShare(courseId: string, courseName: string = '') {
     selectedCourseId = courseId;
+    selectedCourseName = courseName;
     showShareModal = true;
   }
 
@@ -563,7 +565,7 @@
     {:else}
       {#each displayedCourses as course (course.id)}
         <div class="w-full">
-          <UserCourseCard {course} onShare={handleShare} />
+          <UserCourseCard {course} onShare={(id) => handleShare(id, course.Final_Course_Title)} />
         </div>
       {/each}
     {/if}
@@ -577,6 +579,7 @@
     shareType="course"
     id={selectedCourseId}
     courseId={selectedCourseId}
+    courseName={selectedCourseName}
     onClose={() => showShareModal = false}
   />
 {/if} 
