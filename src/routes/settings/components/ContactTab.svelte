@@ -78,7 +78,7 @@
       <!-- Contact Info -->
       <div class="flex-col justify-start items-start gap-4 inline-flex">
         <div class="text-light-text-tertiary dark:text-dark-text-tertiary text-semi-body">
-          Email, call or fill the form to learn how youversity can solve your
+          Email or fill the form to learn how youversity can solve your
           learning difficulties.
         </div>
         <div class="text-light-text-tertiary dark:text-dark-text-tertiary text-semi-body">
