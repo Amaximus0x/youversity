@@ -148,6 +148,8 @@
         const courseData = await getUserCourse(userData.uid, $page.params.id);
         console.log('Got course data:', courseData);
         courseDetails = courseData;
+        
+        // Ensure these are set based on actual values from the course data
         isEnrolled = courseData.isEnrolled || false;
         isCreator = courseData.isCreator || false;
 
@@ -664,6 +666,9 @@
               </h4>
               {#if $currentModuleStore !== -1 && $currentModuleStore !== courseDetails?.Final_Module_Title?.length}
               <div class="mt-6">
+                <p class="text-h4-medium text-Green dark:text-Green2 mb-2">
+                  Module {$currentModuleStore + 1}
+                </p>
                 <p class="text-h2-mobile-bold lg:text-h2-bold text-light-text-primary dark:text-dark-text-primary">
                   {courseDetails.Final_Module_Title[$currentModuleStore]}
                 </p>
@@ -949,7 +954,7 @@
               {/if}
 
               <!-- Reviews Section -->
-              <section id="reviews">
+              <section id="reviews" class="pt-8">
                 {#if courseDetails.isPublic}
                   <div class="w-full">
                     <CourseRatings
