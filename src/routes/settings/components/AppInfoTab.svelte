@@ -6,7 +6,7 @@
   <div><span class="text-light-text-primary dark:text-dark-text-primary text-3xl font-normal font-['Poppins'] leading-[44px]">Privacy Policy of </span>
    <span class="text-light-text-primary dark:text-dark-text-primary text-3xl font-medium font-['Poppins'] leading-[44px]">Youversity</span></div>
   <!-- Privacy Policy -->
-   <div class="text-body text-light-text-tertiary dark:text-dark-text-tertiary mt-4 space-y-4">
+   <div class="text-body text-light-text-secondary dark:text-dark-text-secondary mt-4 space-y-4">
     <p>Effective Date: September 24, 2024</p>
 
     <p>Ayana Dev Studio ("we," "us," or "our") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our mobile applications ("Apps") available on the Google Play Store and Apple App Store. By using our Apps, you agree to the terms outlined in this policy. If you do not agree with these terms, please do not use our Apps.</p>
