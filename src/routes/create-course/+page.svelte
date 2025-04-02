@@ -503,12 +503,10 @@
         likes: 0,
       });
 
-      finalLoadingState.setStep("Enrolling you in the course...");
-      finalLoadingState.setProgress(95);
-
-      await enrollInCourse($user.uid, courseId);
-
       finalLoadingState.setStep("Course is ready!");
+      // Creators now need to explicitly enroll in their courses instead of automatic enrollment
+      // await enrollInCourse($user.uid, courseId);
+
       finalLoadingState.setProgress(100);
       finalLoadingState.setCourseId(courseId);
 
@@ -954,7 +952,7 @@
   <div class="hidden md:block container mx-auto">
     <CourseGenerationHeader />
     {#if courseStructure}
-      <div class="space-y-8">
+      <div class="flex flex-col gap-8">
         <!-- Course Title and Objective -->
         <div>
           <h1 class="text-h2-mobile lg:text-h2 text-Black dark:text-White mb-2">
