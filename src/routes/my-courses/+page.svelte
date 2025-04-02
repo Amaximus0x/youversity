@@ -356,21 +356,7 @@
               <div class="absolute bottom-0 left-0 right-0 h-0.5 bg-Green dark:bg-TransparentGreen2"></div>
             {/if}
           </button>
-          <button 
-            class="pb-4 relative whitespace-nowrap {activeTab === 'completed' 
-              ? 'text-Green dark:text-TransparentGreen2 text-body-semibold' 
-              : 'text-light-text-tertiary dark:text-dark-text-tertiary text-body'}"
-            on:click={() => activeTab = 'completed'}
-          >
-            <span class="hidden lg:inline">Completed Courses</span>
-            <span class="lg:hidden">Completed</span>
-            <span class="ml-2 px-2 py-0.5 bg-Black/5 dark:bg-dark-bg-secondary rounded-full text-semibody-medium">
-              {courseCount.completed}
-            </span>
-            {#if activeTab === 'completed'}
-              <div class="absolute bottom-0 left-0 right-0 h-0.5 bg-Green dark:bg-TransparentGreen2"></div>
-            {/if}
-          </button>
+          
           <button 
             class="pb-4 relative whitespace-nowrap {activeTab === 'created' 
               ? 'text-Green dark:text-TransparentGreen2 text-body-semibold' 
@@ -383,6 +369,21 @@
               {courseCount.created}
             </span>
             {#if activeTab === 'created'}
+              <div class="absolute bottom-0 left-0 right-0 h-0.5 bg-Green dark:bg-TransparentGreen2"></div>
+            {/if}
+          </button>
+          <button 
+            class="pb-4 relative whitespace-nowrap {activeTab === 'completed' 
+              ? 'text-Green dark:text-TransparentGreen2 text-body-semibold' 
+              : 'text-light-text-tertiary dark:text-dark-text-tertiary text-body'}"
+            on:click={() => activeTab = 'completed'}
+          >
+            <span class="hidden lg:inline">Completed Courses</span>
+            <span class="lg:hidden">Completed</span>
+            <span class="ml-2 px-2 py-0.5 bg-Black/5 dark:bg-dark-bg-secondary rounded-full text-semibody-medium">
+              {courseCount.completed}
+            </span>
+            {#if activeTab === 'completed'}
               <div class="absolute bottom-0 left-0 right-0 h-0.5 bg-Green dark:bg-TransparentGreen2"></div>
             {/if}
           </button>
