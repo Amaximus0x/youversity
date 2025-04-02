@@ -8,19 +8,33 @@
   import { goto } from '$app/navigation';
   import { get } from 'svelte/store';
 
-  let allCourses: (FinalCourseStructure & { id: string; progress?: number })[] = [];
-  let enrolledCourses: (FinalCourseStructure & { id: string; progress?: number })[] = [];
-  let createdCourses: (FinalCourseStructure & { id: string; progress?: number })[] = [];
+  // Define an interface for the Firestore Timestamp
+  interface FirestoreTimestamp {
+    toMillis(): number;
+  }
+
+  // Extend the course type to include the timestamp
+  type CourseWithProgress = FinalCourseStructure & { 
+    id: string; 
+    progress?: number;
+    createdAt?: FirestoreTimestamp | Date | null;
+    isCompleted?: boolean;
+  };
+
+  let allCourses: CourseWithProgress[] = [];
+  let enrolledCourses: CourseWithProgress[] = [];
+  let createdCourses: CourseWithProgress[] = [];
+  let completedCourses: CourseWithProgress[] = [];
   let loading = true;
   let error: string | null = null;
-  let activeTab: 'all' | 'enrolled' | 'created' = 'all';
+  let activeTab: 'all' | 'enrolled' | 'created' | 'completed' = 'all';
   let sortBy = '';
   let showShareModal = false;
   let selectedCourseId = '';
   let initialLoad = true;
   let showSortDropdown = false;
   let sortOption: 'newest' | 'oldest' = 'newest';
-  let displayedCourses: (FinalCourseStructure & { id: string; progress?: number })[] = [];
+  let displayedCourses: CourseWithProgress[] = [];
 
   // Subscribe to auth state changes
   user.subscribe(async (userData) => {
@@ -35,6 +49,7 @@
       allCourses = [];
       enrolledCourses = [];
       createdCourses = [];
+      completedCourses = [];
       if (!initialLoad) {
         // Only redirect if this isn't the initial page load
         goto('/login');
@@ -109,9 +124,13 @@
       
       // Get enrolled courses that are not created by the user
       enrolledCourses = coursesWithProgress.filter(
-        course => course.isEnrolled && !course.isCreator && course.createdBy !== userData.uid
+        course => course.isEnrolled && !(course.isCreator || course.createdBy === userData.uid)
       );
       console.log('Enrolled courses:', enrolledCourses);
+      
+      // Get completed courses
+      completedCourses = coursesWithProgress.filter(course => course.isCompleted);
+      console.log('Completed courses:', completedCourses);
       
       // All courses should show both created and enrolled courses without duplicates
       // Use a Map to deduplicate by course ID
@@ -141,13 +160,13 @@
     }
   }
 
-  onMount(async () => {
+  onMount(() => {
     console.log('My courses page mounted');
     initialLoad = true;
     // Get initial user state
     const userData = get(user);
     if (userData) {
-      await loadCourses();
+      loadCourses();
     } else {
       console.log('No user data on mount, waiting for auth state');
     }
@@ -171,7 +190,9 @@
       ? [...allCourses] 
       : activeTab === 'enrolled' 
         ? [...enrolledCourses] 
-        : [...createdCourses];
+        : activeTab === 'completed'
+          ? [...completedCourses]
+          : [...createdCourses];
 
     console.log('Courses before sorting:', courses.map(c => ({ 
       title: c.Final_Course_Title, 
@@ -180,9 +201,26 @@
 
     if (sortOption === 'newest') {
       courses.sort((a, b) => {
-        // Convert Firestore Timestamp to milliseconds for comparison
-        const dateA = a.createdAt?.toMillis() || 0;
-        const dateB = b.createdAt?.toMillis() || 0;
+        // Handle different timestamp types
+        let dateA = 0;
+        let dateB = 0;
+        
+        if (a.createdAt) {
+          if ('toMillis' in a.createdAt) {
+            dateA = a.createdAt.toMillis();
+          } else if (a.createdAt instanceof Date) {
+            dateA = a.createdAt.getTime();
+          }
+        }
+        
+        if (b.createdAt) {
+          if ('toMillis' in b.createdAt) {
+            dateB = b.createdAt.toMillis();
+          } else if (b.createdAt instanceof Date) {
+            dateB = b.createdAt.getTime();
+          }
+        }
+        
         console.log('Comparing dates:', {
           titleA: a.Final_Course_Title,
           dateA,
@@ -194,9 +232,26 @@
       });
     } else if (sortOption === 'oldest') {
       courses.sort((a, b) => {
-        // Convert Firestore Timestamp to milliseconds for comparison
-        const dateA = a.createdAt?.toMillis() || 0;
-        const dateB = b.createdAt?.toMillis() || 0;
+        // Handle different timestamp types
+        let dateA = 0;
+        let dateB = 0;
+        
+        if (a.createdAt) {
+          if ('toMillis' in a.createdAt) {
+            dateA = a.createdAt.toMillis();
+          } else if (a.createdAt instanceof Date) {
+            dateA = a.createdAt.getTime();
+          }
+        }
+        
+        if (b.createdAt) {
+          if ('toMillis' in b.createdAt) {
+            dateB = b.createdAt.toMillis();
+          } else if (b.createdAt instanceof Date) {
+            dateB = b.createdAt.getTime();
+          }
+        }
+        
         return dateA - dateB;
       });
     }
@@ -228,7 +283,8 @@
   $: courseCount = {
     all: allCourses.length,
     enrolled: enrolledCourses.length,
-    created: createdCourses.length
+    created: createdCourses.length,
+    completed: completedCourses.length
   };
 
   // Add this function to handle create course navigation
@@ -266,9 +322,9 @@
     <div class="relative border-b border-light-border dark:border-dark-border">
       <div class="container max-w-auto">
         <!-- Tabs -->
-        <div class="flex gap-8">
+        <div class="flex gap-4 sm:gap-6 lg:gap-8 overflow-x-auto pb-1">
           <button 
-            class="pb-4 relative {activeTab === 'all' 
+            class="pb-4 relative whitespace-nowrap {activeTab === 'all' 
               ? 'text-Green dark:text-TransparentGreen2 text-body-semibold' 
               : 'text-light-text-tertiary dark:text-dark-text-tertiary text-body'}"
             on:click={() => activeTab = 'all'}
@@ -284,7 +340,7 @@
             {/if}
           </button>
           <button 
-            class="pb-4 relative {activeTab === 'enrolled' 
+            class="pb-4 relative whitespace-nowrap {activeTab === 'enrolled' 
               ? 'text-Green dark:text-TransparentGreen2 text-body-semibold' 
               : 'text-light-text-tertiary dark:text-dark-text-tertiary text-body'}"
             on:click={() => activeTab = 'enrolled'}
@@ -299,7 +355,22 @@
             {/if}
           </button>
           <button 
-            class="pb-4 relative {activeTab === 'created' 
+            class="pb-4 relative whitespace-nowrap {activeTab === 'completed' 
+              ? 'text-Green dark:text-TransparentGreen2 text-body-semibold' 
+              : 'text-light-text-tertiary dark:text-dark-text-tertiary text-body'}"
+            on:click={() => activeTab = 'completed'}
+          >
+            <span class="hidden lg:inline">Completed Courses</span>
+            <span class="lg:hidden">Completed</span>
+            <span class="ml-2 px-2 py-0.5 bg-Black/5 dark:bg-dark-bg-secondary rounded-full text-semibody-medium">
+              {courseCount.completed}
+            </span>
+            {#if activeTab === 'completed'}
+              <div class="absolute bottom-0 left-0 right-0 h-0.5 bg-Green dark:bg-TransparentGreen2"></div>
+            {/if}
+          </button>
+          <button 
+            class="pb-4 relative whitespace-nowrap {activeTab === 'created' 
               ? 'text-Green dark:text-TransparentGreen2 text-body-semibold' 
               : 'text-light-text-tertiary dark:text-dark-text-tertiary text-body'}"
             on:click={() => activeTab = 'created'}
@@ -482,7 +553,11 @@
     {:else if displayedCourses.length === 0}
       <div class="col-span-full text-center py-12">
         <p class="text-light-text-secondary dark:text-dark-text-secondary text-lg">
-          No courses found in this category.
+          {#if activeTab === 'completed'}
+            You haven't completed any courses yet. Keep learning!
+          {:else}
+            No courses found in this category.
+          {/if}
         </p>
       </div>
     {:else}
