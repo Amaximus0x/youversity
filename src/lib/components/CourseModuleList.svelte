@@ -216,7 +216,7 @@
 
         <div class="hidden lg:block">
             <h3
-                class="text-body-semibold text-light-text-primary dark:text-dark-text-primary p-2 border-b border-light-border dark:border-dark-border bg-light-bg-primary dark:bg-dark-bg-secondary"
+                class="text-body-semibold text-light-text-primary dark:text-dark-text-primary p-2 border-b border-light-border dark:border-dark-border bg-light-bg-secondary dark:bg-dark-bg-secondary"
             >
                 Course Modules
             </h3>

@@ -906,13 +906,19 @@
     <div class="fixed md:hidden bottom-[5.5rem] z-50">
       {#if !allModulesAreVisited}
         <button
-          class="px-4 py-3 rounded-lg shadow-lg flex items-center justify-center transition-all duration-200 gap-2 {!allModulesLoaded ? 'bg-white cursor-not-allowed text-Grey' : 'bg-brand-turquoise hover:bg-brand-navy text-white'}"
+          class="px-4 py-3 rounded-lg shadow-lg flex items-center justify-center transition-all duration-200 gap-2 {!allModulesLoaded ? 'bg-white cursor-not-allowed text-Grey' : 'dark:bg-brand-turquoise bg-brand-navy text-white'}"
           on:click={() => selectModule(nextUnvisitedModuleIndex)}
           disabled={!allModulesLoaded || nextUnvisitedModuleIndex === -1}
         >
           <div class="flex items-center gap-2">
-            <span class="text-body">Select Module {nextUnvisitedModuleIndex !== -1 ? nextUnvisitedModuleIndex + 1 : ''}</span>
-            <ChevronRight class="w-5 h-5" />
+            <span class="text-mini-body">Select Module {nextUnvisitedModuleIndex !== -1 ? nextUnvisitedModuleIndex + 1 : ''} video</span>
+            <svg class="{!allModulesLoaded ? 'text-Grey' : 'text-white'}" width="25" height="24" viewBox="0 0 25 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <g id="Component 7">
+              <path id="Vector" d="M20.5 12H4.50002" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              <path id="Vector_2" d="M15.5 17C15.5 17 20.5 13.3176 20.5 12C20.5 10.6824 15.5 7 15.5 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </g>
+              </svg>
+              
           </div>
         </button>
       {:else if allModulesLoaded}
@@ -1084,11 +1090,16 @@
         {#if !allModulesAreVisited}
           <button
             on:click={() => selectModule(nextUnvisitedModuleIndex)}
-            class="px-4 py-2 rounded-2xl text-base shadow-lg flex items-center justify-center transition-all duration-200 min-w-[250px] gap-2 {!allModulesLoaded ? 'bg-white cursor-not-allowed text-Grey' : 'bg-brand-turquoise hover:bg-brand-navy text-white'}"
+            class="px-4 py-2 rounded-2xl text-base shadow-lg flex items-center justify-center transition-all duration-200 min-w-[250px] gap-2 {!allModulesLoaded ? 'bg-white cursor-not-allowed text-Grey' : 'dark:bg-brand-turquoise bg-brand-navy text-white'}"
             disabled={!allModulesLoaded || nextUnvisitedModuleIndex === -1}
           >
-            <span class="text-body">Select Module {nextUnvisitedModuleIndex !== -1 ? nextUnvisitedModuleIndex + 1 : ''}</span>
-            <ChevronRight class="w-5 h-5" />
+            <span class="text-body">Select Module {nextUnvisitedModuleIndex !== -1 ? nextUnvisitedModuleIndex + 1 : ''} video</span>
+            <svg width="25" height="24" viewBox="0 0 25 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <g id="Component 7">
+              <path id="Vector" d="M20.5 12H4.50002" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              <path id="Vector_2" d="M15.5 17C15.5 17 20.5 13.3176 20.5 12C20.5 10.6824 15.5 7 15.5 7" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </g>
+              </svg> 
           </button>
         {:else}
           <button

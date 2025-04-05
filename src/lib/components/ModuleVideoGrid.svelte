@@ -68,7 +68,7 @@
 
     <div
       bind:this={sliderRef}
-      class="flex flex-col md:flex-row gap-4 overflow-y-auto md:overflow-x-auto scrollbar-hide pb-4 md:pb-16 px-0.5 md:px-2 pt-2"
+      class="flex flex-col md:flex-row gap-4 overflow-y-auto md:overflow-x-auto scrollbar-hide pb-4 px-0.5 md:px-2 pt-2"
       on:scroll={updateArrows}
     >
       {#each moduleVideos[currentModuleIndex] as video, videoIndex}

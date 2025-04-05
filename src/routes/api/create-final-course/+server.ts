@@ -7,7 +7,7 @@ import type { CourseStructure, FinalCourseStructure, VideoItem, Quiz, QuizQuesti
 import { getVideoTranscript } from '$lib/services/transcriptUtils';
 import pLimit from 'p-limit';
 import { OPENAI_CONFIG } from '$lib/config/openai';
-import { db } from '$lib/server/firebase-admin'; 
+import { adminApp } from '$lib/server/firebase-admin'; 
 import { v4 as uuidv4 } from 'uuid';
 
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
@@ -98,7 +98,7 @@ async function makeOpenAIRequest(prompt: string, retries = 2) {
   });
 }
 
-async function generateQuiz(transcript: string, moduleTitle: string, isFinalQuiz: boolean = false, moduleQuizzes: Quiz[] = []): Promise<Quiz | null> {
+async function generateQuiz(transcript: string, moduleTitle: string, isFinalQuiz: boolean = false, moduleQuizzes: (Quiz | null)[] = []): Promise<Quiz | null> {
   try {
     if (typeof transcript !== 'string') {
       console.error('Invalid transcript type:', typeof transcript);
@@ -300,20 +300,195 @@ function createYouTubePlaylist(course: Partial<FinalCourseStructure>): string {
   }
 }
 
+async function generateModuleSummary(transcript: string, moduleTitle: string): Promise<string | null> {
+  try {
+    if (typeof transcript !== 'string') {
+      console.error('Invalid transcript type:', typeof transcript);
+      return null;
+    }
+
+    // Preprocess the transcript
+    const processedTranscript = preprocessTranscript(transcript);
+    
+    if (!processedTranscript) {
+      console.error(`Empty transcript after processing for: ${moduleTitle}`);
+      return null;
+    }
+
+    console.log(`Starting summary generation for: ${moduleTitle}`);
+    console.log(`Processed transcript length: ${processedTranscript.length} characters`);
+
+    // Use a limited amount of transcript content for summary
+    const transcriptLength = 3000; // 3000 characters should be enough for summary
+    const truncatedTranscript = processedTranscript.substring(0, transcriptLength);
+
+    const prompt = `You are an educational content creator tasked with creating a concise but informative summary of the following video transcript. 
+    
+The summary should:
+1. Focus exclusively on key concepts and main points from the content
+2. Be formatted as 4-6 clear, concise bullet points
+3. Highlight practical takeaways or applications where relevant
+4. Be educational and informative
+5. NOT mention the presenter, instructor, speaker, or any personal references from the transcript
+6. Focus only on the subject matter knowledge, not how it's presented
+
+Module Title: ${moduleTitle}
+
+Transcript:
+${truncatedTranscript}
+
+Provide the response in JSON format with the following key:
+{
+  "summary": "Your bullet-point summary of the key concepts"
+}`;
+
+    try {
+      const result = await makeOpenAIRequest(prompt);
+      
+      console.log(`Summary response for ${moduleTitle}:`, JSON.stringify(result, null, 2));
+      
+      // Check if we got a proper result
+      if (!result) {
+        console.error(`Null summary response for ${moduleTitle}`);
+        return null;
+      }
+      
+      let summary = "";
+      
+      // Try to get summary from the result, handling array or string response
+      if (result.summary) {
+        // If summary is an array, join the bullet points
+        if (Array.isArray(result.summary)) {
+          summary = result.summary.map(point => `• ${point}`).join('\n');
+        } else if (typeof result.summary === 'string') {
+          summary = result.summary;
+        }
+      } else if (typeof result === 'string') {
+        summary = result;
+      } else if (typeof result === 'object') {
+        // Try to get any string property from the result
+        const firstKey = Object.keys(result).find(key => {
+          // Check if the value is a string
+          if (typeof result[key] === 'string') {
+            return true;
+          }
+          // Or if it's an array, we can use that too
+          if (Array.isArray(result[key])) {
+            return true;
+          }
+          return false;
+        });
+        
+        if (firstKey) {
+          if (Array.isArray(result[firstKey])) {
+            summary = result[firstKey].map(point => `• ${point}`).join('\n');
+          } else {
+            summary = result[firstKey];
+          }
+        }
+      }
+      
+      if (!summary) {
+        console.error(`Could not extract summary from response for ${moduleTitle}`);
+        return null;
+      }
+      
+      // Format bullet points consistently if they aren't already and it's a string
+      if (typeof summary === 'string') {
+        // Check if the summary already contains bullet points
+        if (!summary.includes('•') && !summary.includes('-') && !summary.includes('*')) {
+          // Split into sentences and create bullet points
+          const sentences = summary.split(/(?<=[.!?])\s+/);
+          summary = sentences.map(sentence => `• ${sentence.trim()}`).join('\n');
+        } else if (summary.includes('\n')) {
+          // Clean up existing bullet points for consistency
+          summary = summary
+            .split('\n')
+            .map(line => line.trim())
+            .filter(line => line.length > 0)
+            .map(line => {
+              // Standardize bullet points to use •
+              line = line.replace(/^[-*]\s*/, '• ');
+              if (!line.startsWith('•')) {
+                line = `• ${line}`;
+              }
+              return line;
+            })
+            .join('\n');
+        }
+      }
+      
+      return summary;
+    } catch (error) {
+      console.error(`Error generating summary for ${moduleTitle}:`, error);
+      return null;
+    }
+  } catch (error) {
+    console.error(`Error in summary generation for ${moduleTitle}:`, error);
+    return null;
+  }
+}
+
+async function generateAllModuleSummaries(moduleTranscripts: string[], courseStructure: CourseStructure) {
+  const moduleSummaries: (string | null)[] = [];
+  const batchSize = 3; // Process 3 summaries in parallel
+  
+  console.log('Starting summary generation for all modules...');
+  
+  // Process module summaries in batches
+  for (let i = 0; i < moduleTranscripts.length; i += batchSize) {
+    const batch = moduleTranscripts
+      .slice(i, i + batchSize)
+      .map(async (transcript, index) => {
+        const moduleIndex = i + index;
+        try {
+          // Check if transcript is missing or invalid
+          if (!transcript || 
+              transcript === 'No transcript available for this video' || 
+              transcript === 'No transcript available after multiple attempts') {
+            console.log(`Skipping summary generation for module ${moduleIndex + 1} - No valid transcript`);
+            return null;
+          }
+          
+          // Generate summary for this module
+          const summary = await generateModuleSummary(transcript, courseStructure.OG_Module_Title[moduleIndex]);
+          console.log(`Successfully generated summary for module ${moduleIndex + 1}`);
+          return summary;
+        } catch (error) {
+          console.error(`Error processing summary for module ${moduleIndex + 1}:`, error);
+          return null;
+        }
+      });
+      
+    const batchResults = await Promise.all(batch);
+    moduleSummaries.push(...batchResults);
+    
+    // Add a small delay between batches to prevent rate limiting
+    if (i + batchSize < moduleTranscripts.length) {
+      await new Promise(resolve => setTimeout(resolve, DELAY_BETWEEN_REQUESTS));
+    }
+  }
+  
+  console.log(`Generated ${moduleSummaries.filter(s => s !== null).length} module summaries out of ${moduleTranscripts.length} modules`);
+  return moduleSummaries;
+}
+
 async function generateFinalCourse(
   courseStructure: CourseStructure,
   selectedVideos: VideoItem[],
   moduleTranscripts: string[]
 ): Promise<FinalCourseStructure> {
   try {
-    // Run course overview and module details generation in parallel
-    const [courseOverview, moduleDetails] = await Promise.all([
+    // Run course overview, module details, quizzes, and summaries generation in parallel
+    const [courseOverview, moduleDetails, quizData, moduleSummaries] = await Promise.all([
       generateCourseOverview(courseStructure),
-      generateModuleDetails(courseStructure, selectedVideos)
+      generateModuleDetails(courseStructure, selectedVideos),
+      generateAllQuizzes(moduleTranscripts, courseStructure),
+      generateAllModuleSummaries(moduleTranscripts, courseStructure)
     ]);
 
-    // Generate quizzes
-    const { moduleQuizzes, finalQuiz } = await generateAllQuizzes(moduleTranscripts, courseStructure);
+    // Extract quiz data
+    const { moduleQuizzes, finalQuiz } = quizData;
 
     // Check if we have any valid quizzes
     const hasValidQuizzes = moduleQuizzes.some(quiz => quiz !== null);
@@ -338,12 +513,29 @@ async function generateFinalCourse(
       courseConclusion += '\n\nNote: This course does not include quizzes as transcripts were not available for the video content. You can still learn from the video materials, but self-assessment through quizzes is not available.';
     }
 
+    // Create YouTube playlist URL
+    const playlistUrl = createYouTubePlaylist({
+      Final_Module_YouTube_Video_URL: videoUrls,
+      Final_Course_Title: courseOverview.Final_Course_Title
+    });
+
+    // Create the current date
+    const now = new Date();
+
     return {
       Final_Course_Title: courseOverview.Final_Course_Title,
       Final_Course_Objective: courseOverview.Final_Course_Objective,
       Final_Course_Introduction: courseOverview.Final_Course_Introduction,
       Final_Module_Title: moduleDetails.map(module => module.Final_Module_Title),
       Final_Module_Objective: moduleDetails.map(module => module.Final_Module_Objective),
+      Final_Module_Summary: moduleSummaries.map((summary, index) => {
+        if (summary) return summary;
+        // Get module title from moduleDetails or fall back to courseStructure
+        const moduleTitle = moduleDetails[index]?.Final_Module_Title || 
+                            courseStructure.OG_Module_Title[index] || 
+                            `Module ${index + 1}`;
+        return `No summary available for ${moduleTitle}`;
+      }),
       Final_Module_YouTube_Video_URL: videoUrls,
       Final_Module_Video_Duration: videoDurations,
       Final_Module_Thumbnails: videoThumbnails,
@@ -351,7 +543,14 @@ async function generateFinalCourse(
       Final_Course_Quiz: finalQuiz,
       Final_Course_Conclusion: courseConclusion,
       Final_Course_Thumbnail: thumbnailUrl,
-      Final_Course_Duration: totalDuration
+      Final_Course_Duration: totalDuration,
+      YouTube_Playlist_URL: playlistUrl,
+      isPublic: false, // Default to private
+      createdBy: "", // Will be set by the client
+      createdAt: now,
+      likes: 0,
+      views: 0,
+      totalRatings: 0
     };
   } catch (error) {
     console.error('Error in generateFinalCourse:', error);
@@ -380,7 +579,7 @@ async function generateCourseOverview(courseStructure: CourseStructure) {
 async function generateModuleDetails(courseStructure: CourseStructure, selectedVideos: VideoItem[]) {
   // Process modules in parallel batches of 3
   const batchSize = 3;
-  const moduleDetails = [];
+  const moduleDetails: Array<{Final_Module_Title: string, Final_Module_Objective: string}> = [];
   
   for (let i = 0; i < courseStructure.OG_Module_Title.length; i += batchSize) {
     const batch = courseStructure.OG_Module_Title
@@ -404,6 +603,7 @@ async function generateModuleDetails(courseStructure: CourseStructure, selectedV
       });
 
     const batchResults = await Promise.all(batch);
+    // Ensure we have the correct typings for the module details
     moduleDetails.push(...batchResults);
   }
 
@@ -617,7 +817,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
         // Clone request to read auth info
         const clonedRequest = request.clone();
         let requestJson;
-        let serverAuthInfo = null;
+        let serverAuthInfo: { uid?: string } | null = null;
         
         try {
             requestJson = await clonedRequest.json();
@@ -663,7 +863,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
         
         // Validate required fields
         if (!data.courseStructure || !data.selectedVideos || !data.moduleTranscripts) {
-            const missingFields = [];
+            const missingFields: string[] = [];
             if (!data.courseStructure) missingFields.push('courseStructure');
             if (!data.selectedVideos) missingFields.push('selectedVideos');
             if (!data.moduleTranscripts) missingFields.push('moduleTranscripts');
