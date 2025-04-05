@@ -575,6 +575,30 @@
       showNewQuizPage = true;
     }
   }
+
+  // Add this new function to format bullet points
+  function formatBulletPoints(text: string): string {
+    if (!text) return '';
+    
+    // If text contains bullet points (•), format as a list
+    if (text.includes('•')) {
+      const lines = text.split('\n');
+      const formattedLines = lines.map(line => {
+        const trimmed = line.trim();
+        if (trimmed.startsWith('•')) {
+          return `<div class="flex mb-2">
+                    <span class="text-brand-turquoise dark:text-brand-turquoise mr-2 text-lg">•</span>
+                    <span>${trimmed.substring(1).trim()}</span>
+                  </div>`;
+        }
+        return `<p class="mb-2">${trimmed}</p>`;
+      });
+      return formattedLines.join('');
+    }
+    
+    // If no bullet points, just handle line breaks
+    return text.replace(/\n/g, '<br>');
+  }
 </script>
 
 <!-- Main Container -->
@@ -715,14 +739,7 @@
               {#if $currentModuleStore === -1}
                 <!-- Course Introduction and Objectives -->
                 <div>
-                  <!-- Add Course Title here -->
-                  <!-- <div class="mt-6 mb-2">
-                    <p class="text-h2-mobile-bold lg:text-h2-bold text-Black">
-                      {courseDetails?.Final_Course_Title}
-                    </p>
-                  </div> -->
 
-                  <!-- <h3 class="text-h4-medium text-Black mb-4">Course Introduction</h3> -->
                   <p class="text-body text-light-text-secondary dark:text-dark-text-secondary">
                     {courseDetails?.Final_Course_Introduction}
                   </p>
@@ -736,17 +753,13 @@
                     >
                       {courseDetails?.Final_Course_Objective}
                     </p>
+                   
+                    
                   </div>
                 </div>
               {:else if $currentModuleStore === courseDetails?.Final_Module_Title?.length}
                 <!-- Course Conclusion -->
                 <div>
-                  <!-- Add Course Title here too -->
-                  <!-- <div class="mt-6 mb-8">
-                    <p class="text-h2-mobile-bold lg:text-h2-bold text-light-text-primary dark:text-dark-text-primary">
-                      {courseDetails?.Final_Course_Title}
-                    </p>
-                  </div> -->
                   <p class="text-body text-light-text-secondary dark:text-dark-text-secondary">
                     {courseDetails?.Final_Course_Conclusion}
                   </p>
@@ -769,12 +782,6 @@
               {:else}
                 <!-- Regular Module Content -->
                 <div>
-                  <!-- Course Title -->
-                  <!-- <div class="mt-6">
-                    <p class="text-h2-mobile-bold lg:text-h2-bold text-Black">
-                      {courseDetails?.Final_Course_Title}
-                    </p>
-                  </div> -->
 
                   <!-- Module Objective -->
                   <div class="mt-6">
@@ -789,6 +796,20 @@
                       ] || "Loading module..."}
                     </p>
                   </div>
+
+                  <!-- Module Summary -->
+                  {#if courseDetails?.Final_Module_Summary && courseDetails.Final_Module_Summary[$currentModuleStore]}
+                    <div class="mt-6">
+                      <h3 class="text-h4-medium text-light-text-primary dark:text-dark-text-primary mb-4">
+                        Key Points
+                      </h3>
+                      <div 
+                        class="text-body text-light-text-secondary dark:text-dark-text-secondary module-summary"
+                      >
+                        {@html formatBulletPoints(courseDetails.Final_Module_Summary[$currentModuleStore])}
+                      </div>
+                    </div>
+                  {/if}
                 </div>
               {/if}
             </div>
@@ -798,16 +819,6 @@
               <!-- module quiz button -->
               {#if $currentModuleStore !== -1 && $currentModuleStore !== courseDetails?.Final_Module_Title?.length && courseDetails?.Final_Module_Quiz?.[$currentModuleStore]}
                 <div class="mt-6 flex flex-col gap-3">
-                  <!-- <button
-                    on:click={() => {
-                      currentQuiz = courseDetails?.Final_Module_Quiz?.[$currentModuleStore];
-                      quizModuleTitle = courseDetails?.Final_Module_Title?.[$currentModuleStore] || "";
-                      showNewQuizPage = true;
-                    }}
-                    class="w-full px-4 py-2 flex items-center justify-center text-semibody-medium rounded-2xl transition-colors bg-Green hover:bg-GreenHover text-white"
-                  >
-                    Take Module Quiz
-                  </button> -->
                   <button
                   on:click={handleModuleQuiz}
                   class="w-full px-4 py-2 flex items-center justify-center text-semibody-medium rounded-2xl transition-colors bg-Green dark:bg-Green2 hover:bg-GreenHover text-white"
@@ -831,15 +842,6 @@
               </div>
               {/if}
 
-              <!-- Reviews Section for mobile -->
-              <!-- {#if courseDetails.isPublic}
-                <div class="w-full mt-6">
-                  <CourseRatings
-                    courseId={$page.params.id}
-                    showReadAll={true}
-                  />
-                </div>
-              {/if} -->
 
               <!-- Remove Course Button - Mobile -->
               {#if isEnrolled && $user}
@@ -901,17 +903,6 @@
                 </div>
               {/if}
 
-              <!-- Mobile module quiz button -->
-              <!-- {#if $currentModuleStore !== -1 && $currentModuleStore !== courseDetails?.Final_Module_Title?.length && courseDetails?.Final_Module_Quiz?.[$currentModuleStore]}
-                <div class="mt-6 flex flex-col gap-3">
-                  <button
-                    on:click={handleModuleQuiz}
-                    class="w-full px-4 py-2 flex items-center justify-center text-semibody-medium rounded-2xl transition-colors bg-Green hover:bg-GreenHover text-white"
-                  >
-                    Take Module Quiz
-                  </button>
-                </div>
-              {/if} -->
 
               <!-- Desktop module quiz button -->
               {#if $currentModuleStore !== -1 && $currentModuleStore !== courseDetails?.Final_Module_Title?.length && courseDetails?.Final_Module_Quiz?.[$currentModuleStore]}
@@ -932,24 +923,6 @@
               <!-- final quiz button -->
               {#if $currentModuleStore === courseDetails?.Final_Module_Title?.length && courseDetails?.Final_Course_Quiz}
                 <div class="mt-6 flex flex-col gap-3">
-                  <!-- <button
-                    on:click={() => {
-                      currentQuiz = courseDetails?.Final_Course_Quiz;
-                      quizModuleTitle = courseDetails?.Final_Course_Title || "";
-                      showNewQuizPage = true;
-                    }}
-                    class="w-full px-4 py-2 flex items-center justify-center text-semibody-medium rounded-2xl transition-colors bg-Green hover:bg-GreenHover text-white"
-                  >
-                    Take Final Quiz
-                  </button> -->
-                  <!-- <button
-                    on:click={() => {
-                      goto(`/course/${$page.params.id}/quiz`);
-                    }}
-                    class="w-full px-4 py-2 flex items-center justify-center text-semibody-medium rounded-2xl transition-colors bg-Green hover:bg-GreenHover text-white"
-                  >
-                    Take Final Quiz
-                  </button> -->
                 </div>
               {/if}
 
@@ -1069,5 +1042,21 @@
   .video-container {
     position: relative;
     padding-bottom: 56.25%; /* 16:9 Aspect Ratio */
+  }
+
+  /* Module summary styling */
+  .module-summary :global(span.text-brand-turquoise) {
+    margin-right: 0.5rem;
+    font-size: 1.2em;
+  }
+  
+  .module-summary {
+    line-height: 1.6;
+  }
+  
+  .module-summary :global(br) {
+    margin-bottom: 0.75rem;
+    content: "";
+    display: block;
   }
 </style>

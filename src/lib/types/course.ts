@@ -36,6 +36,7 @@ export interface FinalCourseStructure {
   Final_Course_Introduction: string;
   Final_Module_Title: string[];
   Final_Module_Objective: string[];
+  Final_Module_Summary: string[];
   Final_Module_YouTube_Video_URL: string[];
   Final_Module_Quiz: any[];
   Final_Course_Quiz: any;
