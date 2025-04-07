@@ -114,6 +114,7 @@
   // Watch for state changes and save them
   $: if (isEnrolled !== null && isEnrolled !== undefined) {
     saveState();
+    console.log('Enrollment state saved:', isEnrolled);
   }
 
   // Subscribe to auth state changes
@@ -312,8 +313,33 @@
     try {
       enrolling = true;
       await enrollInCourse($user.uid, $page.params.id);
-      currentModuleStore.set(-1); // Start with introduction
-      goto(`/course/${$page.params.id}`);
+      
+      // Update local state before redirecting
+      isEnrolled = true;
+      saveState({ isEnrolled: true });
+      
+      // Load enrollment progress
+      const progress = await getEnrollmentProgress($user.uid, $page.params.id);
+      if (progress) {
+        const typedProgress = {
+          quizResults: progress.quizResults || { moduleQuizzes: {} },
+          moduleProgress: progress.moduleProgress || {},
+          completedModules: Array.isArray(progress.completedModules) 
+            ? [...progress.completedModules] 
+            : [],
+          lastAccessedModule: progress.lastAccessedModule || 0
+        };
+        enrollmentProgress = typedProgress;
+        enrollmentProgressStore.set(typedProgress);
+      }
+      
+      // Set current module and redirect after a small delay
+      currentModuleStore.set(-1);
+      
+      // Small timeout to allow UI to update before redirect
+      setTimeout(() => {
+        goto(`/course/${$page.params.id}`);
+      }, 300);
     } catch (error) {
       console.error("Error enrolling:", error);
     } finally {
@@ -678,14 +704,6 @@
                   Course Introduction and Objectives
                 {:else if $currentModuleStore === courseDetails?.Final_Module_Title?.length}
                   Course Conclusion
-                  <!-- {:else}
-                  <span class="text-h2-mobile-bold text-Black"
-                    >{($currentModuleStore + 1)
-                      .toString()
-                      .padStart(2, "0")}</span
-                  >: 
-                  {courseDetails.Final_Module_Title[$currentModuleStore] ||
-                    "Loading module..."} -->
                 {/if}
               </h4>
               {#if $currentModuleStore !== -1 && $currentModuleStore !== courseDetails?.Final_Module_Title?.length}
@@ -882,7 +900,7 @@
                       ? () => {
                           // Get last accessed module from enrollment progress
                           const lastModule =
-                            enrollmentProgress?.lastAccessedModule || -1;
+                            enrollmentProgress?.lastAccessedModule || 0;
                           currentModuleStore.set(lastModule);
                           goto(`/course/${$page.params.id}`);
                         }
@@ -996,19 +1014,21 @@
       class="px-4 py-2 flex items-center justify-center gap-2 text-white rounded-2xl transition-opacity disabled:opacity-50 text-semibody-medium shadow-lg {isEnrolled
         ? 'bg-brand-red'
         : 'bg-Green'}"
-      on:click={() => {
+      on:click={isEnrolled 
+        ? () => {
             // Get last accessed module from enrollment progress
-            const lastModule = enrollmentProgress?.lastAccessedModule || 1;
+            const lastModule = enrollmentProgress?.lastAccessedModule || 0;
             currentModuleStore.set(lastModule);
             goto(`/course/${$page.params.id}`);
           }
-          }
+        : handleEnroll
+      }
     >
      
-        <span>Continue</span>
+        <span>{isEnrolled ? "Continue" : "Enroll"}</span>
         <img
           src="/icons/arrow-right-white.svg"
-          alt=Continue
+          alt={isEnrolled ? "Continue" : "Enroll"}
           class="w-6 h-6"
         />
     </button>

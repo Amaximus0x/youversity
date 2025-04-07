@@ -845,6 +845,7 @@ export async function enrollInCourse(userId: string, courseId: string) {
       lastAccessedAt: serverTimestamp(),
       completedModules: [],
       moduleProgress: [],
+      lastAccessedModule: 0,
       quizResults: {
         moduleQuizzes: {}
       }
@@ -901,6 +902,7 @@ export async function getEnrollmentStatus(userId: string, courseId: string) {
         lastAccessedAt: new Date(),
         completedModules: [],
         moduleProgress: [],
+        lastAccessedModule: 0,
         quizResults: {
           moduleQuizzes: {}
         }
@@ -1038,6 +1040,7 @@ export async function updateEnrollmentQuizResult(
         lastAccessedAt: serverTimestamp(),
         completedModules: [],
         moduleProgress: [],
+        lastAccessedModule: 0,
         quizResults: {
           moduleQuizzes: {}
         }

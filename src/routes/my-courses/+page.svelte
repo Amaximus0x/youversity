@@ -125,7 +125,8 @@
       
       // Get enrolled courses that are not created by the user
       enrolledCourses = coursesWithProgress.filter(
-        course => course.isEnrolled && !(course.isCreator || course.createdBy === userData.uid)
+        // course => course.isEnrolled && !(course.isCreator || course.createdBy === userData.uid)
+        course => course.isEnrolled
       );
       console.log('Enrolled courses:', enrolledCourses);
       

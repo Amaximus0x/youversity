@@ -110,7 +110,7 @@
 
           <!-- Description -->
           <div class="self-stretch flex-col justify-start items-start gap-2 sm:gap-4 flex">
-            <div class="self-stretch text-Black2dark text-sm sm:text-Body break-words">
+            <div class="self-stretch text-light-text-secondary dark:text-dark-text-secondary text-sm sm:text-Body break-words">
               {currentSlide.description}
             </div>
           </div>
