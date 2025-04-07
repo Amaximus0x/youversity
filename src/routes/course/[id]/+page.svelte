@@ -900,7 +900,7 @@
                       ? () => {
                           // Get last accessed module from enrollment progress
                           const lastModule =
-                            enrollmentProgress?.lastAccessedModule || 1;
+                            enrollmentProgress?.lastAccessedModule || 0;
                           currentModuleStore.set(lastModule);
                           goto(`/course/${$page.params.id}`);
                         }
@@ -1017,7 +1017,7 @@
       on:click={isEnrolled 
         ? () => {
             // Get last accessed module from enrollment progress
-            const lastModule = enrollmentProgress?.lastAccessedModule || 1;
+            const lastModule = enrollmentProgress?.lastAccessedModule || 0;
             currentModuleStore.set(lastModule);
             goto(`/course/${$page.params.id}`);
           }
