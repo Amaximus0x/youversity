@@ -48,6 +48,10 @@
   let isIntroPage = true;
   let showFloatingButton = false;
   let contentStartElement: HTMLElement;
+  
+  // Explicitly track whether user should see the enroll button
+  // Both non-enrolled users and creators who haven't enrolled should see it
+  let shouldShowEnrollButton = false;
 
   // Add this at the top of your script
   let currentPath = $page.url.pathname;
@@ -74,6 +78,7 @@
         showProgress = state.showProgress ?? false;
         isBookmarked = state.isBookmarked ?? false;
         hasLiked = state.hasLiked ?? false;
+        shouldShowEnrollButton = state.shouldShowEnrollButton ?? true;
         
         // Load creator profile if available
         if (state.creatorProfile) {
@@ -92,6 +97,7 @@
         isBookmarked,
         hasLiked,
         creatorProfile,  // Include creator profile in saved state
+        shouldShowEnrollButton, // Include button visibility in saved state
         ...updates,
       };
       localStorage.setItem(
@@ -133,9 +139,15 @@
         showProgress = isEnrolled || isCreator;
         isBookmarked = bookmarkStatus;
         hasLiked = likeStatus;
+        
+        // Determine if we should show enroll button
+        // Show button if user is not enrolled OR if user is creator but not enrolled
+        shouldShowEnrollButton = !isEnrolled;
 
         // Save initial state
-        saveState();
+        saveState({
+          shouldShowEnrollButton
+        });
 
         // Get enrollment progress if needed
         if (enrollmentStatus.enrollmentData) {
@@ -202,7 +214,18 @@
     try {
       enrolling = true;
       await enrollInCourse($user.uid, $page.params.id);
-      currentModuleStore.set(-1); // Start with first video module
+      
+      // Update local state
+      isEnrolled = true;
+      shouldShowEnrollButton = false;
+      
+      // Save the updated state
+      saveState({ 
+        isEnrolled: true,
+        shouldShowEnrollButton: false 
+      });
+      
+      currentModuleStore.set(-1); // Start with introduction
       goto(`/course/${$page.params.id}`);
     } catch (error) {
       console.error("Error enrolling:", error);
@@ -487,11 +510,11 @@
                 <!-- Regular Module Content -->
                 <div>
                   <!-- Course Title -->
-                  <div class=" mt-6">
+                  <!-- <div class=" mt-6">
                     <p class="text-h2-mobile lg:text-h2 text-Black">
                       {courseDetails?.Final_Course_Title}
                     </p>
-                  </div>
+                  </div> -->
 
                   <!-- Module Objective -->
                   <div class="mt-6">
@@ -529,8 +552,7 @@
             <div class="hidden lg:block">
               <!-- Desktop Action Buttons -->
               <div class="mt-6 flex flex-col gap-3">
-                <!-- Enroll/Start button -->
-                <!-- {#if !isEnrolled && !isCreator} -->
+                <!-- Enroll/Start button - show to both non-enrolled users and creators who aren't enrolled -->
                 <button
                   class="w-full px-4 py-2 flex items-center justify-center text-semibody-medium rounded-2xl transition-colors {isEnrolled
                     ? 'bg-brand-red hover:bg-ButtonHover text-white'
@@ -555,9 +577,6 @@
                     />
                   {/if}
                 </button>
-                <!-- {/if}    -->
-
-                
               </div>
 
               <!-- Reviews Section -->
