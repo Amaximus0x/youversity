@@ -140,6 +140,66 @@
       }
     });
 
+    // Create Course step
+    tour.addStep({
+      id: 'create-course',
+      title: '', // No title shown in the screenshot
+      text: `<!-- Custom Arrow -->
+            <div class="shepherd-arrow-custom"></div>
+            <!-- Main Content matching the screenshot -->
+            <div class="w-[374px] p-4 bg-brand-red rounded-2xl outline outline-1 outline-offset-[-1px] outline-black/5 inline-flex flex-col justify-start items-start gap-4 overflow-hidden relative">
+              <div class="self-stretch justify-start text-white text-h4 font-bold">Create Course</div>
+              <div class="self-stretch justify-start text-white text-semi-body">Enter the subject or skills you want to learn in order to create a personalized course tailored to your learning goals.</div>
+              <div class="self-stretch inline-flex justify-between items-center">
+                <!-- Progress Bar -->
+                <div class="w-[118px] h-2.5 bg-black/20 rounded-full inline-flex flex-col justify-center items-start gap-2.5 overflow-hidden">
+                  <div class="w-[13px] h-3 bg-white rounded-full"></div>
+                </div>
+                <!-- Buttons -->
+                <div class="flex justify-start items-center gap-2">
+                  <button id="skip-create-course-btn" class="w-[63px] px-4 py-2 rounded outline outline-1 outline-offset-[-1px] outline-white flex justify-center items-center gap-2.5 cursor-pointer hover:bg-white/10 transition-colors">
+                    <span class="justify-start text-white text-semi-body">Skip</span>
+                  </button>
+                  <button id="next-create-course-btn" class="px-4 py-2 bg-white rounded flex justify-center items-center gap-2.5 cursor-pointer hover:bg-gray-200 transition-colors">
+                    <span class="justify-start text-black text-semi-body">Next</span>
+                  </button>
+                </div>
+              </div>
+            </div>`,
+      attachTo: {
+        element: '.tour-create-course', // Target the form/button container
+        on: 'bottom' // Position the step below the target
+      },
+      buttons: [], // Use custom buttons defined in HTML
+      classes: 'shepherd-theme-custom shepherd-create-course-step',
+      canClickTarget: false,
+      arrow: false, // Disable default arrow, use custom one via CSS
+      scrollTo: false, // Don't scroll for body attachment
+      modalOverlayOpeningPadding: 0, // Adjust padding if needed
+      when: {
+        show: () => {
+          setTimeout(() => {
+            if (browser) {
+              const skipBtn = document.getElementById('skip-create-course-btn');
+              const nextBtn = document.getElementById('next-create-course-btn');
+
+              if (skipBtn) {
+                skipBtn.onclick = () => {
+                  tour.cancel(); // Or tour.complete()
+                };
+              }
+
+              if (nextBtn) {
+                nextBtn.onclick = () => {
+                  tour.next();
+                };
+              }
+            }
+          }, 100);
+        }
+      }
+    });
+
     // Finish step with responsive design
     tour.addStep({
       id: 'finish',
@@ -469,4 +529,60 @@
   :global(.dark .text-light-text-secondary) {
     color: #FFFFFF;
   }
+
+  /* Styling for the new create-course step */
+  :global(.shepherd-create-course-step) {
+    max-width: fit-content !important; /* Override default max-width */
+    width: auto !important; /* Let content determine width */
+    background: transparent !important; /* Make step background transparent */
+    border: none !important; /* Remove default border */
+    box-shadow: none !important; /* Remove default shadow */
+    /* Apply the specific shadow from the screenshot using filter */
+    filter: drop-shadow(-9px 13px 19px rgba(0,0,0,0.37));
+    border-radius: 16px !important; /* Match inner container radius */
+    z-index: 10000 !important; /* Ensure it's above other elements and overlay */
+    /* Remove padding that might interfere with custom layout */
+    padding: 0 !important;
+    /* Add vertical offset to adjust position */
+    transform: translateY(20px);
+  }
+
+  :global(.shepherd-create-course-step .shepherd-content) {
+    padding: 0 !important;
+    background: transparent !important;
+    border-radius: 16px !important;
+    box-shadow: none !important;
+    
+  }
+
+  :global(.shepherd-create-course-step .shepherd-header) {
+    display: none !important; /* Hide header */
+  }
+
+  :global(.shepherd-create-course-step .shepherd-text) {
+    padding: 0 !important;
+    margin: 0 !important;
+    position: relative; /* Needed for absolute positioning of the arrow */
+  }
+
+  /* Custom Arrow Styling - Pointing UP */
+  :global(.shepherd-create-course-step .shepherd-arrow-custom) {
+    position: absolute;
+    /* Position below the box's coordinate system, making it appear above */
+    top: -16px;
+    rotate: 180deg;
+    right: 14px;
+    width: 0;
+    height: 0;
+    border-left: 12px solid transparent;
+    border-right: 12px solid transparent;
+    border-top: 18px solid #EE434A;
+    z-index: 1; /* Ensure arrow is above the main content box background */
+  }
+
+  /* Ensure dark mode doesn't break the arrow */
+ :global(.dark .shepherd-create-course-step .shepherd-arrow-custom) {
+    border-top-color: theme('colors.brand.red') !important; /* Use Tailwind theme function */
+  }
+  
 </style> 
