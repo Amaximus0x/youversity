@@ -27,6 +27,7 @@
   import UserCourseList from '$lib/components/UserCourseList.svelte';
   import { notifications } from '$lib/stores/notificationStore';
   import { browser } from '$app/environment';
+  import TourGuide from '$lib/components/TourGuide.svelte';
 
   let learningObjective = '';
   let userCourses: (FinalCourseStructure & { id: string })[] = [];
@@ -41,6 +42,8 @@
   let showLoadingOverlay = false;
   let showCreationOverlay = false;
   let courseObjectiveInput: HTMLInputElement;
+  let isNewUser = false;
+  let tourGuideInstance: any;
 
   // Function to focus the course objective input
   function focusCourseObjective() {
@@ -69,6 +72,28 @@
 
   $: if ($user) {
     loadUserCourses();
+  }
+
+  // Check if the user is new (hasn't completed the tour)
+  function checkIfNewUser() {
+    if (browser && $user) {
+      const tourKey = `tour-completed-${$user.uid}`;
+      const tourCompleted = localStorage.getItem(tourKey);
+      isNewUser = !tourCompleted;
+      
+      console.log('Tour state check:', {
+        userId: $user.uid,
+        tourKey,
+        tourCompleted,
+        isNewUser
+      });
+      
+      // Force new user state in dev mode with URL parameter
+      if (browser && import.meta.env.DEV && window.location.search.includes('forceNewUser=true')) {
+        console.log('Forcing new user state for tour');
+        isNewUser = true;
+      }
+    }
   }
 
   async function loadUserCourses() {
@@ -107,28 +132,54 @@
     }
   }
 
-  onMount(async () => {
+  onMount(() => {
+    // Check if user is new
+    checkIfNewUser();
+    
+    // Debug info for tour elements
+    if (browser && import.meta.env.DEV) {
+      setTimeout(() => {
+        const tourElements = [
+          '.tour-create-course',
+          '.tour-trending',
+          '.tour-explore-courses',
+          '.tour-navigation'
+        ];
+        
+        console.log('Tour element check:');
+        tourElements.forEach(selector => {
+          const element = document.querySelector(selector);
+          console.log(`${selector}: ${element ? 'Found' : 'MISSING'}`);
+        });
+      }, 500);
+    }
+    
     // Add event listener for focusCourseObjective
     const handleFocusCourseObjective = () => {
       focusCourseObjective();
     };
     window.addEventListener('focusCourseObjective', handleFocusCourseObjective);
 
-    try {
-      console.log('Fetching trending courses...');
-      // Get courses sorted by views/likes
-      publicCourses = await getPublicCourses();
-      // Sort by views and likes
-      publicCourses.sort((a, b) => {
-        const scoreA = (a.views || 0) + (a.likes || 0);
-        const scoreB = (b.views || 0) + (b.likes || 0);
-        return scoreB - scoreA;
-      });
-    } catch (error) {
-      console.error('Error loading trending courses:', error);
-    } finally {
-      trendingCoursesLoading = false;
-    }
+    const loadTrendingCourses = async () => {
+      try {
+        console.log('Fetching trending courses...');
+        // Get courses sorted by views/likes
+        publicCourses = await getPublicCourses();
+        // Sort by views and likes
+        publicCourses.sort((a, b) => {
+          const scoreA = (a.views || 0) + (a.likes || 0);
+          const scoreB = (b.views || 0) + (b.likes || 0);
+          return scoreB - scoreA;
+        });
+      } catch (error) {
+        console.error('Error loading trending courses:', error);
+      } finally {
+        trendingCoursesLoading = false;
+      }
+    };
+
+    // Load trending courses
+    loadTrendingCourses();
 
     // Clean up event listener
     return () => {
@@ -238,6 +289,9 @@
   }
 </style>
 
+<!-- Tour Guide Component -->
+<TourGuide autoStart={isNewUser} bind:this={tourGuideInstance} />
+
 <LoadingOverlay show={showLoadingOverlay} />
 
 <CourseCreationOverlay show={showCreationOverlay} />
@@ -250,16 +304,16 @@
         <h1 class="text-2xl lg:text-h1 font-normal text-light-text-primary dark:text-dark-text-primary mb-2">
           Hi {$user?.displayName?.split(' ')[0] || 'there'} 👋 <br> What would you like to <span class="text-brand-red">Learn?</span>
         </h1>
-        
+         
         <p class="text-light-text-secondary dark:text-dark-text-secondary text-semibody lg:text-h4 mb-8">
           Enter your learning objectives below we'll help you create a comprehensive course.
         </p>
       </div>
-
+      
       <form 
         id="create-course"
         on:submit={handleCreateCourse} 
-        class="relative flex-1 max-w-auto h-[54px] lg:max-w-[812px]"
+        class="relative flex-1 max-w-auto h-[54px] lg:max-w-[812px] tour-create-course"
       >
         <button 
           type="submit"
@@ -299,9 +353,9 @@
       </form>
     </div>
   </div>
-  
+   
   <!-- Continue Learning Section -->
-  <div class="mb-8">
+  <div class="mb-8 tour-explore-courses">
     <div class="flex items-center justify-between mb-4">
       <h4 class="text-h4-medium lg:text-h4 text-light-text-primary dark:text-dark-text-primary">Continue Learning</h4>
       {#if $user && userCourses.length > 0}
@@ -322,7 +376,7 @@
   </div>
   
   <!-- Trending Community Courses Section -->
-  <section class="mb-6">
+  <section class="mb-6 tour-trending">
     <div class="flex items-center justify-between mb-4">
       <h4 class="text-h4-medium lg:text-h4 text-light-text-primary dark:text-dark-text-primary">Trending Courses</h4>
       <div class="flex items-center gap-2">
@@ -339,7 +393,7 @@
 </div>
 
 {#if showShareModal}
-  <ShareModal 
+  <ShareModal
     show={showShareModal}
     shareType="course"
     id={selectedCourseId}
@@ -347,4 +401,14 @@
     onClose={() => showShareModal = false}
     on:focusCourseObjective={focusCourseObjective}
   />
+{/if}
+
+<!-- Debug button for tour - remove in production -->
+{#if import.meta.env.DEV}
+  <button 
+    class="fixed bottom-4 right-4 z-50 bg-brand-red text-white px-4 py-2 rounded-lg shadow-lg lg:right-8"
+    on:click={() => tourGuideInstance?.startTour()}
+  >
+    Start Tour
+  </button>
 {/if} 
