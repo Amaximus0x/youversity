@@ -768,7 +768,7 @@
     border-radius: 16px !important;
     z-index: 10000 !important;
     padding: 0 !important;
-    position: absolute !important;
+    position: fixed !important;
     left: 211px !important;
     top: 176px !important;
     transform: none !important;
