@@ -89,7 +89,7 @@
                 </div>
                 <div class="self-stretch flex flex-col justify-start items-center gap-4 mt-4">
                   <div class="self-stretch flex flex-col justify-start items-center">
-                    <div class="w-full max-w-[456px] text-center mt-[-20px]">
+                    <div class="w-full min-w-[350px] max-w-[456px] text-center mt-[-20px]">
                       <span class="text-light-text-secondary dark:text-white text-2xl md:text-2xl font-semibold font-['Poppins'] leading-normal">Hi there,</span>
                       <div class="text-light-text-secondary dark:text-white text-tour-text-mobile md:text-tour-text">
                         Welcome to Youversity! 
@@ -228,13 +228,13 @@
             </div>`,
       attachTo: {
         element: '.explore-course-btn',
-        on: 'bottom'
+        on: getAttachmentPosition('bottom')
       },
       buttons: [], // Use custom buttons
       classes: 'shepherd-theme-custom shepherd-explore-courses-step',
       canClickTarget: false,
       arrow: false,
-      scrollTo: true, // Enable scrolling to keep the step visible
+      scrollTo: { behavior: 'smooth', block: 'center' },
       modalOverlayOpeningPadding: 5,
       when: {
         show: () => {
@@ -242,10 +242,28 @@
             if (browser) {
               const skipBtn = document.getElementById('skip-explore-courses-btn');
               const nextBtn = document.getElementById('next-explore-courses-btn');
+              
+              // Ensure proper positioning when shown
+              const exploreBtn = document.querySelector('.explore-course-btn');
+              const tourStep = document.querySelector('.shepherd-explore-courses-step');
+              
+              if (exploreBtn && tourStep) {
+                const exploreBtnRect = exploreBtn.getBoundingClientRect();
+                const yOffset = 40; // Add some space below the button
+                
+                // Set position relative to the button
+                (tourStep as HTMLElement).style.position = 'absolute';
+                (tourStep as HTMLElement).style.top = `${exploreBtnRect.bottom + yOffset}px`;
+                // Adjust left position to align with the button's left edge plus a small offset
+                (tourStep as HTMLElement).style.left = `${exploreBtnRect.left + 20}px`;
+                
+                // Ensure visibility by scrolling if needed
+                exploreBtn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              }
 
               if (skipBtn) {
                 skipBtn.onclick = () => {
-                  tour.cancel(); // Or tour.complete()
+                  tour.cancel();
                 };
               }
 
@@ -550,18 +568,14 @@
     // Save tour completion to localStorage when tour is completed
     tour.on('complete', () => {
       if (browser && $user) {
-        const key = `tour-completed-${$user.uid}`;
-        localStorage.setItem(key, 'true');
-        console.log('Tour completed, saved to localStorage:', key);
+        markTourAsFullyCompleted();
       }
     });
 
     // Save tour completion to localStorage when tour is canceled
     tour.on('cancel', () => {
       if (browser && $user) {
-        const key = `tour-completed-${$user.uid}`;
-        localStorage.setItem(key, 'true');
-        console.log('Tour canceled, saved to localStorage:', key);
+        markTourAsPartiallyCompleted();
       }
     });
     
@@ -591,48 +605,149 @@
 
   // Function to check if the tour has been completed before
   function hasCompletedTour() {
-    if (!browser || !$user) return false;
+    if (!browser) {
+      console.log('Not in browser environment, skipping tour check');
+      return false;
+    }
+    
+    if (!$user) {
+      console.log('User not authenticated yet, treating as new user for tour');
+      return false;
+    }
+    
     const key = `tour-completed-${$user.uid}`;
-    const completed = localStorage.getItem(key) === 'true';
-    console.log('Checking if tour is completed:', { key, completed });
-    return completed;
+    // Check if tour was fully completed (not just canceled)
+    const tourFullyCompleted = localStorage.getItem(key) === 'fully-completed';
+    // Check if tour was canceled or partially completed
+    const tourPartiallyCompleted = localStorage.getItem(key) === 'true';
+    
+    // Check if user has any courses (created or enrolled)
+    const hasCoursesKey = `user-has-courses-${$user.uid}`;
+    const userHasCourses = localStorage.getItem(hasCoursesKey) === 'true';
+    
+    console.log('Tour completion check:', { 
+      userId: $user.uid, 
+      tourKey: key, 
+      tourValueInStorage: localStorage.getItem(key),
+      tourFullyCompleted,
+      tourPartiallyCompleted,
+      hasCoursesKey,
+      userHasCourses,
+      localStorageAvailable: typeof localStorage !== 'undefined'
+    });
+    
+    // If tour was fully completed OR (partially completed AND user has courses)
+    // then don't show the tour again
+    return tourFullyCompleted || (tourPartiallyCompleted && userHasCourses);
+  }
+
+  // Function to mark tour as fully completed
+  function markTourAsFullyCompleted() {
+    if (browser && $user) {
+      const key = `tour-completed-${$user.uid}`;
+      localStorage.setItem(key, 'fully-completed');
+      console.log('Tour marked as fully completed:', key);
+    }
+  }
+
+  // Function to mark tour as partially completed
+  function markTourAsPartiallyCompleted() {
+    if (browser && $user) {
+      const key = `tour-completed-${$user.uid}`;
+      localStorage.setItem(key, 'true');
+      console.log('Tour marked as partially completed:', key);
+    }
   }
 
   // Function to start the tour
   export function startTour() {
     console.log('Manual tour start requested');
     if (!tour) {
+      console.log('Tour not initialized, initializing now');
       tour = initTour();
     }
     
-    // No need to check for required elements since we removed all middle steps
+    // Debug info for tour elements
+    if (browser) {
+      const tourElements = [
+        '.tour-create-course',
+        '.tour-trending',
+        '.tour-explore-courses',
+        '.tour-navigation'
+      ];
+      
+      console.log('Tour element check before starting:');
+      tourElements.forEach(selector => {
+        const element = document.querySelector(selector);
+        console.log(`${selector}: ${element ? 'Found' : 'MISSING'}`);
+      });
+    }
     
     console.log('Starting tour...');
     
     // Reset any existing tour state
     if (tour.isActive()) {
+      console.log('Tour was already active, canceling previous state');
       tour.cancel();
     }
     
     // Start fresh
     setTimeout(() => {
+      console.log('Actually starting tour now');
       tour.start();
     }, 100);
   }
 
+  // Function to check if user has any courses
+  export function updateUserHasCourses(hasCourses) {
+    if (browser && $user) {
+      const key = `user-has-courses-${$user.uid}`;
+      localStorage.setItem(key, hasCourses ? 'true' : 'false');
+      console.log(`User courses status updated: ${hasCourses ? 'Has courses' : 'No courses'}`);
+    }
+  }
+
   onMount(() => {
     console.log('TourGuide mounted, autoStart:', autoStart);
+    console.log('Current user state:', { 
+      isAuthenticated: !!$user,
+      userId: $user?.uid
+    });
     
-    if (autoStart && !hasCompletedTour()) {
-      // Use a longer delay to ensure the page is fully rendered
-      console.log('Scheduling tour to start in 2000ms');
-      
-      setTimeout(() => {
-        console.log('Attempting to start automatic tour');
-        tour = initTour();
-        startTour();
-      }, 2000);
+    // First check if we're in the browser
+    if (!browser) {
+      console.log('Not in browser environment, skipping tour');
+      return;
     }
+    
+    // Give more time for user authentication to complete and UI to render
+    setTimeout(() => {
+      console.log('Checking tour autostart conditions after timeout');
+      console.log('User authenticated?', !!$user);
+      
+      if (autoStart) {
+        // Force a fresh check rather than caching the result
+        const shouldShowTour = !hasCompletedTour();
+        console.log('Should show tour?', shouldShowTour);
+        
+        if (shouldShowTour) {
+          console.log('Attempting to start automatic tour');
+          tour = initTour();
+          startTour();
+          
+          // If tour doesn't start for some reason, try one more time after delay
+          setTimeout(() => {
+            if (!tour || !tour.isActive()) {
+              console.log('Tour didn\'t start properly, trying again...');
+              tour = initTour();
+              startTour();
+            }
+          }, 3000);
+        } else {
+          console.log('Tour already completed or conditions not met, not starting');
+        }
+      }
+    }, 3000); // Increased delay to ensure authentication completes
   });
 
   onDestroy(() => {
@@ -896,10 +1011,7 @@
     border-radius: 16px !important;
     z-index: 10000 !important;
     padding: 0 !important;
-    position: absolute !important;
-    left: 368.43px !important;
-    top: 724px !important;
-    transform: none !important;
+    /* Position will be set dynamically in JavaScript */
   }
 
   :global(.shepherd-explore-courses-step .shepherd-content) {

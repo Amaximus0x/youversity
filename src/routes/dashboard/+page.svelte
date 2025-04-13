@@ -124,6 +124,11 @@
 
       userCourses = coursesWithProgress;
       filteredCourses = [...userCourses];
+      
+      // Update user courses status for tour
+      if (tourGuideInstance) {
+        tourGuideInstance.updateUserHasCourses(coursesWithProgress.length > 0);
+      }
     } catch (err) {
       console.error('Error loading courses:', err);
       error = (err as Error).message;
