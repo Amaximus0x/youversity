@@ -260,6 +260,66 @@
       }
     });
 
+    // Trending Courses step
+    tour.addStep({
+      id: 'trending-courses',
+      title: '',
+      text: `<!-- Custom Arrow -->
+            <div class="shepherd-arrow-custom"></div>
+            <!-- Main Content -->
+            <div class="w-[374px] p-4 bg-brand-red rounded-2xl outline outline-1 outline-offset-[-1px] outline-black/5 inline-flex flex-col justify-start items-start gap-4 overflow-hidden relative">
+              <div class="self-stretch justify-start text-white text-h4 font-bold">Trending Courses</div>
+              <div class="self-stretch justify-start text-white text-semi-body">Discover the trending courses that are gaining popularity among learners.</div>
+              <div class="self-stretch inline-flex justify-between items-center">
+                <!-- Progress Bar -->
+                <div class="w-[118px] h-2.5 bg-black/20 rounded-full inline-flex flex-col justify-center items-start gap-2.5 overflow-hidden">
+                  <div class="w-[39px] h-3 bg-white rounded-full"></div>
+                </div>
+                <!-- Buttons -->
+                <div class="flex justify-start items-center gap-2">
+                  <button id="skip-trending-btn" class="w-[63px] px-4 py-1 rounded outline outline-1 outline-offset-[-1px] outline-white flex justify-center items-center gap-2.5 cursor-pointer hover:bg-white/10 transition-colors">
+                    <span class="justify-start text-white text-semi-body">Skip</span>
+                  </button>
+                  <button id="next-trending-btn" class="px-4 py-1 bg-white rounded flex justify-center items-center gap-2.5 cursor-pointer hover:bg-gray-200 transition-colors">
+                    <span class="justify-start text-black text-semi-body">Next</span>
+                  </button>
+                </div>
+              </div>
+            </div>`,
+      attachTo: {
+        element: '.tour-navigation a[href="/trending"]',
+        on: 'right'
+      },
+      buttons: [],
+      classes: 'shepherd-theme-custom shepherd-trending-step',
+      canClickTarget: false,
+      arrow: false,
+      scrollTo: false,
+      modalOverlayOpeningPadding: 5,
+      when: {
+        show: () => {
+          setTimeout(() => {
+            if (browser) {
+              const skipBtn = document.getElementById('skip-trending-btn');
+              const nextBtn = document.getElementById('next-trending-btn');
+
+              if (skipBtn) {
+                skipBtn.onclick = () => {
+                  tour.cancel();
+                };
+              }
+
+              if (nextBtn) {
+                nextBtn.onclick = () => {
+                  tour.next();
+                };
+              }
+            }
+          }, 100);
+        }
+      }
+    });
+
     // Finish step with responsive design
     tour.addStep({
       id: 'finish',
@@ -694,6 +754,58 @@
   }
 
  :global(.dark .shepherd-explore-courses-step .shepherd-arrow-custom) {
+    border-top-color: theme('colors.brand.red') !important;
+  }
+
+  /* Styling for the trending step */
+  :global(.shepherd-trending-step) {
+    max-width: fit-content !important;
+    width: auto !important;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    filter: drop-shadow(-9px 13px 19px rgba(0,0,0,0.37));
+    border-radius: 16px !important;
+    z-index: 10000 !important;
+    padding: 0 !important;
+    position: absolute !important;
+    left: 211px !important;
+    top: 176px !important;
+    transform: none !important;
+  }
+
+  :global(.shepherd-trending-step .shepherd-content) {
+    padding: 0 !important;
+    background: transparent !important;
+    border-radius: 16px !important;
+    box-shadow: none !important;
+  }
+
+  :global(.shepherd-trending-step .shepherd-header) {
+    display: none !important;
+  }
+
+  :global(.shepherd-trending-step .shepherd-text) {
+    padding: 0 !important;
+    margin: 0 !important;
+    position: relative;
+  }
+
+  /* Custom Arrow Styling for trending step */
+  :global(.shepherd-trending-step .shepherd-arrow-custom) {
+    position: absolute;
+    top: 20px;
+    left: -16px;
+    rotate: 90deg;
+    width: 0;
+    height: 0;
+    border-left: 12px solid transparent;
+    border-right: 12px solid transparent;
+    border-top: 18px solid #EE434A;
+    z-index: 1;
+  }
+
+ :global(.dark .shepherd-trending-step .shepherd-arrow-custom) {
     border-top-color: theme('colors.brand.red') !important;
   }
 </style> 
