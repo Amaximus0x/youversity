@@ -153,7 +153,7 @@
               <div class="self-stretch inline-flex justify-between items-center">
                 <!-- Progress Bar -->
                 <div class="w-[118px] h-2.5 bg-black/20 rounded-full inline-flex flex-col justify-center items-start gap-2.5 overflow-hidden">
-                  <div class="w-[13px] h-3 bg-white rounded-full"></div>
+                  <div class="w-[29.5px] h-3 bg-white rounded-full"></div>
                 </div>
                 <!-- Buttons -->
                 <div class="flex justify-start items-center gap-2">
@@ -211,9 +211,9 @@
               <div class="self-stretch justify-start text-white text-body font-bold leading-7">Explore Courses</div>
               <div class="self-stretch justify-start text-white text-semi-body">Explore a wide range of courses designed to help you acquire new skills and deepen your knowledge.</div>
               <div class="self-stretch inline-flex justify-between items-center">
-                <!-- Progress Bar (Step 2/?) -->
+                <!-- Progress Bar (Step 2/4) -->
                 <div class="w-[118px] h-2.5 bg-black/20 rounded-full inline-flex flex-col justify-center items-start gap-2.5 overflow-hidden">
-                  <div class="w-6 h-3 bg-white rounded-full"></div>
+                  <div class="w-[59px] h-3 bg-white rounded-full"></div>
                 </div>
                 <!-- Buttons -->
                 <div class="flex justify-start items-center gap-2">
@@ -271,9 +271,9 @@
               <div class="self-stretch justify-start text-white text-h4 font-bold">Trending Courses</div>
               <div class="self-stretch justify-start text-white text-semi-body">Discover the trending courses that are gaining popularity among learners.</div>
               <div class="self-stretch inline-flex justify-between items-center">
-                <!-- Progress Bar -->
+                <!-- Progress Bar (Step 3/4) -->
                 <div class="w-[118px] h-2.5 bg-black/20 rounded-full inline-flex flex-col justify-center items-start gap-2.5 overflow-hidden">
-                  <div class="w-[39px] h-3 bg-white rounded-full"></div>
+                  <div class="w-[88.5px] h-3 bg-white rounded-full"></div>
                 </div>
                 <!-- Buttons -->
                 <div class="flex justify-start items-center gap-2">

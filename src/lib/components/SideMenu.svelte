@@ -33,7 +33,7 @@
     ];
 </script>
 
-<div class="hidden lg:flex h-full flex-col w-64 p-5 border-r border-light-border dark:border-dark-border bg-light-background-primary dark:bg-dark-background-primary tour-navigation fixed top-0 left-0 bottom-0 z-40">
+<div class="hidden lg:flex h-full flex-col w-68 p-5 border-r border-light-border dark:border-dark-border bg-light-background-primary dark:bg-dark-background-primary tour-navigation fixed top-0 left-0 bottom-0 z-40">
     <!-- Logo section -->
     <div
         class="w-[230px] pb-[24px] pt-[24px] flex flex-col items-start justify-center px-4"

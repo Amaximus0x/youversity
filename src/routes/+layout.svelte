@@ -513,7 +513,7 @@
           <div class="w-full">
             <!-- Header -->
             <header
-              class="fixed top-0 right-0 left-0 lg:left-64 lg:h-24 px-5 lg:px-4 pt-6 lg:pb-4 lg:ml-1.5 lg:border-b border-light-border dark:border-dark-border bg-light-bg-secondary dark:bg-dark-bg-secondary z-40"
+              class="fixed top-0 right-0 left-0 lg:left-64 lg:h-24 px-5 lg:px-4 pt-6 lg:pb-4 lg:ml-[1rem] lg:border-b border-light-border dark:border-dark-border bg-light-bg-secondary dark:bg-dark-bg-secondary z-40"
             >
               <!-- Mobile Header -->
               <div
@@ -824,7 +824,7 @@
             </header>
 
             <!-- Page Content -->
-            <div class="pt-20 px-5 pb-24 lg:pt-28 lg:pl-6 lg:pr-8 lg:pb-8">
+            <div class="pt-20 px-5 pb-24 lg:pt-28 lg:pl-8 lg:pr-8 lg:pb-8">
               <slot />
             </div>
 
