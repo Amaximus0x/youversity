@@ -615,7 +615,7 @@
 <!-- only show on intro Page -->
  {#if $currentModuleStore === -1}
 <div
-  class="fixed bottom-0 left-0 right-0 pb-36 pt-4 z-[60] lg:hidden transition-opacity duration-300"
+  class="fixed bottom-0 left-0 right-0 pb-24 pt-4 z-[60] lg:hidden transition-opacity duration-300"
   class:opacity-0={!showFloatingButton}
   class:pointer-events-none={!showFloatingButton}
 >

@@ -322,7 +322,7 @@
 
 <!-- Navigation Buttons - Only for enrolled users and creators -->
 
-{#if isEnrolled || (isCreator && $currentModuleStore !== -1 && $currentModuleStore !== 0)}
+{#if isCreator && $currentModuleStore !== -1 }
     <div class="flex items-center {$currentModuleStore !== 10 ? 'justify-between' : 'justify-end'} mt-4">
         {#if $currentModuleStore !== -1 && $currentModuleStore !== courseDetails?.Final_Module_Title?.length}
             <!-- Prev and Next Buttons -->
