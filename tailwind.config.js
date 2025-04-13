@@ -138,6 +138,26 @@ export default {
           },
         ],
         
+        'tour-text': [
+          '24px', // Font size
+          {
+            lineHeight: '32px', // Line height
+            fontWeight: '400', // Font weight
+            fontFamily: 'Poppins', // Font family
+            textAlign: 'left', // Text alignment
+          },
+        ],
+
+        'tour-text-mobile': [
+          '20px', // Font size
+          {
+            lineHeight: '32px', // Line height
+            fontWeight: '400', // Font weight
+            fontFamily: 'Poppins', // Font family
+            textAlign: 'left', // Text alignment
+          },
+        ],
+
         '36-53': [
           '36px', // Font size
           {

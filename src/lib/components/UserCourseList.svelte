@@ -73,7 +73,7 @@
     </div>
     <!-- Explore Course Button -->
     <div 
-      class="lg:h-[54px] pl-4 pr-2 py-2 lg:px-4 bg-brand-red hover:bg-[#D63B42] rounded-2xl justify-center items-center gap-2 inline-flex transition-colors duration-200 cursor-pointer"
+      class="explore-course-btn lg:h-[54px] pl-4 pr-2 py-2 lg:px-4 bg-brand-red hover:bg-[#D63B42] rounded-2xl justify-center items-center gap-2 inline-flex transition-colors duration-200 cursor-pointer"
       on:click={() => goto('/trending')}
       on:keydown={(e) => e.key === 'Enter' && goto('/trending')}
       role="button"

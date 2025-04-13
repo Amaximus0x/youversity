@@ -33,9 +33,7 @@
     ];
 </script>
 
-<aside
-    class="px-2.5 w-[262px] fixed top-0 left-0 bottom-0 border-r border-light-border dark:border-dark-border z-40 hidden lg:flex lg:flex-col transition-colors"
->
+<div class="hidden lg:flex h-full flex-col w-68 p-5 border-r border-light-border dark:border-dark-border bg-light-background-primary dark:bg-dark-background-primary tour-navigation fixed top-0 left-0 bottom-0 z-40">
     <!-- Logo section -->
     <div
         class="w-[230px] pb-[24px] pt-[24px] flex flex-col items-start justify-center px-4"
@@ -179,4 +177,4 @@
             </div>
         </div>
     </div>
-</aside>
+</div>

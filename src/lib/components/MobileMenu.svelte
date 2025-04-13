@@ -15,7 +15,7 @@
   <div class="absolute right-0 top-0 h-full w-[80%] bg-gradient-light dark:bg-gradient-dark transform transition-transform duration-300 ease-in-out">
     <div class="flex flex-col h-full">
       <!-- Header -->
-      <div class="flex justify-between items-center px-5 pt-[123px]">
+      <div class="flex justify-between items-center px-5 pt-[52px]">
         <div class="flex items-center gap-2">
           <img src="/YV.svg" alt="Youversity Logo" class="w-[37.14px] h-10 relative" />
           <!-- <span class="text-light-text-primary dark:text-dark-text-primary font-medium">Youversity</span> -->
