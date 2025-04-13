@@ -157,10 +157,10 @@
                 </div>
                 <!-- Buttons -->
                 <div class="flex justify-start items-center gap-2">
-                  <button id="skip-create-course-btn" class="w-[63px] px-4 py-2 rounded outline outline-1 outline-offset-[-1px] outline-white flex justify-center items-center gap-2.5 cursor-pointer hover:bg-white/10 transition-colors">
+                  <button id="skip-create-course-btn" class="w-[63px] px-4 py-1 rounded outline outline-1 outline-offset-[-1px] outline-white flex justify-center items-center gap-2.5 cursor-pointer hover:bg-white/10 transition-colors">
                     <span class="justify-start text-white text-semi-body">Skip</span>
                   </button>
-                  <button id="next-create-course-btn" class="px-4 py-2 bg-white rounded flex justify-center items-center gap-2.5 cursor-pointer hover:bg-gray-200 transition-colors">
+                  <button id="next-create-course-btn" class="px-4 py-1 bg-white rounded flex justify-center items-center gap-2.5 cursor-pointer hover:bg-gray-200 transition-colors">
                     <span class="justify-start text-black text-semi-body">Next</span>
                   </button>
                 </div>
@@ -182,6 +182,66 @@
             if (browser) {
               const skipBtn = document.getElementById('skip-create-course-btn');
               const nextBtn = document.getElementById('next-create-course-btn');
+
+              if (skipBtn) {
+                skipBtn.onclick = () => {
+                  tour.cancel(); // Or tour.complete()
+                };
+              }
+
+              if (nextBtn) {
+                nextBtn.onclick = () => {
+                  tour.next();
+                };
+              }
+            }
+          }, 100);
+        }
+      }
+    });
+
+    // Explore Courses step
+    tour.addStep({
+      id: 'explore-courses',
+      title: '', // No title shown
+      text: `<!-- Custom Arrow -->
+            <div class="shepherd-arrow-custom"></div>
+            <!-- Main Content matching the screenshot -->
+            <div class="w-[311px] p-4 bg-brand-red rounded-2xl outline outline-1 outline-offset-[-1px] outline-black/5 inline-flex flex-col justify-start items-start gap-4 overflow-hidden relative">
+              <div class="self-stretch justify-start text-white text-body font-bold leading-7">Explore Courses</div>
+              <div class="self-stretch justify-start text-white text-semi-body">Explore a wide range of courses designed to help you acquire new skills and deepen your knowledge.</div>
+              <div class="self-stretch inline-flex justify-between items-center">
+                <!-- Progress Bar (Step 2/?) -->
+                <div class="w-[118px] h-2.5 bg-black/20 rounded-full inline-flex flex-col justify-center items-start gap-2.5 overflow-hidden">
+                  <div class="w-6 h-3 bg-white rounded-full"></div>
+                </div>
+                <!-- Buttons -->
+                <div class="flex justify-start items-center gap-2">
+                  <button id="skip-explore-courses-btn" class="w-[63px] px-4 py-1 rounded outline outline-1 outline-offset-[-1px] outline-white flex justify-center items-center gap-2.5 cursor-pointer hover:bg-white/10 transition-colors">
+                    <span class="justify-start text-white text-semi-body">Skip</span>
+                  </button>
+                  <button id="next-explore-courses-btn" class="px-4 py-1 bg-white rounded flex justify-center items-center gap-2.5 cursor-pointer hover:bg-gray-200 transition-colors">
+                    <span class="justify-start text-black text-semi-body">Next</span>
+                  </button>
+                </div>
+              </div>
+            </div>`,
+      attachTo: {
+        element: '.explore-course-btn',
+        on: 'bottom'
+      },
+      buttons: [], // Use custom buttons
+      classes: 'shepherd-theme-custom shepherd-explore-courses-step',
+      canClickTarget: false,
+      arrow: false,
+      scrollTo: true, // Enable scrolling to keep the step visible
+      modalOverlayOpeningPadding: 5,
+      when: {
+        show: () => {
+          setTimeout(() => {
+            if (browser) {
+              const skipBtn = document.getElementById('skip-explore-courses-btn');
+              const nextBtn = document.getElementById('next-explore-courses-btn');
 
               if (skipBtn) {
                 skipBtn.onclick = () => {
@@ -585,4 +645,55 @@
     border-top-color: theme('colors.brand.red') !important; /* Use Tailwind theme function */
   }
   
+  /* Styling for the explore-courses step */
+  :global(.shepherd-explore-courses-step) {
+    max-width: fit-content !important;
+    width: auto !important;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    filter: drop-shadow(-9px 13px 19px rgba(0,0,0,0.37));
+    border-radius: 16px !important;
+    z-index: 10000 !important;
+    padding: 0 !important;
+    position: absolute !important;
+    left: 368.43px !important;
+    top: 724px !important;
+    transform: none !important;
+  }
+
+  :global(.shepherd-explore-courses-step .shepherd-content) {
+    padding: 0 !important;
+    background: transparent !important;
+    border-radius: 16px !important;
+    box-shadow: none !important;
+  }
+
+  :global(.shepherd-explore-courses-step .shepherd-header) {
+    display: none !important;
+  }
+
+  :global(.shepherd-explore-courses-step .shepherd-text) {
+    padding: 0 !important;
+    margin: 0 !important;
+    position: relative;
+  }
+
+  /* Custom Arrow Styling for explore-courses */
+  :global(.shepherd-explore-courses-step .shepherd-arrow-custom) {
+    position: absolute;
+    top: -16px;
+    left: 20px;
+    rotate: 180deg;
+    width: 0;
+    height: 0;
+    border-left: 12px solid transparent;
+    border-right: 12px solid transparent;
+    border-top: 18px solid #EE434A;
+    z-index: 1;
+  }
+
+ :global(.dark .shepherd-explore-courses-step .shepherd-arrow-custom) {
+    border-top-color: theme('colors.brand.red') !important;
+  }
 </style> 
