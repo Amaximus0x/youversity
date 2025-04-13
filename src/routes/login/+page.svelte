@@ -268,7 +268,7 @@
             >
               <!-- Back Button - Mobile Only -->
               <button 
-                on:click={() => window.history.back()} 
+                on:click={() => location.href = '/'} 
                 class="lg:hidden w-6 h-6"
               >
                 <svg

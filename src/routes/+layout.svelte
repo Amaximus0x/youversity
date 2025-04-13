@@ -932,7 +932,7 @@
               type="text"
               placeholder="Search Courses..."
               bind:value={searchQuery}
-              class="flex-1 px-4 bg-transparent border-none focus:outline-none text-body text-light-text-primary dark:text-dark-text-primary placeholder:text-light-text-secondary dark:placeholder:text-dark-text-secondary"
+              class="flex-1 w-full bg-transparent border-none focus:outline-none text-body text-light-text-primary dark:text-dark-text-primary placeholder:text-light-text-secondary dark:placeholder:text-dark-text-secondary"
               autofocus
             />
             <button
