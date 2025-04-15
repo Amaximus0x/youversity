@@ -14,6 +14,7 @@
   import { tourStore } from '$lib/stores/tourStore';
   import type { TourStep } from '$lib/stores/tourStore';
   import CustomTourGuide from '$lib/components/CustomTourGuide.svelte';
+  import { get } from 'svelte/store';
 
   let learningObjective = '';
   let userCourses: (FinalCourseStructure & { id: string })[] = [];
@@ -30,6 +31,7 @@
   let courseObjectiveInput: HTMLInputElement;
   let isNewUser = false;
   let robotImage = '/tour-guide.gif';
+  let debounceTimeout: ReturnType<typeof setTimeout> | null = null;
 
   // Define Tour Steps (using Tailwind in HTML strings)
   const tourSteps: TourStep[] = [
@@ -114,29 +116,42 @@
       placement: 'right',
     },
     {
-      id: 'create-course-interactive',
+      id: 'create-course-input',
       target: '#course-objective-input',
       content: `<div class="w-[374px] p-4 bg-brand-red rounded-2xl outline outline-1 outline-offset-[-1px] outline-black/5 inline-flex flex-col justify-start items-start gap-4 overflow-hidden relative">
         <!-- Arrow placeholder -->
-        <div class="tour-arrow absolute w-4 h-4 bg-brand-red transform rotate-45"></div>
+        <div class="tour-arrow absolute w-4 h-4 bg-brand-red transform rotate-45"></div> 
         <div class="self-stretch justify-start text-white text-h4 font-bold">Let's Create Your First Course!</div>
-        <div class="self-stretch justify-start text-white text-semi-body">Enter what you want to learn in the input field above. For example: "How to bake sourdough bread" or "Introduction to Python programming".</div>
-        <div class="self-stretch inline-flex justify-between items-center">
-          <div class="w-[118px] h-2.5 bg-black/20 rounded-full inline-flex flex-col justify-center items-start gap-2.5 overflow-hidden">
+        <div class="self-stretch justify-start text-white text-semi-body">Enter what you want to learn in the input field above. For example: "How to bake sourdough bread" or "Introduction to Python programming". Try typing now!</div>
+        <div class="self-stretch inline-flex justify-end items-center">
+          <div class="w-[118px] h-2.5 bg-black/20 rounded-full inline-flex flex-col justify-center items-start gap-2.5 overflow-hidden mr-auto">
             <div class="w-[101.1px] h-3 bg-white rounded-full"></div>
           </div>
           <div class="flex justify-start items-center gap-2">
             <button data-tour-action="cancel" class="w-[63px] px-4 py-1 rounded outline outline-1 outline-offset-[-1px] outline-white flex justify-center items-center gap-2.5 cursor-pointer hover:bg-white/10 transition-colors" type="button">
               <span class="justify-start text-white text-semi-body">Skip</span>
             </button>
-            <button data-tour-action="next" class="px-4 py-1 bg-white rounded flex justify-center items-center gap-2.5 cursor-pointer hover:bg-gray-200 transition-colors" type="button">
-              <span class="justify-start text-black text-semi-body">Next</span>
-            </button>
           </div>
         </div>
       </div>`,
       placement: 'bottom',
       isInteractive: true,
+    },
+    {
+      id: 'create-course-button',
+      target: '#create-course button[type="submit"]',
+      content: `<div class="w-[374px] p-4 bg-brand-red rounded-2xl outline outline-1 outline-offset-[-1px] outline-black/5 inline-flex flex-col justify-start items-start gap-4 overflow-hidden relative">
+        <!-- Arrow placeholder -->
+        <div class="tour-arrow absolute w-4 h-4 bg-brand-red transform rotate-45"></div>
+        <div class="self-stretch justify-start text-white text-h4 font-bold">Great! Now Click Create!</div>
+        <div class="self-stretch justify-start text-white text-semi-body">Click the "Create Course" button above to start generating your personalized course content.</div>
+        <div class="self-stretch inline-flex justify-between items-center">
+          <div class="w-[118px] h-2.5 bg-black/20 rounded-full inline-flex flex-col justify-center items-start gap-2.5 overflow-hidden">
+            <div class="w-[118px] h-3 bg-white rounded-full"></div>
+          </div>
+        </div>
+      </div>`,
+      placement: 'bottom',
     },
     {
       id: 'finish',
@@ -307,13 +322,37 @@
 
     init();
 
+    // Add cleanup for debounce timer
+    cleanupFunctions.push(() => {
+      if (debounceTimeout) {
+        clearTimeout(debounceTimeout);
+      }
+    });
+
     return () => {
       console.log('[+page] Running onMount cleanup');
       cleanupFunctions.forEach(cleanup => cleanup());
-      // Optionally cancel tour on navigation away from dashboard if needed
-      // tourStore.cancelTour(); 
+      // Clear timeout on component destroy as well
+      if (debounceTimeout) {
+        clearTimeout(debounceTimeout);
+      }
     };
   });
+
+  // Debounce handler for course objective input
+  function handleObjectiveInput() {
+    if (debounceTimeout) {
+      clearTimeout(debounceTimeout);
+    }
+
+    const tourState = get(tourStore); // Get current store value synchronously
+    if (tourState.isTourActive && tourState.steps[tourState.currentStepIndex]?.id === 'create-course-input') {
+      debounceTimeout = setTimeout(() => {
+        console.log('[+page] Input pause detected, switching to button step.');
+        tourStore.goToStepById('create-course-button');
+      }, 5000); // 5 seconds delay
+    }
+  }
 
   async function handleCreateCourse(e: Event) {
     e.preventDefault();
@@ -321,6 +360,15 @@
     if (!learningObjective.trim()) {
       return; // Don't proceed if learning objective is empty
     }
+
+    // --- Check and close tour if on the button step ---
+    const currentTourState = get(tourStore);
+    if (currentTourState.isTourActive && 
+        currentTourState.steps[currentTourState.currentStepIndex]?.id === 'create-course-button') {
+      console.log('[+page] Create button clicked during tour, cancelling tour.');
+      tourStore.cancelTour(); // Close the tour guide
+    }
+    // --------------------------------------------------
 
     try {
       if ($user) {
@@ -474,6 +522,7 @@
             placeholder="Enter what you want to learn..."
             on:focus={() => isInputFocused = true}
             on:blur={() => isInputFocused = false}
+            on:input={handleObjectiveInput}
             class="w-full text-body pl-12 pr-3 h-[52px] rounded-2xl border-[1.5px] border-light-border dark:border-dark-border focus:pl-4 focus:outline-none focus:border-brand-red bg-light-bg-primary dark:bg-dark-bg-primary text-light-text-primary dark:text-dark-text-primary placeholder:text-light-text-tertiary dark:placeholder:text-dark-text-tertiary transition-colors duration-300 ease-in-out"
           />
         </div>

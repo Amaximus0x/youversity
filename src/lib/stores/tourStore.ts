@@ -120,6 +120,20 @@ function completeTour() {
   set(initialState);
 }
 
+// --- Action to go to a specific step by ID ---
+function goToStepById(id: string) {
+  update(state => {
+    const targetIndex = state.steps.findIndex(step => step.id === id);
+    if (targetIndex !== -1) {
+      console.log(`[TourStore] Jumping to step ID "${id}" (index ${targetIndex})`);
+      return { ...state, currentStepIndex: targetIndex };
+    } else {
+      console.warn(`[TourStore] Step with ID "${id}" not found.`);
+      return state; // No change if ID not found
+    }
+  });
+}
+
 // Export the store and actions
 export const tourStore = {
   subscribe,
@@ -127,6 +141,7 @@ export const tourStore = {
   nextStep,
   prevStep,
   goToStep,
+  goToStepById,
   cancelTour,
   completeTour,
   // Expose completion check if needed elsewhere
