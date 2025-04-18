@@ -139,6 +139,60 @@
       placement: 'right',
     },
     {
+      id: 'my-courses',
+      target: '.tour-navigation a[href="/my-courses"]', 
+      content: `<div class="w-[322px] p-4 bg-brand-red rounded-2xl outline outline-1 outline-offset-[-1px] outline-black/5 inline-flex flex-col justify-start items-start gap-4 relative top-1">
+        <!-- Rotated Arrow SVG -->
+        <svg class="absolute left-[-28px] top-[13%] -translate-y-1/5 w-[34px] h-[38px] z-10 transform rotate-[-90deg]" width="38" height="34" viewBox="0 0 38 34" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M17.2774 1.92017C18.0512 0.6084 19.9488 0.6084 20.7226 1.92017L37.5724 30.4838C38.3588 31.8171 37.3977 33.5 35.8497 33.5H2.15026C0.602323 33.5 -0.358837 31.8171 0.427647 30.4838L17.2774 1.92017Z" fill="#EB434A"/></svg>
+        <div class="self-stretch justify-start text-white text-h4 font-bold">My Courses</div>
+        <div class="self-stretch justify-start text-white text-semi-body">Access all the courses you've created or enrolled in here.</div>
+        <div class="self-stretch inline-flex justify-between items-center">
+          <div class="w-[118px] h-2.5 bg-black/20 rounded-full inline-flex flex-col justify-center items-start gap-2.5 overflow-hidden"><div class="w-[50.5px] h-3 bg-white rounded-full"></div></div>
+          <div class="flex justify-start items-center gap-2">
+            <button data-tour-action="cancel" class="w-[63px] px-4 py-1 rounded outline outline-1 outline-offset-[-1px] outline-white flex justify-center items-center gap-2.5 cursor-pointer hover:bg-white/10 transition-colors" type="button"><span class="justify-start text-white text-semi-body">Skip</span></button>
+            <button data-tour-action="next" class="px-4 py-1 bg-white rounded flex justify-center items-center gap-2.5 cursor-pointer hover:bg-gray-200 transition-colors" type="button"><span class="justify-start text-black text-semi-body">Next</span></button>
+          </div>
+        </div>
+      </div>`,
+      placement: 'right',
+    },
+    {
+      id: 'bookmarks',
+      target: '.tour-navigation a[href="/bookmarks"]', 
+      content: `<div class="w-[322px] p-4 bg-brand-red rounded-2xl outline outline-1 outline-offset-[-1px] outline-black/5 inline-flex flex-col justify-start items-start gap-4 relative top-1">
+        <!-- Rotated Arrow SVG -->
+        <svg class="absolute left-[-28px] top-[13%] -translate-y-1/5 w-[34px] h-[38px] z-10 transform rotate-[-90deg]" width="38" height="34" viewBox="0 0 38 34" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M17.2774 1.92017C18.0512 0.6084 19.9488 0.6084 20.7226 1.92017L37.5724 30.4838C38.3588 31.8171 37.3977 33.5 35.8497 33.5H2.15026C0.602323 33.5 -0.358837 31.8171 0.427647 30.4838L17.2774 1.92017Z" fill="#EB434A"/></svg>
+        <div class="self-stretch justify-start text-white text-h4 font-bold">Bookmarks</div>
+        <div class="self-stretch justify-start text-white text-semi-body">Keep track of your favorite courses and modules by bookmarking them.</div>
+        <div class="self-stretch inline-flex justify-between items-center">
+          <div class="w-[118px] h-2.5 bg-black/20 rounded-full inline-flex flex-col justify-center items-start gap-2.5 overflow-hidden"><div class="w-[67.4px] h-3 bg-white rounded-full"></div></div>
+          <div class="flex justify-start items-center gap-2">
+            <button data-tour-action="cancel" class="w-[63px] px-4 py-1 rounded outline outline-1 outline-offset-[-1px] outline-white flex justify-center items-center gap-2.5 cursor-pointer hover:bg-white/10 transition-colors" type="button"><span class="justify-start text-white text-semi-body">Skip</span></button>
+            <button data-tour-action="next" class="px-4 py-1 bg-white rounded flex justify-center items-center gap-2.5 cursor-pointer hover:bg-gray-200 transition-colors" type="button"><span class="justify-start text-black text-semi-body">Next</span></button>
+          </div>
+        </div>
+      </div>`,
+      placement: 'right',
+    },
+    {
+      id: 'settings',
+      target: '.tour-navigation a[href^="/settings"]', // Use starts-with selector
+      content: `<div class="w-[322px] p-4 bg-brand-red rounded-2xl outline outline-1 outline-offset-[-1px] outline-black/5 inline-flex flex-col justify-start items-start gap-4 relative top-1">
+        <!-- Rotated Arrow SVG -->
+        <svg class="absolute left-[-28px] top-[13%] -translate-y-1/5 w-[34px] h-[38px] z-10 transform rotate-[-90deg]" width="38" height="34" viewBox="0 0 38 34" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M17.2774 1.92017C18.0512 0.6084 19.9488 0.6084 20.7226 1.92017L37.5724 30.4838C38.3588 31.8171 37.3977 33.5 35.8497 33.5H2.15026C0.602323 33.5 -0.358837 31.8171 0.427647 30.4838L17.2774 1.92017Z" fill="#EB434A"/></svg>
+        <div class="self-stretch justify-start text-white text-h4 font-bold">Settings</div>
+        <div class="self-stretch justify-start text-white text-semi-body">Manage your profile, preferences, and account settings here.</div>
+        <div class="self-stretch inline-flex justify-between items-center">
+          <div class="w-[118px] h-2.5 bg-black/20 rounded-full inline-flex flex-col justify-center items-start gap-2.5 overflow-hidden"><div class="w-[84.2px] h-3 bg-white rounded-full"></div></div>
+          <div class="flex justify-start items-center gap-2">
+            <button data-tour-action="cancel" class="w-[63px] px-4 py-1 rounded outline outline-1 outline-offset-[-1px] outline-white flex justify-center items-center gap-2.5 cursor-pointer hover:bg-white/10 transition-colors" type="button"><span class="justify-start text-white text-semi-body">Skip</span></button>
+            <button data-tour-action="next" class="px-4 py-1 bg-white rounded flex justify-center items-center gap-2.5 cursor-pointer hover:bg-gray-200 transition-colors" type="button"><span class="justify-start text-black text-semi-body">Next</span></button>
+          </div>
+        </div>
+      </div>`,
+      placement: 'right',
+    },
+    {
       id: 'create-course-input',
       target: '#course-objective-input',
       content: `<div class="w-[374px] p-4 bg-brand-red rounded-2xl outline outline-1 outline-offset-[-1px] outline-black/5 inline-flex flex-col justify-start items-start gap-4 overflow-hidden relative">
