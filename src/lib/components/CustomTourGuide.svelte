@@ -73,6 +73,7 @@
     const segments = [spotlightTop, spotlightBottom, spotlightLeft, spotlightRight];
     if (!segments.every(el => el)) return; // Ensure elements are bound
 
+    // Only show spotlight if target exists AND current step doesn't disable overlay
     if (targetRect && currentStep && !currentStep.disableOverlay) {
       // Target exists and overlay is enabled for this step
       // Make segments visible (assuming they default to hidden or zero size)
@@ -94,49 +95,8 @@
       spotlightRight.style.width = `calc(100vw - ${Math.max(0, targetRect.right)}px)`;
 
     } else {
-      // No target or overlay disabled, hide the spotlight
+      // No target or overlay explicitly disabled for this step, hide the spotlight
       segments.forEach(el => el.style.display = 'none');
-    }
-  }
-
-  // --- Function to position the arrow ---
-  function positionArrow(stepEl: HTMLElement, placement: TourStep['placement']) {
-    const arrowEl = stepEl.querySelector<HTMLElement>('.tour-arrow');
-    if (!arrowEl) return;
-
-    const stepRect = stepEl.getBoundingClientRect();
-    const arrowSize = arrowEl.offsetWidth; // Use actual size
-    const arrowHalfSize = arrowSize / 2;
-
-    // Reset styles
-    arrowEl.style.top = '';
-    arrowEl.style.left = '';
-    arrowEl.style.bottom = '';
-    arrowEl.style.right = '';
-
-    switch (placement) {
-      case 'bottom':
-        arrowEl.style.top = `-${arrowHalfSize}px`;
-        arrowEl.style.left = `${stepRect.width / 2 - arrowHalfSize}px`;
-        arrowEl.style.transform = 'rotate(45deg)';
-        break;
-      case 'top':
-        arrowEl.style.bottom = `-${arrowHalfSize}px`;
-        arrowEl.style.left = `${stepRect.width / 2 - arrowHalfSize}px`;
-        arrowEl.style.transform = 'rotate(225deg)';
-        break;
-      case 'right':
-        arrowEl.style.left = `-${arrowHalfSize}px`;
-        arrowEl.style.top = `${stepRect.height / 2 - arrowHalfSize}px`;
-        arrowEl.style.transform = 'rotate(-45deg)';
-        break;
-      case 'left':
-        arrowEl.style.right = `-${arrowHalfSize}px`;
-        arrowEl.style.top = `${stepRect.height / 2 - arrowHalfSize}px`;
-        arrowEl.style.transform = 'rotate(135deg)';
-        break;
-      default: // Includes 'center' or undefined
-         arrowEl.style.display = 'none'; // Hide arrow for centered steps
     }
   }
 
@@ -167,19 +127,28 @@
           left = `${rect.left + scrollX + (rect.width / 2) - horizontalOffset}px`; // Use scrollX
           transform = 'none';
         } else if (currentStep.placement === 'right') {
-          top = `${rect.top + scrollY + (rect.height / 2) - (stepRect.height / 2) + verticalOffset}px`; // Use scrollY
-          left = `${rect.right + scrollX + horizontalGap}px`; // Use scrollX
+          const verticalOffset = 42; // Increased slightly
+          const horizontalGap = 48; // Corrected to positive value
+          top = `${rect.top + scrollY + (rect.height / 2) - (stepRect.height / 2) + verticalOffset}px`; // Adjust vertical alignment
+          left = `${rect.right + scrollX + horizontalGap}px`; // Correct horizontal gap calculation
           transform = 'none';
+        } else if (currentStep.placement === 'top') {
+          const horizontalOffsetTop = 20; // Pixels to shift right from target center
+          top = `${rect.top + scrollY - stepRect.height - arrowOffset}px`; // Position above target
+          left = `${rect.left + scrollX + (rect.width / 2) + horizontalOffsetTop}px`; // Adjust horizontal position
+          transform = 'none';
+        } else if (currentStep.placement === 'left') {
+            const horizontalGap = 30; // Increased gap to the left
+            const verticalOffset = 15; // Added offset to push down slightly
+            top = `${rect.top + scrollY + (rect.height / 2) - (stepRect.height / 2) + verticalOffset}px`; // Adjust vertical alignment
+            left = `${rect.left + scrollX - stepRect.width - horizontalGap}px`; // Position further left
+            transform = 'none';
         } else {
            console.warn(`Placement "${currentStep.placement}" not fully implemented. Defaulting position.`);
            top = `${rect.bottom + scrollY + arrowOffset}px`; // Use scrollY
            left = `${rect.left + scrollX + (rect.width / 2) - (stepRect.width / 2)}px`; // Use scrollX
            transform = 'none';
         }
-
-        positionArrow(stepElement, currentStep.placement);
-        // No need to scrollIntoView on every scroll update
-        // targetEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); 
 
       } else {
         // Target not found
@@ -212,8 +181,8 @@
 <svelte:window bind:scrollY bind:scrollX />
 
 {#if isVisible && currentStep}
-  <!-- Simple Overlay (for centered steps) -->
-  {#if currentStep.placement === 'center'}
+  <!-- Simple Overlay (for centered steps without disabled overlay) -->
+  {#if currentStep.placement === 'center' && !currentStep.disableOverlay}
     <div
       transition:fade={{ duration: 200 }}
       class="fixed inset-0 bg-black/50 dark:bg-black/70 backdrop-blur-sm z-[9997]"
@@ -254,7 +223,7 @@
 
 <style>
   .spotlight-segment {
-    @apply bg-black/50 dark:bg-black/70 backdrop-blur-sm pointer-events-auto;
+    @apply bg-black/50 dark:bg-black/70 pointer-events-auto;
  }
   /* Ensure step container itself doesn't block underlying content unnecessarily */
  .tour-step-container {

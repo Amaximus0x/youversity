@@ -67,19 +67,37 @@
       </div>`,
       placement: 'center',
     },
+    // <div id="tour-arrow" class="absolute w-4 h-4 bg-brand-red transform rotate-45" style="top: -8px; left: calc(50% - 8px);"></div>
     {
       id: 'explore-courses',
       target: '.explore-course-btn',
-      content: `<div class="w-[311px] p-4 bg-brand-red rounded-2xl outline outline-1 outline-offset-[-1px] outline-black/5 inline-flex flex-col justify-start items-start gap-4 overflow-hidden relative">
-        <!-- Arrow placeholder -->
-        <div id="tour-arrow" class="absolute w-4 h-4 bg-brand-red transform rotate-45" style="top: -8px; left: calc(50% - 8px);"></div> 
-        <div class="self-stretch justify-start text-white text-body font-bold leading-7">Explore Courses</div>
-        <div class="self-stretch justify-start text-white text-semi-body">Explore a wide range of courses designed to help you acquire new skills and deepen your knowledge.</div>
-        <div class="self-stretch inline-flex justify-between items-center">
-          <div class="w-[118px] h-2.5 bg-black/20 rounded-full inline-flex flex-col justify-center items-start gap-2.5 overflow-hidden">
-            <div class="w-[16.8px] h-3 bg-white rounded-full"></div>
-          </div>
-          <div class="flex justify-start items-center gap-2">
+      content: `<div class="w-[437px] h-[182px] relative">
+   <!-- Arrow SVG Embedded -->
+   <svg class="absolute left-[82px] top-[0px] w-[38px] h-[34px] z-10" width="38" height="34" viewBox="0 0 38 34" fill="none" xmlns="http://www.w3.org/2000/svg">
+     <path id="Polygon 2" d="M17.2774 1.92017C18.0512 0.6084 19.9488 0.6084 20.7226 1.92017L37.5724 30.4838C38.3588 31.8171 37.3977 33.5 35.8497 33.5H2.15026C0.602323 33.5 -0.358837 31.8171 0.427647 30.4838L17.2774 1.92017Z" fill="#EB434A"/>
+   </svg>
+ 
+   <!-- Card -->
+   <div class="w-[311px] p-4 left-[63px] top-[23px] absolute bg-[#eb434a] rounded-2xl shadow-[-9px_13px_38px_-1px_rgba(0,0,0,0.37)] outline outline-1 outline-offset-[-1px] outline-[rgba(0,0,0,0.05)] inline-flex flex-col justify-start items-start gap-4 overflow-hidden z-20">
+     <!-- Title -->
+     <div class="self-stretch justify-start text-white text-base font-bold font-['Poppins'] leading-7">
+       Explore Courses
+     </div>
+
+     <!-- Description -->
+     <div class="self-stretch justify-start text-white text-sm font-normal font-['Poppins'] leading-snug">
+       Explore a wide range of courses designed to help you acquire new skills and deepen your knowledge.
+     </div>
+
+     <!-- Progress and Buttons -->
+     <div class="self-stretch inline-flex justify-between items-center">
+       <!-- Progress bar -->
+       <div class="w-[118px] h-2.5 bg-black/20 rounded-full inline-flex flex-col justify-center items-start gap-2.5 overflow-hidden">
+         <div class="w-6 h-3 bg-white rounded-full"></div>
+       </div>
+
+       <!-- Buttons -->
+       <div class="flex justify-start items-center gap-2">
             <button data-tour-action="cancel" class="w-[63px] px-4 py-1 rounded outline outline-1 outline-offset-[-1px] outline-white flex justify-center items-center gap-2.5 cursor-pointer hover:bg-white/10 transition-colors" type="button">
               <span class="justify-start text-white text-semi-body">Skip</span>
             </button>
@@ -87,16 +105,21 @@
               <span class="justify-start text-black text-semi-body">Next</span>
             </button>
           </div>
-        </div>
-      </div>`,
+     </div>
+   </div>
+ </div>`,
       placement: 'bottom',
     },
     {
       id: 'trending-courses',
       target: '.tour-navigation a[href="/trending"]', 
-      content: `<div class="w-[374px] p-4 bg-brand-red rounded-2xl outline outline-1 outline-offset-[-1px] outline-black/5 inline-flex flex-col justify-start items-start gap-4 overflow-hidden relative">
-        <!-- Arrow placeholder -->
-        <div class="tour-arrow absolute w-4 h-4 bg-brand-red transform rotate-45"></div>
+      content: `
+      <div class="w-[322px] p-4 bg-brand-red rounded-2xl outline outline-1 outline-offset-[-1px] outline-black/5 inline-flex flex-col justify-start items-start gap-4 relative top-1">
+        <!-- Rotated Arrow SVG Embedded -->
+        <svg class="absolute left-[-28px] top-[13%] -translate-y-1/5 w-[34px] h-[38px] z-10 transform rotate-[-90deg]" width="38" height="34" viewBox="0 0 38 34" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path id="Polygon 2" d="M17.2774 1.92017C18.0512 0.6084 19.9488 0.6084 20.7226 1.92017L37.5724 30.4838C38.3588 31.8171 37.3977 33.5 35.8497 33.5H2.15026C0.602323 33.5 -0.358837 31.8171 0.427647 30.4838L17.2774 1.92017Z" fill="#EB434A"/>
+        </svg>
+        <!-- <div class="tour-arrow absolute w-4 h-4 bg-brand-red transform rotate-45"></div> -->
         <div class="self-stretch justify-start text-white text-h4 font-bold">Trending Courses</div>
         <div class="self-stretch justify-start text-white text-semi-body">Discover the trending courses that are gaining popularity among learners.</div>
         <div class="self-stretch inline-flex justify-between items-center">
@@ -119,8 +142,7 @@
       id: 'create-course-input',
       target: '#course-objective-input',
       content: `<div class="w-[374px] p-4 bg-brand-red rounded-2xl outline outline-1 outline-offset-[-1px] outline-black/5 inline-flex flex-col justify-start items-start gap-4 overflow-hidden relative">
-        <!-- Arrow placeholder -->
-        <div class="tour-arrow absolute w-4 h-4 bg-brand-red transform rotate-45"></div> 
+        <!-- <div class="tour-arrow absolute w-4 h-4 bg-brand-red transform rotate-45"></div> --> 
         <div class="self-stretch justify-start text-white text-h4 font-bold">Let's Create Your First Course!</div>
         <div class="self-stretch justify-start text-white text-semi-body">Enter what you want to learn in the input field above. For example: "How to bake sourdough bread" or "Introduction to Python programming". Try typing now!</div>
         <div class="self-stretch inline-flex justify-end items-center">
@@ -141,8 +163,7 @@
       id: 'create-course-button',
       target: '#create-course button[type="submit"]',
       content: `<div class="w-[374px] p-4 bg-brand-red rounded-2xl outline outline-1 outline-offset-[-1px] outline-black/5 inline-flex flex-col justify-start items-start gap-4 overflow-hidden relative">
-        <!-- Arrow placeholder -->
-        <div class="tour-arrow absolute w-4 h-4 bg-brand-red transform rotate-45"></div>
+        <!-- <div class="tour-arrow absolute w-4 h-4 bg-brand-red transform rotate-45"></div> -->
         <div class="self-stretch justify-start text-white text-h4 font-bold">Great! Now Click Create!</div>
         <div class="self-stretch justify-start text-white text-semi-body">Click the "Create Course" button above to start generating your personalized course content.</div>
         <div class="self-stretch inline-flex justify-between items-center">
@@ -153,32 +174,32 @@
       </div>`,
       placement: 'bottom',
     },
-    {
-      id: 'finish',
-      content: `<div class="w-full inline-flex flex-col justify-start items-center gap-[56px] p-12 rounded-2xl bg-gradient-light dark:bg-gradient-dark">
-        <div class="self-stretch flex flex-col justify-start items-center">
-          <div class="w-[116.5px] h-[142px] relative overflow-hidden">
-            <img class="w-[140px] h-[170px] object-cover absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" src="${robotImage}" alt="Tour Guide Robot" />
-          </div>
-          <div class="self-stretch flex flex-col justify-start items-center gap-4 mt-4">
-            <div class="self-stretch flex flex-col justify-start items-center">
-              <div class="w-full min-w-[350px] max-w-[456px] text-center mt-[-20px]">
-                <span class="text-light-text-secondary dark:text-white text-2xl md:text-2xl font-semibold font-['Poppins'] leading-normal">You're all set!</span>
-                <div class="text-light-text-secondary dark:text-white text-tour-text-mobile md:text-tour-text mt-3">
-                  You're now ready to start your learning journey. Enjoy using Youversity!
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="w-full max-w-[162px] inline-flex justify-start items-start">
-          <button data-tour-action="complete" class="flex-1 h-12 md:h-[54px] px-4 md:px-8 py-2 bg-[#eb434a] rounded-2xl shadow-[0px_4px_26px_0px_#EB434A] flex justify-center items-center gap-2 cursor-pointer hover:bg-[#D93940]" type="button">
-            <span class="text-white text-sm md:text-base font-medium md:font-semibold font-['Poppins'] leading-normal">Finish</span>
-          </button>
-        </div>
-      </div>`,
-      placement: 'center',
-    },
+    // {
+    //   id: 'finish',
+    //   content: `<div class="w-full inline-flex flex-col justify-start items-center gap-[56px] p-12 rounded-2xl bg-gradient-light dark:bg-gradient-dark">
+    //     <div class="self-stretch flex flex-col justify-start items-center">
+    //       <div class="w-[116.5px] h-[142px] relative overflow-hidden">
+    //         <img class="w-[140px] h-[170px] object-cover absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" src="${robotImage}" alt="Tour Guide Robot" />
+    //       </div>
+    //       <div class="self-stretch flex flex-col justify-start items-center gap-4 mt-4">
+    //         <div class="self-stretch flex flex-col justify-start items-center">
+    //           <div class="w-full min-w-[350px] max-w-[456px] text-center mt-[-20px]">
+    //             <span class="text-light-text-secondary dark:text-white text-2xl md:text-2xl font-semibold font-['Poppins'] leading-normal">You're all set!</span>
+    //             <div class="text-light-text-secondary dark:text-white text-tour-text-mobile md:text-tour-text mt-3">
+    //               You're now ready to start your learning journey. Enjoy using Youversity!
+    //             </div>
+    //           </div>
+    //         </div>
+    //       </div>
+    //     </div>
+    //     <div class="w-full max-w-[162px] inline-flex justify-start items-start">
+    //       <button data-tour-action="complete" class="flex-1 h-12 md:h-[54px] px-4 md:px-8 py-2 bg-[#eb434a] rounded-2xl shadow-[0px_4px_26px_0px_#EB434A] flex justify-center items-center gap-2 cursor-pointer hover:bg-[#D93940]" type="button">
+    //         <span class="text-white text-sm md:text-base font-medium md:font-semibold font-['Poppins'] leading-normal">Finish</span>
+    //       </button>
+    //     </div>
+    //   </div>`,
+    //   placement: 'center',
+    // },
   ];
 
   // Function to focus the course objective input
@@ -372,6 +393,12 @@
 
     try {
       if ($user) {
+        // --- Set flag to trigger next tour --- 
+        if (browser) {
+          localStorage.setItem('startCreateCourseTour', 'true');
+        }
+        // -------------------------------------
+
         // Show creation overlay first
         showCreationOverlay = true;
 

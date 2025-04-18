@@ -23,6 +23,10 @@
   // @ts-ignore - Svelte component import
   import CourseGenerationModal from "$lib/components/CourseGenerationModal.svelte";
   import type { PageData } from './$types';
+  import { tourStore } from "$lib/stores/tourStore";
+  import type { TourStep } from "$lib/stores/tourStore";
+  import CustomTourGuide from "$lib/components/CustomTourGuide.svelte";
+  import { get } from 'svelte/store';
 
   // Define interface that describes the server data
   interface ServerAuthData {
@@ -50,9 +54,115 @@
   let visitedModules: boolean[] = [];
   let moduleRegenerating: Record<number, boolean> = {};
   let nextUnvisitedModuleIndex: number = -1;
+  let shouldStartTourOnLoad = false; // Flag to track if tour should start
+  let createCourseTourCompletedKey: string | null = null;
+  let nextStepIdAfterModal: string | null = null; // Variable to store next step ID
 
   // Reference to the module navigation container for scrolling
   let moduleNavContainer: HTMLElement;
+
+  // --- Tour Steps for Create Course Page (Apply Dashboard Styling) ---
+  const createCourseTourSteps: TourStep[] = [
+    {
+      id: 'cc-module-nav',
+      target: '[data-tour="module-navigation"]',
+      content: `<div class="w-[374px] p-4 bg-brand-red rounded-2xl outline outline-1 outline-offset-[-1px] outline-black/5 inline-flex flex-col justify-start items-start gap-4 overflow-hidden relative">
+                  <div class="tour-arrow absolute w-4 h-4 bg-brand-red transform rotate-45"></div>
+                  <div class="self-stretch justify-start text-white text-h4 font-bold">Module Navigation</div>
+                  <div class="self-stretch justify-start text-white text-semi-body">You will have 10 modules to choose videos for. Select modules here to view and choose videos for each one.</div>
+                  <div class="self-stretch inline-flex justify-between items-center mt-2">
+                     <div class="w-[118px] h-2.5 bg-black/20 rounded-full inline-flex flex-col justify-center items-start gap-2.5 overflow-hidden"><div class="w-[16.8px] h-3 bg-white rounded-full"></div></div>
+                     <div class="flex justify-start items-center gap-2">
+                       <button data-tour-action="next" class="px-4 py-1 bg-white rounded flex justify-center items-center gap-2.5 cursor-pointer hover:bg-gray-200 transition-colors" type="button"><span class="justify-start text-black text-semi-body">Next</span></button>
+                     </div>
+                  </div>
+                </div>`,
+      placement: 'bottom'
+    }, 
+    {
+      id: 'cc-video-grid',
+      target: '[data-tour="module-video-grid"]',
+      content: `<div class="w-[374px] p-4 bg-brand-red rounded-2xl outline outline-1 outline-offset-[-1px] outline-black/5 inline-flex flex-col justify-start items-start gap-4 overflow-hidden relative">
+                  <div class="tour-arrow absolute w-4 h-4 bg-brand-red transform rotate-45"></div>
+                  <div class="self-stretch justify-start text-white text-h4 font-bold">Select a Video</div>
+                  <div class="self-stretch justify-start text-white text-semi-body">Click on a video card to select it for this module. The selected video will have a border. You can play videos by clicking on the thumbnails.</div>
+                  <div class="self-stretch inline-flex justify-between items-center mt-2">
+                     <div class="w-[118px] h-2.5 bg-black/20 rounded-full inline-flex flex-col justify-center items-start gap-2.5 overflow-hidden"><div class="w-[33.7px] h-3 bg-white rounded-full"></div></div>
+                     <div class="flex justify-start items-center gap-2">
+                       <button data-tour-action="next" class="px-4 py-1 bg-white rounded flex justify-center items-center gap-2.5 cursor-pointer hover:bg-gray-200 transition-colors" type="button"><span class="justify-start text-black text-semi-body">Next</span></button>
+                     </div>
+                  </div>
+               </div>`,
+      placement: 'top' // Might need adjustment based on grid size
+    },
+    {
+      id: 'cc-regenerate',
+      target: '[data-tour="regenerate-button"]',
+      content: `<div class="w-[374px] p-4 bg-brand-red rounded-2xl outline outline-1 outline-offset-[-1px] outline-black/5 inline-flex flex-col justify-start items-start gap-4 overflow-hidden relative">
+                  <div class="tour-arrow absolute w-4 h-4 bg-brand-red transform rotate-45"></div>
+                  <div class="self-stretch justify-start text-white text-h4 font-bold">Regenerate Videos</div>
+                  <div class="self-stretch justify-start text-white text-semi-body">Not happy with the choices? Click this button to search for a better set of videos for the current module.</div>
+                  <div class="self-stretch inline-flex justify-between items-center mt-2">
+                     <div class="w-[118px] h-2.5 bg-black/20 rounded-full inline-flex flex-col justify-center items-start gap-2.5 overflow-hidden"><div class="w-[50.5px] h-3 bg-white rounded-full"></div></div>
+                     <div class="flex justify-start items-center gap-2">
+                       <button data-tour-action="next" class="px-4 py-1 bg-white rounded flex justify-center items-center gap-2.5 cursor-pointer hover:bg-gray-200 transition-colors" type="button"><span class="justify-start text-black text-semi-body">Next</span></button>
+                     </div>
+                  </div>
+               </div>`,
+      placement: 'right'
+    },
+     {
+      id: 'cc-add-custom',
+      target: '[data-tour="add-custom-video-button"]',
+      content: `<div class="w-[374px] p-4 bg-brand-red rounded-2xl outline outline-1 outline-offset-[-1px] outline-black/5 inline-flex flex-col justify-start items-start gap-4 overflow-hidden relative">
+                  <div class="tour-arrow absolute w-4 h-4 bg-brand-red transform rotate-45"></div>
+                  <div class="self-stretch justify-start text-white text-h4 font-bold">Add Custom Video</div>
+                  <div class="self-stretch justify-start text-white text-semi-body">Have a specific YouTube video in mind? Click here to add it by pasting its URL.</div>
+                   <div class="self-stretch inline-flex justify-between items-center mt-2">
+                     <div class="w-[118px] h-2.5 bg-black/20 rounded-full inline-flex flex-col justify-center items-start gap-2.5 overflow-hidden"><div class="w-[67.4px] h-3 bg-white rounded-full"></div></div>
+                     <div class="flex justify-start items-center gap-2">
+                       <button data-tour-action="next" class="px-4 py-1 bg-white rounded flex justify-center items-center gap-2.5 cursor-pointer hover:bg-gray-200 transition-colors" type="button"><span class="justify-start text-black text-semi-body">Next</span></button>
+                     </div>
+                  </div>
+               </div>`,
+      placement: 'left',
+      disableOverlay: true // Don't show overlay/spotlight for this step
+    },
+    
+     {
+      id: 'cc-select-next-module',
+      target: '[data-tour="select-next-module-button"]',
+      content: `<div class="w-[374px] p-4 bg-brand-red rounded-2xl outline outline-1 outline-offset-[-1px] outline-black/5 inline-flex flex-col justify-start items-start gap-4 overflow-hidden relative">
+                  <div class="tour-arrow absolute w-4 h-4 bg-brand-red transform rotate-45"></div>
+                  <div class="self-stretch justify-start text-white text-h4 font-bold">Continue to Next Module</div>
+                  <div class="self-stretch justify-start text-white text-semi-body">Once you've selected a video for the current module, click here to proceed to the next one.</div>
+                   <div class="self-stretch inline-flex justify-between items-center mt-2">
+                     <div class="w-[118px] h-2.5 bg-black/20 rounded-full inline-flex flex-col justify-center items-start gap-2.5 overflow-hidden"><div class="w-[84.2px] h-3 bg-white rounded-full"></div></div>
+                     <div class="flex justify-start items-center gap-2">
+                       <button data-tour-action="next" class="px-4 py-1 bg-white rounded flex justify-center items-center gap-2.5 cursor-pointer hover:bg-gray-200 transition-colors" type="button"><span class="justify-start text-black text-semi-body">Next</span></button>
+                     </div>
+                  </div>
+                </div>`,
+      placement: 'top',
+      disableOverlay: true // Don't show overlay/spotlight for this step
+    },
+    {
+      id: 'cc-create-complete',
+      target: '[data-tour="create-complete-course-button"]',
+      content: `<div class="w-[374px] p-4 bg-brand-red rounded-2xl outline outline-1 outline-offset-[-1px] outline-black/5 inline-flex flex-col justify-start items-start gap-4 overflow-hidden relative">
+                  <div class="tour-arrow absolute w-4 h-4 bg-brand-red transform rotate-45"></div>
+                  <div class="self-stretch justify-start text-white text-h4 font-bold">Create Course!</div>
+                  <div class="self-stretch justify-start text-white text-semi-body">Looks like you've selected a video for every module! Click here to generate your complete course.</div>
+                  <div class="self-stretch inline-flex justify-between items-center mt-2">
+                     <div class="w-[118px] h-2.5 bg-black/20 rounded-full inline-flex flex-col justify-center items-start gap-2.5 overflow-hidden"><div class="w-[118px] h-3 bg-white rounded-full"></div></div> 
+                     <div class="flex justify-start items-center gap-2">
+                       <button data-tour-action="complete" class="px-4 py-1 bg-white rounded flex justify-center items-center gap-2.5 cursor-pointer hover:bg-gray-200 transition-colors" type="button"><span class="justify-start text-black text-semi-body">Finish Tour</span></button>
+                     </div>
+                  </div>
+                </div>`,
+      placement: 'top'
+    }
+  ];
 
   // Enable persistence by saving course state to localStorage
   function saveStateToStorage() {
@@ -676,8 +786,74 @@
     }
   }
 
-  // Get the objective from URL parameters on mount
+  // Function to check conditions and start the tour
+  function tryStartCreateCourseTour() {
+      // Ensure we are in browser, tour should start, modules are loaded, and we have a completion key
+      if (browser && shouldStartTourOnLoad && allModulesLoaded && createCourseTourCompletedKey) {
+          console.log('[Create Course Page] Conditions met, starting tour...');
+          
+          // Check if tour is already active (safety check)
+          if (get(tourStore).isTourActive) {
+             console.log('[Create Course Page] Tour is already active, not restarting.');
+             shouldStartTourOnLoad = false; // Prevent trying again
+             return; 
+          }
+          
+          // Add a small delay to ensure elements are definitely ready
+          setTimeout(() => {
+              tourStore.startTour(createCourseTourSteps);
+              // Mark this tour as completed in localStorage when it finishes
+              // Use a temporary subscription that unsubscribes itself
+              let unsub: (() => void) | null = null;
+              unsub = tourStore.subscribe(state => {
+                  // Check if the tour became inactive AND the index reset (indicating completion/cancellation)
+                  if (!state.isTourActive && get(tourStore).currentStepIndex === -1) { 
+                      console.log('[Create Course Page] Tour finished or cancelled, marking as completed.');
+                      if (createCourseTourCompletedKey) { // Double check key exists
+                         localStorage.setItem(createCourseTourCompletedKey, 'fully-completed');
+                      }
+                      if (unsub) unsub(); // Unsubscribe after marking
+                  }
+              });
+          }, 500);
+          shouldStartTourOnLoad = false; // Prevent restarting if function is called again
+      } else {
+          // Log why it didn't start for debugging
+          if (browser) { // Only log reasons in browser
+            console.log('[Create Course Page] Conditions not met for starting tour.', { shouldStartTourOnLoad, allModulesLoaded, keyExists: !!createCourseTourCompletedKey });
+          }
+      }
+  }
+
+  // --- Handle Add Custom Video button click during tour ---
+  function handleAddCustomVideoClick() {
+    const tourState = get(tourStore);
+    if (tourState.isTourActive && tourState.steps[tourState.currentStepIndex]?.id === 'cc-add-custom') {
+      console.log('[Create Course Page] Add Custom Video clicked during tour. Hiding tour.');
+      nextStepIdAfterModal = 'cc-select-next-module'; // Store the ID of the step to resume at
+      tourStore.cancelTour(); // Hide the tour UI for now
+    }
+    // Always show the modal when the button is clicked
+    showCustomUrlInput = true;
+  }
+
+  // --- Handle Modal Close ---
+  function handleModalClose() {
+    showCustomUrlInput = false;
+    if (nextStepIdAfterModal) {
+        console.log(`[Create Course Page] Modal closed, resuming tour at step: ${nextStepIdAfterModal}`);
+        // Use timeout to ensure modal is fully closed before tour reappears
+        setTimeout(() => {
+            tourStore.startTour(createCourseTourSteps); // Restart the tour sequence
+            tourStore.goToStepById(nextStepIdAfterModal!); // Jump to the stored step
+            nextStepIdAfterModal = null; // Clear the stored ID
+        }, 100); // Small delay
+    }
+  }
+
   onMount(() => {
+    let cleanupFunctions: (() => void)[] = [];
+
     const initPageData = async () => {
       const urlObjective = $page.url.searchParams.get("objective");
       let courseLoaded = false;
@@ -738,10 +914,33 @@
         // No stored course, redirect to home
         goto("/");
       }
+
+      // --- Check if tour should potentially start --- 
+      if (browser) {
+          const startFlag = localStorage.getItem('startCreateCourseTour');
+          createCourseTourCompletedKey = auth.currentUser ? `tour-completed-create-course-${auth.currentUser.uid}` : null;
+          const hasCompleted = createCourseTourCompletedKey ? localStorage.getItem(createCourseTourCompletedKey) === 'fully-completed' : true;
+          
+          if (startFlag === 'true' && createCourseTourCompletedKey && !hasCompleted) {
+              shouldStartTourOnLoad = true;
+              localStorage.removeItem('startCreateCourseTour'); // Consume the flag immediately
+              console.log('[Create Course Page] Tour start flag detected and consumed.');
+          } else {
+              shouldStartTourOnLoad = false;
+              console.log('[Create Course Page] Tour start flag not found or tour already completed.');
+          }
+      }
+      // ---------------------------------------------
+
+      // --- Attempt to start tour AFTER initial load/build --- 
+      // This will be called again by the reactive statement if allModulesLoaded becomes true later
+      console.log('[Create Course Page] Initial attempt to start tour after initPageData.');
+      tryStartCreateCourseTour();
+      // ------------------------------------------------------
     };
     
     initPageData();
-    
+
     // Set up event listener to clear state when navigating away
     if (browser) {
       const handleBeforeUnload = () => {
@@ -757,9 +956,17 @@
       return () => {
         window.removeEventListener('beforeunload', handleBeforeUnload);
         initialLoadingState.stopLoading();
+        console.log('[+page] Running onMount cleanup');
+        cleanupFunctions.forEach(cleanup => cleanup());
       };
     }
   });
+
+  // Update check when allModulesLoaded changes state reactively
+  $: if (browser && allModulesLoaded) { // Added browser check
+      console.log(`[Create Course Page] allModulesLoaded changed to: ${allModulesLoaded}, attempting tour start.`);
+      tryStartCreateCourseTour();
+  }
 
   // Handle SvelteKit navigation events with afterNavigate
   afterNavigate(({ from, to }) => {
@@ -870,7 +1077,7 @@
               </div>
               <button
                 class="text-nowrap bg-brand-red hover:bg-ButtonHover text-mini-body lg:text-semi-body text-white px-2 py-2 rounded-lg flex items-center gap-2 transition-colors duration-200"
-                on:click={() => (showCustomUrlInput = true)}
+                on:click={handleAddCustomVideoClick}
               >
                 Add Custom Video
                 <Plus class="w-4 h-4 lg:w-6 lg:h-6" />
@@ -885,7 +1092,7 @@
                   moduleTitle={courseStructure?.OG_Module_Title[
                     currentModuleIndex
                   ] || ""}
-                  onClose={() => (showCustomUrlInput = false)}
+                  onClose={handleModalClose}
                 />
               </div>
             {/if}
@@ -936,7 +1143,7 @@
           <div class="flex items-center gap-2">
             <span class="text-mini-body">Complete Creating Course</span>
             <svg
-              class="w-5 h-5"
+              class="w-5 h-5 {!allModulesLoaded ? 'fill-Grey' : ''}"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
@@ -972,7 +1179,7 @@
         </div>
 
         <!-- Module Navigation with scroll buttons -->
-        <div class="relative flex items-center">
+        <div data-tour="module-navigation" class="relative flex items-center">
           <!-- Left scroll button -->
           <button 
             class="absolute left-0 z-10 p-1 bg-white dark:bg-dark-bg-primary rounded-full shadow-md text-Green dark:text-Green2 hover:bg-gray-100 dark:hover:bg-dark-bg-secondary"
@@ -1025,6 +1232,7 @@
                   .OG_Module_Title[currentModuleIndex]}
               </h2>
               <button
+                data-tour="regenerate-button"
                 class="text-[#42C1C8] hover:text-[#2A4D61] rounded-full transition-colors duration-200 {moduleRegenerating[currentModuleIndex] ? 'cursor-not-allowed opacity-50' : ''}"
                 on:click={() => handleRegenerateModuleVideos(currentModuleIndex)}
                 disabled={moduleRegenerating[currentModuleIndex]}
@@ -1049,8 +1257,9 @@
               </button>
             </div>
             <button
+              data-tour="add-custom-video-button"
               class="text-nowrap bg-brand-red hover:bg-ButtonHover text-mini-body lg:text-semi-body text-white px-2 py-2 rounded-lg flex items-center gap-2 transition-colors duration-200"
-              on:click={() => (showCustomUrlInput = true)}
+              on:click={handleAddCustomVideoClick}
             >
               Add Custom Video
               <Plus class="w-4 h-4 lg:w-6 lg:h-6" />
@@ -1065,18 +1274,20 @@
                 moduleTitle={courseStructure?.OG_Module_Title[
                   currentModuleIndex
                 ] || ""}
-                onClose={() => (showCustomUrlInput = false)}
+                onClose={handleModalClose}
               />
             </div>
           {/if}
 
-          <ModuleVideoGrid
-            {courseStructure}
-            bind:moduleVideos
-            bind:selectedVideos
-            {currentModuleIndex}
-            {error}
-          />
+          <div data-tour="module-video-grid">
+            <ModuleVideoGrid
+              {courseStructure}
+              bind:moduleVideos
+              bind:selectedVideos
+              {currentModuleIndex}
+              {error}
+            />
+          </div>
         </div>
       </div>
 
@@ -1089,6 +1300,7 @@
       >
         {#if !allModulesAreVisited}
           <button
+            data-tour="select-next-module-button"
             on:click={() => selectModule(nextUnvisitedModuleIndex)}
             class="px-4 py-2 rounded-2xl text-base shadow-lg flex items-center justify-center transition-all duration-200 min-w-[250px] gap-2 {!allModulesLoaded ? 'bg-white cursor-not-allowed text-Grey' : 'dark:bg-brand-turquoise bg-brand-navy text-white'}"
             disabled={!allModulesLoaded || nextUnvisitedModuleIndex === -1}
@@ -1103,6 +1315,7 @@
           </button>
         {:else}
           <button
+            data-tour="create-complete-course-button"
             on:click={handleSaveCourse}
             class="px-4 py-2 rounded-2xl text-base shadow-lg flex items-center justify-center transition-all duration-200 min-w-[250px] gap-2 {!allModulesLoaded ||
             !courseStructure?.OG_Module_Title.every(
@@ -1146,6 +1359,9 @@
 
 <!-- Keep this for complete course generation -->
 <CourseGenerationModal />
+
+<!-- Add CustomTourGuide Component -->
+<CustomTourGuide />
 
 <style>
   .scrollbar-hide::-webkit-scrollbar {
