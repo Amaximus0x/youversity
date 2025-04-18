@@ -66,11 +66,12 @@
     {
       id: 'cc-module-nav',
       target: '[data-tour="module-navigation"]',
-      content: `<div class="w-[374px] p-4 bg-brand-red rounded-2xl outline outline-1 outline-offset-[-1px] outline-black/5 inline-flex flex-col justify-start items-start gap-4 overflow-hidden relative">
-                  <div class="tour-arrow absolute w-4 h-4 bg-brand-red transform rotate-45"></div>
+      content: `<div class="w-[374px] p-4 bg-brand-red rounded-2xl outline outline-1 outline-offset-[-1px] outline-black/5 inline-flex flex-col justify-start items-start gap-4 relative">
+                  <!-- Arrow Up -->
+                  <svg class="absolute left-[12%] -translate-x-[12%] top-[-28px] w-[34px] h-[38px] z-10" width="38" height="34" viewBox="0 0 38 34" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M17.2774 1.92017C18.0512 0.6084 19.9488 0.6084 20.7226 1.92017L37.5724 30.4838C38.3588 31.8171 37.3977 33.5 35.8497 33.5H2.15026C0.602323 33.5 -0.358837 31.8171 0.427647 30.4838L17.2774 1.92017Z" fill="#EB434A"/></svg>
                   <div class="self-stretch justify-start text-white text-h4 font-bold">Module Navigation</div>
                   <div class="self-stretch justify-start text-white text-semi-body">You will have 10 modules to choose videos for. Select modules here to view and choose videos for each one.</div>
-                  <div class="self-stretch inline-flex justify-between items-center mt-2">
+                  <div class="self-stretch inline-flex justify-between items-center">
                      <div class="w-[118px] h-2.5 bg-black/20 rounded-full inline-flex flex-col justify-center items-start gap-2.5 overflow-hidden"><div class="w-[16.8px] h-3 bg-white rounded-full"></div></div>
                      <div class="flex justify-start items-center gap-2">
                        <button data-tour-action="next" class="px-4 py-1 bg-white rounded flex justify-center items-center gap-2.5 cursor-pointer hover:bg-gray-200 transition-colors" type="button"><span class="justify-start text-black text-semi-body">Next</span></button>
@@ -82,13 +83,15 @@
     {
       id: 'cc-video-grid',
       target: '[data-tour="module-video-grid"]',
-      content: `<div class="w-[374px] p-4 bg-brand-red rounded-2xl outline outline-1 outline-offset-[-1px] outline-black/5 inline-flex flex-col justify-start items-start gap-4 overflow-hidden relative">
-                  <div class="tour-arrow absolute w-4 h-4 bg-brand-red transform rotate-45"></div>
+      content: `<div class="w-[374px] p-4 bg-brand-red rounded-2xl outline outline-1 outline-offset-[-1px] outline-black/5 inline-flex flex-col justify-start items-start gap-4 relative">
+                  <!-- Arrow Down (Corrected for placement: 'top') -->
+                  <svg class="absolute left-[12%] -translate-x-[12%] bottom-[-28px] w-[34px] h-[38px] z-10 transform rotate-180" width="38" height="34" viewBox="0 0 38 34" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M17.2774 1.92017C18.0512 0.6084 19.9488 0.6084 20.7226 1.92017L37.5724 30.4838C38.3588 31.8171 37.3977 33.5 35.8497 33.5H2.15026C0.602323 33.5 -0.358837 31.8171 0.427647 30.4838L17.2774 1.92017Z" fill="#EB434A"/></svg>
                   <div class="self-stretch justify-start text-white text-h4 font-bold">Select a Video</div>
                   <div class="self-stretch justify-start text-white text-semi-body">Click on a video card to select it for this module. The selected video will have a border. You can play videos by clicking on the thumbnails.</div>
-                  <div class="self-stretch inline-flex justify-between items-center mt-2">
+                  <div class="self-stretch inline-flex justify-between items-center ">
                      <div class="w-[118px] h-2.5 bg-black/20 rounded-full inline-flex flex-col justify-center items-start gap-2.5 overflow-hidden"><div class="w-[33.7px] h-3 bg-white rounded-full"></div></div>
                      <div class="flex justify-start items-center gap-2">
+                       <button data-tour-action="prev" class="w-[63px] px-4 py-1 rounded outline outline-1 outline-offset-[-1px] outline-white flex justify-center items-center gap-2.5 cursor-pointer hover:bg-white/10 transition-colors" type="button"><span class="justify-start text-white text-semi-body">Back</span></button>
                        <button data-tour-action="next" class="px-4 py-1 bg-white rounded flex justify-center items-center gap-2.5 cursor-pointer hover:bg-gray-200 transition-colors" type="button"><span class="justify-start text-black text-semi-body">Next</span></button>
                      </div>
                   </div>
@@ -98,13 +101,15 @@
     {
       id: 'cc-regenerate',
       target: '[data-tour="regenerate-button"]',
-      content: `<div class="w-[374px] p-4 bg-brand-red rounded-2xl outline outline-1 outline-offset-[-1px] outline-black/5 inline-flex flex-col justify-start items-start gap-4 overflow-hidden relative">
-                  <div class="tour-arrow absolute w-4 h-4 bg-brand-red transform rotate-45"></div>
+      content: `<div class="w-[374px] p-4 bg-brand-red rounded-2xl outline outline-1 outline-offset-[-1px] outline-black/5 inline-flex flex-col justify-start items-start gap-4 relative">
+                  <!-- Arrow Left -->
+                  <svg class="absolute left-[-28px] top-[22%] -translate-y-[22%] w-[34px] h-[38px] z-10 transform rotate-[-90deg]" width="38" height="34" viewBox="0 0 38 34" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M17.2774 1.92017C18.0512 0.6084 19.9488 0.6084 20.7226 1.92017L37.5724 30.4838C38.3588 31.8171 37.3977 33.5 35.8497 33.5H2.15026C0.602323 33.5 -0.358837 31.8171 0.427647 30.4838L17.2774 1.92017Z" fill="#EB434A"/></svg>
                   <div class="self-stretch justify-start text-white text-h4 font-bold">Regenerate Videos</div>
                   <div class="self-stretch justify-start text-white text-semi-body">Not happy with the choices? Click this button to search for a better set of videos for the current module.</div>
-                  <div class="self-stretch inline-flex justify-between items-center mt-2">
+                  <div class="self-stretch inline-flex justify-between items-center ">
                      <div class="w-[118px] h-2.5 bg-black/20 rounded-full inline-flex flex-col justify-center items-start gap-2.5 overflow-hidden"><div class="w-[50.5px] h-3 bg-white rounded-full"></div></div>
                      <div class="flex justify-start items-center gap-2">
+                       <button data-tour-action="prev" class="w-[63px] px-4 py-1 rounded outline outline-1 outline-offset-[-1px] outline-white flex justify-center items-center gap-2.5 cursor-pointer hover:bg-white/10 transition-colors" type="button"><span class="justify-start text-white text-semi-body">Back</span></button>
                        <button data-tour-action="next" class="px-4 py-1 bg-white rounded flex justify-center items-center gap-2.5 cursor-pointer hover:bg-gray-200 transition-colors" type="button"><span class="justify-start text-black text-semi-body">Next</span></button>
                      </div>
                   </div>
@@ -114,43 +119,47 @@
      {
       id: 'cc-add-custom',
       target: '[data-tour="add-custom-video-button"]',
-      content: `<div class="w-[374px] p-4 bg-brand-red rounded-2xl outline outline-1 outline-offset-[-1px] outline-black/5 inline-flex flex-col justify-start items-start gap-4 overflow-hidden relative">
-                  <div class="tour-arrow absolute w-4 h-4 bg-brand-red transform rotate-45"></div>
+      content: `<div class="w-[374px] p-4 bg-brand-red rounded-2xl outline outline-1 outline-offset-[-1px] outline-black/5 inline-flex flex-col justify-start items-start gap-4 relative">
+                  <!-- Arrow Right -->
+                  <svg class="absolute right-[-28px] top-[28%] -translate-y-[28%] w-[34px] h-[38px] z-10 transform rotate-[90deg]" width="38" height="34" viewBox="0 0 38 34" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M17.2774 1.92017C18.0512 0.6084 19.9488 0.6084 20.7226 1.92017L37.5724 30.4838C38.3588 31.8171 37.3977 33.5 35.8497 33.5H2.15026C0.602323 33.5 -0.358837 31.8171 0.427647 30.4838L17.2774 1.92017Z" fill="#EB434A"/></svg>
                   <div class="self-stretch justify-start text-white text-h4 font-bold">Add Custom Video</div>
                   <div class="self-stretch justify-start text-white text-semi-body">Have a specific YouTube video in mind? Click here to add it by pasting its URL.</div>
                    <div class="self-stretch inline-flex justify-between items-center mt-2">
                      <div class="w-[118px] h-2.5 bg-black/20 rounded-full inline-flex flex-col justify-center items-start gap-2.5 overflow-hidden"><div class="w-[67.4px] h-3 bg-white rounded-full"></div></div>
                      <div class="flex justify-start items-center gap-2">
+                       <button data-tour-action="prev" class="w-[63px] px-4 py-1 rounded outline outline-1 outline-offset-[-1px] outline-white flex justify-center items-center gap-2.5 cursor-pointer hover:bg-white/10 transition-colors" type="button"><span class="justify-start text-white text-semi-body">Back</span></button>
                        <button data-tour-action="next" class="px-4 py-1 bg-white rounded flex justify-center items-center gap-2.5 cursor-pointer hover:bg-gray-200 transition-colors" type="button"><span class="justify-start text-black text-semi-body">Next</span></button>
                      </div>
                   </div>
                </div>`,
       placement: 'left',
-      disableOverlay: true // Don't show overlay/spotlight for this step
+      // disableOverlay: true // Don't show overlay/spotlight for this step
     },
     
      {
       id: 'cc-select-next-module',
       target: '[data-tour="select-next-module-button"]',
-      content: `<div class="w-[374px] p-4 bg-brand-red rounded-2xl outline outline-1 outline-offset-[-1px] outline-black/5 inline-flex flex-col justify-start items-start gap-4 overflow-hidden relative">
-                  <div class="tour-arrow absolute w-4 h-4 bg-brand-red transform rotate-45"></div>
+      content: `<div class="w-[374px] p-4 bg-brand-red rounded-2xl outline outline-1 outline-offset-[-1px] outline-black/5 inline-flex flex-col justify-start items-start gap-4 relative">
+                  <!-- Arrow Right -->
+                  <svg class="absolute left-[12%] -translate-x-[12%] bottom-[-28px] w-[34px] h-[38px] z-10 transform rotate-180" width="38" height="34" viewBox="0 0 38 34" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M17.2774 1.92017C18.0512 0.6084 19.9488 0.6084 20.7226 1.92017L37.5724 30.4838C38.3588 31.8171 37.3977 33.5 35.8497 33.5H2.15026C0.602323 33.5 -0.358837 31.8171 0.427647 30.4838L17.2774 1.92017Z" fill="#EB434A"/></svg>
                   <div class="self-stretch justify-start text-white text-h4 font-bold">Continue to Next Module</div>
                   <div class="self-stretch justify-start text-white text-semi-body">Once you've selected a video for the current module, click here to proceed to the next one.</div>
                    <div class="self-stretch inline-flex justify-between items-center mt-2">
                      <div class="w-[118px] h-2.5 bg-black/20 rounded-full inline-flex flex-col justify-center items-start gap-2.5 overflow-hidden"><div class="w-[84.2px] h-3 bg-white rounded-full"></div></div>
                      <div class="flex justify-start items-center gap-2">
+                       <button data-tour-action="prev" class="w-[63px] px-4 py-1 rounded outline outline-1 outline-offset-[-1px] outline-white flex justify-center items-center gap-2.5 cursor-pointer hover:bg-white/10 transition-colors" type="button"><span class="justify-start text-white text-semi-body">Back</span></button>
                        <button data-tour-action="next" class="px-4 py-1 bg-white rounded flex justify-center items-center gap-2.5 cursor-pointer hover:bg-gray-200 transition-colors" type="button"><span class="justify-start text-black text-semi-body">Next</span></button>
                      </div>
                   </div>
                 </div>`,
-      placement: 'top',
-      disableOverlay: true // Don't show overlay/spotlight for this step
+      placement: 'top'
     },
     {
       id: 'cc-create-complete',
       target: '[data-tour="create-complete-course-button"]',
-      content: `<div class="w-[374px] p-4 bg-brand-red rounded-2xl outline outline-1 outline-offset-[-1px] outline-black/5 inline-flex flex-col justify-start items-start gap-4 overflow-hidden relative">
-                  <div class="tour-arrow absolute w-4 h-4 bg-brand-red transform rotate-45"></div>
+      content: `<div class="w-[374px] p-4 bg-brand-red rounded-2xl outline outline-1 outline-offset-[-1px] outline-black/5 inline-flex flex-col justify-start items-start gap-4 relative">
+                  <!-- Arrow Down -->
+                  <svg class="absolute left-[12%] -translate-x-[12%] bottom-[-28px] w-[34px] h-[38px] z-10 transform rotate-180" width="38" height="34" viewBox="0 0 38 34" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M17.2774 1.92017C18.0512 0.6084 19.9488 0.6084 20.7226 1.92017L37.5724 30.4838C38.3588 31.8171 37.3977 33.5 35.8497 33.5H2.15026C0.602323 33.5 -0.358837 31.8171 0.427647 30.4838L17.2774 1.92017Z" fill="#EB434A"/></svg>
                   <div class="self-stretch justify-start text-white text-h4 font-bold">Create Course!</div>
                   <div class="self-stretch justify-start text-white text-semi-body">Looks like you've selected a video for every module! Click here to generate your complete course.</div>
                   <div class="self-stretch inline-flex justify-between items-center mt-2">
@@ -935,7 +944,8 @@
       // --- Attempt to start tour AFTER initial load/build --- 
       // This will be called again by the reactive statement if allModulesLoaded becomes true later
       console.log('[Create Course Page] Initial attempt to start tour after initPageData.');
-      tryStartCreateCourseTour();
+      // Add a small delay before trying to start the tour
+      setTimeout(tryStartCreateCourseTour, 200); // 200ms delay
       // ------------------------------------------------------
     };
     

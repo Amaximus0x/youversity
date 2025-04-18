@@ -3,6 +3,7 @@
   import type { TourStep } from '$lib/stores/tourStore';
   import { fade } from 'svelte/transition';
   import { onMount, onDestroy } from 'svelte';
+  import { tick } from 'svelte';
   import { browser } from '$app/environment';
 
   let currentStep: TourStep | null = null;
@@ -101,7 +102,9 @@
   }
 
   // --- Combined function for positioning Step & Spotlight ---
-  function positionAndSpotlightUpdate() {
+  async function positionAndSpotlightUpdate() {
+    await tick(); // Wait for DOM updates
+
     if (!isVisible || !currentStep || !stepElement) {
       updateSpotlightOverlay(null); // Hide spotlight if not visible/no step
       return;
@@ -139,7 +142,7 @@
           transform = 'none';
         } else if (currentStep.placement === 'left') {
             const horizontalGap = 30; // Increased gap to the left
-            const verticalOffset = 15; // Added offset to push down slightly
+            const verticalOffset = 30; // Added offset to push down slightly
             top = `${rect.top + scrollY + (rect.height / 2) - (stepRect.height / 2) + verticalOffset}px`; // Adjust vertical alignment
             left = `${rect.left + scrollX - stepRect.width - horizontalGap}px`; // Position further left
             transform = 'none';
