@@ -53,7 +53,30 @@
           tourStore.nextStep();
           break;
         case 'prev':
-          tourStore.prevStep();
+          // Custom back logic for interactive tour
+          if (currentStep) {
+            switch (currentStep.id) {
+              case 'cc-select-next-module-interactive':
+                tourStore.goToStepById('cc-video-grid-interactive');
+                break;
+              case 'cc-video-grid-interactive':
+                tourStore.goToStepById('cc-module-nav');
+                break;
+              case 'cc-create-complete':
+                // Go back to video grid for the *last* module
+                // Note: This requires access to the total number of modules, 
+                // which isn't directly in the store. We might need to enhance the store 
+                // or pass total steps if this becomes complex. For now, assume we can guess.
+                // A simpler fallback is to just go to the previous step ID in the array.
+                tourStore.goToStepById('cc-select-next-module-interactive'); // Simpler fallback
+                break;
+              default:
+                // Default behavior for non-interactive or dashboard steps
+                tourStore.prevStep(); 
+            }
+          } else {
+            tourStore.prevStep(); // Fallback if currentStep is null
+          }
           break;
         case 'cancel':
           tourStore.cancelTour();
