@@ -19,30 +19,35 @@ interface TourState {
   isTourActive: boolean;
   currentStepIndex: number;
   steps: TourStep[];
+  activeTourId: string | null; // ID of the currently active tour
 }
 
 // --- Helper functions for localStorage persistence ---
 
-function getTourKey(): string | null {
+function getTourKey(tourId: string): string | null {
   let currentUserId: string | null = null;
   // Need to synchronously get user ID if possible, or handle async loading
   user.subscribe(u => { currentUserId = u?.uid ?? null; })(); // Get current value, assign null if undefined
-  return currentUserId ? `tour-completed-${currentUserId}` : null;
+  return currentUserId ? `tour-completed-${tourId}-${currentUserId}` : null;
 }
 
-function hasCompletedTour(): boolean {
+function hasCompletedTour(tourId: string): boolean {
   if (!browser) return true; // Assume completed server-side
-  const key = getTourKey();
+  const key = getTourKey(tourId);
   if (!key) return true; // Assume completed if no user key
   return localStorage.getItem(key) === 'fully-completed';
 }
 
-function markTourAsCompleted(status: 'fully-completed' | 'partially-completed') {
+function markTourAsCompleted(tourId: string | null, status: 'fully-completed' | 'partially-completed') {
   if (!browser) return;
-  const key = getTourKey();
+  if (!tourId) {
+    console.warn('[TourStore] Attempted to mark tour completed with no activeTourId.');
+    return;
+  }
+  const key = getTourKey(tourId);
   if (key) {
     localStorage.setItem(key, status);
-    console.log(`[TourStore] Marked tour as ${status}`);
+    console.log(`[TourStore] Marked tour ${tourId} as ${status}`);
   }
 }
 
@@ -52,27 +57,29 @@ const initialState: TourState = {
   isTourActive: false,
   currentStepIndex: -1,
   steps: [],
+  activeTourId: null,
 };
 
 const { subscribe, set, update }: Writable<TourState> = writable(initialState);
 
 // --- Store Actions ---
 
-function startTour(definedSteps: TourStep[]) {
-  if (hasCompletedTour()) {
-    console.log('[TourStore] Tour already completed, not starting.');
+function startTour(definedSteps: TourStep[], tourId: string) {
+  if (hasCompletedTour(tourId)) {
+    console.log(`[TourStore] Tour "${tourId}" already completed, not starting.`);
     return;
   }
   if (definedSteps.length === 0) {
     console.warn('[TourStore] Start called with no steps defined.');
     return;
   }
-  console.log('[TourStore] Starting tour...');
+  console.log(`[TourStore] Starting tour "${tourId}"...`);
   update(state => ({
     ...state,
     steps: definedSteps,
     currentStepIndex: 0,
     isTourActive: true,
+    activeTourId: tourId,
   }));
 }
 
@@ -81,7 +88,7 @@ function nextStep() {
     const nextIndex = state.currentStepIndex + 1;
     if (nextIndex >= state.steps.length) {
       // Reached the end, complete the tour
-      markTourAsCompleted('fully-completed');
+      markTourAsCompleted(state.activeTourId, 'fully-completed');
       return { ...initialState }; // Reset state
     } else {
       return { ...state, currentStepIndex: nextIndex };
@@ -109,15 +116,19 @@ function goToStep(index: number) {
 }
 
 function cancelTour() {
-  console.log('[TourStore] Cancelling tour.');
-  markTourAsCompleted('partially-completed');
-  set(initialState); // Reset state
+  update(state => {
+    console.log(`[TourStore] Cancelling tour "${state.activeTourId}".`);
+    markTourAsCompleted(state.activeTourId, 'partially-completed');
+    return { ...initialState }; // Reset state including activeTourId
+  });
 }
 
 function completeTour() {
-  console.log('[TourStore] Completing tour.');
-  markTourAsCompleted('fully-completed');
-  set(initialState);
+  update(state => {
+    console.log(`[TourStore] Completing tour "${state.activeTourId}".`);
+    markTourAsCompleted(state.activeTourId, 'fully-completed');
+    return { ...initialState }; // Reset state including activeTourId
+  });
 }
 
 // --- Action to go to a specific step by ID ---

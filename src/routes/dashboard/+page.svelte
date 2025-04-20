@@ -34,10 +34,10 @@
   let debounceTimeout: ReturnType<typeof setTimeout> | null = null;
 
   // Define Tour Steps (using Tailwind in HTML strings)
-  const tourSteps: TourStep[] = [
+  const dashboardTourSteps: TourStep[] = [
     {
       id: 'welcome',
-      content: `<div class="w-full inline-flex flex-col justify-start items-center gap-8 p-12 rounded-2xl bg-gradient-light dark:bg-gradient-dark">
+      content: `<div class="w-full inline-flex flex-col justify-start items-center gap-14 p-12 rounded-2xl bg-gradient-light dark:bg-gradient-dark">
         <div class="self-stretch flex flex-col justify-start items-center">
           <div class="w-[116.5px] h-[142px] relative overflow-hidden">
             <img class="w-[140px] h-[170px] object-cover absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" src="${robotImage}" alt="Tour Guide Robot" />
@@ -56,7 +56,7 @@
             </div>
           </div>
         </div>
-        <div class="w-full max-w-[326px] inline-flex justify-start items-start gap-4 mt-8">
+        <div class="w-full max-w-[326px] inline-flex justify-start items-start gap-4">
           <button data-tour-action="cancel" class="flex-1 h-12 md:h-[54px] px-4 py-2 rounded-2xl outline outline-1 outline-offset-[-1px] outline-[#41c1cb] flex justify-center items-center gap-4 cursor-pointer hover:bg-white/10 transition-colors" type="button">
             <span class="text-[#41c1cb] text-sm md:text-base font-medium md:font-semibold font-['Poppins'] leading-normal">Skip Tour</span>
           </button>
@@ -288,7 +288,7 @@
   // Check if the user is new (hasn't completed the tour)
   function checkIfNewUser() {
     if (browser && $user) {
-      isNewUser = !tourStore.hasCompletedTour();
+      isNewUser = !tourStore.hasCompletedTour('dashboard');
       console.log('[+page] New user check:', { isNewUser });
     } else if (browser) {
       isNewUser = true; // Treat as new if no user but in browser
@@ -340,59 +340,87 @@
   onMount(() => {
     let cleanupFunctions: (() => void)[] = [];
 
-    const init = async () => {
-    checkIfNewUser();
-    
-    // Debug info for tour elements
-    if (browser && import.meta.env.DEV) {
-      setTimeout(() => {
-          console.log('Tour element check:');
-        const tourElements = [
-            '#course-objective-input',
-            '.tour-navigation a[href="/trending"]',
-          '.tour-explore-courses',
-          '.tour-navigation'
-        ];
-        tourElements.forEach(selector => {
-          const element = document.querySelector(selector);
-            console.log(`[+page] ${selector}: ${element ? 'Found' : 'MISSING'}`);
-        });
-        }, 1000);
+    // Helper function to get tour key for localStorage
+    // Needed here because we might set localStorage before tourStore logic runs
+    function getTourKey(tourId: string): string | null {
+        let currentUserId: string | null = null;
+        // Use the $user store value which is updated by the time this is called
+        currentUserId = $user?.uid ?? null;
+        return currentUserId ? `tour-completed-${tourId}-${currentUserId}` : null;
     }
-    
-    // Add event listener for focusCourseObjective
-    const handleFocusCourseObjective = () => {
-      focusCourseObjective();
-    };
-    window.addEventListener('focusCourseObjective', handleFocusCourseObjective);
-      cleanupFunctions.push(() => window.removeEventListener('focusCourseObjective', handleFocusCourseObjective));
 
-    const loadTrendingCourses = async () => {
-      try {
-        console.log('Fetching trending courses...');
-        // Get courses sorted by views/likes
-        publicCourses = await getPublicCourses();
-        // Sort by views and likes
-        publicCourses.sort((a, b) => {
-          const scoreA = (a.views || 0) + (a.likes || 0);
-          const scoreB = (b.views || 0) + (b.likes || 0);
-          return scoreB - scoreA;
-        });
-      } catch (error) {
-        console.error('Error loading trending courses:', error);
-      } finally {
-        trendingCoursesLoading = false;
+    const init = async () => {
+      // --- Tour Eligibility Logic --- 
+      if ($user) { // Check if user is available
+        await loadUserCourses(); // Wait for courses to load
+
+        // Check if user has courses and mark tour complete if so
+        if (userCourses.length > 0) {
+          console.log('[+page] User has courses, marking dashboard tour as completed in localStorage.');
+          const tourKey = getTourKey('dashboard'); 
+          if (tourKey && browser) {
+            localStorage.setItem(tourKey, 'fully-completed');
+          }
+          isNewUser = false; // Explicitly set isNewUser to false for experienced users
+        } else {
+           // Only check completion flag if user has NO courses
+           checkIfNewUser(); // This now checks localStorage via tourStore.hasCompletedTour('dashboard')
+        }
+      } else {
+         checkIfNewUser(); // Handle non-logged-in case or default new user state
       }
-    };
+      // --- End Tour Eligibility Logic ---
 
-    // Load trending courses
-    loadTrendingCourses();
-
-      // Start tour if new user
-      if (isNewUser && browser) {
-        console.log('[+page] Starting custom tour...');
-        tourStore.startTour(tourSteps);
+      // Debug info for tour elements
+      if (browser && import.meta.env.DEV) {
+        setTimeout(() => {
+          console.log('Tour element check:');
+          const tourElements = [
+              '#course-objective-input',
+              '.tour-navigation a[href="/trending"]',
+            '.tour-explore-courses',
+            '.tour-navigation'
+          ];
+          tourElements.forEach(selector => {
+            const element = document.querySelector(selector);
+              console.log(`[+page] ${selector}: ${element ? 'Found' : 'MISSING'}`);
+          });
+          }, 1000);
       }
+      
+      // Add event listener for focusCourseObjective
+      const handleFocusCourseObjective = () => {
+        focusCourseObjective();
+      };
+      window.addEventListener('focusCourseObjective', handleFocusCourseObjective);
+        cleanupFunctions.push(() => window.removeEventListener('focusCourseObjective', handleFocusCourseObjective));
+
+      const loadTrendingCourses = async () => {
+        try {
+          console.log('Fetching trending courses...');
+          // Get courses sorted by views/likes
+          publicCourses = await getPublicCourses();
+          // Sort by views and likes
+          publicCourses.sort((a, b) => {
+            const scoreA = (a.views || 0) + (a.likes || 0);
+            const scoreB = (b.views || 0) + (b.likes || 0);
+            return scoreB - scoreA;
+          });
+        } catch (error) {
+          console.error('Error loading trending courses:', error);
+        } finally {
+          trendingCoursesLoading = false;
+        }
+      };
+
+      // Load trending courses
+      loadTrendingCourses();
+
+        // Start tour *only* if isNewUser is still true after checks
+        if (isNewUser && browser) { 
+          console.log('[+page] Starting custom dashboard tour...');
+          tourStore.startTour(dashboardTourSteps, 'dashboard');
+        }
     };
 
     init();
@@ -436,12 +464,13 @@
       return; // Don't proceed if learning objective is empty
     }
 
-    // --- Check and close tour if on the button step ---
-    const currentTourState = get(tourStore);
-    if (currentTourState.isTourActive && 
-        currentTourState.steps[currentTourState.currentStepIndex]?.id === 'create-course-button') {
-      console.log('[+page] Create button clicked during tour, cancelling tour.');
-      tourStore.cancelTour(); // Close the tour guide
+    // --- Check and close tour if on the relevant steps --- 
+    const tourState = get(tourStore); // Get current store value synchronously
+    if (tourState.isTourActive && 
+        (tourState.steps[tourState.currentStepIndex]?.id === 'create-course-input' || 
+         tourState.steps[tourState.currentStepIndex]?.id === 'create-course-button')) {
+      console.log('[+page] Create button clicked during relevant tour step, completing tour.');
+      tourStore.completeTour(); // Use completeTour as user is fulfilling the goal
     }
     // --------------------------------------------------
 
@@ -664,7 +693,7 @@
 {#if import.meta.env.DEV}
   <button 
     class="fixed bottom-4 right-4 z-50 bg-brand-red text-white px-4 py-2 rounded-lg shadow-lg lg:right-8"
-    on:click={() => tourStore.startTour(tourSteps)}
+    on:click={() => tourStore.startTour(dashboardTourSteps, 'dashboard')}
   >
     Start Tour
   </button>

@@ -15,6 +15,7 @@
   import { Plus, ChevronLeft, ChevronRight } from "lucide-svelte";
   import { fade, fly } from "svelte/transition";
   import { getVideoTranscript } from "$lib/services/transcriptUtils";
+  import { tick } from 'svelte';
   import { auth, setAuthTokenCookie, refreshToken } from "$lib/firebase";
   import { saveCourseToFirebase, enrollInCourse } from "$lib/firebase";
   import { user, isAuthenticated } from "$lib/stores/auth";
@@ -62,7 +63,7 @@
   let moduleNavContainer: HTMLElement;
 
   // --- Tour Steps for Create Course Page (INTERACTIVE VERSION) ---
-  const interactiveCreateCourseTourSteps: TourStep[] = [
+  const createCourseTourSteps: TourStep[] = [
     {
       id: 'cc-video-grid-interactive',
       target: '[data-tour="module-video-grid"]',
@@ -471,6 +472,12 @@
 
     if (!courseStructure) return;
 
+    // Complete the tour immediately when the final button is clicked
+    if (get(tourStore).isTourActive) { // Use get() for synchronous check
+        tourStore.completeTour();
+        await tick(); // Force DOM update before showing modal
+    }
+
     // Start final course generation process
     finalLoadingState.startLoading(courseStructure.OG_Course_Title);
     finalLoadingState.setStep("Starting course generation...");
@@ -565,11 +572,6 @@
 
       // Clear stored state after successful course creation
       clearStoredState();
-
-      // Complete the tour when the course is saved
-      if (get(tourStore).isTourActive) { // Use get() for synchronous check
-        tourStore.completeTour();
-      }
     } catch (err: any) {
       console.error("Error saving course:", err);
       error = err.message;
@@ -749,17 +751,14 @@
           
           // Add a small delay to ensure elements are definitely ready
           setTimeout(() => {
-              tourStore.startTour(interactiveCreateCourseTourSteps);
+              tourStore.startTour(createCourseTourSteps, 'create-course');
               // Mark this tour as completed in localStorage when it finishes
               // Use a temporary subscription that unsubscribes itself
               let unsub: (() => void) | null = null;
               unsub = tourStore.subscribe(state => {
-                  // Check if the tour became inactive AND the index reset (indicating completion/cancellation)
-                  if (!state.isTourActive && get(tourStore).currentStepIndex === -1) { 
+                  // Check if the tour became inactive
+                  if (!state.isTourActive) { 
                       console.log('[Create Course Page] Tour finished or cancelled, marking as completed.');
-                      if (createCourseTourCompletedKey) { // Double check key exists
-                         localStorage.setItem(createCourseTourCompletedKey, 'fully-completed');
-                      }
                       if (unsub) unsub(); // Unsubscribe after marking
                   }
               });
@@ -792,7 +791,7 @@
         console.log(`[Create Course Page] Modal closed, resuming tour at step: ${nextStepIdAfterModal}`);
         // Use timeout to ensure modal is fully closed before tour reappears
         setTimeout(() => {
-            tourStore.startTour(interactiveCreateCourseTourSteps); // Restart the tour sequence
+            tourStore.startTour(createCourseTourSteps, 'create-course'); // Restart the tour sequence
             tourStore.goToStepById(nextStepIdAfterModal!); // Jump to the stored step
             nextStepIdAfterModal = null; // Clear the stored ID
         }, 100); // Small delay
@@ -925,7 +924,7 @@
     };
     
     initPageData();
-
+    
     // Set up event listener to clear state when navigating away
     if (browser) {
       const handleBeforeUnload = () => {
@@ -1265,13 +1264,13 @@
           {/if}
 
           <div data-tour="module-video-grid">
-            <ModuleVideoGrid
-              {courseStructure}
-              bind:moduleVideos
-              bind:selectedVideos
-              {currentModuleIndex}
-              {error}
-            />
+          <ModuleVideoGrid
+            {courseStructure}
+            bind:moduleVideos
+            bind:selectedVideos
+            {currentModuleIndex}
+            {error}
+          />
           </div>
         </div>
       </div>
