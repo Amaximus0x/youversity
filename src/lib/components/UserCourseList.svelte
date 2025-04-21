@@ -79,7 +79,7 @@
       role="button"
       tabindex="0"
     >
-      <div class="text-semi-body lg:text-body text-white">Explore Course</div>
+      <div class="text-semi-body lg:text-body text-white">Explore Courses</div>
       <div class="w-6 h-6 relative origin-top-left">
         <img src="/icons/arrow-right-white.svg" alt="arrow" class="w-full h-full" />
       </div>

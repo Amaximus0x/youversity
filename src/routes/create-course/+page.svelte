@@ -96,15 +96,35 @@
       id: 'cc-create-complete',
       target: '[data-tour="create-complete-course-button"]',
       content: `<div class="w-[374px] p-4 bg-brand-red rounded-2xl outline outline-1 outline-offset-[-1px] outline-black/5 inline-flex flex-col justify-start items-start gap-4 relative">
-                  <!-- Arrow Down -->
-                  <svg class="absolute left-[12%] -translate-x-[12%] bottom-[-28px] w-[34px] h-[38px] z-10 transform rotate-180" width="38" height="34" viewBox="0 0 38 34" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M17.2774 1.92017C18.0512 0.6084 19.9488 0.6084 20.7226 1.92017L37.5724 30.4838C38.3588 31.8171 37.3977 33.5 35.8497 33.5H2.15026C0.602323 33.5 -0.358837 31.8171 0.427647 30.4838L17.2774 1.92017Z" fill="#EB434A"/></svg>
-                  <div class="self-stretch justify-start text-white text-h4 font-bold">Create Course!</div>
-                  <div class="self-stretch justify-start text-white text-semi-body">Looks like you've selected a video for every module! Click here to generate your complete course.</div>
-                  <div class="self-stretch inline-flex justify-between items-center mt-2">
-                     <div class="flex-grow h-2.5 bg-black/20 rounded-full inline-flex flex-col justify-center items-start gap-2.5 overflow-hidden"><div class="w-full h-3 bg-white rounded-full"></div></div> 
+                    <!-- Arrow pointing up -->
+                    <svg class="absolute left-1/2 -translate-x-1/2 top-[-28px] w-[34px] h-[38px] z-10 transform rotate-0" width="38" height="34" viewBox="0 0 38 34" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M17.2774 1.92017C18.0512 0.6084 19.9488 0.6084 20.7226 1.92017L37.5724 30.4838C38.3588 31.8171 37.3977 33.5 35.8497 33.5H2.15026C0.602323 33.5 -0.358837 31.8171 0.427647 30.4838L17.2774 1.92017Z" fill="#EB434A"/></svg>
+                    <div class="self-stretch justify-start text-white text-h4 font-bold">Create Course!</div>
+                    <div class="self-stretch justify-start text-white text-semi-body">Looks like you've selected a video for every module! Click the button below to generate your complete course.</div>
+                    <div class="self-stretch inline-flex justify-between items-center mt-2">
+                       <div class="flex-grow h-2.5 bg-black/20 rounded-full inline-flex flex-col justify-center items-start gap-2.5 overflow-hidden"><div class="w-full h-3 bg-white rounded-full"></div></div> 
+                    </div>
+                  </div>`,
+      placement: 'top', // Place above the "Create Complete Course" button
+      isInteractive: true // Keep interactive if needed, but maybe not required?
+    }
+  ];
+
+  // --- Final Congratulation Step Definition ---
+  const finalCongratulationStep: TourStep[] = [
+    {
+      id: 'cc-congratulations',
+      target: '[data-tour="view-course-button"]', // Target the button in the modal
+      content: `<div class="w-[374px] p-4 bg-brand-red rounded-2xl outline outline-1 outline-offset-[-1px] outline-black/5 inline-flex flex-col justify-start items-start gap-4 relative">
+                  <!-- Arrow pointing left -->
+                  <svg class="absolute right-[-28px] top-[13%] -translate-y-1/5 w-[34px] h-[38px] z-10 transform rotate-[90deg]" width="38" height="34" viewBox="0 0 38 34" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M17.2774 1.92017C18.0512 0.6084 19.9488 0.6084 20.7226 1.92017L37.5724 30.4838C38.3588 31.8171 37.3977 33.5 35.8497 33.5H2.15026C0.602323 33.5 -0.358837 31.8171 0.427647 30.4838L17.2774 1.92017Z" fill="#EB434A"/></svg>
+                  <div class="self-stretch justify-start text-white text-h4 font-bold">Congratulations!</div>
+                  <div class="self-stretch justify-start text-white text-semi-body">Your personalized course is ready. Click 'View Course' to start learning!</div>
+                  <div class="self-stretch inline-flex justify-end items-center mt-2">
+                     <button data-tour-action="complete" class="px-4 py-1 bg-white rounded flex justify-center items-center gap-2.5 cursor-pointer hover:bg-gray-200 transition-colors" type="button"><span class="justify-start text-black text-semi-body">Got it!</span></button>
                   </div>
                 </div>`,
-      placement: 'top'
+      placement: 'left', // Position to the left of the button
+      disableOverlay: true, // Don't need overlay as modal is present
     }
   ];
 
@@ -844,6 +864,16 @@
   onMount(() => {
     let cleanupFunctions: (() => void)[] = [];
 
+    // --- Listener for final congratulations step --- 
+    const handleCourseReady = () => {
+      console.log('[%c+page%c] Received courseReadyForViewing event, starting final tour step.', 'color: #42C1C8; font-weight: bold', 'color: inherit;');
+      // Ensure any previous tour is stopped before starting the new one
+      if (get(tourStore).isTourActive) {
+        tourStore.cancelTour(); // Use cancel or complete depending on desired state
+      }
+      tourStore.startTour(finalCongratulationStep, 'create-course-final');
+    };
+
     const initPageData = async () => {
       const urlObjective = $page.url.searchParams.get("objective");
       let courseLoaded = false;
@@ -976,12 +1006,15 @@
       // Add listeners
       window.addEventListener('beforeunload', handleBeforeUnload);
       
+      window.addEventListener('courseReadyForViewing', handleCourseReady);
+      
       // Cleanup
       return () => {
         window.removeEventListener('beforeunload', handleBeforeUnload);
         initialLoadingState.stopLoading();
         console.log('[+page] Running onMount cleanup');
         cleanupFunctions.forEach(cleanup => cleanup());
+        window.removeEventListener('courseReadyForViewing', handleCourseReady);
       };
     }
   });

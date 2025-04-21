@@ -89,6 +89,15 @@
     $modalState.isMinimized;
 
   $: isComplete = $finalLoadingState.progress === 100;
+
+  // Dispatch event when course is complete and modal is not minimized
+  $: if (browser && isComplete && !$modalState.isMinimized) {
+    // Use timeout to ensure button is rendered before event fires
+    setTimeout(() => {
+      console.log('[Modal] Dispatching courseReadyForViewing event');
+      window.dispatchEvent(new CustomEvent('courseReadyForViewing'));
+    }, 100); // Small delay
+  }
 </script>
 
 {#if shouldShowModal}
@@ -147,6 +156,7 @@
           <button
             class="w-full bg-Green dark:bg-Green2 hover:bg-Green2 text-white rounded-xl py-3 text-body transition-colors duration-200"
             on:click|stopPropagation={handleViewCourse}
+            data-tour="view-course-button"
           >
             View Course
           </button>
@@ -253,6 +263,7 @@
               </p>
               <button
                 class="w-full bg-Green dark:bg-Green2 hover:bg-Green2 text-white rounded-xl py-4 text-body-semibold transition-colors duration-200"
+                data-tour="view-course-button"
                 on:click={handleViewCourse}
               >
                 View Course
