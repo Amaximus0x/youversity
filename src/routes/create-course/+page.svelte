@@ -17,7 +17,7 @@
   import { getVideoTranscript } from "$lib/services/transcriptUtils";
   import { tick } from 'svelte';
   import { auth, setAuthTokenCookie, refreshToken } from "$lib/firebase";
-  import { saveCourseToFirebase, enrollInCourse } from "$lib/firebase";
+  import { saveCourseToFirebase, enrollInCourse, getUserCourses } from "$lib/firebase";
   import { user, isAuthenticated } from "$lib/stores/auth";
   // @ts-ignore - Svelte component import
   import CourseGenerationHeader from "$lib/components/CourseGenerationHeader.svelte";
@@ -834,12 +834,44 @@
     currentModuleIndex;
   }
 
+  // Helper function to get tour key for localStorage
+  function getTourKey(tourId: string): string | null {
+      let currentUserId: string | null = null;
+      currentUserId = $user?.uid ?? null; // Directly use $user
+      return currentUserId ? `tour-completed-${tourId}-${currentUserId}` : null;
+  }
+
   onMount(() => {
     let cleanupFunctions: (() => void)[] = [];
 
     const initPageData = async () => {
       const urlObjective = $page.url.searchParams.get("objective");
       let courseLoaded = false;
+      
+      // --- Check if user has existing courses FIRST ---
+      let userHasCourses = false;
+      if ($user) {
+        try {
+          const courses = await getUserCourses($user.uid); 
+          userHasCourses = courses.length > 0;
+
+          if (userHasCourses) {
+            console.log('[Create Course Page] User already has courses, marking create-course tour as completed.');
+            const tourKey = getTourKey('create-course');
+            if (tourKey && browser) {
+              localStorage.setItem(tourKey, 'fully-completed');
+            }
+          }
+        } catch (err) {
+          console.error("Error checking user course count:", err);
+          // Decide how to handle error - maybe assume user has courses to be safe?
+          // For now, let's assume they don't have courses if check fails.
+          userHasCourses = false; 
+        }
+      }
+      // --- End course count check ---
+
+      // Now proceed with loading/building the current course objective
       
       // First try to load from localStorage to have data ready
       courseLoaded = loadStateFromStorage();
@@ -892,26 +924,34 @@
         } else {
           // No course structure yet, redirect to home to get objective
           goto("/");
+          return; // Exit early if redirecting
         }
       } else {
         // No stored course, redirect to home
         goto("/");
+        return; // Exit early if redirecting
       }
 
-      // --- Check if tour should potentially start --- 
-      if (browser) {
+      // --- Check if tour should *potentially* start --- 
+      if (browser && !userHasCourses) { // Only consider starting if user has NO courses
           const startFlag = localStorage.getItem('startCreateCourseTour');
-          createCourseTourCompletedKey = auth.currentUser ? `tour-completed-create-course-${auth.currentUser.uid}` : null;
-          const hasCompleted = createCourseTourCompletedKey ? localStorage.getItem(createCourseTourCompletedKey) === 'fully-completed' : true;
-          
-          if (startFlag === 'true' && createCourseTourCompletedKey && !hasCompleted) {
-              shouldStartTourOnLoad = true;
-              localStorage.removeItem('startCreateCourseTour'); // Consume the flag immediately
-              console.log('[Create Course Page] Tour start flag detected and consumed.');
+          // We still need createCourseTourCompletedKey for the tryStart function
+          createCourseTourCompletedKey = $user ? `tour-completed-create-course-${$user.uid}` : null;
+
+          if (startFlag === 'true') {
+              // Check completion flag *before* setting shouldStartTourOnLoad
+              if (!tourStore.hasCompletedTour('create-course')) {
+                 shouldStartTourOnLoad = true;
+                 console.log('[Create Course Page] Tour start flag detected and tour not completed, preparing to start.');
+              } else {
+                 console.log('[Create Course Page] Tour start flag detected, but tour already completed.');
+              }
+              localStorage.removeItem('startCreateCourseTour'); // Consume the flag
           } else {
               shouldStartTourOnLoad = false;
-              console.log('[Create Course Page] Tour start flag not found or tour already completed.');
           }
+      } else {
+          shouldStartTourOnLoad = false; // Don't start if user has courses or not in browser
       }
       // ---------------------------------------------
 
