@@ -15,14 +15,19 @@
   import { Plus, ChevronLeft, ChevronRight } from "lucide-svelte";
   import { fade, fly } from "svelte/transition";
   import { getVideoTranscript } from "$lib/services/transcriptUtils";
+  import { tick } from 'svelte';
   import { auth, setAuthTokenCookie, refreshToken } from "$lib/firebase";
-  import { saveCourseToFirebase, enrollInCourse } from "$lib/firebase";
+  import { saveCourseToFirebase, enrollInCourse, getUserCourses } from "$lib/firebase";
   import { user, isAuthenticated } from "$lib/stores/auth";
   // @ts-ignore - Svelte component import
   import CourseGenerationHeader from "$lib/components/CourseGenerationHeader.svelte";
   // @ts-ignore - Svelte component import
   import CourseGenerationModal from "$lib/components/CourseGenerationModal.svelte";
   import type { PageData } from './$types';
+  import { tourStore } from "$lib/stores/tourStore";
+  import type { TourStep } from "$lib/stores/tourStore";
+  import CustomTourGuide from "$lib/components/CustomTourGuide.svelte";
+  import { get } from 'svelte/store';
 
   // Define interface that describes the server data
   interface ServerAuthData {
@@ -50,9 +55,58 @@
   let visitedModules: boolean[] = [];
   let moduleRegenerating: Record<number, boolean> = {};
   let nextUnvisitedModuleIndex: number = -1;
+  let shouldStartTourOnLoad = false; // Flag to track if tour should start
+  let createCourseTourCompletedKey: string | null = null;
+  let nextStepIdAfterModal: string | null = null; // Variable to store next step ID
 
   // Reference to the module navigation container for scrolling
   let moduleNavContainer: HTMLElement;
+
+  // --- Tour Steps for Create Course Page (INTERACTIVE VERSION) ---
+  const createCourseTourSteps: TourStep[] = [
+    {
+      id: 'cc-video-grid-interactive',
+      target: '[data-tour="module-video-grid"]',
+      content: `<div class="w-[374px] p-4 bg-brand-red rounded-2xl outline outline-1 outline-offset-[-1px] outline-black/5 inline-flex flex-col justify-start items-start gap-4 relative">
+                  <!-- Arrow Down -->
+                  <svg class="absolute left-[12%] -translate-x-[12%] bottom-[-28px] w-[34px] h-[38px] z-10 transform rotate-180" width="38" height="34" viewBox="0 0 38 34" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M17.2774 1.92017C18.0512 0.6084 19.9488 0.6084 20.7226 1.92017L37.5724 30.4838C38.3588 31.8171 37.3977 33.5 35.8497 33.5H2.15026C0.602323 33.5 -0.358837 31.8171 0.427647 30.4838L17.2774 1.92017Z" fill="#EB434A"/></svg>
+                  <div class="self-stretch justify-start text-white text-h4 font-bold">Select a Video</div>
+                  <div class="self-stretch justify-start text-white text-semi-body">Click on a video card below to select it for the current module. The tour will continue once you select one.</div>
+                  <div class="self-stretch inline-flex items-center gap-4 mt-2">
+                      <div class="flex-grow h-2.5 bg-black/20 rounded-full inline-flex flex-col justify-center items-start gap-2.5 overflow-hidden"><div class="w-[30%] h-3 bg-white rounded-full"></div></div>
+                  </div>
+               </div>`,
+      placement: 'top' 
+    },
+    {
+      id: 'cc-select-next-module-interactive',
+      target: '[data-tour="select-next-module-button"]',
+      content: `<div class="w-[374px] p-4 bg-brand-red rounded-2xl outline outline-1 outline-offset-[-1px] outline-black/5 inline-flex flex-col justify-start items-start gap-4 relative">
+                   <!-- Arrow Right -->
+                  <svg class="absolute left-[12%] -translate-x-[12%] bottom-[-28px] w-[34px] h-[38px] z-10 transform rotate-180" width="38" height="34" viewBox="0 0 38 34" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M17.2774 1.92017C18.0512 0.6084 19.9488 0.6084 20.7226 1.92017L37.5724 30.4838C38.3588 31.8171 37.3977 33.5 35.8497 33.5H2.15026C0.602323 33.5 -0.358837 31.8171 0.427647 30.4838L17.2774 1.92017Z" fill="#EB434A"/></svg>
+                  <div class="self-stretch justify-start text-white text-h4 font-bold">Continue to Next Module</div>
+                  <div class="self-stretch justify-start text-white text-semi-body">Great! Now click the button below to proceed to the next module.</div>
+                   <div class="self-stretch inline-flex justify-between items-center mt-2">
+                     <div class="flex-grow h-2.5 bg-black/20 rounded-full inline-flex flex-col justify-center items-start gap-2.5 overflow-hidden"><div class="w-[75%] h-3 bg-white rounded-full"></div></div>
+                   </div>
+                 </div>`,
+      placement: 'top'
+    },
+    {
+      id: 'cc-create-complete',
+      target: '[data-tour="create-complete-course-button"]',
+      content: `<div class="w-[374px] p-4 bg-brand-red rounded-2xl outline outline-1 outline-offset-[-1px] outline-black/5 inline-flex flex-col justify-start items-start gap-4 relative">
+                  <!-- Arrow Down -->
+                  <svg class="absolute left-[12%] -translate-x-[12%] bottom-[-28px] w-[34px] h-[38px] z-10 transform rotate-180" width="38" height="34" viewBox="0 0 38 34" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M17.2774 1.92017C18.0512 0.6084 19.9488 0.6084 20.7226 1.92017L37.5724 30.4838C38.3588 31.8171 37.3977 33.5 35.8497 33.5H2.15026C0.602323 33.5 -0.358837 31.8171 0.427647 30.4838L17.2774 1.92017Z" fill="#EB434A"/></svg>
+                  <div class="self-stretch justify-start text-white text-h4 font-bold">Create Course!</div>
+                  <div class="self-stretch justify-start text-white text-semi-body">Looks like you've selected a video for every module! Click here to generate your complete course.</div>
+                  <div class="self-stretch inline-flex justify-between items-center mt-2">
+                     <div class="flex-grow h-2.5 bg-black/20 rounded-full inline-flex flex-col justify-center items-start gap-2.5 overflow-hidden"><div class="w-full h-3 bg-white rounded-full"></div></div> 
+                  </div>
+                </div>`,
+      placement: 'top'
+    }
+  ];
 
   // Enable persistence by saving course state to localStorage
   function saveStateToStorage() {
@@ -418,6 +472,12 @@
 
     if (!courseStructure) return;
 
+    // Complete the tour immediately when the final button is clicked
+    if (get(tourStore).isTourActive) { // Use get() for synchronous check
+        tourStore.completeTour();
+        await tick(); // Force DOM update before showing modal
+    }
+
     // Start final course generation process
     finalLoadingState.startLoading(courseStructure.OG_Course_Title);
     finalLoadingState.setStep("Starting course generation...");
@@ -627,7 +687,7 @@
           [],
         );
         selectedVideos = new Array(courseStructure.OG_Module_Title.length).fill(
-          0,
+          null,
         );
 
         initialLoadingState.setTotalModules(
@@ -676,11 +736,142 @@
     }
   }
 
-  // Get the objective from URL parameters on mount
+  // Function to check conditions and start the tour
+  function tryStartCreateCourseTour() {
+      // Ensure we are in browser, tour should start, modules are loaded, and we have a completion key
+      if (browser && shouldStartTourOnLoad && allModulesLoaded && createCourseTourCompletedKey) {
+          console.log('[Create Course Page] Conditions met, starting tour...');
+          
+          // Check if tour is already active (safety check)
+          if (get(tourStore).isTourActive) {
+             console.log('[Create Course Page] Tour is already active, not restarting.');
+             shouldStartTourOnLoad = false; // Prevent trying again
+             return; 
+          }
+          
+          // Add a small delay to ensure elements are definitely ready
+          setTimeout(() => {
+              tourStore.startTour(createCourseTourSteps, 'create-course');
+              // Mark this tour as completed in localStorage when it finishes
+              // Use a temporary subscription that unsubscribes itself
+              let unsub: (() => void) | null = null;
+              unsub = tourStore.subscribe(state => {
+                  // Check if the tour became inactive
+                  if (!state.isTourActive) { 
+                      console.log('[Create Course Page] Tour finished or cancelled, marking as completed.');
+                      if (unsub) unsub(); // Unsubscribe after marking
+                  }
+              });
+          }, 500);
+          shouldStartTourOnLoad = false; // Prevent restarting if function is called again
+      } else {
+          // Log why it didn't start for debugging
+          if (browser) { // Only log reasons in browser
+            console.log('[Create Course Page] Conditions not met for starting tour.', { shouldStartTourOnLoad, allModulesLoaded, keyExists: !!createCourseTourCompletedKey });
+          }
+      }
+  }
+
+  // --- Handle Add Custom Video button click during tour ---
+  function handleAddCustomVideoClick() {
+    const tourState = get(tourStore);
+    if (tourState.isTourActive && tourState.steps[tourState.currentStepIndex]?.id === 'cc-add-custom') {
+      console.log('[Create Course Page] Add Custom Video clicked during tour. Hiding tour.');
+      nextStepIdAfterModal = 'cc-select-next-module-interactive'; // Store the ID of the step to resume at
+      tourStore.cancelTour(); // Hide the tour UI for now
+    }
+    // Always show the modal when the button is clicked
+    showCustomUrlInput = true;
+  }
+
+  // --- Handle Modal Close ---
+  function handleModalClose() {
+    showCustomUrlInput = false;
+    if (nextStepIdAfterModal) {
+        console.log(`[Create Course Page] Modal closed, resuming tour at step: ${nextStepIdAfterModal}`);
+        // Use timeout to ensure modal is fully closed before tour reappears
+        setTimeout(() => {
+            tourStore.startTour(createCourseTourSteps, 'create-course'); // Restart the tour sequence
+            tourStore.goToStepById(nextStepIdAfterModal!); // Jump to the stored step
+            nextStepIdAfterModal = null; // Clear the stored ID
+        }, 100); // Small delay
+    }
+  }
+
+  // Helper to check if it's the last module index
+  function isLastModule(index: number): boolean {
+      return courseStructure ? index === courseStructure.OG_Module_Title.length - 1 : false;
+  }
+
+  // Reactive statement to advance tour when a video is selected for the current module
+  $: if (browser && $tourStore.isTourActive && $tourStore.steps[$tourStore.currentStepIndex]?.id === 'cc-video-grid-interactive') {
+     // Check if a video has been selected (is not null) for the *current* module
+     if (moduleVideos[currentModuleIndex] && selectedVideos[currentModuleIndex] !== null) {
+        console.log(`[Tour] Video selected for module ${currentModuleIndex}.`);
+        if (isLastModule(currentModuleIndex)) {
+            // If it was the last module, jump directly to create complete
+            console.log('[Tour] Last module video selected, moving to create complete step.');
+            tourStore.goToStepById('cc-create-complete');
+        } else {
+            // Not the last module, go to the 'next module' prompt
+             console.log('[Tour] Moving to next module step.');
+            tourStore.goToStepById('cc-select-next-module-interactive');
+        }
+     }
+     // Dependency tracking for reactivity
+     selectedVideos, currentModuleIndex, courseStructure, moduleVideos;
+  }
+
+  // Reactive statement to advance tour when the module index changes *away* from the currently shown module
+  let previousModuleIndexForTour = currentModuleIndex;
+  $: if (browser && $tourStore.isTourActive && $tourStore.steps[$tourStore.currentStepIndex]?.id === 'cc-select-next-module-interactive') {
+    if (currentModuleIndex !== previousModuleIndexForTour) {
+       console.log(`[Tour] Module index changed to ${currentModuleIndex}, moving back to video grid step.`);
+       tourStore.goToStepById('cc-video-grid-interactive');
+       previousModuleIndexForTour = currentModuleIndex; // Update tracker
+    }
+    // Dependency tracking
+    currentModuleIndex;
+  }
+
+  // Helper function to get tour key for localStorage
+  function getTourKey(tourId: string): string | null {
+      let currentUserId: string | null = null;
+      currentUserId = $user?.uid ?? null; // Directly use $user
+      return currentUserId ? `tour-completed-${tourId}-${currentUserId}` : null;
+  }
+
   onMount(() => {
+    let cleanupFunctions: (() => void)[] = [];
+
     const initPageData = async () => {
       const urlObjective = $page.url.searchParams.get("objective");
       let courseLoaded = false;
+      
+      // --- Check if user has existing courses FIRST ---
+      let userHasCourses = false;
+      if ($user) {
+        try {
+          const courses = await getUserCourses($user.uid); 
+          userHasCourses = courses.length > 0;
+
+          if (userHasCourses) {
+            console.log('[Create Course Page] User already has courses, marking create-course tour as completed.');
+            const tourKey = getTourKey('create-course');
+            if (tourKey && browser) {
+              localStorage.setItem(tourKey, 'fully-completed');
+            }
+          }
+        } catch (err) {
+          console.error("Error checking user course count:", err);
+          // Decide how to handle error - maybe assume user has courses to be safe?
+          // For now, let's assume they don't have courses if check fails.
+          userHasCourses = false; 
+        }
+      }
+      // --- End course count check ---
+
+      // Now proceed with loading/building the current course objective
       
       // First try to load from localStorage to have data ready
       courseLoaded = loadStateFromStorage();
@@ -733,11 +924,43 @@
         } else {
           // No course structure yet, redirect to home to get objective
           goto("/");
+          return; // Exit early if redirecting
         }
       } else {
         // No stored course, redirect to home
         goto("/");
+        return; // Exit early if redirecting
       }
+
+      // --- Check if tour should *potentially* start --- 
+      if (browser && !userHasCourses) { // Only consider starting if user has NO courses
+          const startFlag = localStorage.getItem('startCreateCourseTour');
+          // We still need createCourseTourCompletedKey for the tryStart function
+          createCourseTourCompletedKey = $user ? `tour-completed-create-course-${$user.uid}` : null;
+
+          if (startFlag === 'true') {
+              // Check completion flag *before* setting shouldStartTourOnLoad
+              if (!tourStore.hasCompletedTour('create-course')) {
+                 shouldStartTourOnLoad = true;
+                 console.log('[Create Course Page] Tour start flag detected and tour not completed, preparing to start.');
+              } else {
+                 console.log('[Create Course Page] Tour start flag detected, but tour already completed.');
+              }
+              localStorage.removeItem('startCreateCourseTour'); // Consume the flag
+          } else {
+              shouldStartTourOnLoad = false;
+          }
+      } else {
+          shouldStartTourOnLoad = false; // Don't start if user has courses or not in browser
+      }
+      // ---------------------------------------------
+
+      // --- Attempt to start tour AFTER initial load/build --- 
+      // This will be called again by the reactive statement if allModulesLoaded becomes true later
+      console.log('[Create Course Page] Initial attempt to start tour after initPageData.');
+      // Add a small delay before trying to start the tour
+      setTimeout(tryStartCreateCourseTour, 200); // 200ms delay
+      // ------------------------------------------------------
     };
     
     initPageData();
@@ -757,9 +980,17 @@
       return () => {
         window.removeEventListener('beforeunload', handleBeforeUnload);
         initialLoadingState.stopLoading();
+        console.log('[+page] Running onMount cleanup');
+        cleanupFunctions.forEach(cleanup => cleanup());
       };
     }
   });
+
+  // Update check when allModulesLoaded changes state reactively
+  $: if (browser && allModulesLoaded) { // Added browser check
+      console.log(`[Create Course Page] allModulesLoaded changed to: ${allModulesLoaded}, attempting tour start.`);
+      tryStartCreateCourseTour();
+  }
 
   // Handle SvelteKit navigation events with afterNavigate
   afterNavigate(({ from, to }) => {
@@ -870,7 +1101,7 @@
               </div>
               <button
                 class="text-nowrap bg-brand-red hover:bg-ButtonHover text-mini-body lg:text-semi-body text-white px-2 py-2 rounded-lg flex items-center gap-2 transition-colors duration-200"
-                on:click={() => (showCustomUrlInput = true)}
+                on:click={handleAddCustomVideoClick}
               >
                 Add Custom Video
                 <Plus class="w-4 h-4 lg:w-6 lg:h-6" />
@@ -885,7 +1116,7 @@
                   moduleTitle={courseStructure?.OG_Module_Title[
                     currentModuleIndex
                   ] || ""}
-                  onClose={() => (showCustomUrlInput = false)}
+                  onClose={handleModalClose}
                 />
               </div>
             {/if}
@@ -936,7 +1167,7 @@
           <div class="flex items-center gap-2">
             <span class="text-mini-body">Complete Creating Course</span>
             <svg
-              class="w-5 h-5"
+              class="w-5 h-5 {!allModulesLoaded ? 'fill-Grey' : ''}"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
@@ -972,7 +1203,7 @@
         </div>
 
         <!-- Module Navigation with scroll buttons -->
-        <div class="relative flex items-center">
+        <div data-tour="module-navigation" class="relative flex items-center">
           <!-- Left scroll button -->
           <button 
             class="absolute left-0 z-10 p-1 bg-white dark:bg-dark-bg-primary rounded-full shadow-md text-Green dark:text-Green2 hover:bg-gray-100 dark:hover:bg-dark-bg-secondary"
@@ -1025,6 +1256,7 @@
                   .OG_Module_Title[currentModuleIndex]}
               </h2>
               <button
+                data-tour="regenerate-button"
                 class="text-[#42C1C8] hover:text-[#2A4D61] rounded-full transition-colors duration-200 {moduleRegenerating[currentModuleIndex] ? 'cursor-not-allowed opacity-50' : ''}"
                 on:click={() => handleRegenerateModuleVideos(currentModuleIndex)}
                 disabled={moduleRegenerating[currentModuleIndex]}
@@ -1049,8 +1281,9 @@
               </button>
             </div>
             <button
+              data-tour="add-custom-video-button"
               class="text-nowrap bg-brand-red hover:bg-ButtonHover text-mini-body lg:text-semi-body text-white px-2 py-2 rounded-lg flex items-center gap-2 transition-colors duration-200"
-              on:click={() => (showCustomUrlInput = true)}
+              on:click={handleAddCustomVideoClick}
             >
               Add Custom Video
               <Plus class="w-4 h-4 lg:w-6 lg:h-6" />
@@ -1065,11 +1298,12 @@
                 moduleTitle={courseStructure?.OG_Module_Title[
                   currentModuleIndex
                 ] || ""}
-                onClose={() => (showCustomUrlInput = false)}
+                onClose={handleModalClose}
               />
             </div>
           {/if}
 
+          <div data-tour="module-video-grid">
           <ModuleVideoGrid
             {courseStructure}
             bind:moduleVideos
@@ -1077,6 +1311,7 @@
             {currentModuleIndex}
             {error}
           />
+          </div>
         </div>
       </div>
 
@@ -1089,6 +1324,7 @@
       >
         {#if !allModulesAreVisited}
           <button
+            data-tour="select-next-module-button"
             on:click={() => selectModule(nextUnvisitedModuleIndex)}
             class="px-4 py-2 rounded-2xl text-base shadow-lg flex items-center justify-center transition-all duration-200 min-w-[250px] gap-2 {!allModulesLoaded ? 'bg-white cursor-not-allowed text-Grey' : 'dark:bg-brand-turquoise bg-brand-navy text-white'}"
             disabled={!allModulesLoaded || nextUnvisitedModuleIndex === -1}
@@ -1103,6 +1339,7 @@
           </button>
         {:else}
           <button
+            data-tour="create-complete-course-button"
             on:click={handleSaveCourse}
             class="px-4 py-2 rounded-2xl text-base shadow-lg flex items-center justify-center transition-all duration-200 min-w-[250px] gap-2 {!allModulesLoaded ||
             !courseStructure?.OG_Module_Title.every(
@@ -1146,6 +1383,9 @@
 
 <!-- Keep this for complete course generation -->
 <CourseGenerationModal />
+
+<!-- Add CustomTourGuide Component -->
+<CustomTourGuide />
 
 <style>
   .scrollbar-hide::-webkit-scrollbar {
