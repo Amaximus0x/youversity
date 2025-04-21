@@ -40,6 +40,10 @@
     if ($finalLoadingState.courseId) {
       const courseId = $finalLoadingState.courseId;
 
+      // Dispatch event before navigating
+      console.log('[Modal] Dispatching viewCourseClicked event');
+      window.dispatchEvent(new CustomEvent('viewCourseClicked'));
+
       // Navigate first
       // currentModuleStore.set(-1);
       await goto(`/course/${courseId}`);
@@ -96,7 +100,7 @@
     setTimeout(() => {
       console.log('[Modal] Dispatching courseReadyForViewing event');
       window.dispatchEvent(new CustomEvent('courseReadyForViewing'));
-    }, 100); // Small delay
+    }, 300); // Increased delay
   }
 </script>
 

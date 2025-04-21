@@ -874,6 +874,15 @@
       tourStore.startTour(finalCongratulationStep, 'create-course-final');
     };
 
+    // --- Listener to close final tour step when View Course is clicked --- 
+    const handleViewCourseClick = () => {
+      const currentState = get(tourStore); // Get current state
+      if (currentState.isTourActive && currentState.activeTourId === 'create-course-final') {
+        console.log('[%c+page%c] Received viewCourseClicked event, completing final tour step.', 'color: #42C1C8; font-weight: bold', 'color: inherit;');
+        tourStore.completeTour();
+      }
+    };
+
     const initPageData = async () => {
       const urlObjective = $page.url.searchParams.get("objective");
       let courseLoaded = false;
@@ -1007,6 +1016,7 @@
       window.addEventListener('beforeunload', handleBeforeUnload);
       
       window.addEventListener('courseReadyForViewing', handleCourseReady);
+      window.addEventListener('viewCourseClicked', handleViewCourseClick);
       
       // Cleanup
       return () => {
@@ -1015,6 +1025,7 @@
         console.log('[+page] Running onMount cleanup');
         cleanupFunctions.forEach(cleanup => cleanup());
         window.removeEventListener('courseReadyForViewing', handleCourseReady);
+        window.removeEventListener('viewCourseClicked', handleViewCourseClick);
       };
     }
   });
