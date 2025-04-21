@@ -195,8 +195,8 @@
     {
       id: 'create-course-input',
       target: '#course-objective-input',
-      content: `<div class="w-[374px] p-4 bg-brand-red rounded-2xl outline outline-1 outline-offset-[-1px] outline-black/5 inline-flex flex-col justify-start items-start gap-4 overflow-hidden relative">
-        <!-- <div class="tour-arrow absolute w-4 h-4 bg-brand-red transform rotate-45"></div> --> 
+      content: `<div class="w-[374px] p-4 bg-brand-red rounded-2xl outline outline-1 outline-offset-[-1px] outline-black/5 inline-flex flex-col justify-start items-start gap-4  relative">
+        <svg class="absolute left-1/2 -translate-x-1/2 top-[-25px] w-[34px] h-[38px] z-10" width="38" height="34" viewBox="0 0 38 34" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M17.2774 1.92017C18.0512 0.6084 19.9488 0.6084 20.7226 1.92017L37.5724 30.4838C38.3588 31.8171 37.3977 33.5 35.8497 33.5H2.15026C0.602323 33.5 -0.358837 31.8171 0.427647 30.4838L17.2774 1.92017Z" fill="#EB434A"/></svg> 
         <div class="self-stretch justify-start text-white text-h4 font-bold">Let's Create Your First Course!</div>
         <div class="self-stretch justify-start text-white text-semi-body">Enter what you want to learn in the input field above. For example: "How to bake sourdough bread" or "Introduction to Python programming". Try typing now!</div>
         <div class="self-stretch inline-flex justify-end items-center">

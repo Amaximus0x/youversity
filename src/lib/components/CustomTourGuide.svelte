@@ -167,8 +167,13 @@
             }
           } else {
             // Desktop: Use offset-based calculation
-            left = `${rect.left + scrollX + (rect.width / 2) - (stepElement.getBoundingClientRect().width / 2)}px`; // Center based on step width
-            transform = 'none'; // Ensure no transform on desktop
+            if(currentStep.id === 'explore-courses') {
+              left = `${rect.left + scrollX + (rect.width / 2) - (stepElement.getBoundingClientRect().width / 2)}px`;
+              transform = 'translateX(28%)'; // Center based on step width
+            } else {
+              left = `${rect.left + scrollX + (rect.width / 2) - (stepElement.getBoundingClientRect().width / 2)}px`; // Center based on step width
+              transform = 'none'; // Ensure no transform on desktop
+            }
           }
           // ----------------------------------------------------
         } else if (currentStep.placement === 'right') {
