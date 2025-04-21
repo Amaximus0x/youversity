@@ -256,6 +256,150 @@
     // },
   ];
 
+  // -- Mobile Steps --
+  const dashboardTourStepsMobile: TourStep[] = [
+    {
+      id: 'welcome',
+      content: `<div class="w-full inline-flex flex-col justify-start items-center gap-14 p-12 rounded-2xl bg-gradient-light dark:bg-gradient-dark">
+        <div class="self-stretch flex flex-col justify-start items-center">
+          <div class="w-[116.5px] h-[142px] relative overflow-hidden">
+            <img class="w-[140px] h-[170px] object-cover absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" src="${robotImage}" alt="Tour Guide Robot" />
+          </div>
+          <div class="self-stretch flex flex-col justify-start items-center gap-4 mt-4">
+            <div class="self-stretch flex flex-col justify-start items-center">
+              <div class="w-full min-w-[350px] max-w-[456px] text-center mt-[-20px]">
+                <span class="text-light-text-secondary dark:text-white text-2xl md:text-2xl font-semibold font-['Poppins'] leading-normal">Hi there,</span>
+                <div class="text-light-text-secondary dark:text-white text-tour-text-mobile md:text-tour-text">
+                  Welcome to Youversity! 
+                  <span>
+                    <br>I'm your tour guide, and I'll be briefly <br> showing you around the app. Let's go!
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="w-full max-w-[326px] inline-flex justify-start items-start gap-4">
+          <button data-tour-action="cancel" class="flex-1 h-12 md:h-[54px] px-4 py-2 rounded-2xl outline outline-1 outline-offset-[-1px] outline-[#41c1cb] flex justify-center items-center gap-4 cursor-pointer hover:bg-white/10 transition-colors" type="button">
+            <span class="text-[#41c1cb] text-sm md:text-base font-medium md:font-semibold font-['Poppins'] leading-normal">Skip Tour</span>
+          </button>
+          <button data-tour-action="next" class="flex-1 h-12 md:h-[54px] px-4 py-2 bg-[#eb434a] rounded-2xl shadow-[0px_4px_26px_0px_#EB434A] flex justify-center items-center gap-2 cursor-pointer hover:bg-[#D93940]" type="button">
+            <span class="text-white text-sm md:text-base font-medium md:font-semibold font-['Poppins'] leading-normal">Start Tour</span>
+          </button>
+        </div>
+      </div>`,
+      placement: 'center',
+    },
+    {
+      id: 'explore-courses-mobile',
+      target: '.explore-course-btn',
+      content: `<div class="w-full max-w-[340px] relative">
+        <!-- Arrow centered relative to the button -->
+        <svg class="absolute left-[12%] -translate-x-[12%] top-[-25px] w-[34px] h-[38px] z-10" width="38" height="34" viewBox="0 0 38 34" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M17.2774 1.92017C18.0512 0.6084 19.9488 0.6084 20.7226 1.92017L37.5724 30.4838C38.3588 31.8171 37.3977 33.5 35.8497 33.5H2.15026C0.602323 33.5 -0.358837 31.8171 0.427647 30.4838L17.2774 1.92017Z" fill="#EB434A"/></svg>
+        <!-- Card with responsive width -->
+        <div class="w-full p-4 bg-[#eb434a] rounded-2xl shadow-[-9px_13px_38px_-1px_rgba(0,0,0,0.37)] outline outline-1 outline-offset-[-1px] outline-[rgba(0,0,0,0.05)] inline-flex flex-col justify-start items-start gap-4 z-20">
+          <div class="self-stretch justify-start text-white text-base font-bold font-['Poppins'] leading-7">Explore Courses</div>
+          <div class="self-stretch justify-start text-white text-sm font-normal font-['Poppins'] leading-snug">Explore a wide range of courses designed to help you acquire new skills and deepen your knowledge.</div>
+          <div class="self-stretch inline-flex justify-between items-center">
+            <div class="flex-grow h-2.5 bg-black/20 rounded-full inline-flex flex-col justify-center items-start gap-2.5 overflow-hidden"><div class="w-[20%] h-3 bg-white rounded-full"></div></div>
+            <div class="flex justify-start items-center gap-2 ml-auto">
+              <button data-tour-action="cancel" class="w-[63px] px-4 py-1 rounded outline outline-1 outline-offset-[-1px] outline-white flex justify-center items-center gap-2.5 cursor-pointer hover:bg-white/10 transition-colors" type="button"><span class="justify-start text-white text-semi-body">Skip</span></button>
+              <button data-tour-action="next" class="px-4 py-1 bg-white rounded flex justify-center items-center gap-2.5 cursor-pointer hover:bg-gray-200 transition-colors" type="button"><span class="justify-start text-black text-semi-body">Next</span></button>
+            </div>
+          </div>
+        </div>
+      </div>`,
+      placement: 'bottom',
+    },
+    {
+      id: 'trending-courses-mobile',
+      target: '[data-tour="mobile-nav"] a[href="/trending"]', 
+      content: `<div class="w-[322px] p-4 bg-brand-red rounded-2xl outline outline-1 outline-offset-[-1px] outline-black/5 inline-flex flex-col justify-start items-start gap-4 relative">
+        <!-- Arrow Down -->
+        <svg class="absolute left-[30%] bottom-[-25px] w-[34px] h-[38px] z-10 transform rotate-180" width="38" height="34" viewBox="0 0 38 34" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M17.2774 1.92017C18.0512 0.6084 19.9488 0.6084 20.7226 1.92017L37.5724 30.4838C38.3588 31.8171 37.3977 33.5 35.8497 33.5H2.15026C0.602323 33.5 -0.358837 31.8171 0.427647 30.4838L17.2774 1.92017Z" fill="#EB434A"/></svg>
+        <div class="self-stretch justify-start text-white text-h4 font-bold">Trending Courses</div>
+        <div class="self-stretch justify-start text-white text-semi-body">Discover the trending courses that are gaining popularity among learners.</div>
+        <div class="self-stretch inline-flex items-center gap-4">
+          <div class="flex-grow h-2.5 bg-black/20 rounded-full inline-flex flex-col justify-center items-start gap-2.5 overflow-hidden"><div class="w-[40%] h-3 bg-white rounded-full"></div></div>
+          <div class="flex justify-start items-center gap-2 ml-auto">
+            <button data-tour-action="cancel" class="w-[63px] px-4 py-1 rounded outline outline-1 outline-offset-[-1px] outline-white flex justify-center items-center gap-2.5 cursor-pointer hover:bg-white/10 transition-colors" type="button"><span class="justify-start text-white text-semi-body">Skip</span></button>
+            <button data-tour-action="next" class="px-4 py-1 bg-white rounded flex justify-center items-center gap-2.5 cursor-pointer hover:bg-gray-200 transition-colors" type="button"><span class="justify-start text-black text-semi-body">Next</span></button>
+          </div>
+        </div>
+      </div>`,
+      placement: 'top',
+    },
+    {
+      id: 'my-courses-mobile',
+      target: '[data-tour="mobile-nav"] a[href="/my-courses"]', 
+      content: `<div class="w-[322px] p-4 bg-brand-red rounded-2xl outline outline-1 outline-offset-[-1px] outline-black/5 inline-flex flex-col justify-start items-start gap-4 relative">
+        <svg class="absolute left-1/2 -translate-x-1/2 bottom-[-25px] w-[34px] h-[38px] z-10 transform rotate-180" width="38" height="34" viewBox="0 0 38 34" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M17.2774 1.92017C18.0512 0.6084 19.9488 0.6084 20.7226 1.92017L37.5724 30.4838C38.3588 31.8171 37.3977 33.5 35.8497 33.5H2.15026C0.602323 33.5 -0.358837 31.8171 0.427647 30.4838L17.2774 1.92017Z" fill="#EB434A"/></svg>
+        <div class="self-stretch justify-start text-white text-h4 font-bold">My Courses</div>
+        <div class="self-stretch justify-start text-white text-semi-body">Access all the courses you've created or enrolled in here.</div>
+        <div class="self-stretch inline-flex items-center gap-4">
+          <div class="flex-grow h-2.5 bg-black/20 rounded-full inline-flex flex-col justify-center items-start gap-2.5 overflow-hidden"><div class="w-[55%] h-3 bg-white rounded-full"></div></div>
+          <div class="flex justify-start items-center gap-2 ml-auto">
+            <button data-tour-action="cancel" class="w-[63px] px-4 py-1 rounded outline outline-1 outline-offset-[-1px] outline-white flex justify-center items-center gap-2.5 cursor-pointer hover:bg-white/10 transition-colors" type="button"><span class="justify-start text-white text-semi-body">Skip</span></button>
+            <button data-tour-action="next" class="px-4 py-1 bg-white rounded flex justify-center items-center gap-2.5 cursor-pointer hover:bg-gray-200 transition-colors" type="button"><span class="justify-start text-black text-semi-body">Next</span></button>
+          </div>
+        </div>
+      </div>`,
+      placement: 'top',
+    },
+    {
+      id: 'bookmarks-mobile',
+      target: '[data-tour="mobile-nav"] a[href="/bookmarks"]', 
+      content: `<div class="w-[322px] p-4 bg-brand-red rounded-2xl outline outline-1 outline-offset-[-1px] outline-black/5 inline-flex flex-col justify-start items-start gap-4 relative">
+        <svg class="absolute left-[60%] bottom-[-25px] w-[34px] h-[38px] z-10 transform rotate-180" width="38" height="34" viewBox="0 0 38 34" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M17.2774 1.92017C18.0512 0.6084 19.9488 0.6084 20.7226 1.92017L37.5724 30.4838C38.3588 31.8171 37.3977 33.5 35.8497 33.5H2.15026C0.602323 33.5 -0.358837 31.8171 0.427647 30.4838L17.2774 1.92017Z" fill="#EB434A"/></svg>
+        <div class="self-stretch justify-start text-white text-h4 font-bold">Bookmarks</div>
+        <div class="self-stretch justify-start text-white text-semi-body">Keep track of your favorite courses and modules by bookmarking them.</div>
+        <div class="self-stretch inline-flex items-center gap-4">
+          <div class="flex-grow h-2.5 bg-black/20 rounded-full inline-flex flex-col justify-center items-start gap-2.5 overflow-hidden"><div class="w-[70%] h-3 bg-white rounded-full"></div></div>
+          <div class="flex justify-start items-center gap-2 ml-auto">
+            <button data-tour-action="cancel" class="w-[63px] px-4 py-1 rounded outline outline-1 outline-offset-[-1px] outline-white flex justify-center items-center gap-2.5 cursor-pointer hover:bg-white/10 transition-colors" type="button"><span class="justify-start text-white text-semi-body">Skip</span></button>
+            <button data-tour-action="next" class="px-4 py-1 bg-white rounded flex justify-center items-center gap-2.5 cursor-pointer hover:bg-gray-200 transition-colors" type="button"><span class="justify-start text-black text-semi-body">Next</span></button>
+          </div>
+        </div>
+      </div>`,
+      placement: 'top',
+    },
+    {
+      id: 'settings-mobile',
+      target: '[data-tour="mobile-nav"] a[href^="/settings"]', 
+      content: `<div class="w-[322px] p-4 bg-brand-red rounded-2xl outline outline-1 outline-offset-[-1px] outline-black/5 inline-flex flex-col justify-start items-start gap-4 relative">
+        <svg class="absolute left-[80%] bottom-[-25px] w-[34px] h-[38px] z-10 transform rotate-180" width="38" height="34" viewBox="0 0 38 34" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M17.2774 1.92017C18.0512 0.6084 19.9488 0.6084 20.7226 1.92017L37.5724 30.4838C38.3588 31.8171 37.3977 33.5 35.8497 33.5H2.15026C0.602323 33.5 -0.358837 31.8171 0.427647 30.4838L17.2774 1.92017Z" fill="#EB434A"/></svg>
+        <div class="self-stretch justify-start text-white text-h4 font-bold">Settings</div>
+        <div class="self-stretch justify-start text-white text-semi-body">Manage your profile, preferences, and account settings here.</div>
+        <div class="self-stretch inline-flex items-center gap-4">
+          <div class="flex-grow h-2.5 bg-black/20 rounded-full inline-flex flex-col justify-center items-start gap-2.5 overflow-hidden"><div class="w-[85%] h-3 bg-white rounded-full"></div></div>
+          <div class="flex justify-start items-center gap-2 ml-auto">
+            <button data-tour-action="cancel" class="w-[63px] px-4 py-1 rounded outline outline-1 outline-offset-[-1px] outline-white flex justify-center items-center gap-2.5 cursor-pointer hover:bg-white/10 transition-colors" type="button"><span class="justify-start text-white text-semi-body">Skip</span></button>
+            <button data-tour-action="next" class="px-4 py-1 bg-white rounded flex justify-center items-center gap-2.5 cursor-pointer hover:bg-gray-200 transition-colors" type="button"><span class="justify-start text-black text-semi-body">Next</span></button>
+          </div>
+        </div>
+      </div>`,
+      placement: 'top',
+    },
+    {
+      id: 'create-course-input-mobile',
+      target: '#course-objective-input',
+      content: `<div class="w-[374px] p-4 bg-brand-red rounded-2xl outline outline-1 outline-offset-[-1px] outline-black/5 inline-flex flex-col justify-start items-start gap-4 relative">
+        <!-- Arrow pointing up -->
+        <svg class="absolute left-1/2 -translate-x-1/2 top-[-25px] w-[34px] h-[38px] z-10" width="38" height="34" viewBox="0 0 38 34" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M17.2774 1.92017C18.0512 0.6084 19.9488 0.6084 20.7226 1.92017L37.5724 30.4838C38.3588 31.8171 37.3977 33.5 35.8497 33.5H2.15026C0.602323 33.5 -0.358837 31.8171 0.427647 30.4838L17.2774 1.92017Z" fill="#EB434A"/></svg>
+        <div class="self-stretch justify-start text-white text-h4 font-bold">Let's Create Your First Course!</div>
+        <div class="self-stretch justify-start text-white text-semi-body">Enter what you want to learn in the input field above. For example: "How to bake sourdough bread" or "Introduction to Python programming". Try typing now!</div>
+        <div class="self-stretch inline-flex items-center gap-4">
+          <div class="flex-grow h-2.5 bg-black/20 rounded-full inline-flex flex-col justify-center items-start gap-2.5 overflow-hidden mr-auto"><div class="w-[90%] h-3 bg-white rounded-full"></div></div>
+          <div class="flex justify-start items-center gap-2 ml-auto">
+            <button data-tour-action="cancel" class="w-[63px] px-4 py-1 rounded outline outline-1 outline-offset-[-1px] outline-white flex justify-center items-center gap-2.5 cursor-pointer hover:bg-white/10 transition-colors" type="button"><span class="justify-start text-white text-semi-body">Skip</span></button>
+          </div>
+        </div>
+      </div>`,
+      placement: 'bottom',
+      isInteractive: true,
+    },
+  ];
+
   // Function to focus the course objective input
   function focusCourseObjective() {
     if (courseObjectiveInput) {
@@ -370,56 +514,60 @@
          checkIfNewUser(); // Handle non-logged-in case or default new user state
       }
       // --- End Tour Eligibility Logic ---
-
-      // Debug info for tour elements
-      if (browser && import.meta.env.DEV) {
-        setTimeout(() => {
+    
+    // Debug info for tour elements
+    if (browser && import.meta.env.DEV) {
+      setTimeout(() => {
           console.log('Tour element check:');
-          const tourElements = [
+        const tourElements = [
               '#course-objective-input',
               '.tour-navigation a[href="/trending"]',
-            '.tour-explore-courses',
-            '.tour-navigation'
-          ];
-          tourElements.forEach(selector => {
-            const element = document.querySelector(selector);
+          '.tour-explore-courses',
+          '.tour-navigation'
+        ];
+        tourElements.forEach(selector => {
+          const element = document.querySelector(selector);
               console.log(`[+page] ${selector}: ${element ? 'Found' : 'MISSING'}`);
-          });
+        });
           }, 1000);
-      }
-      
-      // Add event listener for focusCourseObjective
-      const handleFocusCourseObjective = () => {
-        focusCourseObjective();
-      };
-      window.addEventListener('focusCourseObjective', handleFocusCourseObjective);
+    }
+    
+    // Add event listener for focusCourseObjective
+    const handleFocusCourseObjective = () => {
+      focusCourseObjective();
+    };
+    window.addEventListener('focusCourseObjective', handleFocusCourseObjective);
         cleanupFunctions.push(() => window.removeEventListener('focusCourseObjective', handleFocusCourseObjective));
 
-      const loadTrendingCourses = async () => {
-        try {
-          console.log('Fetching trending courses...');
-          // Get courses sorted by views/likes
-          publicCourses = await getPublicCourses();
-          // Sort by views and likes
-          publicCourses.sort((a, b) => {
-            const scoreA = (a.views || 0) + (a.likes || 0);
-            const scoreB = (b.views || 0) + (b.likes || 0);
-            return scoreB - scoreA;
-          });
-        } catch (error) {
-          console.error('Error loading trending courses:', error);
-        } finally {
-          trendingCoursesLoading = false;
-        }
-      };
+    const loadTrendingCourses = async () => {
+      try {
+        console.log('Fetching trending courses...');
+        // Get courses sorted by views/likes
+        publicCourses = await getPublicCourses();
+        // Sort by views and likes
+        publicCourses.sort((a, b) => {
+          const scoreA = (a.views || 0) + (a.likes || 0);
+          const scoreB = (b.views || 0) + (b.likes || 0);
+          return scoreB - scoreA;
+        });
+      } catch (error) {
+        console.error('Error loading trending courses:', error);
+      } finally {
+        trendingCoursesLoading = false;
+      }
+    };
 
-      // Load trending courses
-      loadTrendingCourses();
+    // Load trending courses
+    loadTrendingCourses();
 
         // Start tour *only* if isNewUser is still true after checks
         if (isNewUser && browser) { 
           console.log('[+page] Starting custom dashboard tour...');
-          tourStore.startTour(dashboardTourSteps, 'dashboard');
+          // Check screen width and choose steps
+          const stepsToUse = window.innerWidth < 1024 ? dashboardTourStepsMobile : dashboardTourSteps;
+          const tourType = window.innerWidth < 1024 ? 'mobile' : 'desktop';
+          console.log(`[+page] Starting dashboard tour (${tourType})`);
+          tourStore.startTour(stepsToUse, 'dashboard'); // Still use 'dashboard' ID for completion tracking
         }
     };
 
@@ -467,9 +615,10 @@
     // --- Check and close tour if on the relevant steps --- 
     const tourState = get(tourStore); // Get current store value synchronously
     if (tourState.isTourActive && 
-        (tourState.steps[tourState.currentStepIndex]?.id === 'create-course-input' || 
-         tourState.steps[tourState.currentStepIndex]?.id === 'create-course-button')) {
-      console.log('[+page] Create button clicked during relevant tour step, completing tour.');
+        (tourState.steps[tourState.currentStepIndex]?.id === 'create-course-input' ||
+         tourState.steps[tourState.currentStepIndex]?.id === 'create-course-button' || // Desktop
+         tourState.steps[tourState.currentStepIndex]?.id === 'create-course-input-mobile')) { // Mobile
+      console.log('[%c+page%c] Create button clicked during relevant tour step, completing tour.', 'color: #42C1C8; font-weight: bold', 'color: inherit;');
       tourStore.completeTour(); // Use completeTour as user is fulfilling the goal
     }
     // --------------------------------------------------
@@ -693,7 +842,10 @@
 {#if import.meta.env.DEV}
   <button 
     class="fixed bottom-4 right-4 z-50 bg-brand-red text-white px-4 py-2 rounded-lg shadow-lg lg:right-8"
-    on:click={() => tourStore.startTour(dashboardTourSteps, 'dashboard')}
+    on:click={() => {
+      const stepsToUse = window.innerWidth < 1024 ? dashboardTourStepsMobile : dashboardTourSteps;
+      tourStore.startTour(stepsToUse, 'dashboard');
+    }}
   >
     Start Tour
   </button>

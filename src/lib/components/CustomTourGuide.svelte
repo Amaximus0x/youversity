@@ -107,7 +107,7 @@
       spotlightTop.style.height = `${Math.max(0, targetRect.top)}px`;
 
       spotlightBottom.style.top = `${Math.max(0, targetRect.bottom)}px`;
-      spotlightBottom.style.height = `calc(100vh - ${Math.max(0, targetRect.bottom)}px)`;
+      spotlightBottom.style.height = `calc(100% - ${Math.max(0, targetRect.bottom)}px)`;
 
       spotlightLeft.style.top = `${Math.max(0, targetRect.top)}px`;
       spotlightLeft.style.height = `${Math.max(0, targetRect.height)}px`;
@@ -148,10 +148,29 @@
         const horizontalGap = -10;
         position = 'absolute'; // Use absolute for target-based positioning
 
+        // Default transform
+        transform = 'none';
+
         if (currentStep.placement === 'bottom') {
           top = `${rect.bottom + scrollY + arrowOffset}px`; // Use scrollY
-          left = `${rect.left + scrollX + (rect.width / 2) - horizontalOffset}px`; // Use scrollX
-          transform = 'none';
+          // --- Conditional Centering for Mobile vs Desktop --- 
+          if (browser && window.innerWidth < 1024) { // Mobile breakpoint (lg)
+            // Mobile: Use transform-based centering 
+            left = `${rect.left + scrollX + (rect.width / 2)}px`; 
+            // Default center, adjust per ID if needed
+            transform = 'translateX(-50%)'; 
+            // Example: Adjust for create-course-input-mobile if necessary
+            if (currentStep.id === 'explore-courses-mobile') { 
+              transform = 'translateX(-26%)'; // Default center
+            } else if (currentStep.id === 'create-course-input-mobile') { 
+              transform = 'translateX(-50%)'; // Slightly right
+            }
+          } else {
+            // Desktop: Use offset-based calculation
+            left = `${rect.left + scrollX + (rect.width / 2) - (stepElement.getBoundingClientRect().width / 2)}px`; // Center based on step width
+            transform = 'none'; // Ensure no transform on desktop
+          }
+          // ----------------------------------------------------
         } else if (currentStep.placement === 'right') {
           const verticalOffset = 42; // Increased slightly
           const horizontalGap = 48; // Corrected to positive value
@@ -159,10 +178,31 @@
           left = `${rect.right + scrollX + horizontalGap}px`; // Correct horizontal gap calculation
           transform = 'none';
         } else if (currentStep.placement === 'top') {
-          const horizontalOffsetTop = 20; // Pixels to shift right from target center
-          top = `${rect.top + scrollY - stepRect.height - arrowOffset}px`; // Position above target
-          left = `${rect.left + scrollX + (rect.width / 2) + horizontalOffsetTop}px`; // Adjust horizontal position
-          transform = 'none';
+          const spaceNeeded = stepRect.height + arrowOffset; // Total space needed above target
+          const availableSpace = rect.top + scrollY;
+          // Calculate top, ensuring minimum margin from viewport top (e.g., 10px)
+          top = `${Math.max(10, availableSpace - spaceNeeded)}px`;
+
+          // --- Conditional Centering for Mobile vs Desktop --- 
+          if (browser && window.innerWidth < 1024) { // Mobile breakpoint (lg)
+            // Mobile: Use transform-based centering for bottom nav items
+            left = `${rect.left + scrollX + (rect.width / 2)}px`;
+            // Specific adjustment for trending courses mobile step
+            if (currentStep.id === 'trending-courses-mobile') {
+              transform = 'translateX(-35%)'; // Shift slightly right
+            } else if (currentStep.id === 'bookmarks-mobile') {
+              transform = 'translateX(-65%)'; // Shift further left
+            } else if (currentStep.id === 'settings-mobile') {
+              transform = 'translateX(-91%)'; // Shift even further left
+            } else {
+              transform = 'translateX(-50%)'; // Default center for other top steps
+            }
+          } else {
+            // Desktop: Use width-based calculation (revert)
+            left = `${rect.left + scrollX + (rect.width / 2) - (stepRect.width / 2)}px`;
+            transform = 'none';
+          }
+          // ----------------------------------------------------
         } else if (currentStep.placement === 'left') {
             const horizontalGap = 30; // Increased gap to the left
             const verticalOffset = 30; // Added offset to push down slightly
