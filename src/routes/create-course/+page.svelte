@@ -63,7 +63,36 @@
   let moduleNavContainer: HTMLElement;
 
   // --- Tour Steps for Create Course Page (INTERACTIVE VERSION) ---
+  // Re-use robot image variable if defined elsewhere, or define here
+  let robotImage = '/tour-guide.gif'; 
+
   const createCourseTourSteps: TourStep[] = [
+    {
+      id: 'cc-welcome',
+      content: `<div class="w-full inline-flex flex-col justify-start items-center gap-14 p-12 rounded-2xl bg-gradient-light dark:bg-gradient-dark">
+        <div class="self-stretch flex flex-col justify-start items-center">
+          <div class="w-[116.5px] h-[142px] relative overflow-hidden">
+            <img class="w-[140px] h-[170px] object-cover absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" src="${robotImage}" alt="Tour Guide Robot" />
+          </div>
+          <div class="self-stretch flex flex-col justify-start items-center gap-4 mt-4">
+            <div class="self-stretch flex flex-col justify-start items-center">
+              <div class="w-full min-w-[350px] max-w-[456px] text-center mt-[-20px]">
+                <span class="text-light-text-secondary dark:text-white text-2xl md:text-2xl font-semibold font-['Poppins'] leading-normal">Awesome! Let's build your course!</span>
+                <div class="text-light-text-secondary dark:text-white text-tour-text-mobile md:text-tour-text">
+                  Just follow a few simple steps to select<br> the best videos for each module. Ready? 
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="w-full max-w-[326px] inline-flex justify-start items-start gap-4">
+          <button data-tour-action="next" class="flex-1 h-12 md:h-[54px] px-4 py-2 bg-[#eb434a] rounded-2xl shadow-[0px_4px_26px_0px_#EB434A] flex justify-center items-center gap-2 cursor-pointer hover:bg-[#D93940]" type="button">
+            <span class="text-white text-sm md:text-base font-medium md:font-semibold font-['Poppins'] leading-normal">Let's Build!</span>
+          </button>
+        </div>
+      </div>`,
+      placement: 'center',
+    },
     {
       id: 'cc-video-grid-interactive',
       target: '[data-tour="module-video-grid"]',
@@ -106,25 +135,6 @@
                   </div>`,
       placement: 'top', // Place above the "Create Complete Course" button
       isInteractive: true // Keep interactive if needed, but maybe not required?
-    }
-  ];
-
-  // --- Final Congratulation Step Definition ---
-  const finalCongratulationStep: TourStep[] = [
-    {
-      id: 'cc-congratulations',
-      target: '[data-tour="view-course-button"]', // Target the button in the modal
-      content: `<div class="w-[374px] p-4 bg-brand-red rounded-2xl outline outline-1 outline-offset-[-1px] outline-black/5 inline-flex flex-col justify-start items-start gap-4 relative">
-                  <!-- Arrow pointing left -->
-                  <svg class="absolute right-[-28px] top-[13%] -translate-y-1/5 w-[34px] h-[38px] z-10 transform rotate-[90deg]" width="38" height="34" viewBox="0 0 38 34" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M17.2774 1.92017C18.0512 0.6084 19.9488 0.6084 20.7226 1.92017L37.5724 30.4838C38.3588 31.8171 37.3977 33.5 35.8497 33.5H2.15026C0.602323 33.5 -0.358837 31.8171 0.427647 30.4838L17.2774 1.92017Z" fill="#EB434A"/></svg>
-                  <div class="self-stretch justify-start text-white text-h4 font-bold">Congratulations!</div>
-                  <div class="self-stretch justify-start text-white text-semi-body">Your personalized course is ready. Click 'View Course' to start learning!</div>
-                  <div class="self-stretch inline-flex justify-end items-center mt-2">
-                     <button data-tour-action="complete" class="px-4 py-1 bg-white rounded flex justify-center items-center gap-2.5 cursor-pointer hover:bg-gray-200 transition-colors" type="button"><span class="justify-start text-black text-semi-body">Got it!</span></button>
-                  </div>
-                </div>`,
-      placement: 'left', // Position to the left of the button
-      disableOverlay: true, // Don't need overlay as modal is present
     }
   ];
 
@@ -759,7 +769,7 @@
   // Function to check conditions and start the tour
   function tryStartCreateCourseTour() {
       // Ensure we are in browser, tour should start, modules are loaded, and we have a completion key
-      if (browser && shouldStartTourOnLoad && allModulesLoaded && createCourseTourCompletedKey) {
+      if (browser && shouldStartTourOnLoad && createCourseTourCompletedKey) {
           console.log('[Create Course Page] Conditions met, starting tour...');
           
           // Check if tour is already active (safety check)
@@ -787,7 +797,7 @@
       } else {
           // Log why it didn't start for debugging
           if (browser) { // Only log reasons in browser
-            console.log('[Create Course Page] Conditions not met for starting tour.', { shouldStartTourOnLoad, allModulesLoaded, keyExists: !!createCourseTourCompletedKey });
+            console.log('[Create Course Page] Conditions not met for starting tour.', { shouldStartTourOnLoad, keyExists: !!createCourseTourCompletedKey });
           }
       }
   }
@@ -863,25 +873,6 @@
 
   onMount(() => {
     let cleanupFunctions: (() => void)[] = [];
-
-    // --- Listener for final congratulations step --- 
-    const handleCourseReady = () => {
-      console.log('[%c+page%c] Received courseReadyForViewing event, starting final tour step.', 'color: #42C1C8; font-weight: bold', 'color: inherit;');
-      // Ensure any previous tour is stopped before starting the new one
-      if (get(tourStore).isTourActive) {
-        tourStore.cancelTour(); // Use cancel or complete depending on desired state
-      }
-      tourStore.startTour(finalCongratulationStep, 'create-course-final');
-    };
-
-    // --- Listener to close final tour step when View Course is clicked --- 
-    const handleViewCourseClick = () => {
-      const currentState = get(tourStore); // Get current state
-      if (currentState.isTourActive && currentState.activeTourId === 'create-course-final') {
-        console.log('[%c+page%c] Received viewCourseClicked event, completing final tour step.', 'color: #42C1C8; font-weight: bold', 'color: inherit;');
-        tourStore.completeTour();
-      }
-    };
 
     const initPageData = async () => {
       const urlObjective = $page.url.searchParams.get("objective");
@@ -1015,17 +1006,12 @@
       // Add listeners
       window.addEventListener('beforeunload', handleBeforeUnload);
       
-      window.addEventListener('courseReadyForViewing', handleCourseReady);
-      window.addEventListener('viewCourseClicked', handleViewCourseClick);
-      
       // Cleanup
       return () => {
         window.removeEventListener('beforeunload', handleBeforeUnload);
         initialLoadingState.stopLoading();
         console.log('[+page] Running onMount cleanup');
         cleanupFunctions.forEach(cleanup => cleanup());
-        window.removeEventListener('courseReadyForViewing', handleCourseReady);
-        window.removeEventListener('viewCourseClicked', handleViewCourseClick);
       };
     }
   });

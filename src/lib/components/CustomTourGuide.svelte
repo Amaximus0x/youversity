@@ -94,39 +94,56 @@
 
   // --- Function to update the spotlight overlay ---
   function updateSpotlightOverlay(targetRect: DOMRect | null) {
-    const segments = [spotlightTop, spotlightBottom, spotlightLeft, spotlightRight];
-    if (!segments.every(el => el)) return; // Ensure elements are bound
+    if (!browser) return; // Don't run on server
+
+    const overlayDiv = document.getElementById('spotlight-overlay');
+    const cutoutRect = document.getElementById('spotlight-cutout') as SVGElement | null;
+
+    if (!overlayDiv || !cutoutRect) {
+      console.warn('Spotlight overlay or cutout element not found');
+      return;
+    }
 
     // Only show spotlight if target exists AND current step doesn't disable overlay
     if (targetRect && currentStep && !currentStep.disableOverlay) {
-      // Target exists and overlay is enabled for this step
-      // Make segments visible (assuming they default to hidden or zero size)
-      segments.forEach(el => el.style.display = 'block'); 
+      overlayDiv.style.display = 'block';
 
-      // Calculate positions (adjust if needed for borders/exactness)
-      spotlightTop.style.height = `${Math.max(0, targetRect.top)}px`;
+      // Get target element to compute style
+      const targetEl = currentStep.target ? document.querySelector<HTMLElement>(currentStep.target) : null;
+      let borderRadius = '4'; // Default radius
+      if (targetEl) {
+          try {
+            const styles = getComputedStyle(targetEl);
+            const radiusValue = styles.borderRadius;
+            // Simple parsing: assumes px, takes the first value if multiple are present
+            const parsed = parseFloat(radiusValue.split(' ')[0]); 
+            if (!isNaN(parsed) && parsed > 0) {
+              borderRadius = parsed.toString();
+            }
+          } catch(e) {
+            console.warn('Could not parse border radius, using default.', e);
+          }
+      }
 
-      spotlightBottom.style.top = `${Math.max(0, targetRect.bottom)}px`;
-      spotlightBottom.style.height = `calc(100% - ${Math.max(0, targetRect.bottom)}px)`;
-
-      spotlightLeft.style.top = `${Math.max(0, targetRect.top)}px`;
-      spotlightLeft.style.height = `${Math.max(0, targetRect.height)}px`;
-      spotlightLeft.style.width = `${Math.max(0, targetRect.left)}px`;
-
-      spotlightRight.style.top = `${Math.max(0, targetRect.top)}px`;
-      spotlightRight.style.height = `${Math.max(0, targetRect.height)}px`;
-      spotlightRight.style.left = `${Math.max(0, targetRect.right)}px`;
-      spotlightRight.style.width = `calc(100vw - ${Math.max(0, targetRect.right)}px)`;
+      // Update SVG cutout attributes
+      cutoutRect.setAttribute('x', targetRect.left.toString());
+      cutoutRect.setAttribute('y', targetRect.top.toString());
+      cutoutRect.setAttribute('width', targetRect.width.toString());
+      cutoutRect.setAttribute('height', targetRect.height.toString());
+      cutoutRect.setAttribute('rx', borderRadius);
+      cutoutRect.setAttribute('ry', borderRadius);
 
     } else {
       // No target or overlay explicitly disabled for this step, hide the spotlight
-      segments.forEach(el => el.style.display = 'none');
+      overlayDiv.style.display = 'none';
     }
   }
 
   // --- Combined function for positioning Step & Spotlight ---
   async function positionAndSpotlightUpdate() {
     await tick(); // Wait for DOM updates
+
+    if (!browser) return; // Don't run on server
 
     if (!isVisible || !currentStep || !stepElement) {
       updateSpotlightOverlay(null); // Hide spotlight if not visible/no step
@@ -252,22 +269,40 @@
 <svelte:window bind:scrollY bind:scrollX />
 
 {#if isVisible && currentStep}
-  <!-- Simple Overlay (for centered steps without disabled overlay) -->
-  {#if currentStep.placement === 'center' && !currentStep.disableOverlay}
+  <!-- Simple Overlay for CENTRED steps (with blur) -->
+  {#if !currentStep.target && !currentStep.disableOverlay}
     <div
       transition:fade={{ duration: 200 }}
       class="fixed inset-0 bg-black/50 dark:bg-black/70 backdrop-blur-sm z-[9997]"
-      on:click={tourStore.cancelTour}
+      on:click={tourStore.cancelTour} 
       aria-hidden="true"
     ></div>
   {/if}
 
-  <!-- Spotlight Overlay (for targeted steps) -->
-  <div class="fixed inset-0 z-[9998] pointer-events-none"> 
-    <div bind:this={spotlightTop} class="spotlight-segment absolute top-0 left-0 w-full" style="display: none;"></div>
-    <div bind:this={spotlightBottom} class="spotlight-segment absolute bottom-0 left-0 w-full" style="display: none;"></div>
-    <div bind:this={spotlightLeft} class="spotlight-segment absolute left-0" style="display: none;"></div>
-    <div bind:this={spotlightRight} class="spotlight-segment absolute right-0" style="display: none;"></div>
+  <!-- Overlay and SVG Mask -->
+  <div 
+    id="spotlight-overlay"
+    class="fixed inset-0 z-[9998] pointer-events-none"
+    style="display: none;" 
+  >
+    <svg width="100%" height="100%" class="fixed inset-0 pointer-events-none">
+      <defs>
+        <mask id="spotlight-mask">
+          <!-- White background (visible area) -->
+          <rect width="100%" height="100%" fill="white"/>
+          <!-- Black cutout rectangle (masked area) -->
+          <rect id="spotlight-cutout" x="0" y="0" width="0" height="0" rx="0" ry="0" fill="black"/>
+        </mask>
+      </defs>
+      <!-- Apply the mask to a full overlay rectangle -->
+      <rect 
+        width="100%" 
+        height="100%" 
+        fill="rgba(0, 0, 0, 0.5)" 
+        class="dark:fill-[rgba(0,0,0,0.7)]" 
+        mask="url(#spotlight-mask)" 
+      />
+    </svg>
   </div>
 
   <!-- Tour Step Container -->
@@ -293,9 +328,6 @@
 {/if}
 
 <style>
-  .spotlight-segment {
-    @apply bg-black/50 dark:bg-black/70 pointer-events-auto;
- }
   /* Ensure step container itself doesn't block underlying content unnecessarily */
  .tour-step-container {
     pointer-events: auto; /* Allow clicks inside the step */

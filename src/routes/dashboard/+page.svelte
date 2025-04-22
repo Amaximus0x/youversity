@@ -216,12 +216,12 @@
     {
       id: 'create-course-button',
       target: '#create-course button[type="submit"]',
-      content: `<div class="w-[374px] p-4 bg-brand-red rounded-2xl outline outline-1 outline-offset-[-1px] outline-black/5 inline-flex flex-col justify-start items-start gap-4 overflow-hidden relative">
-        <!-- <div class="tour-arrow absolute w-4 h-4 bg-brand-red transform rotate-45"></div> -->
+      content: `<div class="w-[374px] p-4 bg-brand-red rounded-2xl outline outline-1 outline-offset-[-1px] outline-black/5 inline-flex flex-col justify-start items-start gap-4 relative">
+        <svg class="absolute left-1/2 -translate-x-1/2 top-[-25px] w-[34px] h-[38px] z-10" width="38" height="34" viewBox="0 0 38 34" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M17.2774 1.92017C18.0512 0.6084 19.9488 0.6084 20.7226 1.92017L37.5724 30.4838C38.3588 31.8171 37.3977 33.5 35.8497 33.5H2.15026C0.602323 33.5 -0.358837 31.8171 0.427647 30.4838L17.2774 1.92017Z" fill="#EB434A"/></svg>
         <div class="self-stretch justify-start text-white text-h4 font-bold">Great! Now Click Create!</div>
         <div class="self-stretch justify-start text-white text-semi-body">Click the "Create Course" button above to start generating your personalized course content.</div>
         <div class="self-stretch inline-flex justify-between items-center">
-          <div class="w-[118px] h-2.5 bg-black/20 rounded-full inline-flex flex-col justify-center items-start gap-2.5 overflow-hidden">
+          <div class="w-[340px] h-2.5 bg-black/20 rounded-full inline-flex flex-col justify-center items-start gap-2.5 overflow-hidden">
             <div class="w-[118px] h-3 bg-white rounded-full"></div>
           </div>
         </div>
