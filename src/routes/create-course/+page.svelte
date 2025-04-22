@@ -77,7 +77,7 @@
           <div class="self-stretch flex flex-col justify-start items-center gap-4 mt-4">
             <div class="self-stretch flex flex-col justify-start items-center">
               <div class="w-full min-w-[350px] max-w-[456px] text-center mt-[-20px]">
-                <span class="text-light-text-secondary dark:text-white text-2xl md:text-2xl font-semibold font-['Poppins'] leading-normal">Awesome! Let's build your course!</span>
+                <span class="text-light-text-secondary dark:text-white text-2xl md:text-2xl font-semibold font-['Poppins'] leading-normal">Awesome! Your course structure is ready. Let's build your course!</span>
                 <div class="text-light-text-secondary dark:text-white text-tour-text-mobile md:text-tour-text">
                   Just follow a few simple steps to select<br> the best videos for each module. Ready? 
                 </div>
