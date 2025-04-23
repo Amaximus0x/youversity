@@ -76,9 +76,9 @@
           <div class="self-stretch flex flex-col justify-start items-center gap-4 mt-4">
             <div class="self-stretch flex flex-col justify-start items-center">
               <div class="w-full min-w-[350px] max-w-[456px] text-center mt-[-20px]">
-                <span class="text-light-text-secondary dark:text-white text-2xl md:text-2xl font-semibold font-['Poppins'] leading-normal">Awesome! Your course structure is ready. Let's build your course!</span>
+                <span class="text-light-text-secondary dark:text-white text-2xl md:text-2xl font-semibold font-['Poppins'] leading-normal">Awesome!<br> Your course structure is ready. Let's build your course!</span>
                 <div class="text-light-text-secondary dark:text-white text-tour-text-mobile md:text-tour-text">
-                  Just follow a few simple steps to select<br> the best videos for each module. Ready? 
+                  Just follow a few simple steps to select the best videos for each module. Ready? 
                 </div>
               </div>
             </div>
@@ -98,10 +98,10 @@
       content: `<div class="w-[374px] p-4 bg-brand-red rounded-2xl outline outline-1 outline-offset-[-1px] outline-black/5 inline-flex flex-col justify-start items-start gap-4 relative">
                   <!-- Arrow Down -->
                   <svg class="absolute left-[12%] -translate-x-[12%] bottom-[-28px] w-[34px] h-[38px] z-10 transform rotate-180" width="38" height="34" viewBox="0 0 38 34" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M17.2774 1.92017C18.0512 0.6084 19.9488 0.6084 20.7226 1.92017L37.5724 30.4838C38.3588 31.8171 37.3977 33.5 35.8497 33.5H2.15026C0.602323 33.5 -0.358837 31.8171 0.427647 30.4838L17.2774 1.92017Z" fill="#EB434A"/></svg>
-                  <div class="self-stretch justify-start text-white text-h4 font-bold">Select a Video</div>
+                  <div class="self-stretch justify-start text-white text-h4 font-bold">Select a Video for Module {{moduleNumber}}</div>
                   <div class="self-stretch justify-start text-white text-semi-body">Click on a video card below to select it for the current module. The tour will continue once you select one.</div>
                   <div class="self-stretch inline-flex items-center gap-4 mt-2">
-                      <div class="flex-grow h-2.5 bg-black/20 rounded-full inline-flex flex-col justify-center items-start gap-2.5 overflow-hidden"><div class="w-[30%] h-3 bg-white rounded-full"></div></div>
+                      <div class="flex-grow h-2.5 bg-black/20 rounded-full inline-flex flex-col justify-center items-start gap-2.5 overflow-hidden"><div class="h-3 bg-white rounded-full" style="width: {{progressBarWidth}}%;"></div></div>
                   </div>
                </div>`,
       placement: 'top' 
@@ -112,10 +112,10 @@
       content: `<div class="w-[374px] p-4 bg-brand-red rounded-2xl outline outline-1 outline-offset-[-1px] outline-black/5 inline-flex flex-col justify-start items-start gap-4 relative">
                    <!-- Arrow Right -->
                   <svg class="absolute left-[12%] -translate-x-[12%] bottom-[-28px] w-[34px] h-[38px] z-10 transform rotate-180" width="38" height="34" viewBox="0 0 38 34" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M17.2774 1.92017C18.0512 0.6084 19.9488 0.6084 20.7226 1.92017L37.5724 30.4838C38.3588 31.8171 37.3977 33.5 35.8497 33.5H2.15026C0.602323 33.5 -0.358837 31.8171 0.427647 30.4838L17.2774 1.92017Z" fill="#EB434A"/></svg>
-                  <div class="self-stretch justify-start text-white text-h4 font-bold">Continue to Next Module</div>
+                  <div class="self-stretch justify-start text-white text-h4 font-bold">Continue to Module {{moduleNumber}}</div>
                   <div class="self-stretch justify-start text-white text-semi-body">Great! Now click the button below to proceed to the next module.</div>
                    <div class="self-stretch inline-flex justify-between items-center mt-2">
-                     <div class="flex-grow h-2.5 bg-black/20 rounded-full inline-flex flex-col justify-center items-start gap-2.5 overflow-hidden"><div class="w-[75%] h-3 bg-white rounded-full"></div></div>
+                     <div class="flex-grow h-2.5 bg-black/20 rounded-full inline-flex flex-col justify-center items-start gap-2.5 overflow-hidden"><div class="h-3 bg-white rounded-full" style="width: {{progressBarWidth}}%;"></div></div>
                    </div>
                  </div>`,
       placement: 'top'
@@ -129,7 +129,7 @@
                   <div class="self-stretch justify-start text-white text-h4 font-bold">Add Your Own Video?</div>
                   <div class="self-stretch justify-start text-white text-semi-body">Don't see the perfect video for your module? <br> You can add your own by clicking the 'Add Custom Video' button, and pasting the link to your preferred video.</div>
                   <div class="self-stretch inline-flex justify-between items-center mt-2">
-                     <div class="flex-grow h-2.5 bg-black/20 rounded-full inline-flex flex-col justify-center items-start gap-2.5 overflow-hidden"><div class="w-[90%] h-3 bg-white rounded-full"></div></div> 
+                     <div class="flex-grow h-2.5 bg-black/20 rounded-full inline-flex flex-col justify-center items-start gap-2.5 overflow-hidden"><div class="h-3 bg-white rounded-full" style="width: {{progressBarWidth}}%;"></div></div> 
                      <div class="flex justify-start items-center gap-2 ml-auto">
                         <button data-tour-action="cancel" class="w-[63px] px-4 py-1 rounded outline outline-1 outline-offset-[-1px] outline-white flex justify-center items-center gap-2.5 cursor-pointer hover:bg-white/10 transition-colors" type="button"><span class="justify-start text-white text-semi-body">Skip</span></button>
                         <button data-tour-action="next" class="px-4 py-1 bg-white rounded flex justify-center items-center gap-2.5 cursor-pointer hover:bg-gray-200 transition-colors" type="button"><span class="justify-start text-black text-semi-body">Next</span></button>
@@ -149,11 +149,11 @@
                     <div class="self-stretch justify-start text-white text-semi-body">You're just one step away from completing your first course!
 Click 'Create Complete Course' below to publish it and start learning.</div>
                     <div class="self-stretch inline-flex justify-between items-center mt-2">
-                       <div class="flex-grow h-2.5 bg-black/20 rounded-full inline-flex flex-col justify-center items-start gap-2.5 overflow-hidden"><div class="w-full h-3 bg-white rounded-full"></div></div> 
+                       <div class="flex-grow h-2.5 bg-black/20 rounded-full inline-flex flex-col justify-center items-start gap-2.5 overflow-hidden"><div class="w-full h-3 bg-white rounded-full" style="width: {{progressBarWidth}}%;"></div></div> 
                     </div>
                   </div>`,
       placement: 'top', // Place above the "Create Complete Course" button
-      isInteractive: true // Keep interactive if needed, but maybe not required?
+      disableOverlay: true, // Keep interactive if needed, but maybe not required?
     }
   ];
 
@@ -1413,7 +1413,10 @@ Click 'Create Complete Course' below to publish it and start learning.</div>
 <CourseGenerationModal />
 
 <!-- Add CustomTourGuide Component -->
-<CustomTourGuide />
+<CustomTourGuide 
+  currentModuleIndex={currentModuleIndex} 
+  totalModules={courseStructure ? courseStructure.OG_Module_Title.length : 0} 
+/>
 
 <style>
   .scrollbar-hide::-webkit-scrollbar {

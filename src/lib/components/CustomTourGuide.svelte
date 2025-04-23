@@ -2,9 +2,13 @@
   import { tourStore } from '$lib/stores/tourStore';
   import type { TourStep } from '$lib/stores/tourStore';
   import { fade } from 'svelte/transition';
-  import { onMount, onDestroy } from 'svelte';
+  import { onMount, onDestroy, createEventDispatcher } from 'svelte';
   import { tick } from 'svelte';
   import { browser } from '$app/environment';
+
+  // Props for dynamic progress
+  export let currentModuleIndex: number = 0;
+  export let totalModules: number = 1;
 
   let currentStep: TourStep | null = null;
   let isVisible = false;
@@ -13,6 +17,7 @@
   let top = '50%';
   let left = '50%';
   let transform = 'translate(-50%, -50%)';
+  let renderedContent = ''; // Reactive variable for dynamic content
 
   // Variables for spotlight overlay
   let spotlightTop: HTMLElement, spotlightBottom: HTMLElement, spotlightLeft: HTMLElement, spotlightRight: HTMLElement;
@@ -41,6 +46,51 @@
     }
   });
 
+  // --- Reactive statement to update renderedContent ---
+  $: {
+    if (currentStep && currentStep.content) {
+      let progressBarWidth = 0;
+      // Calculate progress based on step ID and module index
+      if (totalModules > 0) { // Avoid division by zero
+         switch (currentStep.id) {
+            case 'cc-video-grid-interactive':
+               // Progress increases linearly from 0% to 80% based on current module
+               progressBarWidth = Math.min(80, Math.max(0, Math.round((currentModuleIndex / totalModules) * 80)));
+               break;
+            case 'cc-select-next-module-interactive':
+               // Progress after completing a module step (up to 80%)
+               progressBarWidth = Math.min(80, Math.max(0, Math.round(((currentModuleIndex + 1) / totalModules) * 80)));
+               break;
+            case 'cc-add-custom-video':
+               progressBarWidth = 90; // Fixed near-end percentage
+               break;
+            case 'cc-create-complete':
+               progressBarWidth = 100; // Fixed end percentage
+               break;
+            default:
+               // For steps without module progress (like dashboard steps), maybe hide or set to 0?
+               progressBarWidth = 0; // Default to 0 if step doesn't match
+         }
+      } else {
+        progressBarWidth = 0; // Default to 0 if totalModules is 0
+      }
+      
+      // Replace placeholder in the content string
+      renderedContent = currentStep.content.replace('{{progressBarWidth}}', progressBarWidth.toString());
+      // Replace module number placeholder if it exists
+      if (renderedContent.includes('{{moduleNumber}}')) {
+        let moduleNumberToShow = currentModuleIndex + 1;
+        if (currentStep.id === 'cc-select-next-module-interactive') {
+          // For the "Continue to..." step, show the *next* module number
+          moduleNumberToShow = currentModuleIndex + 2;
+        }
+        renderedContent = renderedContent.replace('{{moduleNumber}}', moduleNumberToShow.toString());
+      }
+    } else {
+      renderedContent = ''; // Clear content if no step
+    }
+  }
+
   // Handle clicks on buttons within the step content
   function handleStepAction(event: MouseEvent) {
     const target = event.target as HTMLElement;
@@ -61,15 +111,17 @@
                 tourStore.goToStepById('cc-video-grid-interactive');
                 break;
               case 'cc-video-grid-interactive':
-                tourStore.goToStepById('cc-module-nav');
+                // Need a way to go back to previous module step OR start
+                // For simplicity, let's go back one step in the array if possible
+                tourStore.prevStep(); 
                 break;
+              case 'cc-add-custom-video':
+                 // Go back to video grid for the last module
+                 tourStore.goToStepById('cc-video-grid-interactive');
+                 break;
               case 'cc-create-complete':
-                // Go back to video grid for the *last* module
-                // Note: This requires access to the total number of modules, 
-                // which isn't directly in the store. We might need to enhance the store 
-                // or pass total steps if this becomes complex. For now, assume we can guess.
-                // A simpler fallback is to just go to the previous step ID in the array.
-                tourStore.goToStepById('cc-select-next-module-interactive'); // Simpler fallback
+                // Go back to the add custom video step
+                tourStore.goToStepById('cc-add-custom-video');
                 break;
               default:
                 // Default behavior for non-interactive or dashboard steps
@@ -343,7 +395,7 @@
     on:click={handleStepAction}
   >
     <!-- Render Step Content (potentially unsafe, consider sanitizing or using components) -->
-    {@html currentStep.content}
+    {@html renderedContent}
   </div>
 
   <!-- TODO: Add Element Highlighting Logic Here -->
