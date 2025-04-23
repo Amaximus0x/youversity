@@ -212,6 +212,15 @@
         const rect = targetEl.getBoundingClientRect();
         targetRect = rect;
 
+        // ---> ADD SCROLLING LOGIC HERE <---
+        if (browser && window.innerWidth >= 1024) { // Check for desktop
+          if (currentStep.id === 'explore-courses' || currentStep.id === 'create-course-input') {
+            console.log(`[CustomTourGuide] Scrolling target for step ${currentStep.id} into view.`);
+            targetEl.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+          }
+        }
+        // ---> END SCROLLING LOGIC <---
+
         // Calculate step position (using existing logic)
         const stepRect = stepElement.getBoundingClientRect();
         const arrowOffset = 30; 
