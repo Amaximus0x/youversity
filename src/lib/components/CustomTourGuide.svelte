@@ -29,9 +29,10 @@
     isVisible = state.isTourActive;
     if (state.isTourActive && state.currentStepIndex >= 0) {
       currentStep = state.steps[state.currentStepIndex];
-      console.log('[CustomTourGuide] Displaying step:', currentStep?.id);
+      console.log('[CustomTourGuide SUB] Store updated. Active:', state.isTourActive, 'Index:', state.currentStepIndex, 'Step ID:', currentStep?.id);
     } else {
       currentStep = null;
+      console.log('[CustomTourGuide SUB] Store updated. Tour inactive.');
     }
 
     // If step/visibility changes, ensure initial positioning happens before scroll updates
@@ -145,6 +146,8 @@
 
     if (!browser) return; // Don't run on server
 
+    console.log('[CustomTourGuide POS] Running for Step ID:', currentStep?.id, 'Visible:', isVisible);
+
     if (!isVisible || !currentStep || !stepElement) {
       updateSpotlightOverlay(null); // Hide spotlight if not visible/no step
       return;
@@ -221,14 +224,33 @@
             }
           } else {
             // Desktop: Use width-based calculation (revert)
-            left = `${rect.left + scrollX + (rect.width / 2) - (stepRect.width / 2)}px`;
-            transform = 'none';
+            if(currentStep.id === 'cc-select-next-module-interactive') {
+              left = `${rect.left + scrollX + (rect.width / 2) - (stepRect.width / 2)}px`;
+              transform = 'translateX(210px)';
+            } else if(currentStep.id === 'cc-add-custom-video') {
+              left = `${rect.left + scrollX + (rect.width / 2) - (stepRect.width / 2)}px`;
+              transform = 'translateX(-35%)';
+            } else if(currentStep.id === 'cc-create-complete') {
+              left = `${rect.left + scrollX + (rect.width / 2) - (stepRect.width / 2)}px`;
+              transform = 'translateX(60%)';
+            } else {
+              left = `${rect.left + scrollX + (rect.width / 2) - (stepRect.width / 2)}px`;
+              transform = 'none';
+            }
           }
           // ----------------------------------------------------
         } else if (currentStep.placement === 'left') {
-            const horizontalGap = 30; // Increased gap to the left
+            let horizontalGap = 30; // Increased gap to the left
             const verticalOffset = 30; // Added offset to push down slightly
-            top = `${rect.top + scrollY + (rect.height / 2) - (stepRect.height / 2) + verticalOffset}px`; // Adjust vertical alignment
+            
+            // Step-specific vertical adjustment
+            let adjustedTopOffset = verticalOffset;
+            // if (currentStep.id === 'cc-add-custom-video') {
+            //   adjustedTopOffset = 60;
+            //  transform = 'translateY(32px)'; // Reduce the downward push for this specific step
+            // }
+
+            top = `${rect.top + scrollY + (rect.height / 2) - (stepRect.height / 2) + adjustedTopOffset}px`; // Use adjusted offset
             left = `${rect.left + scrollX - stepRect.width - horizontalGap}px`; // Position further left
             transform = 'none';
         } else {

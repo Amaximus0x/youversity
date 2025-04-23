@@ -57,7 +57,6 @@
   let nextUnvisitedModuleIndex: number = -1;
   let shouldStartTourOnLoad = false; // Flag to track if tour should start
   let createCourseTourCompletedKey: string | null = null;
-  let nextStepIdAfterModal: string | null = null; // Variable to store next step ID
 
   // Reference to the module navigation container for scrolling
   let moduleNavContainer: HTMLElement;
@@ -122,13 +121,33 @@
       placement: 'top'
     },
     {
+      id: 'cc-add-custom-video',
+      target: '[data-tour="add-custom-video-button"]', 
+      content: `<div class="w-[374px] p-4 bg-brand-red rounded-2xl outline outline-1 outline-offset-[-1px] outline-black/5 inline-flex flex-col justify-start items-start gap-4 relative">
+                  <!-- Arrow pointing left -->
+                  <svg class="absolute bottom-[-28px] right-[8%] -translate-x-1/5 w-[34px] h-[38px] z-10 transform rotate-[180deg]" width="38" height="34" viewBox="0 0 38 34" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M17.2774 1.92017C18.0512 0.6084 19.9488 0.6084 20.7226 1.92017L37.5724 30.4838C38.3588 31.8171 37.3977 33.5 35.8497 33.5H2.15026C0.602323 33.5 -0.358837 31.8171 0.427647 30.4838L17.2774 1.92017Z" fill="#EB434A"/></svg>
+                  <div class="self-stretch justify-start text-white text-h4 font-bold">Add Your Own Video?</div>
+                  <div class="self-stretch justify-start text-white text-semi-body">Don't see the perfect video for your module? <br> You can add your own by clicking the 'Add Custom Video' button, and pasting the link to your preferred video.</div>
+                  <div class="self-stretch inline-flex justify-between items-center mt-2">
+                     <div class="flex-grow h-2.5 bg-black/20 rounded-full inline-flex flex-col justify-center items-start gap-2.5 overflow-hidden"><div class="w-[90%] h-3 bg-white rounded-full"></div></div> 
+                     <div class="flex justify-start items-center gap-2 ml-auto">
+                        <button data-tour-action="cancel" class="w-[63px] px-4 py-1 rounded outline outline-1 outline-offset-[-1px] outline-white flex justify-center items-center gap-2.5 cursor-pointer hover:bg-white/10 transition-colors" type="button"><span class="justify-start text-white text-semi-body">Skip</span></button>
+                        <button data-tour-action="next" class="px-4 py-1 bg-white rounded flex justify-center items-center gap-2.5 cursor-pointer hover:bg-gray-200 transition-colors" type="button"><span class="justify-start text-black text-semi-body">Next</span></button>
+                     </div>
+                  </div>
+                </div>`,
+      placement: 'top', // TEST: Position relative to the button
+      disableOverlay: true, // No spotlight
+    },
+    {
       id: 'cc-create-complete',
       target: '[data-tour="create-complete-course-button"]',
       content: `<div class="w-[374px] p-4 bg-brand-red rounded-2xl outline outline-1 outline-offset-[-1px] outline-black/5 inline-flex flex-col justify-start items-start gap-4 relative">
                     <!-- Arrow pointing up -->
-                    <svg class="absolute left-1/2 -translate-x-1/2 top-[-28px] w-[34px] h-[38px] z-10 transform rotate-0" width="38" height="34" viewBox="0 0 38 34" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M17.2774 1.92017C18.0512 0.6084 19.9488 0.6084 20.7226 1.92017L37.5724 30.4838C38.3588 31.8171 37.3977 33.5 35.8497 33.5H2.15026C0.602323 33.5 -0.358837 31.8171 0.427647 30.4838L17.2774 1.92017Z" fill="#EB434A"/></svg>
-                    <div class="self-stretch justify-start text-white text-h4 font-bold">Create Course!</div>
-                    <div class="self-stretch justify-start text-white text-semi-body">Looks like you've selected a video for every module! Click the button below to generate your complete course.</div>
+                    <svg class="absolute left-[12%] -translate-x-[12%] bottom-[-28px] w-[34px] h-[38px] z-10 transform rotate-180" width="38" height="34" viewBox="0 0 38 34" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M17.2774 1.92017C18.0512 0.6084 19.9488 0.6084 20.7226 1.92017L37.5724 30.4838C38.3588 31.8171 37.3977 33.5 35.8497 33.5H2.15026C0.602323 33.5 -0.358837 31.8171 0.427647 30.4838L17.2774 1.92017Z" fill="#EB434A"/></svg>
+                    <div class="self-stretch justify-start text-white text-h4 font-bold">Congratulations!</div>
+                    <div class="self-stretch justify-start text-white text-semi-body">You're just one step away from completing your first course!
+Click 'Create Complete Course' below to publish it and start learning.</div>
                     <div class="self-stretch inline-flex justify-between items-center mt-2">
                        <div class="flex-grow h-2.5 bg-black/20 rounded-full inline-flex flex-col justify-center items-start gap-2.5 overflow-hidden"><div class="w-full h-3 bg-white rounded-full"></div></div> 
                     </div>
@@ -804,12 +823,6 @@
 
   // --- Handle Add Custom Video button click during tour ---
   function handleAddCustomVideoClick() {
-    const tourState = get(tourStore);
-    if (tourState.isTourActive && tourState.steps[tourState.currentStepIndex]?.id === 'cc-add-custom') {
-      console.log('[Create Course Page] Add Custom Video clicked during tour. Hiding tour.');
-      nextStepIdAfterModal = 'cc-select-next-module-interactive'; // Store the ID of the step to resume at
-      tourStore.cancelTour(); // Hide the tour UI for now
-    }
     // Always show the modal when the button is clicked
     showCustomUrlInput = true;
   }
@@ -817,15 +830,8 @@
   // --- Handle Modal Close ---
   function handleModalClose() {
     showCustomUrlInput = false;
-    if (nextStepIdAfterModal) {
-        console.log(`[Create Course Page] Modal closed, resuming tour at step: ${nextStepIdAfterModal}`);
-        // Use timeout to ensure modal is fully closed before tour reappears
-        setTimeout(() => {
-            tourStore.startTour(createCourseTourSteps, 'create-course'); // Restart the tour sequence
-            tourStore.goToStepById(nextStepIdAfterModal!); // Jump to the stored step
-            nextStepIdAfterModal = null; // Clear the stored ID
-        }, 100); // Small delay
-    }
+    console.log(`[Create Course Page] handleModalClose called. Attempting to go to cc-create-complete.`);
+    tourStore.goToStepById('cc-create-complete'); // Always go to the final step after modal closes
   }
 
   // Helper to check if it's the last module index
@@ -839,9 +845,9 @@
      if (moduleVideos[currentModuleIndex] && selectedVideos[currentModuleIndex] !== null) {
         console.log(`[Tour] Video selected for module ${currentModuleIndex}.`);
         if (isLastModule(currentModuleIndex)) {
-            // If it was the last module, jump directly to create complete
-            console.log('[Tour] Last module video selected, moving to create complete step.');
-            tourStore.goToStepById('cc-create-complete');
+            // If it was the last module, jump directly to Add Custom Video step
+            console.log(`[Tour] isLastModule(${currentModuleIndex}) returned true. Attempting to go to cc-add-custom-video.`);
+            tourStore.goToStepById('cc-add-custom-video');
         } else {
             // Not the last module, go to the 'next module' prompt
              console.log('[Tour] Moving to next module step.');
@@ -882,16 +888,8 @@
       let userHasCourses = false;
       if ($user) {
         try {
-          const courses = await getUserCourses($user.uid); 
+          const courses = await getUserCourses($user.uid);
           userHasCourses = courses.length > 0;
-
-          if (userHasCourses) {
-            console.log('[Create Course Page] User already has courses, marking create-course tour as completed.');
-            const tourKey = getTourKey('create-course');
-            if (tourKey && browser) {
-              localStorage.setItem(tourKey, 'fully-completed');
-            }
-          }
         } catch (err) {
           console.error("Error checking user course count:", err);
           // Decide how to handle error - maybe assume user has courses to be safe?
