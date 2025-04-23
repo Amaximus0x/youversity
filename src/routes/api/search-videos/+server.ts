@@ -6,8 +6,8 @@ export const GET: RequestHandler = async ({ url }) => {
   const query = url.searchParams.get('query')?.trim();
   const moduleTitle = url.searchParams.get('moduleTitle');
   const moduleIndex = parseInt(url.searchParams.get('moduleIndex') || '0');
-  const diversity = parseInt(url.searchParams.get('diversity') || '0');
-  const excludeIds = new Set(url.searchParams.get('excludeIds')?.split(',') || []);
+  const usedVideoIdsParam = url.searchParams.get('usedVideoIds');
+  const usedVideoIdsSet = new Set(usedVideoIdsParam ? usedVideoIdsParam.split(',').filter(id => id) : []);
 
   if (!query) {
     return new Response(JSON.stringify({ 
@@ -20,13 +20,13 @@ export const GET: RequestHandler = async ({ url }) => {
   }
 
   try {
-    console.log('Searching videos for:', { query, moduleTitle, moduleIndex, diversity });
-    const videos = await GetListByKeyword(query, moduleTitle || '', excludeIds, moduleIndex, diversity);
+    console.log('Searching videos for:', { query, moduleTitle, moduleIndex, usedVideoIds: Array.from(usedVideoIdsSet) });
+    const videos = await GetListByKeyword(query, moduleTitle || '', usedVideoIdsSet, moduleIndex);
     
     if (videos.every(v => !v.videoId)) {
       console.log('No videos found, retrying with simplified query...');
       const simplifiedQuery = query.split(' ').slice(0, 3).join(' ');
-      const retryVideos = await GetListByKeyword(simplifiedQuery, moduleTitle || '', excludeIds, moduleIndex, diversity);
+      const retryVideos = await GetListByKeyword(simplifiedQuery, moduleTitle || '', usedVideoIdsSet, moduleIndex);
       return json({ videos: retryVideos });
     }
 

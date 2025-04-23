@@ -57,6 +57,7 @@
   let nextUnvisitedModuleIndex: number = -1;
   let shouldStartTourOnLoad = false; // Flag to track if tour should start
   let createCourseTourCompletedKey: string | null = null;
+  let globalUsedVideoIds = new Set<string>(); // <-- Add this line
 
   // Reference to the module navigation container for scrolling
   let moduleNavContainer: HTMLElement;
@@ -439,7 +440,9 @@ Click 'Create Complete Course' below to publish it and start learning.</div>
         query: searchPrompt.trim(),
         moduleTitle: courseStructure.OG_Module_Title[moduleIndex],
         moduleIndex: moduleIndex.toString(),
-        retry: retryCount.toString()
+        retry: retryCount.toString(),
+        // Pass the globally used video IDs as a comma-separated string
+        usedVideoIds: Array.from(globalUsedVideoIds).join(',') 
       });
       
       // Prepare headers with multiple sources of auth
@@ -472,6 +475,14 @@ Click 'Create Complete Course' below to publish it and start learning.</div>
       // Update the videos for this module
       moduleVideos[moduleIndex] = responseData.videos;
       moduleVideos = [...moduleVideos]; // Trigger reactivity
+
+      // Add the newly fetched video IDs to the global set
+      responseData.videos.forEach((video: VideoItem) => {
+        if (video && video.videoId) {
+          globalUsedVideoIds.add(video.videoId);
+        }
+      });
+      globalUsedVideoIds = new Set(globalUsedVideoIds); // Trigger reactivity if needed
 
       // Check if all modules are loaded after this update
       allModulesLoaded = checkAllModulesLoaded();
@@ -636,6 +647,7 @@ Click 'Create Complete Course' below to publish it and start learning.</div>
     error = null;
     moduleVideos = [];
     selectedVideos = [];
+    globalUsedVideoIds = new Set<string>(); // <-- Reset when building a new course
 
     try {
       // Get a fresh token
