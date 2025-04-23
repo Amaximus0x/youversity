@@ -830,7 +830,7 @@
 
             <!-- Mobile Bottom Navigation -->
             <div class="fixed bottom-0 left-0 right-0 z-50 lg:hidden flex flex-col">
-              <nav class="h-20 bg-light-bg-primary dark:bg-dark-bg-primary border-t border-light-border dark:border-dark-border">
+              <nav data-tour="mobile-nav" class="h-20 bg-light-bg-primary dark:bg-dark-bg-primary border-t border-light-border dark:border-dark-border">
                 <div class="flex justify-between items-center h-full">
                   {#each mobileNavItems as item}
                     <a

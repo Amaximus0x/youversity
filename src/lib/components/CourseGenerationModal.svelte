@@ -89,6 +89,15 @@
     $modalState.isMinimized;
 
   $: isComplete = $finalLoadingState.progress === 100;
+
+  // Dispatch event when course is complete and modal is not minimized
+  $: if (browser && isComplete && !$modalState.isMinimized) {
+    // Use timeout to ensure button is rendered before event fires
+    // setTimeout(() => {
+    //   console.log('[Modal] Dispatching courseReadyForViewing event');
+    //   window.dispatchEvent(new CustomEvent('courseReadyForViewing'));
+    // }, 300); // Removed event dispatch
+  }
 </script>
 
 {#if shouldShowModal}

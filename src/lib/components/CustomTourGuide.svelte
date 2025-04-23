@@ -2,9 +2,13 @@
   import { tourStore } from '$lib/stores/tourStore';
   import type { TourStep } from '$lib/stores/tourStore';
   import { fade } from 'svelte/transition';
-  import { onMount, onDestroy } from 'svelte';
+  import { onMount, onDestroy, createEventDispatcher } from 'svelte';
   import { tick } from 'svelte';
   import { browser } from '$app/environment';
+
+  // Props for dynamic progress
+  export let currentModuleIndex: number = 0;
+  export let totalModules: number = 1;
 
   let currentStep: TourStep | null = null;
   let isVisible = false;
@@ -13,6 +17,7 @@
   let top = '50%';
   let left = '50%';
   let transform = 'translate(-50%, -50%)';
+  let renderedContent = ''; // Reactive variable for dynamic content
 
   // Variables for spotlight overlay
   let spotlightTop: HTMLElement, spotlightBottom: HTMLElement, spotlightLeft: HTMLElement, spotlightRight: HTMLElement;
@@ -29,9 +34,10 @@
     isVisible = state.isTourActive;
     if (state.isTourActive && state.currentStepIndex >= 0) {
       currentStep = state.steps[state.currentStepIndex];
-      console.log('[CustomTourGuide] Displaying step:', currentStep?.id);
+      console.log('[CustomTourGuide SUB] Store updated. Active:', state.isTourActive, 'Index:', state.currentStepIndex, 'Step ID:', currentStep?.id);
     } else {
       currentStep = null;
+      console.log('[CustomTourGuide SUB] Store updated. Tour inactive.');
     }
 
     // If step/visibility changes, ensure initial positioning happens before scroll updates
@@ -39,6 +45,51 @@
        positionAndSpotlightUpdate(); // Use a combined function
     }
   });
+
+  // --- Reactive statement to update renderedContent ---
+  $: {
+    if (currentStep && currentStep.content) {
+      let progressBarWidth = 0;
+      // Calculate progress based on step ID and module index
+      if (totalModules > 0) { // Avoid division by zero
+         switch (currentStep.id) {
+            case 'cc-video-grid-interactive':
+               // Progress increases linearly from 0% to 80% based on current module
+               progressBarWidth = Math.min(80, Math.max(0, Math.round((currentModuleIndex / totalModules) * 80)));
+               break;
+            case 'cc-select-next-module-interactive':
+               // Progress after completing a module step (up to 80%)
+               progressBarWidth = Math.min(80, Math.max(0, Math.round(((currentModuleIndex + 1) / totalModules) * 80)));
+               break;
+            case 'cc-add-custom-video':
+               progressBarWidth = 90; // Fixed near-end percentage
+               break;
+            case 'cc-create-complete':
+               progressBarWidth = 100; // Fixed end percentage
+               break;
+            default:
+               // For steps without module progress (like dashboard steps), maybe hide or set to 0?
+               progressBarWidth = 0; // Default to 0 if step doesn't match
+         }
+      } else {
+        progressBarWidth = 0; // Default to 0 if totalModules is 0
+      }
+      
+      // Replace placeholder in the content string
+      renderedContent = currentStep.content.replace('{{progressBarWidth}}', progressBarWidth.toString());
+      // Replace module number placeholder if it exists
+      if (renderedContent.includes('{{moduleNumber}}')) {
+        let moduleNumberToShow = currentModuleIndex + 1;
+        if (currentStep.id === 'cc-select-next-module-interactive') {
+          // For the "Continue to..." step, show the *next* module number
+          moduleNumberToShow = currentModuleIndex + 2;
+        }
+        renderedContent = renderedContent.replace('{{moduleNumber}}', moduleNumberToShow.toString());
+      }
+    } else {
+      renderedContent = ''; // Clear content if no step
+    }
+  }
 
   // Handle clicks on buttons within the step content
   function handleStepAction(event: MouseEvent) {
@@ -60,15 +111,17 @@
                 tourStore.goToStepById('cc-video-grid-interactive');
                 break;
               case 'cc-video-grid-interactive':
-                tourStore.goToStepById('cc-module-nav');
+                // Need a way to go back to previous module step OR start
+                // For simplicity, let's go back one step in the array if possible
+                tourStore.prevStep(); 
                 break;
+              case 'cc-add-custom-video':
+                 // Go back to video grid for the last module
+                 tourStore.goToStepById('cc-video-grid-interactive');
+                 break;
               case 'cc-create-complete':
-                // Go back to video grid for the *last* module
-                // Note: This requires access to the total number of modules, 
-                // which isn't directly in the store. We might need to enhance the store 
-                // or pass total steps if this becomes complex. For now, assume we can guess.
-                // A simpler fallback is to just go to the previous step ID in the array.
-                tourStore.goToStepById('cc-select-next-module-interactive'); // Simpler fallback
+                // Go back to the add custom video step
+                tourStore.goToStepById('cc-add-custom-video');
                 break;
               default:
                 // Default behavior for non-interactive or dashboard steps
@@ -94,39 +147,58 @@
 
   // --- Function to update the spotlight overlay ---
   function updateSpotlightOverlay(targetRect: DOMRect | null) {
-    const segments = [spotlightTop, spotlightBottom, spotlightLeft, spotlightRight];
-    if (!segments.every(el => el)) return; // Ensure elements are bound
+    if (!browser) return; // Don't run on server
+
+    const overlayDiv = document.getElementById('spotlight-overlay');
+    const cutoutRect = document.getElementById('spotlight-cutout') as SVGElement | null;
+
+    if (!overlayDiv || !cutoutRect) {
+      console.warn('Spotlight overlay or cutout element not found');
+      return;
+    }
 
     // Only show spotlight if target exists AND current step doesn't disable overlay
     if (targetRect && currentStep && !currentStep.disableOverlay) {
-      // Target exists and overlay is enabled for this step
-      // Make segments visible (assuming they default to hidden or zero size)
-      segments.forEach(el => el.style.display = 'block'); 
+      overlayDiv.style.display = 'block';
 
-      // Calculate positions (adjust if needed for borders/exactness)
-      spotlightTop.style.height = `${Math.max(0, targetRect.top)}px`;
+      // Get target element to compute style
+      const targetEl = currentStep.target ? document.querySelector<HTMLElement>(currentStep.target) : null;
+      let borderRadius = '4'; // Default radius
+      if (targetEl) {
+          try {
+            const styles = getComputedStyle(targetEl);
+            const radiusValue = styles.borderRadius;
+            // Simple parsing: assumes px, takes the first value if multiple are present
+            const parsed = parseFloat(radiusValue.split(' ')[0]); 
+            if (!isNaN(parsed) && parsed > 0) {
+              borderRadius = parsed.toString();
+            }
+          } catch(e) {
+            console.warn('Could not parse border radius, using default.', e);
+          }
+      }
 
-      spotlightBottom.style.top = `${Math.max(0, targetRect.bottom)}px`;
-      spotlightBottom.style.height = `calc(100vh - ${Math.max(0, targetRect.bottom)}px)`;
-
-      spotlightLeft.style.top = `${Math.max(0, targetRect.top)}px`;
-      spotlightLeft.style.height = `${Math.max(0, targetRect.height)}px`;
-      spotlightLeft.style.width = `${Math.max(0, targetRect.left)}px`;
-
-      spotlightRight.style.top = `${Math.max(0, targetRect.top)}px`;
-      spotlightRight.style.height = `${Math.max(0, targetRect.height)}px`;
-      spotlightRight.style.left = `${Math.max(0, targetRect.right)}px`;
-      spotlightRight.style.width = `calc(100vw - ${Math.max(0, targetRect.right)}px)`;
+      // Update SVG cutout attributes
+      cutoutRect.setAttribute('x', targetRect.left.toString());
+      cutoutRect.setAttribute('y', targetRect.top.toString());
+      cutoutRect.setAttribute('width', targetRect.width.toString());
+      cutoutRect.setAttribute('height', targetRect.height.toString());
+      cutoutRect.setAttribute('rx', borderRadius);
+      cutoutRect.setAttribute('ry', borderRadius);
 
     } else {
       // No target or overlay explicitly disabled for this step, hide the spotlight
-      segments.forEach(el => el.style.display = 'none');
+      overlayDiv.style.display = 'none';
     }
   }
 
   // --- Combined function for positioning Step & Spotlight ---
   async function positionAndSpotlightUpdate() {
     await tick(); // Wait for DOM updates
+
+    if (!browser) return; // Don't run on server
+
+    console.log('[CustomTourGuide POS] Running for Step ID:', currentStep?.id, 'Visible:', isVisible);
 
     if (!isVisible || !currentStep || !stepElement) {
       updateSpotlightOverlay(null); // Hide spotlight if not visible/no step
@@ -140,6 +212,15 @@
         const rect = targetEl.getBoundingClientRect();
         targetRect = rect;
 
+        // ---> ADD SCROLLING LOGIC HERE <---
+        if (browser && window.innerWidth >= 1024) { // Check for desktop
+          if (currentStep.id === 'explore-courses' || currentStep.id === 'create-course-input') {
+            console.log(`[CustomTourGuide] Scrolling target for step ${currentStep.id} into view.`);
+            targetEl.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+          }
+        }
+        // ---> END SCROLLING LOGIC <---
+
         // Calculate step position (using existing logic)
         const stepRect = stepElement.getBoundingClientRect();
         const arrowOffset = 30; 
@@ -148,10 +229,34 @@
         const horizontalGap = -10;
         position = 'absolute'; // Use absolute for target-based positioning
 
+        // Default transform
+        transform = 'none';
+
         if (currentStep.placement === 'bottom') {
           top = `${rect.bottom + scrollY + arrowOffset}px`; // Use scrollY
-          left = `${rect.left + scrollX + (rect.width / 2) - horizontalOffset}px`; // Use scrollX
-          transform = 'none';
+          // --- Conditional Centering for Mobile vs Desktop --- 
+          if (browser && window.innerWidth < 1024) { // Mobile breakpoint (lg)
+            // Mobile: Use transform-based centering 
+            left = `${rect.left + scrollX + (rect.width / 2)}px`; 
+            // Default center, adjust per ID if needed
+            transform = 'translateX(-50%)'; 
+            // Example: Adjust for create-course-input-mobile if necessary
+            if (currentStep.id === 'explore-courses-mobile') { 
+              transform = 'translateX(-26%)'; // Default center
+            } else if (currentStep.id === 'create-course-input-mobile') { 
+              transform = 'translateX(-50%)'; // Slightly right
+            }
+          } else {
+            // Desktop: Use offset-based calculation
+            if(currentStep.id === 'explore-courses') {
+              left = `${rect.left + scrollX + (rect.width / 2) - (stepElement.getBoundingClientRect().width / 2)}px`;
+              transform = 'translateX(28%)'; // Center based on step width
+            } else {
+              left = `${rect.left + scrollX + (rect.width / 2) - (stepElement.getBoundingClientRect().width / 2)}px`; // Center based on step width
+              transform = 'none'; // Ensure no transform on desktop
+            }
+          }
+          // ----------------------------------------------------
         } else if (currentStep.placement === 'right') {
           const verticalOffset = 42; // Increased slightly
           const horizontalGap = 48; // Corrected to positive value
@@ -159,14 +264,54 @@
           left = `${rect.right + scrollX + horizontalGap}px`; // Correct horizontal gap calculation
           transform = 'none';
         } else if (currentStep.placement === 'top') {
-          const horizontalOffsetTop = 20; // Pixels to shift right from target center
-          top = `${rect.top + scrollY - stepRect.height - arrowOffset}px`; // Position above target
-          left = `${rect.left + scrollX + (rect.width / 2) + horizontalOffsetTop}px`; // Adjust horizontal position
-          transform = 'none';
+          const spaceNeeded = stepRect.height + arrowOffset; // Total space needed above target
+          const availableSpace = rect.top + scrollY;
+          // Calculate top, ensuring minimum margin from viewport top (e.g., 10px)
+          top = `${Math.max(10, availableSpace - spaceNeeded)}px`;
+
+          // --- Conditional Centering for Mobile vs Desktop --- 
+          if (browser && window.innerWidth < 1024) { // Mobile breakpoint (lg)
+            // Mobile: Use transform-based centering for bottom nav items
+            left = `${rect.left + scrollX + (rect.width / 2)}px`;
+            // Specific adjustment for trending courses mobile step
+            if (currentStep.id === 'trending-courses-mobile') {
+              transform = 'translateX(-35%)'; // Shift slightly right
+            } else if (currentStep.id === 'bookmarks-mobile') {
+              transform = 'translateX(-65%)'; // Shift further left
+            } else if (currentStep.id === 'settings-mobile') {
+              transform = 'translateX(-91%)'; // Shift even further left
+            } else {
+              transform = 'translateX(-50%)'; // Default center for other top steps
+            }
+          } else {
+            // Desktop: Use width-based calculation (revert)
+            if(currentStep.id === 'cc-select-next-module-interactive') {
+              left = `${rect.left + scrollX + (rect.width / 2) - (stepRect.width / 2)}px`;
+              transform = 'translateX(210px)';
+            } else if(currentStep.id === 'cc-add-custom-video') {
+              left = `${rect.left + scrollX + (rect.width / 2) - (stepRect.width / 2)}px`;
+              transform = 'translateX(-35%)';
+            } else if(currentStep.id === 'cc-create-complete') {
+              left = `${rect.left + scrollX + (rect.width / 2) - (stepRect.width / 2)}px`;
+              transform = 'translateX(60%)';
+            } else {
+              left = `${rect.left + scrollX + (rect.width / 2) - (stepRect.width / 2)}px`;
+              transform = 'none';
+            }
+          }
+          // ----------------------------------------------------
         } else if (currentStep.placement === 'left') {
-            const horizontalGap = 30; // Increased gap to the left
+            let horizontalGap = 30; // Increased gap to the left
             const verticalOffset = 30; // Added offset to push down slightly
-            top = `${rect.top + scrollY + (rect.height / 2) - (stepRect.height / 2) + verticalOffset}px`; // Adjust vertical alignment
+            
+            // Step-specific vertical adjustment
+            let adjustedTopOffset = verticalOffset;
+            // if (currentStep.id === 'cc-add-custom-video') {
+            //   adjustedTopOffset = 60;
+            //  transform = 'translateY(32px)'; // Reduce the downward push for this specific step
+            // }
+
+            top = `${rect.top + scrollY + (rect.height / 2) - (stepRect.height / 2) + adjustedTopOffset}px`; // Use adjusted offset
             left = `${rect.left + scrollX - stepRect.width - horizontalGap}px`; // Position further left
             transform = 'none';
         } else {
@@ -207,22 +352,40 @@
 <svelte:window bind:scrollY bind:scrollX />
 
 {#if isVisible && currentStep}
-  <!-- Simple Overlay (for centered steps without disabled overlay) -->
-  {#if currentStep.placement === 'center' && !currentStep.disableOverlay}
+  <!-- Simple Overlay for CENTRED steps (with blur) -->
+  {#if !currentStep.target && !currentStep.disableOverlay}
     <div
       transition:fade={{ duration: 200 }}
       class="fixed inset-0 bg-black/50 dark:bg-black/70 backdrop-blur-sm z-[9997]"
-      on:click={tourStore.cancelTour}
+      on:click={tourStore.cancelTour} 
       aria-hidden="true"
     ></div>
   {/if}
 
-  <!-- Spotlight Overlay (for targeted steps) -->
-  <div class="fixed inset-0 z-[9998] pointer-events-none"> 
-    <div bind:this={spotlightTop} class="spotlight-segment absolute top-0 left-0 w-full" style="display: none;"></div>
-    <div bind:this={spotlightBottom} class="spotlight-segment absolute bottom-0 left-0 w-full" style="display: none;"></div>
-    <div bind:this={spotlightLeft} class="spotlight-segment absolute left-0" style="display: none;"></div>
-    <div bind:this={spotlightRight} class="spotlight-segment absolute right-0" style="display: none;"></div>
+  <!-- Overlay and SVG Mask -->
+  <div 
+    id="spotlight-overlay"
+    class="fixed inset-0 z-[9998] pointer-events-none"
+    style="display: none;" 
+  >
+    <svg width="100%" height="100%" class="fixed inset-0 pointer-events-none">
+      <defs>
+        <mask id="spotlight-mask">
+          <!-- White background (visible area) -->
+          <rect width="100%" height="100%" fill="white"/>
+          <!-- Black cutout rectangle (masked area) -->
+          <rect id="spotlight-cutout" x="0" y="0" width="0" height="0" rx="0" ry="0" fill="black"/>
+        </mask>
+      </defs>
+      <!-- Apply the mask to a full overlay rectangle -->
+      <rect 
+        width="100%" 
+        height="100%" 
+        fill="rgba(0, 0, 0, 0.5)" 
+        class="dark:fill-[rgba(0,0,0,0.7)]" 
+        mask="url(#spotlight-mask)" 
+      />
+    </svg>
   </div>
 
   <!-- Tour Step Container -->
@@ -241,16 +404,13 @@
     on:click={handleStepAction}
   >
     <!-- Render Step Content (potentially unsafe, consider sanitizing or using components) -->
-    {@html currentStep.content}
+    {@html renderedContent}
   </div>
 
   <!-- TODO: Add Element Highlighting Logic Here -->
 {/if}
 
 <style>
-  .spotlight-segment {
-    @apply bg-black/50 dark:bg-black/70 pointer-events-auto;
- }
   /* Ensure step container itself doesn't block underlying content unnecessarily */
  .tour-step-container {
     pointer-events: auto; /* Allow clicks inside the step */

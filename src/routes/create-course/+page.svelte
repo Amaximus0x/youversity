@@ -57,23 +57,52 @@
   let nextUnvisitedModuleIndex: number = -1;
   let shouldStartTourOnLoad = false; // Flag to track if tour should start
   let createCourseTourCompletedKey: string | null = null;
-  let nextStepIdAfterModal: string | null = null; // Variable to store next step ID
+  let globalUsedVideoIds = new Set<string>(); // <-- Add this line
 
   // Reference to the module navigation container for scrolling
   let moduleNavContainer: HTMLElement;
 
   // --- Tour Steps for Create Course Page (INTERACTIVE VERSION) ---
+  // Re-use robot image variable if defined elsewhere, or define here
+  let robotImage = '/tour-guide.gif'; 
+
   const createCourseTourSteps: TourStep[] = [
+    {
+      id: 'cc-welcome',
+      content: `<div class="w-full inline-flex flex-col justify-start items-center gap-14 p-12 rounded-2xl bg-gradient-light dark:bg-gradient-dark">
+        <div class="self-stretch flex flex-col justify-start items-center">
+          <div class="w-[116.5px] h-[142px] relative overflow-hidden">
+            <img class="w-[140px] h-[170px] object-cover absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" src="${robotImage}" alt="Tour Guide Robot" />
+          </div>
+          <div class="self-stretch flex flex-col justify-start items-center gap-4 mt-4">
+            <div class="self-stretch flex flex-col justify-start items-center">
+              <div class="w-full min-w-[350px] max-w-[456px] text-center mt-[-20px]">
+                <span class="text-light-text-secondary dark:text-white text-2xl md:text-2xl font-semibold font-['Poppins'] leading-normal">Awesome!<br> Your course structure is ready. Let's build your course!</span>
+                <div class="text-light-text-secondary dark:text-white text-tour-text-mobile md:text-tour-text">
+                  Just follow a few simple steps to select the best videos for each module. Ready? 
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="w-full max-w-[326px] inline-flex justify-start items-start gap-4">
+          <button data-tour-action="next" class="flex-1 h-12 md:h-[54px] px-4 py-2 bg-[#eb434a] rounded-2xl shadow-[0px_4px_26px_0px_#EB434A] flex justify-center items-center gap-2 cursor-pointer hover:bg-[#D93940]" type="button">
+            <span class="text-white text-sm md:text-base font-medium md:font-semibold font-['Poppins'] leading-normal">Let's Build!</span>
+          </button>
+        </div>
+      </div>`,
+      placement: 'center',
+    },
     {
       id: 'cc-video-grid-interactive',
       target: '[data-tour="module-video-grid"]',
       content: `<div class="w-[374px] p-4 bg-brand-red rounded-2xl outline outline-1 outline-offset-[-1px] outline-black/5 inline-flex flex-col justify-start items-start gap-4 relative">
                   <!-- Arrow Down -->
                   <svg class="absolute left-[12%] -translate-x-[12%] bottom-[-28px] w-[34px] h-[38px] z-10 transform rotate-180" width="38" height="34" viewBox="0 0 38 34" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M17.2774 1.92017C18.0512 0.6084 19.9488 0.6084 20.7226 1.92017L37.5724 30.4838C38.3588 31.8171 37.3977 33.5 35.8497 33.5H2.15026C0.602323 33.5 -0.358837 31.8171 0.427647 30.4838L17.2774 1.92017Z" fill="#EB434A"/></svg>
-                  <div class="self-stretch justify-start text-white text-h4 font-bold">Select a Video</div>
+                  <div class="self-stretch justify-start text-white text-h4 font-bold">Select a Video for Module {{moduleNumber}}</div>
                   <div class="self-stretch justify-start text-white text-semi-body">Click on a video card below to select it for the current module. The tour will continue once you select one.</div>
                   <div class="self-stretch inline-flex items-center gap-4 mt-2">
-                      <div class="flex-grow h-2.5 bg-black/20 rounded-full inline-flex flex-col justify-center items-start gap-2.5 overflow-hidden"><div class="w-[30%] h-3 bg-white rounded-full"></div></div>
+                      <div class="flex-grow h-2.5 bg-black/20 rounded-full inline-flex flex-col justify-center items-start gap-2.5 overflow-hidden"><div class="h-3 bg-white rounded-full" style="width: {{progressBarWidth}}%;"></div></div>
                   </div>
                </div>`,
       placement: 'top' 
@@ -84,27 +113,48 @@
       content: `<div class="w-[374px] p-4 bg-brand-red rounded-2xl outline outline-1 outline-offset-[-1px] outline-black/5 inline-flex flex-col justify-start items-start gap-4 relative">
                    <!-- Arrow Right -->
                   <svg class="absolute left-[12%] -translate-x-[12%] bottom-[-28px] w-[34px] h-[38px] z-10 transform rotate-180" width="38" height="34" viewBox="0 0 38 34" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M17.2774 1.92017C18.0512 0.6084 19.9488 0.6084 20.7226 1.92017L37.5724 30.4838C38.3588 31.8171 37.3977 33.5 35.8497 33.5H2.15026C0.602323 33.5 -0.358837 31.8171 0.427647 30.4838L17.2774 1.92017Z" fill="#EB434A"/></svg>
-                  <div class="self-stretch justify-start text-white text-h4 font-bold">Continue to Next Module</div>
+                  <div class="self-stretch justify-start text-white text-h4 font-bold">Continue to Module {{moduleNumber}}</div>
                   <div class="self-stretch justify-start text-white text-semi-body">Great! Now click the button below to proceed to the next module.</div>
                    <div class="self-stretch inline-flex justify-between items-center mt-2">
-                     <div class="flex-grow h-2.5 bg-black/20 rounded-full inline-flex flex-col justify-center items-start gap-2.5 overflow-hidden"><div class="w-[75%] h-3 bg-white rounded-full"></div></div>
+                     <div class="flex-grow h-2.5 bg-black/20 rounded-full inline-flex flex-col justify-center items-start gap-2.5 overflow-hidden"><div class="h-3 bg-white rounded-full" style="width: {{progressBarWidth}}%;"></div></div>
                    </div>
                  </div>`,
       placement: 'top'
     },
     {
+      id: 'cc-add-custom-video',
+      target: '[data-tour="add-custom-video-button"]', 
+      content: `<div class="w-[374px] p-4 bg-brand-red rounded-2xl outline outline-1 outline-offset-[-1px] outline-black/5 inline-flex flex-col justify-start items-start gap-4 relative">
+                  <!-- Arrow pointing left -->
+                  <svg class="absolute bottom-[-28px] right-[8%] -translate-x-1/5 w-[34px] h-[38px] z-10 transform rotate-[180deg]" width="38" height="34" viewBox="0 0 38 34" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M17.2774 1.92017C18.0512 0.6084 19.9488 0.6084 20.7226 1.92017L37.5724 30.4838C38.3588 31.8171 37.3977 33.5 35.8497 33.5H2.15026C0.602323 33.5 -0.358837 31.8171 0.427647 30.4838L17.2774 1.92017Z" fill="#EB434A"/></svg>
+                  <div class="self-stretch justify-start text-white text-h4 font-bold">Add Your Own Video?</div>
+                  <div class="self-stretch justify-start text-white text-semi-body">Don't see the perfect video for your module? <br> You can add your own by clicking the 'Add Custom Video' button, and pasting the link to your preferred video.</div>
+                  <div class="self-stretch inline-flex justify-between items-center mt-2">
+                     <div class="flex-grow h-2.5 bg-black/20 rounded-full inline-flex flex-col justify-center items-start gap-2.5 overflow-hidden"><div class="h-3 bg-white rounded-full" style="width: {{progressBarWidth}}%;"></div></div> 
+                     <div class="flex justify-start items-center gap-2 ml-auto">
+                        <button data-tour-action="cancel" class="w-[63px] px-4 py-1 rounded outline outline-1 outline-offset-[-1px] outline-white flex justify-center items-center gap-2.5 cursor-pointer hover:bg-white/10 transition-colors" type="button"><span class="justify-start text-white text-semi-body">Skip</span></button>
+                        <button data-tour-action="next" class="px-4 py-1 bg-white rounded flex justify-center items-center gap-2.5 cursor-pointer hover:bg-gray-200 transition-colors" type="button"><span class="justify-start text-black text-semi-body">Next</span></button>
+                     </div>
+                  </div>
+                </div>`,
+      placement: 'top', // TEST: Position relative to the button
+      disableOverlay: true, // No spotlight
+    },
+    {
       id: 'cc-create-complete',
       target: '[data-tour="create-complete-course-button"]',
       content: `<div class="w-[374px] p-4 bg-brand-red rounded-2xl outline outline-1 outline-offset-[-1px] outline-black/5 inline-flex flex-col justify-start items-start gap-4 relative">
-                  <!-- Arrow Down -->
-                  <svg class="absolute left-[12%] -translate-x-[12%] bottom-[-28px] w-[34px] h-[38px] z-10 transform rotate-180" width="38" height="34" viewBox="0 0 38 34" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M17.2774 1.92017C18.0512 0.6084 19.9488 0.6084 20.7226 1.92017L37.5724 30.4838C38.3588 31.8171 37.3977 33.5 35.8497 33.5H2.15026C0.602323 33.5 -0.358837 31.8171 0.427647 30.4838L17.2774 1.92017Z" fill="#EB434A"/></svg>
-                  <div class="self-stretch justify-start text-white text-h4 font-bold">Create Course!</div>
-                  <div class="self-stretch justify-start text-white text-semi-body">Looks like you've selected a video for every module! Click here to generate your complete course.</div>
-                  <div class="self-stretch inline-flex justify-between items-center mt-2">
-                     <div class="flex-grow h-2.5 bg-black/20 rounded-full inline-flex flex-col justify-center items-start gap-2.5 overflow-hidden"><div class="w-full h-3 bg-white rounded-full"></div></div> 
-                  </div>
-                </div>`,
-      placement: 'top'
+                    <!-- Arrow pointing up -->
+                    <svg class="absolute left-[12%] -translate-x-[12%] bottom-[-28px] w-[34px] h-[38px] z-10 transform rotate-180" width="38" height="34" viewBox="0 0 38 34" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M17.2774 1.92017C18.0512 0.6084 19.9488 0.6084 20.7226 1.92017L37.5724 30.4838C38.3588 31.8171 37.3977 33.5 35.8497 33.5H2.15026C0.602323 33.5 -0.358837 31.8171 0.427647 30.4838L17.2774 1.92017Z" fill="#EB434A"/></svg>
+                    <div class="self-stretch justify-start text-white text-h4 font-bold">Congratulations!</div>
+                    <div class="self-stretch justify-start text-white text-semi-body">You're just one step away from completing your first course!
+Click 'Create Complete Course' below to publish it and start learning.</div>
+                    <div class="self-stretch inline-flex justify-between items-center mt-2">
+                       <div class="flex-grow h-2.5 bg-black/20 rounded-full inline-flex flex-col justify-center items-start gap-2.5 overflow-hidden"><div class="w-full h-3 bg-white rounded-full" style="width: {{progressBarWidth}}%;"></div></div> 
+                    </div>
+                  </div>`,
+      placement: 'top', // Place above the "Create Complete Course" button
+      disableOverlay: true, // Keep interactive if needed, but maybe not required?
     }
   ];
 
@@ -390,7 +440,9 @@
         query: searchPrompt.trim(),
         moduleTitle: courseStructure.OG_Module_Title[moduleIndex],
         moduleIndex: moduleIndex.toString(),
-        retry: retryCount.toString()
+        retry: retryCount.toString(),
+        // Pass the globally used video IDs as a comma-separated string
+        usedVideoIds: Array.from(globalUsedVideoIds).join(',') 
       });
       
       // Prepare headers with multiple sources of auth
@@ -423,6 +475,14 @@
       // Update the videos for this module
       moduleVideos[moduleIndex] = responseData.videos;
       moduleVideos = [...moduleVideos]; // Trigger reactivity
+
+      // Add the newly fetched video IDs to the global set
+      responseData.videos.forEach((video: VideoItem) => {
+        if (video && video.videoId) {
+          globalUsedVideoIds.add(video.videoId);
+        }
+      });
+      globalUsedVideoIds = new Set(globalUsedVideoIds); // Trigger reactivity if needed
 
       // Check if all modules are loaded after this update
       allModulesLoaded = checkAllModulesLoaded();
@@ -587,6 +647,7 @@
     error = null;
     moduleVideos = [];
     selectedVideos = [];
+    globalUsedVideoIds = new Set<string>(); // <-- Reset when building a new course
 
     try {
       // Get a fresh token
@@ -739,7 +800,7 @@
   // Function to check conditions and start the tour
   function tryStartCreateCourseTour() {
       // Ensure we are in browser, tour should start, modules are loaded, and we have a completion key
-      if (browser && shouldStartTourOnLoad && allModulesLoaded && createCourseTourCompletedKey) {
+      if (browser && shouldStartTourOnLoad && createCourseTourCompletedKey) {
           console.log('[Create Course Page] Conditions met, starting tour...');
           
           // Check if tour is already active (safety check)
@@ -767,19 +828,13 @@
       } else {
           // Log why it didn't start for debugging
           if (browser) { // Only log reasons in browser
-            console.log('[Create Course Page] Conditions not met for starting tour.', { shouldStartTourOnLoad, allModulesLoaded, keyExists: !!createCourseTourCompletedKey });
+            console.log('[Create Course Page] Conditions not met for starting tour.', { shouldStartTourOnLoad, keyExists: !!createCourseTourCompletedKey });
           }
       }
   }
 
   // --- Handle Add Custom Video button click during tour ---
   function handleAddCustomVideoClick() {
-    const tourState = get(tourStore);
-    if (tourState.isTourActive && tourState.steps[tourState.currentStepIndex]?.id === 'cc-add-custom') {
-      console.log('[Create Course Page] Add Custom Video clicked during tour. Hiding tour.');
-      nextStepIdAfterModal = 'cc-select-next-module-interactive'; // Store the ID of the step to resume at
-      tourStore.cancelTour(); // Hide the tour UI for now
-    }
     // Always show the modal when the button is clicked
     showCustomUrlInput = true;
   }
@@ -787,15 +842,8 @@
   // --- Handle Modal Close ---
   function handleModalClose() {
     showCustomUrlInput = false;
-    if (nextStepIdAfterModal) {
-        console.log(`[Create Course Page] Modal closed, resuming tour at step: ${nextStepIdAfterModal}`);
-        // Use timeout to ensure modal is fully closed before tour reappears
-        setTimeout(() => {
-            tourStore.startTour(createCourseTourSteps, 'create-course'); // Restart the tour sequence
-            tourStore.goToStepById(nextStepIdAfterModal!); // Jump to the stored step
-            nextStepIdAfterModal = null; // Clear the stored ID
-        }, 100); // Small delay
-    }
+    console.log(`[Create Course Page] handleModalClose called. Attempting to go to cc-create-complete.`);
+    tourStore.goToStepById('cc-create-complete'); // Always go to the final step after modal closes
   }
 
   // Helper to check if it's the last module index
@@ -809,9 +857,9 @@
      if (moduleVideos[currentModuleIndex] && selectedVideos[currentModuleIndex] !== null) {
         console.log(`[Tour] Video selected for module ${currentModuleIndex}.`);
         if (isLastModule(currentModuleIndex)) {
-            // If it was the last module, jump directly to create complete
-            console.log('[Tour] Last module video selected, moving to create complete step.');
-            tourStore.goToStepById('cc-create-complete');
+            // If it was the last module, jump directly to Add Custom Video step
+            console.log(`[Tour] isLastModule(${currentModuleIndex}) returned true. Attempting to go to cc-add-custom-video.`);
+            tourStore.goToStepById('cc-add-custom-video');
         } else {
             // Not the last module, go to the 'next module' prompt
              console.log('[Tour] Moving to next module step.');
@@ -852,16 +900,8 @@
       let userHasCourses = false;
       if ($user) {
         try {
-          const courses = await getUserCourses($user.uid); 
+          const courses = await getUserCourses($user.uid);
           userHasCourses = courses.length > 0;
-
-          if (userHasCourses) {
-            console.log('[Create Course Page] User already has courses, marking create-course tour as completed.');
-            const tourKey = getTourKey('create-course');
-            if (tourKey && browser) {
-              localStorage.setItem(tourKey, 'fully-completed');
-            }
-          }
         } catch (err) {
           console.error("Error checking user course count:", err);
           // Decide how to handle error - maybe assume user has courses to be safe?
@@ -1385,7 +1425,10 @@
 <CourseGenerationModal />
 
 <!-- Add CustomTourGuide Component -->
-<CustomTourGuide />
+<CustomTourGuide 
+  currentModuleIndex={currentModuleIndex} 
+  totalModules={courseStructure ? courseStructure.OG_Module_Title.length : 0} 
+/>
 
 <style>
   .scrollbar-hide::-webkit-scrollbar {
