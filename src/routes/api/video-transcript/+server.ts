@@ -3,7 +3,7 @@ import axios from "axios";
 import { ProxyAgent } from "undici";
 
 const proxyUrl =
-  "http://pMB6OiMGVcKfR333:1i8vyq5zLZUSQY8C@geo.iproyal.com:12321";
+  "http://kQdcMjN5Ls6E1DK3:gurktsM4S7wdOnUF@geo.iproyal.com:12321";
 const proxyAgent = new ProxyAgent(proxyUrl);
 
 async function fetchTranscriptFromYoutube(videoId: string) {
