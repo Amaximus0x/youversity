@@ -1,4 +1,6 @@
 <script lang="ts">
+  export const prerender = true;
+
   import Button from "$lib/components/Button.svelte";
   import {
     signInWithGoogle,

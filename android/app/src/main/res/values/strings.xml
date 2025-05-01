@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Youversity</string>
+    <string name="title_activity_main">Youversity</string>
+    <string name="package_name">com.youversity.app</string>
+    <string name="custom_url_scheme">com.youversity.app</string>
+</resources>

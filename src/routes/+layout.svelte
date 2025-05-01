@@ -263,7 +263,7 @@
   });
 
   // Reactive declarations for page navigation
-  $: if (isMounted && $page && $page.url) {
+  $: if (isMounted && $page?.url) {
     try {
       const pathname = $page.url.pathname;
       isSearchPage = pathname === "/search";

@@ -4,6 +4,9 @@ import { isAuthenticated, user } from '$lib/stores/auth';
 import { browser } from '$app/environment';
 import { tokenService } from '$lib/services/tokenService';
 import { auth } from '$lib/firebase';
+import { Capacitor } from '@capacitor/core';
+
+export const prerender = true;
 
 // List of public routes that don't require authentication
 const publicRoutes = ['/', '/login', '/about', '/contact'];
@@ -87,12 +90,23 @@ const waitForAuthState = async (maxWaitTime = 2000): Promise<boolean> => {
 export const load: Load = async ({ url, route }) => {
   const path = url.pathname;
   
-  // Skip auth check for non-browser environments (SSR)
+  // Skip checks for non-browser environments (SSR)
   if (!browser) {
     return {
       hideNav: path === '/'
     };
   }
+
+  // --- Platform-specific Redirect --- 
+  const platform = Capacitor.getPlatform();
+  console.log(`Platform detected: ${platform}`);
+
+  // If on native platform and at the root, redirect to login
+  if ((platform === 'android' || platform === 'ios') && path === '/') {
+    console.log(`Native platform (${platform}) detected at root. Redirecting to /login.`);
+    redirect(302, '/login');
+  }
+  // --- End Platform-specific Redirect ---
 
   console.log(`Route load: ${path}`);
 
