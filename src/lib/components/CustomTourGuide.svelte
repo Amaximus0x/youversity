@@ -407,7 +407,7 @@
   <!-- Tour Step Container -->
   <div
     bind:this={stepElement}
-    class="z-[9999] p-0 border-none shadow-none bg-transparent tour-step-container" 
+    class="z-[9999] p-0 border-none shadow-none bg-transparent tour-step-container {currentStep.placement === 'center' ? 'w-full max-w-md px-4' : ''}"
     style:position={position}
     style:top={top}
     style:left={left}

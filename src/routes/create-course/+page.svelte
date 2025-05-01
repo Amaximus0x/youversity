@@ -162,30 +162,31 @@ Click 'Create Complete Course' below to publish it and start learning.</div>
   const createCourseTourStepsMobile: TourStep[] = [
     {
       id: 'cc-welcome-mobile',
-      content: `<div class="w-full inline-flex flex-col justify-start items-center gap-14 p-12 rounded-2xl bg-gradient-light dark:bg-gradient-dark">
-        <div class="self-stretch flex flex-col justify-start items-center">
-          <div class="w-[116.5px] h-[142px] relative overflow-hidden">
-            <img class="w-[140px] h-[170px] object-cover absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" src="${robotImage}" alt="Tour Guide Robot" />
-          </div>
-          <div class="self-stretch flex flex-col justify-start items-center gap-4 mt-4">
-            <div class="self-stretch flex flex-col justify-start items-center">
-              <div class="w-full min-w-[350px] max-w-[456px] text-center mt-[-20px]">
-                <span class="text-light-text-secondary dark:text-white text-2xl font-semibold font-['Poppins'] leading-normal">Awesome!<br> Your course structure is ready. Let's build your course!</span>
-                <div class="text-light-text-secondary dark:text-white text-tour-text-mobile">
-                  Just follow a few simple steps to select the best videos for each module. Ready?
+      // Remove outer p-4 div, constrain width of main container, remove disableOverlay
+      content: `<div class="inline-flex max-w-sm flex-col justify-start items-center gap-14 p-12 rounded-2xl bg-gradient-light dark:bg-gradient-dark">
+          <div class="self-stretch flex flex-col justify-start items-center">
+            <div class="w-[116.5px] h-[142px] relative overflow-hidden">
+              <img class="w-[140px] h-[170px] object-cover absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" src="${robotImage}" alt="Tour Guide Robot" />
+            </div>
+            <div class="self-stretch flex flex-col justify-start items-center gap-4 mt-4">
+              <div class="self-stretch flex flex-col justify-start items-center">
+                <div class="w-full text-center mt-[-20px]">
+                  <span class="text-light-text-secondary dark:text-white text-2xl font-semibold font-['Poppins'] leading-normal">Awesome!<br> Your course structure is ready. Let's build your course!</span>
+                  <div class="text-light-text-secondary dark:text-white text-tour-text-mobile mt-2">
+                    Just follow a few simple steps to select the best videos for each module. Ready?
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
-        <div class="w-full max-w-[326px] inline-flex justify-start items-start gap-4">
-          <button data-tour-action="next" class="flex-1 h-12 px-4 py-2 bg-[#eb434a] rounded-2xl shadow-[0px_4px_26px_0px_#EB434A] flex justify-center items-center gap-2 cursor-pointer hover:bg-[#D93940]" type="button">
-            <span class="text-white text-sm font-medium font-['Poppins'] leading-normal">Let's Build!</span>
-          </button>
-        </div>
-      </div>`,
+          <div class="w-full max-w-[326px] inline-flex justify-start items-start gap-4">
+            <button data-tour-action="next" class="flex-1 h-12 px-4 py-2 bg-[#eb434a] rounded-2xl shadow-[0px_4px_26px_0px_#EB434A] flex justify-center items-center gap-2 cursor-pointer hover:bg-[#D93940]" type="button">
+              <span class="text-white text-sm font-medium font-['Poppins'] leading-normal">Let's Build!</span>
+            </button>
+          </div>
+        </div>`,
       placement: 'center',
-      
+      // disableOverlay: true, // Removed this to allow default overlay for centered steps
     },
     {
       id: 'cc-video-grid-interactive-mobile',
