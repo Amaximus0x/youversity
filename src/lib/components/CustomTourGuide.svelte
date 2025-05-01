@@ -54,17 +54,21 @@
       if (totalModules > 0) { // Avoid division by zero
          switch (currentStep.id) {
             case 'cc-video-grid-interactive':
+            case 'cc-video-grid-interactive-mobile':
                // Progress increases linearly from 0% to 80% based on current module
                progressBarWidth = Math.min(80, Math.max(0, Math.round((currentModuleIndex / totalModules) * 80)));
                break;
             case 'cc-select-next-module-interactive':
+            case 'cc-select-next-module-interactive-mobile':
                // Progress after completing a module step (up to 80%)
                progressBarWidth = Math.min(80, Math.max(0, Math.round(((currentModuleIndex + 1) / totalModules) * 80)));
                break;
             case 'cc-add-custom-video':
+            case 'cc-add-custom-video-mobile':
                progressBarWidth = 90; // Fixed near-end percentage
                break;
             case 'cc-create-complete':
+            case 'cc-create-complete-mobile':
                progressBarWidth = 100; // Fixed end percentage
                break;
             default:
@@ -245,6 +249,8 @@
               transform = 'translateX(-26%)'; // Default center
             } else if (currentStep.id === 'create-course-input-mobile') { 
               transform = 'translateX(-50%)'; // Slightly right
+            } else if (currentStep.id === 'cc-add-custom-video-mobile') { 
+              transform = 'translateX(-82%)'; // Slightly right
             }
           } else {
             // Desktop: Use offset-based calculation
@@ -280,6 +286,16 @@
               transform = 'translateX(-65%)'; // Shift further left
             } else if (currentStep.id === 'settings-mobile') {
               transform = 'translateX(-91%)'; // Shift even further left
+            } else if (currentStep.id === 'cc-video-grid-interactive-mobile') {
+              transform = 'translate(-50%, 40%)';
+               // Default center for other top steps
+            } else if (currentStep.id === 'cc-select-next-module-interactive-mobile') {
+              transform = 'translate(-24%)';
+            } else if (currentStep.id === 'cc-add-custom-video-mobile') {
+              transform = 'translate(-47%, 32%)';
+            } else if (currentStep.id === 'cc-create-complete-mobile') {
+              transform = 'translate(-28%)';
+               // Default center for other top steps
             } else {
               transform = 'translateX(-50%)'; // Default center for other top steps
             }

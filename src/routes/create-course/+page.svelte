@@ -158,6 +158,102 @@ Click 'Create Complete Course' below to publish it and start learning.</div>
     }
   ];
 
+  // --- Tour Steps for Create Course Page (MOBILE VERSION) ---
+  const createCourseTourStepsMobile: TourStep[] = [
+    {
+      id: 'cc-welcome-mobile',
+      content: `<div class="w-full inline-flex flex-col justify-start items-center gap-14 p-12 rounded-2xl bg-gradient-light dark:bg-gradient-dark">
+        <div class="self-stretch flex flex-col justify-start items-center">
+          <div class="w-[116.5px] h-[142px] relative overflow-hidden">
+            <img class="w-[140px] h-[170px] object-cover absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" src="${robotImage}" alt="Tour Guide Robot" />
+          </div>
+          <div class="self-stretch flex flex-col justify-start items-center gap-4 mt-4">
+            <div class="self-stretch flex flex-col justify-start items-center">
+              <div class="w-full min-w-[350px] max-w-[456px] text-center mt-[-20px]">
+                <span class="text-light-text-secondary dark:text-white text-2xl font-semibold font-['Poppins'] leading-normal">Awesome!<br> Your course structure is ready. Let's build your course!</span>
+                <div class="text-light-text-secondary dark:text-white text-tour-text-mobile">
+                  Just follow a few simple steps to select the best videos for each module. Ready?
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="w-full max-w-[326px] inline-flex justify-start items-start gap-4">
+          <button data-tour-action="next" class="flex-1 h-12 px-4 py-2 bg-[#eb434a] rounded-2xl shadow-[0px_4px_26px_0px_#EB434A] flex justify-center items-center gap-2 cursor-pointer hover:bg-[#D93940]" type="button">
+            <span class="text-white text-sm font-medium font-['Poppins'] leading-normal">Let's Build!</span>
+          </button>
+        </div>
+      </div>`,
+      placement: 'center',
+      
+    },
+    {
+      id: 'cc-video-grid-interactive-mobile',
+      target: '[data-tour="module-navigation-mobile"]', // Target mobile module navigation
+      content: `<div class="w-[374px] p-4 bg-brand-red rounded-2xl outline outline-1 outline-offset-[-1px] outline-black/5 inline-flex flex-col justify-start items-start gap-4 relative">
+                  <!-- Arrow Down -->
+                  <svg class="absolute left-[12%] -translate-x-[12%] bottom-[-28px] w-[34px] h-[38px] z-10 transform rotate-180" width="38" height="34" viewBox="0 0 38 34" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M17.2774 1.92017C18.0512 0.6084 19.9488 0.6084 20.7226 1.92017L37.5724 30.4838C38.3588 31.8171 37.3977 33.5 35.8497 33.5H2.15026C0.602323 33.5 -0.358837 31.8171 0.427647 30.4838L17.2774 1.92017Z" fill="#EB434A"/></svg>
+                  <div class="self-stretch justify-start text-white text-h4 font-bold">Select a Video for Module {{moduleNumber}}</div>
+                  <div class="self-stretch justify-start text-white text-semi-body">Tap a video below to add it to the module. The tour will continue once you select one.</div>
+                  <div class="self-stretch inline-flex items-center gap-4 mt-2">
+                      <div class="flex-grow h-2.5 bg-black/20 rounded-full inline-flex flex-col justify-center items-start gap-2.5 overflow-hidden"><div class="h-3 bg-white rounded-full" style="width: {{progressBarWidth}}%;"></div></div>
+                  </div>
+               </div>`,
+      placement: 'top', // Position below the module nav
+      disableOverlay: true,
+    },
+    {
+      id: 'cc-select-next-module-interactive-mobile',
+      target: '[data-tour="select-next-module-button-mobile"]', // Target mobile button
+      content: `<div class="w-[374px] p-4 bg-brand-red rounded-2xl outline outline-1 outline-offset-[-1px] outline-black/5 inline-flex flex-col justify-start items-start gap-4 relative">
+                   <!-- Arrow Up -->
+                   <svg class="absolute left-[12%] -translate-x-[12%] bottom-[-28px] w-[34px] h-[38px] z-10 transform rotate-180" width="38" height="34" viewBox="0 0 38 34" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M17.2774 1.92017C18.0512 0.6084 19.9488 0.6084 20.7226 1.92017L37.5724 30.4838C38.3588 31.8171 37.3977 33.5 35.8497 33.5H2.15026C0.602323 33.5 -0.358837 31.8171 0.427647 30.4838L17.2774 1.92017Z" fill="#EB434A"/></svg>
+                  <div class="self-stretch justify-start text-white text-h4 font-bold">Continue to Module {{moduleNumber}}</div>
+                  <div class="self-stretch justify-start text-white text-semi-body">Great! Now tap the button below to proceed to the next module.</div>
+                   <div class="self-stretch inline-flex justify-between items-center mt-2">
+                     <div class="flex-grow h-2.5 bg-black/20 rounded-full inline-flex flex-col justify-center items-start gap-2.5 overflow-hidden"><div class="h-3 bg-white rounded-full" style="width: {{progressBarWidth}}%;"></div></div>
+                   </div>
+                 </div>`,
+      placement: 'top', // Position above mobile button
+      disableOverlay: true,
+    },
+    {
+      id: 'cc-add-custom-video-mobile',
+      // target: '[data-tour="module-navigation-mobile"]',
+      target: '[data-tour="add-custom-video-button-mobile"]', // Target mobile button
+      content: `<div class="w-[374px] p-4 bg-brand-red rounded-2xl outline outline-1 outline-offset-[-1px] outline-black/5 inline-flex flex-col justify-start items-start gap-4 relative">
+                  <!-- Arrow Down -->
+                  <svg class="absolute left-[84%] -translate-x-[84%] top-[-28px] w-[34px] h-[38px] z-10 transform " width="38" height="34" viewBox="0 0 38 34" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M17.2774 1.92017C18.0512 0.6084 19.9488 0.6084 20.7226 1.92017L37.5724 30.4838C38.3588 31.8171 37.3977 33.5 35.8497 33.5H2.15026C0.602323 33.5 -0.358837 31.8171 0.427647 30.4838L17.2774 1.92017Z" fill="#EB434A"/></svg>
+                  <div class="self-stretch justify-start text-white text-h4 font-bold">Add Your Own Video?</div>
+                  <div class="self-stretch justify-start text-white text-semi-body">Don't see the perfect video? <br> Tap 'Add Custom Video' to paste a link to your preferred video.</div>
+                  <div class="self-stretch inline-flex justify-between items-center mt-2">
+                     <div class="flex-grow h-2.5 bg-black/20 rounded-full inline-flex flex-col justify-center items-start gap-2.5 overflow-hidden"><div class="h-3 bg-white rounded-full" style="width: {{progressBarWidth}}%;"></div></div>
+                     <div class="flex justify-start items-center gap-2 ml-auto">
+                        <button data-tour-action="cancel" class="w-[63px] px-4 py-1 rounded outline outline-1 outline-offset-[-1px] outline-white flex justify-center items-center gap-2.5 cursor-pointer hover:bg-white/10 transition-colors" type="button"><span class="justify-start text-white text-semi-body">Skip</span></button>
+                        <button data-tour-action="next" class="px-4 py-1 bg-white rounded flex justify-center items-center gap-2.5 cursor-pointer hover:bg-gray-200 transition-colors" type="button"><span class="justify-start text-black text-semi-body">Next</span></button>
+                     </div>
+                  </div>
+                </div>`,
+      placement: 'bottom', // Position below mobile button
+      disableOverlay: true,
+    },
+    {
+      id: 'cc-create-complete-mobile',
+      target: '[data-tour="create-complete-course-button-mobile"]', // Target mobile button
+      content: `<div class="w-[374px] p-4 bg-brand-red rounded-2xl outline outline-1 outline-offset-[-1px] outline-black/5 inline-flex flex-col justify-start items-start gap-4 relative">
+                    <!-- Arrow Up -->
+                     <svg class="absolute left-[12%] -translate-x-[12%] bottom-[-28px] w-[34px] h-[38px] z-10 transform rotate-180" width="38" height="34" viewBox="0 0 38 34" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M17.2774 1.92017C18.0512 0.6084 19.9488 0.6084 20.7226 1.92017L37.5724 30.4838C38.3588 31.8171 37.3977 33.5 35.8497 33.5H2.15026C0.602323 33.5 -0.358837 31.8171 0.427647 30.4838L17.2774 1.92017Z" fill="#EB434A"/></svg>
+                    <div class="self-stretch justify-start text-white text-h4 font-bold">Congratulations!</div>
+                    <div class="self-stretch justify-start text-white text-semi-body">You're just one step away! Tap 'Complete Creating Course' below to publish it.</div>
+                    <div class="self-stretch inline-flex justify-between items-center mt-2">
+                       <div class="flex-grow h-2.5 bg-black/20 rounded-full inline-flex flex-col justify-center items-start gap-2.5 overflow-hidden"><div class="w-full h-3 bg-white rounded-full" style="width: {{progressBarWidth}}%;"></div></div>
+                    </div>
+                  </div>`,
+      placement: 'top', // Position above mobile button
+      disableOverlay: true,
+    }
+  ];
+
   // Enable persistence by saving course state to localStorage
   function saveStateToStorage() {
     if (browser) {
@@ -809,10 +905,15 @@ Click 'Create Complete Course' below to publish it and start learning.</div>
              shouldStartTourOnLoad = false; // Prevent trying again
              return; 
           }
+
+          // Determine which steps to use based on screen width (using md breakpoint: 768px)
+          const isMobile = window.innerWidth < 768;
+          const stepsToUse = isMobile ? createCourseTourStepsMobile : createCourseTourSteps;
+          console.log(`[Create Course Page] Using ${isMobile ? 'mobile' : 'desktop'} tour steps.`);
           
           // Add a small delay to ensure elements are definitely ready
           setTimeout(() => {
-              tourStore.startTour(createCourseTourSteps, 'create-course');
+              tourStore.startTour(stepsToUse, 'create-course');
               // Mark this tour as completed in localStorage when it finishes
               // Use a temporary subscription that unsubscribes itself
               let unsub: (() => void) | null = null;
@@ -842,8 +943,10 @@ Click 'Create Complete Course' below to publish it and start learning.</div>
   // --- Handle Modal Close ---
   function handleModalClose() {
     showCustomUrlInput = false;
-    console.log(`[Create Course Page] handleModalClose called. Attempting to go to cc-create-complete.`);
-    tourStore.goToStepById('cc-create-complete'); // Always go to the final step after modal closes
+    const isMobileStep = $tourStore.isTourActive && $tourStore.steps[$tourStore.currentStepIndex]?.id.endsWith('-mobile');
+    const finalStepId = isMobileStep ? 'cc-create-complete-mobile' : 'cc-create-complete';
+    console.log(`[Create Course Page] handleModalClose called. Attempting to go to ${finalStepId}.`);
+    tourStore.goToStepById(finalStepId); // Go to the final step (mobile or desktop) after modal closes
   }
 
   // Helper to check if it's the last module index
@@ -852,18 +955,22 @@ Click 'Create Complete Course' below to publish it and start learning.</div>
   }
 
   // Reactive statement to advance tour when a video is selected for the current module
-  $: if (browser && $tourStore.isTourActive && $tourStore.steps[$tourStore.currentStepIndex]?.id === 'cc-video-grid-interactive') {
+  $: if (browser && $tourStore.isTourActive && ($tourStore.steps[$tourStore.currentStepIndex]?.id === 'cc-video-grid-interactive' || $tourStore.steps[$tourStore.currentStepIndex]?.id === 'cc-video-grid-interactive-mobile')) {
      // Check if a video has been selected (is not null) for the *current* module
      if (moduleVideos[currentModuleIndex] && selectedVideos[currentModuleIndex] !== null) {
+        const isMobileStep = $tourStore.steps[$tourStore.currentStepIndex]?.id === 'cc-video-grid-interactive-mobile';
+        const nextModuleStepId = isMobileStep ? 'cc-select-next-module-interactive-mobile' : 'cc-select-next-module-interactive';
+        const addCustomVideoStepId = isMobileStep ? 'cc-add-custom-video-mobile' : 'cc-add-custom-video';
+
         console.log(`[Tour] Video selected for module ${currentModuleIndex}.`);
         if (isLastModule(currentModuleIndex)) {
             // If it was the last module, jump directly to Add Custom Video step
-            console.log(`[Tour] isLastModule(${currentModuleIndex}) returned true. Attempting to go to cc-add-custom-video.`);
-            tourStore.goToStepById('cc-add-custom-video');
+            console.log(`[Tour] isLastModule(${currentModuleIndex}) returned true. Attempting to go to ${addCustomVideoStepId}.`);
+            tourStore.goToStepById(addCustomVideoStepId);
         } else {
             // Not the last module, go to the 'next module' prompt
-             console.log('[Tour] Moving to next module step.');
-            tourStore.goToStepById('cc-select-next-module-interactive');
+             console.log(`[Tour] Moving to ${nextModuleStepId}.`);
+            tourStore.goToStepById(nextModuleStepId);
         }
      }
      // Dependency tracking for reactivity
@@ -872,10 +979,12 @@ Click 'Create Complete Course' below to publish it and start learning.</div>
 
   // Reactive statement to advance tour when the module index changes *away* from the currently shown module
   let previousModuleIndexForTour = currentModuleIndex;
-  $: if (browser && $tourStore.isTourActive && $tourStore.steps[$tourStore.currentStepIndex]?.id === 'cc-select-next-module-interactive') {
+  $: if (browser && $tourStore.isTourActive && ($tourStore.steps[$tourStore.currentStepIndex]?.id === 'cc-select-next-module-interactive' || $tourStore.steps[$tourStore.currentStepIndex]?.id === 'cc-select-next-module-interactive-mobile')) {
     if (currentModuleIndex !== previousModuleIndexForTour) {
-       console.log(`[Tour] Module index changed to ${currentModuleIndex}, moving back to video grid step.`);
-       tourStore.goToStepById('cc-video-grid-interactive');
+       const isMobileStep = $tourStore.steps[$tourStore.currentStepIndex]?.id === 'cc-select-next-module-interactive-mobile';
+       const videoGridStepId = isMobileStep ? 'cc-video-grid-interactive-mobile' : 'cc-video-grid-interactive';
+       console.log(`[Tour] Module index changed to ${currentModuleIndex}, moving back to ${videoGridStepId}.`);
+       tourStore.goToStepById(videoGridStepId);
        previousModuleIndexForTour = currentModuleIndex; // Update tracker
     }
     // Dependency tracking
@@ -1079,18 +1188,16 @@ Click 'Create Complete Course' below to publish it and start learning.</div>
 
           <!-- Module Navigation -->
           <div
+            data-tour="module-navigation-mobile"
             class="flex gap-2 overflow-x-auto whitespace-nowrap pl-4 pb-2 scrollbar-hide"
           >
             {#each courseStructure.OG_Module_Title as moduleTitle, index}
               {@const isActive = currentModuleIndex === index}
-              {@const isNextUnvisited = !visitedModules[index] && index === getNextUnvisitedModuleIndex()}
               <button
                 class="px-4 py-2 rounded-lg whitespace-nowrap transition-all duration-200 
                 {isActive
                   ? 'text-body-semibold bg-Green dark:bg-Green2 text-white'
-                  : isNextUnvisited
-                    ? 'text-body bg-Black/5 dark:bg-White/10 hover:bg-gray-200 border-2 border-Green2 animate-text-only'
-                    : 'text-body bg-Black/5 dark:bg-White/10 text-Green dark:text-Green2 hover:bg-gray-200'}"
+                  : 'text-body bg-Black/5 dark:bg-White/10 text-Green dark:text-Green2 hover:bg-gray-200'}"
                 on:click={() => selectModule(index)}
               >
                 Module {index + 1}
@@ -1140,6 +1247,7 @@ Click 'Create Complete Course' below to publish it and start learning.</div>
                 </button>
               </div>
               <button
+                data-tour="add-custom-video-button-mobile"
                 class="text-nowrap bg-brand-red hover:bg-ButtonHover text-mini-body lg:text-semi-body text-white px-2 py-2 rounded-lg flex items-center gap-2 transition-colors duration-200"
                 on:click={handleAddCustomVideoClick}
               >
@@ -1177,6 +1285,7 @@ Click 'Create Complete Course' below to publish it and start learning.</div>
     <div class="fixed md:hidden bottom-[5.5rem] z-50">
       {#if !allModulesAreVisited}
         <button
+          data-tour="select-next-module-button-mobile"
           class="px-4 py-3 rounded-lg shadow-lg flex items-center justify-center transition-all duration-200 gap-2 {!allModulesLoaded ? 'bg-white cursor-not-allowed text-Grey' : 'dark:bg-brand-turquoise bg-brand-navy text-white'}"
           on:click={() => selectModule(nextUnvisitedModuleIndex)}
           disabled={!allModulesLoaded || nextUnvisitedModuleIndex === -1}
@@ -1194,6 +1303,7 @@ Click 'Create Complete Course' below to publish it and start learning.</div>
         </button>
       {:else if allModulesLoaded}
         <button
+          data-tour="create-complete-course-button-mobile"
           class="px-4 py-2 rounded-lg shadow-lg flex items-center justify-center transition-all duration-200 gap-2 {!courseStructure?.OG_Module_Title.every(
             (_, index) => selectedVideos[index] !== undefined
           )
