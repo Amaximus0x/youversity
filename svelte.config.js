@@ -1,18 +1,18 @@
 import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 import staticAdapter from '@sveltejs/adapter-static';
 import nodeAdapter from '@sveltejs/adapter-node';
+import vercelAdapter from '@sveltejs/adapter-vercel';
 
 // Determine the adapter based on environment variable
 const getAdapter = () => {
 	const target = process.env.ADAPTER_TARGET?.toLowerCase();
 
-	if (target === 'replit') {
-		console.log('Using node adapter for Replit');
-		return nodeAdapter({
-			out: 'build',
-			precompress: false,
-			envPrefix: ''
-		});
+	if (target === 'vercel') {
+		console.log('Using Vercel adapter');
+		return vercelAdapter();
+	} else if (target === 'replit') {
+		console.log('Using Node adapter for Replit');
+		return nodeAdapter({ out: 'build' });
 	} else if (target === 'capacitor') {
 		console.log('Using static adapter for Capacitor');
 		return staticAdapter({
@@ -23,15 +23,14 @@ const getAdapter = () => {
 			strict: true
 		});
 	} else {
-		// Default to node adapter for Replit if ADAPTER_TARGET is not set or invalid
-		console.warn('ADAPTER_TARGET not set or invalid, defaulting to node adapter for Replit');
-		return nodeAdapter({
-			out: 'build',
+		// Default to static for web
+		return staticAdapter({
+			pages: 'build',
+			assets: 'build',
+			fallback: 'index.html',
 			precompress: false,
-			envPrefix: ''
+			strict: true
 		});
-		// Alternatively, you could throw an error:
-		// throw new Error('ADAPTER_TARGET environment variable must be set to \'replit\' or \'capacitor\'');
 	}
 };
 
@@ -41,6 +40,19 @@ const config = {
 		adapter: getAdapter(), // Call the function to get the correct adapter
 		csrf: {
 			checkOrigin: false
+		},
+		appDir: '_app',
+		paths: {
+			base: '',
+			assets: ''
+		},
+		serviceWorker: {
+			register: true,
+			files: (filepath) => !/\.DS_Store/.test(filepath)
+		},
+		prerender: {
+			handleHttpError: 'warn',
+			entries: ['/'] // Only prerender the home page
 		}
 	},
 	preprocess: vitePreprocess()
