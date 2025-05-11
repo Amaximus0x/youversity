@@ -1,10 +1,8 @@
-import { error } from "@sveltejs/kit";
+import { error, json } from "@sveltejs/kit";
 import axios from "axios";
-import { ProxyAgent } from "undici";
 
 const proxyUrl =
   "http://kQdcMjN5Ls6E1DK3:gurktsM4S7wdOnUF@geo.iproyal.com:12321";
-const proxyAgent = new ProxyAgent(proxyUrl);
 
 async function fetchTranscriptFromYoutube(videoId: string) {
   console.log("=== Starting transcript fetch ===");
@@ -22,7 +20,6 @@ async function fetchTranscriptFromYoutube(videoId: string) {
         Pragma: "no-cache",
         Referer: "https://www.youtube.com/",
       },
-      dispatcher: proxyAgent,
     });
 
     if (!response.ok) {
@@ -185,5 +182,26 @@ export async function GET({ url }) {
         },
       },
     );
+  }
+}
+
+export async function POST({ request }) {
+  try {
+    const body = await request.json();
+    const videoId = body.videoId;
+    
+    if (!videoId) {
+      return json({ error: 'Video ID is required' }, { status: 400 });
+    }
+    
+    const response = await fetch(`https://www.youtube.com/watch?v=${videoId}`);
+    const html = await response.text();
+    
+    // Rest of the function logic...
+    
+    return json({ transcript: "Transcript data would be extracted here" });
+  } catch (error) {
+    console.error('Error fetching video transcript:', error);
+    return json({ error: 'Failed to fetch transcript' }, { status: 500 });
   }
 }

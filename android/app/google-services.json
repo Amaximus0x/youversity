@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "1021633759112",
+    "project_id": "youversity-c8632",
+    "storage_bucket": "youversity-c8632.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1021633759112:android:d32dc3f3f1d8972497dc3d",
+        "android_client_info": {
+          "package_name": "com.youversity.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1021633759112-p0urmmp5sl16aumpg10g687e50svfvnq.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.youversity.app",
+            "certificate_hash": "02c85d8a3f4e10f05facb3ae0aa166a9ed9b7a6e"
+          }
+        },
+        {
+          "client_id": "1021633759112-r02t1urkv39jdcr61k2von0l7ompobs1.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAV9Soc3ii8tmMJzyYCPD_E0Aa-LxUXI98"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1021633759112-aj9gtk007u78s61tu43qp51q46oep4pr.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
