@@ -54,6 +54,14 @@ const waitForAuthState = async (maxWaitTime = 2000): Promise<boolean> => {
   });
 };
 
+// Define the initial route based on platform
+const getInitialRoute = (isNativePlatform: boolean, isUserAuthenticated: boolean): string => {
+  if (isNativePlatform) {
+    return isUserAuthenticated ? '/dashboard' : '/login';
+  }
+  return '/'; // Default to landing page for web
+};
+
 export const load: Load = async ({ url, route }) => {
   const path = url.pathname;
   
@@ -66,30 +74,40 @@ export const load: Load = async ({ url, route }) => {
 
   const platform = Capacitor.getPlatform();
   const isNative = platform === 'android' || platform === 'ios';
+
+  // Wait for auth state to be initialized (shorter wait for initial determination)
+  await waitForAuthState(1000);
+  const isUserAuthenticated = get(isAuthenticated) || !!auth.currentUser;
+  
+  // On native platforms, when at root path, immediately navigate to appropriate starting route
+  if (isNative && path === '/') {
+    const initialRoute = getInitialRoute(isNative, isUserAuthenticated);
+    redirect(302, initialRoute);
+  }
+  
   const isAuthRoute = authOnlyRoutes.some(route => path.startsWith(route));
   const isLoginPage = path === '/login';
   
-  // Wait for auth state to be initialized
+  // Wait for auth state to be fully initialized for auth-dependent routes
   if (isAuthRoute || isLoginPage) {
     await waitForAuthState(isAuthRoute ? 3000 : 2000);
-    } else {
-      await waitForAuthState(1000);
-    }
+  }
     
   // Always refresh token if needed
-    await tokenService.refreshTokenIfNeeded();
+  await tokenService.refreshTokenIfNeeded();
 
-  const isUserAuthenticated = get(isAuthenticated) || !!auth.currentUser;
+  // Re-check auth state after potential refresh
+  const updatedIsUserAuthenticated = get(isAuthenticated) || !!auth.currentUser;
 
   // --- Improved Native Auth Guard ---
-  if (isNative && isAuthRoute && !isUserAuthenticated) {
+  if (isNative && isAuthRoute && !updatedIsUserAuthenticated) {
     // On native, always redirect to login for protected routes if not authenticated
     redirect(302, '/login');
   }
   // --- End Improved Native Auth Guard ---
 
   // Existing web auth guard
-  if (isAuthRoute && !isUserAuthenticated) {
+  if (isAuthRoute && !updatedIsUserAuthenticated) {
     const currentUser = auth.currentUser;
     if (currentUser) {
       return {
@@ -112,7 +130,7 @@ export const load: Load = async ({ url, route }) => {
   }
   
   // If user is on login page but is already authenticated, redirect to dashboard
-  if (isLoginPage && isUserAuthenticated) {
+  if (isLoginPage && updatedIsUserAuthenticated) {
     const redirectTo = url.searchParams.get('redirectTo');
     if (redirectTo) {
       redirect(302, redirectTo);
@@ -123,7 +141,7 @@ export const load: Load = async ({ url, route }) => {
   
   return {
     hideNav: path === '/',
-    isAuthenticated: isUserAuthenticated
+    isAuthenticated: updatedIsUserAuthenticated
   };
 }; 
 

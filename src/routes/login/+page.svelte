@@ -295,7 +295,7 @@
     <!-- Left Side - Form Container -->
     <div class="w-full flex items-center justify-center lg:w-[52%]">
       <div
-        class="w-[390px] lg:w-[415px] mx-auto xl:px-4 pt-[112px] lg:pt-[151px] xl:pt-[151px]"
+        class="w-full px-3 max-w-[390px] lg:w-[415px] mx-auto xl:px-4 pt-[112px] lg:pt-[151px] xl:pt-[151px]"
       >
         {#if isRegistering}
           <!-- Sign Up Form -->

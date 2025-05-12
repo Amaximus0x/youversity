@@ -111,7 +111,7 @@ async function fetchTranscriptFromYoutube(videoId: string) {
   }
 }
 
-async function parseTranscriptXml(transcriptXml: string): string {
+async function parseTranscriptXml(transcriptXml: string): Promise<string> {
   console.log("=== Starting transcript parsing ===");
   console.log("Raw transcript length:", transcriptXml.length);
 

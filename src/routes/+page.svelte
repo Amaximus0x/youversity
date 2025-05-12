@@ -5,6 +5,7 @@
   import LandingHeader from "$lib/components/LandingHeader.svelte";
   import Footer from "$lib/components/Footer.svelte";
   import { theme } from "$lib/stores/theme";
+  import { Capacitor } from "@capacitor/core";
 
   let showShareModal = false;
   let selectedCourseId = "";
@@ -15,6 +16,15 @@
 
   // Redirect authenticated users to dashboard
   onMount(() => {
+    // Immediately redirect to login on mobile platforms
+    const platform = Capacitor.getPlatform();
+    const isNative = platform === 'android' || platform === 'ios';
+    
+    if (isNative) {
+      goto("/login");
+      return;
+    }
+    
     if ($isAuthenticated) {
       goto("/dashboard");
     }
@@ -596,7 +606,7 @@
             <div
               class="self-stretch relative justify-center text-light-text-secondary dark:text-dark-text-secondary text-sm font-medium font-['Poppins']"
             >
-            I’ve explored so many topics with Youversity. It’s simple, intuitive, and helps me learn at my own pace.
+            I've explored so many topics with Youversity. It's simple, intuitive, and helps me learn at my own pace.
             </div>
           </div>
         </div>
