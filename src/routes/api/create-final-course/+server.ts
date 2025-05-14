@@ -9,6 +9,7 @@ import pLimit from 'p-limit';
 import { OPENAI_CONFIG } from '$lib/config/openai';
 import { adminApp } from '$lib/server/firebase-admin'; 
 import { v4 as uuidv4 } from 'uuid';
+import { addCorsHeaders, handleCorsOptions } from '$lib/utils/cors';
 
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -747,7 +748,12 @@ function validateCourseStructure(data: any): data is CourseStructure {
     return true;
 }
 
-// Add a HEAD handler
+// Add OPTIONS handler for CORS preflight requests
+export const OPTIONS: RequestHandler = async ({ request }) => {
+  return handleCorsOptions(request);
+};
+
+// Update the HEAD handler to use the reusable CORS headers
 export const HEAD: RequestHandler = async ({ request, locals }) => {
   console.log("API: HEAD request to /api/create-final-course endpoint");
   
@@ -755,13 +761,15 @@ export const HEAD: RequestHandler = async ({ request, locals }) => {
   return new Response(null, {
     status: 200,
     headers: {
-      'Access-Control-Allow-Origin': request.headers.get('origin') || '',
+      'Access-Control-Allow-Origin': request.headers.get('origin') || '*',
+      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Firebase-Token, X-Server-Auth-UID',
       'Access-Control-Allow-Credentials': 'true'
     }
   });
 };
 
+// Update the POST handler to add CORS headers to all responses
 export const POST: RequestHandler = async ({ request, locals }) => {
     try {
         console.log("API: /api/create-final-course endpoint called");
@@ -837,7 +845,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
         if (!authenticatedUser) {
             console.log("API: Unauthorized - No authenticated user found from any source");
             // Detailed error response for debugging
-            return json({ 
+            const errorResponse = json({ 
                 success: false, 
                 error: 'Unauthorized', 
                 message: 'Authentication required to access this resource',
@@ -849,6 +857,8 @@ export const POST: RequestHandler = async ({ request, locals }) => {
                 },
                 help: 'Ensure you are signed in and the token is being correctly passed'
             }, { status: 401 });
+            
+            return addCorsHeaders(errorResponse, request);
         }
         
         console.log("API: Processing request from user:", authenticatedUser.uid);
@@ -868,17 +878,21 @@ export const POST: RequestHandler = async ({ request, locals }) => {
             if (!data.selectedVideos) missingFields.push('selectedVideos');
             if (!data.moduleTranscripts) missingFields.push('moduleTranscripts');
             
-            return json({
+            const errorResponse = json({
                 success: false,
                 error: `Missing required data: ${missingFields.join(', ')}`
             }, { status: 400 });
+            
+            return addCorsHeaders(errorResponse, request);
         }
 
         if (!validateCourseStructure(data.courseStructure)) {
-            return json({
+            const errorResponse = json({
                 success: false,
                 error: 'Invalid course structure format or missing required fields. Check server logs for details.'
             }, { status: 400 });
+            
+            return addCorsHeaders(errorResponse, request);
         }
 
         try {
@@ -893,41 +907,51 @@ export const POST: RequestHandler = async ({ request, locals }) => {
                 throw new Error('Invalid course generation result');
             }
 
-            return json({
+            const successResponse = json({
                 success: true,
                 course: finalCourse
             });
+            
+            return addCorsHeaders(successResponse, request);
             
         } catch (error: any) {
             console.error('Error in course generation:', error);
             
             // Handle rate limit errors
             if (error.response?.status === 429) {
-                return json({
+                const errorResponse = json({
                     success: false,
                     error: 'Rate limit exceeded. Please try again in a few minutes.'
                 }, { status: 429 });
+                
+                return addCorsHeaders(errorResponse, request);
             }
 
             // Handle OpenAI API errors
             if (error.response?.data?.error) {
-                return json({
+                const errorResponse = json({
                     success: false,
                     error: error.response.data.error.message || 'OpenAI API error'
                 }, { status: 500 });
+                
+                return addCorsHeaders(errorResponse, request);
             }
 
-            return json({
+            const errorResponse = json({
                 success: false,
                 error: error.message || 'Error generating course content'
             }, { status: 500 });
+            
+            return addCorsHeaders(errorResponse, request);
         }
 
     } catch (error: any) {
         console.error('Error processing request:', error);
-        return json({
+        const errorResponse = json({
             success: false,
             error: 'Invalid request data'
         }, { status: 400 });
+        
+        return addCorsHeaders(errorResponse, request);
     }
 };
