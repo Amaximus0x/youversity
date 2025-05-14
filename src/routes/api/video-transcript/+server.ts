@@ -1,10 +1,16 @@
 import { error } from "@sveltejs/kit";
 import axios from "axios";
 import { ProxyAgent } from "undici";
+import { addCorsHeaders, handleCorsOptions } from '$lib/utils/cors';
 
 const proxyUrl =
   "http://kQdcMjN5Ls6E1DK3:gurktsM4S7wdOnUF@geo.iproyal.com:12321";
 const proxyAgent = new ProxyAgent(proxyUrl);
+
+// Add OPTIONS handler for CORS preflight requests
+export const OPTIONS = async ({ request }) => {
+  return handleCorsOptions(request);
+};
 
 async function fetchTranscriptFromYoutube(videoId: string) {
   console.log("=== Starting transcript fetch ===");
@@ -154,26 +160,33 @@ async function parseTranscriptXml(transcriptXml: string): string {
   }
 }
 
-export async function GET({ url }) {
+export async function GET({ url, request }) {
   try {
     const videoId = url.searchParams.get("videoId");
 
     if (!videoId) {
-      throw error(400, "Video ID is required");
+      const errorResponse = new Response(JSON.stringify({ error: "Video ID is required" }), {
+        status: 400,
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      return addCorsHeaders(errorResponse, request);
     }
 
     console.log("Fetching transcript for video:", videoId);
     const transcriptResponse = await fetchTranscriptFromYoutube(videoId);
     const cleanTranscript = await parseTranscriptXml(transcriptResponse);
 
-    return new Response(JSON.stringify({ transcript: cleanTranscript }), {
+    const successResponse = new Response(JSON.stringify({ transcript: cleanTranscript }), {
       headers: {
         "Content-Type": "application/json",
       },
     });
+    return addCorsHeaders(successResponse, request);
   } catch (err) {
     console.error("Error in transcript endpoint:", err);
-    return new Response(
+    const errorResponse = new Response(
       JSON.stringify({
         transcript: "No transcript available for this video",
         error: err.message,
@@ -185,5 +198,6 @@ export async function GET({ url }) {
         },
       },
     );
+    return addCorsHeaders(errorResponse, request);
   }
 }

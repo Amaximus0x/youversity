@@ -4,8 +4,14 @@ import { env } from '$env/dynamic/private';
 import axios from 'axios';
 import type { CourseStructure } from '$lib/types/course';
 import { OPENAI_CONFIG } from '$lib/config/openai';
+import { addCorsHeaders, handleCorsOptions } from '$lib/utils/cors';
 
-// Add a HEAD handler
+// Add OPTIONS handler for CORS preflight requests
+export const OPTIONS: RequestHandler = async ({ request }) => {
+  return handleCorsOptions(request);
+};
+
+// Update HEAD handler with consistent CORS headers
 export const HEAD: RequestHandler = async ({ request, locals }) => {
   console.log("API: HEAD request to /api/generate-course endpoint");
   
@@ -13,7 +19,8 @@ export const HEAD: RequestHandler = async ({ request, locals }) => {
   return new Response(null, {
     status: 200,
     headers: {
-      'Access-Control-Allow-Origin': request.headers.get('origin') || '',
+      'Access-Control-Allow-Origin': request.headers.get('origin') || '*',
+      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Firebase-Token, X-Server-Auth-UID',
       'Access-Control-Allow-Credentials': 'true'
     }
@@ -109,7 +116,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
   if (!authenticatedUser) {
     console.log("API: Unauthorized - No authenticated user found from any source");
     // Detailed error response for debugging
-    return json({ 
+    const errorResponse = json({ 
       success: false, 
       error: 'Unauthorized', 
       message: 'Authentication required to access this resource',
@@ -124,6 +131,9 @@ export const POST: RequestHandler = async ({ request, locals }) => {
       },
       help: 'Ensure you are signed in and the token is being correctly passed in the Authorization header, X-Firebase-Token header, request body, or cookie'
     }, { status: 401 });
+    
+    // Add CORS headers to the error response
+    return addCorsHeaders(errorResponse, request);
   }
   
   console.log("API: Processing request from user:", authenticatedUser.uid);
@@ -134,10 +144,13 @@ export const POST: RequestHandler = async ({ request, locals }) => {
     const { courseInput } = await freshRequest.json();
 
     if (!courseInput?.trim()) {
-      return json({ 
+      const errorResponse = json({ 
         success: false, 
         error: 'Course input is required' 
       }, { status: 400 });
+      
+      // Add CORS headers to the error response
+      return addCorsHeaders(errorResponse, request);
     }
 
     try {
@@ -152,38 +165,51 @@ export const POST: RequestHandler = async ({ request, locals }) => {
           courseStructure.OG_Module_Title.length !== 10 ||
           courseStructure.OG_Module_YouTube_Search_Prompt.length !== 10) {
         console.error('Invalid course structure:', courseStructure);
-        return json({ 
+        const errorResponse = json({ 
           success: false, 
           error: 'Failed to generate a valid course structure' 
         }, { status: 500 });
+        
+        // Add CORS headers to the error response
+        return addCorsHeaders(errorResponse, request);
       }
 
-      return json({ 
+      const successResponse = json({ 
         success: true, 
         courseStructure 
       });
+      
+      // Add CORS headers to the success response
+      return addCorsHeaders(successResponse, request);
 
     } catch (error: any) {
       console.error('Error generating course:', error);
       
+      let errorResponse;
       if (error.response?.data?.error) {
-        return json({ 
+        errorResponse = json({ 
           success: false, 
           error: `OpenAI API error: ${error.response.data.error.message}` 
         }, { status: 500 });
+      } else {
+        errorResponse = json({ 
+          success: false, 
+          error: error.message || 'Failed to generate course' 
+        }, { status: 500 });
       }
-
-      return json({ 
-        success: false, 
-        error: error.message || 'Failed to generate course' 
-      }, { status: 500 });
+      
+      // Add CORS headers to the error response
+      return addCorsHeaders(errorResponse, request);
     }
   } catch (error) {
     console.error('Error processing request:', error);
-    return json({ 
+    const errorResponse = json({ 
       success: false, 
       error: 'Invalid request data' 
     }, { status: 400 });
+    
+    // Add CORS headers to the error response
+    return addCorsHeaders(errorResponse, request);
   }
 };
 
