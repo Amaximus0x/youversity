@@ -12,8 +12,8 @@ const isNative = getPlatform() === 'android' || getPlatform() === 'ios';
 
 // API URLs for different environments
 const API_URLS = {
-  development: 'http://localhost:5173',
-  production: 'https://youversity-kt23syhg2-derevyan-gmailcoms-projects.vercel.app',
+  development: 'https://www.youversity.io/',
+  production: 'https://www.youversity.io',
   // Add other environments as needed
 };
 
@@ -28,7 +28,8 @@ const getEnvironment = () => {
 
 // Export the API configuration
 export const API_CONFIG = {
-  baseURL: API_URLS[getEnvironment()],
+  // Always use production URL for native mobile apps
+  baseURL: isNative ? 'https://www.youversity.io' : API_URLS[getEnvironment()],
   isNative,
   platform: getPlatform(),
   headers: {

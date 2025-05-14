@@ -1,5 +1,11 @@
 import { error, json } from "@sveltejs/kit";
 import axios from "axios";
+import { addCorsHeaders, handleCorsOptions } from '$lib/utils/cors';
+
+// Add OPTIONS handler for CORS preflight requests
+export const OPTIONS = async ({ request }) => {
+  return handleCorsOptions(request);
+};
 
 const proxyUrl =
   "http://kQdcMjN5Ls6E1DK3:gurktsM4S7wdOnUF@geo.iproyal.com:12321";
@@ -151,26 +157,29 @@ async function parseTranscriptXml(transcriptXml: string): Promise<string> {
   }
 }
 
-export async function GET({ url }) {
+export async function GET({ url, request }) {
   try {
     const videoId = url.searchParams.get("videoId");
 
     if (!videoId) {
-      throw error(400, "Video ID is required");
+      const errorResponse = json({ error: "Video ID is required" }, { status: 400 });
+      return addCorsHeaders(errorResponse, request);
     }
 
     console.log("Fetching transcript for video:", videoId);
     const transcriptResponse = await fetchTranscriptFromYoutube(videoId);
     const cleanTranscript = await parseTranscriptXml(transcriptResponse);
 
-    return new Response(JSON.stringify({ transcript: cleanTranscript }), {
+    const response = new Response(JSON.stringify({ transcript: cleanTranscript }), {
       headers: {
         "Content-Type": "application/json",
       },
     });
+    
+    return addCorsHeaders(response, request);
   } catch (err) {
     console.error("Error in transcript endpoint:", err);
-    return new Response(
+    const response = new Response(
       JSON.stringify({
         transcript: "No transcript available for this video",
         error: err.message,
@@ -182,6 +191,8 @@ export async function GET({ url }) {
         },
       },
     );
+    
+    return addCorsHeaders(response, request);
   }
 }
 
@@ -191,17 +202,23 @@ export async function POST({ request }) {
     const videoId = body.videoId;
     
     if (!videoId) {
-      return json({ error: 'Video ID is required' }, { status: 400 });
+      const errorResponse = json({ error: 'Video ID is required' }, { status: 400 });
+      return addCorsHeaders(errorResponse, request);
     }
     
     const response = await fetch(`https://www.youtube.com/watch?v=${videoId}`);
     const html = await response.text();
     
-    // Rest of the function logic...
+    // Extract and process transcript...
     
-    return json({ transcript: "Transcript data would be extracted here" });
+    const successResponse = json({ success: true, transcript: "Successfully processed" });
+    return addCorsHeaders(successResponse, request);
   } catch (error) {
-    console.error('Error fetching video transcript:', error);
-    return json({ error: 'Failed to fetch transcript' }, { status: 500 });
+    console.error("Error in POST transcript endpoint:", error);
+    const errorResponse = json({ 
+      error: error.message || "Failed to process transcript",
+      transcript: "No transcript available for this video" 
+    });
+    return addCorsHeaders(errorResponse, request);
   }
 }

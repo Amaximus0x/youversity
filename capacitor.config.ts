@@ -4,12 +4,6 @@ const config: CapacitorConfig = {
   appId: 'com.youversity.app',
   appName: 'Youversity',
   webDir: 'build',
-  server: {
-    androidScheme: 'http',
-    iosScheme: 'http',
-    hostname: 'localhost',
-    allowNavigation: ['*']
-  },
   plugins: {
     SplashScreen: {
       launchShowDuration: 2000,

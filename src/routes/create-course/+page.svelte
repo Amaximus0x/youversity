@@ -28,6 +28,7 @@
   import type { TourStep } from "$lib/stores/tourStore";
   import CustomTourGuide from "$lib/components/CustomTourGuide.svelte";
   import { get } from 'svelte/store';
+  import { API_CONFIG } from "$lib/config/api";
 
   // Define interface that describes the server data
   interface ServerAuthData {
@@ -556,7 +557,7 @@ Click 'Create Complete Course' below to publish it and start learning.</div>
       }
       
       const response = await fetch(
-        `/api/search-videos?${queryParams.toString()}`,
+        `${API_CONFIG.baseURL}/api/search-videos?${queryParams.toString()}`,
         {
           headers,
           credentials: 'include'
@@ -684,7 +685,7 @@ Click 'Create Complete Course' below to publish it and start learning.</div>
         headers["X-Server-Auth-UID"] = serverAuthuid;
       }
 
-      const response = await fetch("/api/create-final-course", {
+      const response = await fetch(`${API_CONFIG.baseURL}/api/create-final-course`, {
         method: "POST",
         headers,
         body: JSON.stringify({
@@ -791,7 +792,7 @@ Click 'Create Complete Course' below to publish it and start learning.</div>
       // Debug check to verify server connection and CORS setup
       console.log("Checking API endpoint connection...");
       try {
-        const headersCheckResponse = await fetch("/api/generate-course", { 
+        const headersCheckResponse = await fetch(`${API_CONFIG.baseURL}/api/generate-course`, { 
           method: "HEAD",
           credentials: 'include',
           headers: {
@@ -810,7 +811,7 @@ Click 'Create Complete Course' below to publish it and start learning.</div>
       
       // Make the actual API request
       console.log("Making actual API request...");
-      const response = await fetch("/api/generate-course", {
+      const response = await fetch(`${API_CONFIG.baseURL}/api/generate-course`, {
         method: "POST",
         headers,
         body: JSON.stringify({ 

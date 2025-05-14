@@ -9,6 +9,12 @@ import pLimit from 'p-limit';
 import { OPENAI_CONFIG } from '$lib/config/openai';
 import { adminApp } from '$lib/server/firebase-admin'; 
 import { v4 as uuidv4 } from 'uuid';
+import { addCorsHeaders, handleCorsOptions } from '$lib/utils/cors';
+
+// Add OPTIONS handler for CORS preflight requests
+export const OPTIONS: RequestHandler = async ({ request }) => {
+  return handleCorsOptions(request);
+};
 
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -747,187 +753,125 @@ function validateCourseStructure(data: any): data is CourseStructure {
     return true;
 }
 
-// Add a HEAD handler
+// Update the HEAD handler to use the reusable CORS headers
 export const HEAD: RequestHandler = async ({ request, locals }) => {
-  console.log("API: HEAD request to /api/create-final-course endpoint");
+  console.log("HEAD request to /api/create-final-course endpoint");
   
   // Return a simple 200 OK response with CORS headers
   return new Response(null, {
     status: 200,
     headers: {
-      'Access-Control-Allow-Origin': request.headers.get('origin') || '',
+      'Access-Control-Allow-Origin': request.headers.get('origin') || '*',
+      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Firebase-Token, X-Server-Auth-UID',
       'Access-Control-Allow-Credentials': 'true'
     }
   });
 };
 
+// Update the POST handler to add CORS headers to all responses
 export const POST: RequestHandler = async ({ request, locals }) => {
-    try {
-        console.log("API: /api/create-final-course endpoint called");
-        console.log("API: User in locals:", locals.user ? `User ${locals.user.uid} authenticated` : "No user in locals");
-        
-        // DEVELOPMENT MODE SHORTCUT - Allow all requests in development mode if desired
-        if (process.env.NODE_ENV === 'development' && !locals.user) {
-            console.log("API: Development mode - creating mock user authentication");
-            
-            // Check if there's a test header first
-            const devTestUID = request.headers.get('X-Dev-Test-UID');
-            const now = Math.floor(Date.now() / 1000);
-            
-            if (devTestUID) {
-                console.log(`API: Using X-Dev-Test-UID header value: ${devTestUID}`);
-                locals.user = { 
-                    uid: devTestUID,
-                    email: 'dev-test@example.com',
-                    email_verified: true,
-                    aud: 'mock-project-id',
-                    auth_time: now,
-                    exp: now + 3600,
-                    firebase: { sign_in_provider: 'custom', identities: {} },
-                    iat: now,
-                    iss: 'https://securetoken.google.com/mock-project-id',
-                    sub: devTestUID
-                };
-            } else {
-                console.log("API: Using default development test user");
-                locals.user = { 
-                    uid: 'dev-test-user',
-                    email: 'dev-test@example.com',
-                    email_verified: true,
-                    aud: 'mock-project-id',
-                    auth_time: now,
-                    exp: now + 3600,
-                    firebase: { sign_in_provider: 'custom', identities: {} },
-                    iat: now,
-                    iss: 'https://securetoken.google.com/mock-project-id',
-                    sub: 'dev-test-user'
-                };
-            }
-        }
-        
-        // Debug cookies and headers
-        const authHeader = request.headers.get('Authorization');
-        console.log("API: Authorization header:", authHeader ? `${authHeader.substring(0, 20)}...` : "None");
-        
-        // Get custom server auth header
-        const serverAuthUID = request.headers.get('X-Server-Auth-UID');
-        console.log("API: Server Auth UID header:", serverAuthUID || "None");
-        
-        // Clone request to read auth info
-        const clonedRequest = request.clone();
-        let requestJson;
-        let serverAuthInfo: { uid?: string } | null = null;
-        
-        try {
-            requestJson = await clonedRequest.json();
-            serverAuthInfo = requestJson.serverAuthInfo;
-            console.log("API: Server auth info from request body:", serverAuthInfo ? JSON.stringify(serverAuthInfo) : "None");
-        } catch (error) {
-            console.error("API: Error parsing request data:", error);
-        }
-
-        // Use auth info from the best available source
-        const userFromLocals = locals.user;
-        const userFromServerAuth = serverAuthInfo?.uid ? { uid: serverAuthInfo.uid } : null;
-        
-        // Combine auth sources (prefer locals)
-        const authenticatedUser = userFromLocals || userFromServerAuth;
-        
-        if (!authenticatedUser) {
-            console.log("API: Unauthorized - No authenticated user found from any source");
-            // Detailed error response for debugging
-            return json({ 
-                success: false, 
-                error: 'Unauthorized', 
-                message: 'Authentication required to access this resource',
-                authSources: {
-                    locals: !!userFromLocals,
-                    serverAuth: !!userFromServerAuth,
-                    authHeader: !!authHeader,
-                    serverAuthHeader: !!serverAuthUID
-                },
-                help: 'Ensure you are signed in and the token is being correctly passed'
-            }, { status: 401 });
-        }
-        
-        console.log("API: Processing request from user:", authenticatedUser.uid);
-        
-        // Fresh request for data
-        const freshRequest = request.clone();
-        const data = await freshRequest.json();
-        
-        // Continue with original code:
-        // Log the received data for debugging
-        console.log('Received course structure:', JSON.stringify(data.courseStructure, null, 2));
-        
-        // Validate required fields
-        if (!data.courseStructure || !data.selectedVideos || !data.moduleTranscripts) {
-            const missingFields: string[] = [];
-            if (!data.courseStructure) missingFields.push('courseStructure');
-            if (!data.selectedVideos) missingFields.push('selectedVideos');
-            if (!data.moduleTranscripts) missingFields.push('moduleTranscripts');
-            
-            return json({
-                success: false,
-                error: `Missing required data: ${missingFields.join(', ')}`
-            }, { status: 400 });
-        }
-
-        if (!validateCourseStructure(data.courseStructure)) {
-            return json({
-                success: false,
-                error: 'Invalid course structure format or missing required fields. Check server logs for details.'
-            }, { status: 400 });
-        }
-
-        try {
-            const finalCourse = await generateFinalCourse(
-                data.courseStructure,
-                data.selectedVideos,
-                data.moduleTranscripts
-            );
-
-            // Validate the generated course
-            if (!finalCourse || !finalCourse.Final_Course_Title) {
-                throw new Error('Invalid course generation result');
-            }
-
-            return json({
-                success: true,
-                course: finalCourse
-            });
-            
-        } catch (error: any) {
-            console.error('Error in course generation:', error);
-            
-            // Handle rate limit errors
-            if (error.response?.status === 429) {
-                return json({
-                    success: false,
-                    error: 'Rate limit exceeded. Please try again in a few minutes.'
-                }, { status: 429 });
-            }
-
-            // Handle OpenAI API errors
-            if (error.response?.data?.error) {
-                return json({
-                    success: false,
-                    error: error.response.data.error.message || 'OpenAI API error'
-                }, { status: 500 });
-            }
-
-            return json({
-                success: false,
-                error: error.message || 'Error generating course content'
-            }, { status: 500 });
-        }
-
-    } catch (error: any) {
-        console.error('Error processing request:', error);
-        return json({
-            success: false,
-            error: 'Invalid request data'
-        }, { status: 400 });
+  console.log("POST request to /api/create-final-course endpoint");
+  
+  // DEVELOPMENT MODE SHORTCUT - Allow all requests in development mode if desired
+  if (process.env.NODE_ENV === 'development' && !locals.user) {
+    console.log("Development mode - creating mock user authentication");
+    
+    // Check if there's a test header first
+    const devTestUID = request.headers.get('X-Dev-Test-UID');
+    const now = Math.floor(Date.now() / 1000);
+    
+    if (devTestUID) {
+      console.log(`Using X-Dev-Test-UID header value: ${devTestUID}`);
+      locals.user = { 
+        uid: devTestUID,
+        email: 'dev-test@example.com',
+        email_verified: true,
+        aud: 'mock-project-id',
+        auth_time: now,
+        exp: now + 3600,
+        firebase: { sign_in_provider: 'custom', identities: {} },
+        iat: now,
+        iss: 'https://securetoken.google.com/mock-project-id',
+        sub: devTestUID
+      };
+    } else {
+      console.log("Using default development test user");
+      locals.user = { 
+        uid: 'dev-test-user',
+        email: 'dev-test@example.com',
+        email_verified: true,
+        aud: 'mock-project-id',
+        auth_time: now,
+        exp: now + 3600,
+        firebase: { sign_in_provider: 'custom', identities: {} },
+        iat: now,
+        iss: 'https://securetoken.google.com/mock-project-id',
+        sub: 'dev-test-user'
+      };
     }
+  }
+  
+  try {
+    // Make sure there's a user
+    const userFromLocals = locals.user;
+    
+    // Get user from body as fallback
+    let requestData;
+    let serverAuthInfo;
+    let userIdFromBody: string | null = null;
+    
+    try {
+      const clonedRequest = request.clone();
+      requestData = await clonedRequest.json();
+      serverAuthInfo = requestData.serverAuthInfo || null;
+      userIdFromBody = requestData.userId || (serverAuthInfo && serverAuthInfo.uid) || null;
+    } catch (error) {
+      console.error("Error parsing request data:", error);
+    }
+    
+    const authenticatedUser = userFromLocals || (userIdFromBody ? { uid: userIdFromBody } : null);
+    
+    if (!authenticatedUser) {
+      console.log("Unauthorized - No authenticated user found");
+      const errorResponse = json(
+        { success: false, error: 'Authentication required' },
+        { status: 401 }
+      );
+      return addCorsHeaders(errorResponse, request);
+    }
+    
+    console.log("Processing request from user:", authenticatedUser.uid);
+    
+    // Parse the request body
+    const freshRequest = request.clone();
+    const { courseStructure, selectedVideos, moduleTranscripts } = await freshRequest.json();
+    
+    if (!validateCourseStructure(courseStructure) || !Array.isArray(selectedVideos) || !Array.isArray(moduleTranscripts)) {
+      console.log("Invalid request data");
+      const errorResponse = json(
+        { success: false, error: 'Invalid request data' },
+        { status: 400 }
+      );
+      return addCorsHeaders(errorResponse, request);
+    }
+    
+    // Generate the course
+    const finalCourse = await generateFinalCourse(courseStructure, selectedVideos, moduleTranscripts);
+    
+    // Add the user ID
+    finalCourse.createdBy = authenticatedUser.uid;
+    
+    // Return the final course as JSON
+    const successResponse = json({ success: true, course: finalCourse });
+    return addCorsHeaders(successResponse, request);
+    
+  } catch (error) {
+    console.error('Error creating final course:', error);
+    const errorResponse = json(
+      { success: false, error: error.message || 'Failed to create course' },
+      { status: 500 }
+    );
+    return addCorsHeaders(errorResponse, request);
+  }
 };
