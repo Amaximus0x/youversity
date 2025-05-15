@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Capacitor Mobile App Simulator</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      padding: 20px;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    button {
+      padding: 10px 16px;
+      background: #42C1C8;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-weight: bold;
+      margin: 10px 0;
+      cursor: pointer;
+    }
+    pre {
+      background: #f5f5f5;
+      padding: 15px;
+      border-radius: 8px;
+      overflow-x: auto;
+      white-space: pre-wrap;
+    }
+    .error {
+      background: #ffeeee;
+      color: #990000;
+    }
+    h1 {
+      color: #2A4D61;
+    }
+    .status {
+      margin-top: 20px;
+      padding: 10px;
+      border-radius: 5px;
+    }
+    .success {
+      background: #e6ffed;
+      color: #166534;
+    }
+  </style>
+</head>
+<body>
+  <h1>YouVersity Mobile App CORS Tester</h1>
+  <p>This page simulates API requests as if they're coming from a Capacitor mobile app.</p>
+  
+  <div>
+    <label for="api-url">API Base URL:</label>
+    <input type="text" id="api-url" style="width: 100%; margin: 5px 0; padding: 8px;" 
+           value="https://www.youversity.io" placeholder="Enter your ngrok URL here">
+  </div>
+
+  <div>
+    <button id="test-cors">Test CORS Setup</button>
+    <button id="test-auth">Test Auth API</button>
+    <button id="test-create-course">Test Create Course API</button>
+  </div>
+
+  <div class="status" id="status"></div>
+  
+  <h3>Response:</h3>
+  <pre id="result">Results will appear here</pre>
+
+  <script>
+    // Get the elements
+    const apiUrlInput = document.getElementById('api-url');
+    const testCorsBtn = document.getElementById('test-cors');
+    const testAuthBtn = document.getElementById('test-auth');
+    const testCreateCourseBtn = document.getElementById('test-create-course');
+    const resultEl = document.getElementById('result');
+    const statusEl = document.getElementById('status');
+
+    // Base fetch options to simulate a Capacitor app
+    function getBaseOptions() {
+      return {
+        mode: 'cors',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          // Set a custom origin to simulate Capacitor
+          'X-Simulated-Origin': 'capacitor://localhost'
+        }
+      };
+    }
+
+    // Show the result
+    function showResult(data, isError = false) {
+      resultEl.textContent = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
+      resultEl.className = isError ? 'error' : '';
+    }
+
+    // Show status message
+    function showStatus(message, isSuccess = true) {
+      statusEl.textContent = message;
+      statusEl.className = isSuccess ? 'status success' : 'status error';
+    }
+
+    // Test CORS setup with basic endpoint
+    testCorsBtn.addEventListener('click', async () => {
+      try {
+        const apiUrl = apiUrlInput.value.trim();
+        showStatus('Testing CORS setup...');
+        
+        const response = await fetch(`${apiUrl}/api/test-cors`, getBaseOptions());
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        // Check response headers
+        const corsHeader = response.headers.get('access-control-allow-origin');
+        let headerInfo = `\n\nCORS Headers:\nAccess-Control-Allow-Origin: ${corsHeader}`;
+        headerInfo += `\nAccess-Control-Allow-Credentials: ${response.headers.get('access-control-allow-credentials')}`;
+        
+        showResult({...data, _cors_headers: headerInfo});
+        showStatus('CORS test successful!');
+      } catch (err) {
+        console.error('CORS test error:', err);
+        showResult(`Error: ${err.message}`, true);
+        showStatus('CORS test failed!', false);
+      }
+    });
+
+    // Test Auth API
+    testAuthBtn.addEventListener('click', async () => {
+      try {
+        const apiUrl = apiUrlInput.value.trim();
+        showStatus('Testing Auth API...');
+        
+        // For this test, we'll just make a simple GET request to see if server acknowledges us
+        const response = await fetch(`${apiUrl}/api/auth/status`, getBaseOptions());
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`HTTP error! status: ${response.status}\n${errorText}`);
+        }
+        
+        const data = await response.json();
+        showResult(data);
+        showStatus('Auth API test completed!');
+      } catch (err) {
+        console.error('Auth API test error:', err);
+        showResult(`Error: ${err.message}`, true);
+        showStatus('Auth API test failed!', false);
+      }
+    });
+
+    // Test Create Course API
+    testCreateCourseBtn.addEventListener('click', async () => {
+      try {
+        const apiUrl = apiUrlInput.value.trim();
+        showStatus('Testing Create Course API...');
+        
+        // Send a minimal course creation request
+        const response = await fetch(`${apiUrl}/api/generate-course`, {
+          ...getBaseOptions(),
+          method: 'POST',
+          body: JSON.stringify({
+            courseInput: 'Test course on mobile app development',
+            // Include test ID
+            userId: 'test-mobile-user',
+            // You might need to include a token here from a previous auth step
+            token: 'test-token'
+          })
+        });
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`HTTP error! status: ${response.status}\n${errorText}`);
+        }
+        
+        const data = await response.json();
+        showResult(data);
+        showStatus('Create Course API test completed!');
+      } catch (err) {
+        console.error('Create Course API test error:', err);
+        showResult(`Error: ${err.message}`, true);
+        showStatus('Create Course API test failed!', false);
+      }
+    });
+  </script>
+</body>
+</html> 
