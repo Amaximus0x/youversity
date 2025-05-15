@@ -1,3 +1,5 @@
+import { API_CONFIG } from "$lib/config/api";
+
 export async function getVideoTranscript(videoId: string, maxRetries = 2): Promise<string> {
   const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
   let lastError: Error | null = null;
@@ -6,7 +8,7 @@ export async function getVideoTranscript(videoId: string, maxRetries = 2): Promi
     try {
       console.log(`Attempt ${attempt + 1}/${maxRetries} to fetch transcript for ${videoId}`);
       
-      const response = await fetch(`/api/video-transcript?videoId=${videoId}`, {
+      const response = await fetch(`${API_CONFIG.baseURL}/api/video-transcript?videoId=${videoId}`, {
         headers: {
           'Accept': 'application/json',
           'Content-Type': 'application/json',

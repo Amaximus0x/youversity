@@ -24,8 +24,12 @@ const config: CapacitorConfig = {
       spinnerColor: "#FFFFFF",
       splashFullScreen: true,
       splashImmersive: true
+    },
+    FirebaseAuthentication: {
+      skipNativeAuth: false,
+      providers: ["google.com"],
     }
   }
 };
 
-export default config; 
+export default config;
