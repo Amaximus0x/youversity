@@ -1,19 +1,25 @@
 modules = ["nodejs-20", "web"]
 run = "npm run dev -- --port 3000 --host 0.0.0.0"
 
-
 [nix]
 channel = "stable-24_05"
 
 [deployment]
-build = "npm run build"
-run = "npm run start"
-deploymentTarget = "cloudrun"
+build = ["sh", "-c", "npm run build"]
+run = ["sh", "-c", "npm run start"]
 
 [[ports]]
 localPort = 3000
 externalPort = 80
 
 [[ports]]
-localPort = 3001
-externalPort = 3001
+localPort = 4173
+externalPort = 3000
+
+[env]
+VITE_FIREBASE_API_KEY = "$VITE_FIREBASE_API_KEY"
+VITE_FIREBASE_AUTH_DOMAIN = "$VITE_FIREBASE_AUTH_DOMAIN"
+VITE_FIREBASE_PROJECT_ID = "$VITE_FIREBASE_PROJECT_ID"
+VITE_FIREBASE_STORAGE_BUCKET = "$VITE_FIREBASE_STORAGE_BUCKET"
+VITE_FIREBASE_MESSAGING_SENDER_ID = "$VITE_FIREBASE_MESSAGING_SENDER_ID"
+VITE_FIREBASE_APP_ID = "$VITE_FIREBASE_APP_ID"

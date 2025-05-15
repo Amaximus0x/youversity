@@ -1,16 +1,18 @@
 <script lang="ts">
   import Button from "$lib/components/Button.svelte";
   import {
-    signInWithGoogle,
+    signInWithGoogle as webSignInWithGoogle,
     signInWithEmail,
     registerWithEmail,
     resetPassword,
   } from "$lib/services/auth";
+  import { signInWithGoogle as nativeSignInWithGoogle } from "$lib/services/firebase-auth";
   import { page } from "$app/stores";
   import { default as OnboardingCarousel } from "$lib/components/OnboardingCarousel.svelte";
   import { user, isAuthenticated, isAuthLoading } from "$lib/stores/auth";
   import { onMount } from "svelte";
   import { goto } from "$app/navigation";
+  import { Capacitor } from '@capacitor/core';
 
   let error: string | null = null;
   let successMessage: string | null = null;
@@ -25,6 +27,24 @@
   let termsAccepted = false;
   let isLoading = false;
   let isGoogleLoading = false;
+
+  // Simple notification function
+  function showNotification(type: string, message: string) {
+    if (type === "Error") {
+      error = message;
+    } else {
+      successMessage = message;
+    }
+    
+    // Clear notification after 5 seconds
+    setTimeout(() => {
+      if (type === "Error") {
+        error = null;
+      } else {
+        successMessage = null;
+      }
+    }, 5000);
+  }
 
   function getReadableErrorMessage(err: any): string {
     if (!(err instanceof Error)) return "Authentication failed";
@@ -76,18 +96,37 @@
     return unsubscribe;
   });
 
-  async function handleSignIn() {
+  async function handleGoogleSignIn() {
     try {
       isGoogleLoading = true;
       error = null;
       
-      const redirectTo = $page.url.searchParams.get("redirectTo") || "/dashboard";
-      await signInWithGoogle(redirectTo);
+      // Check if running on native platform
+      const isNativePlatform = Capacitor.isNativePlatform();
+      const platform = Capacitor.getPlatform();
+      console.log('Current platform:', platform);
       
-      // The redirect will be handled by onAuthStateChanged in auth.ts
-    } catch (err) {
-      console.error("Sign in error:", err);
-      error = getReadableErrorMessage(err);
+      let user;
+      
+      if (isNativePlatform) {
+        // Use native Google sign-in for Android/iOS
+        console.log('Using native Google sign-in');
+        user = await nativeSignInWithGoogle();
+      } else {
+        // Use web Google sign-in
+        console.log('Using web Google sign-in');
+        const redirectTo = $page.url.searchParams.get("redirectTo") || "/dashboard";
+        user = await webSignInWithGoogle(redirectTo);
+      }
+
+      if (user) {
+        showNotification("Success", "Signed in successfully with Google!");
+        window.location.href = "/dashboard";
+      }
+    } catch (error) {
+      console.error("Google sign-in error:", error);
+      showNotification("Error", "Failed to sign in with Google. Please try again.");
+    } finally {
       isGoogleLoading = false;
     }
   }
@@ -256,7 +295,7 @@
     <!-- Left Side - Form Container -->
     <div class="w-full flex items-center justify-center lg:w-[52%]">
       <div
-        class="w-[390px] lg:w-[415px] mx-auto xl:px-4 pt-[112px] lg:pt-[151px] xl:pt-[151px]"
+        class="w-full px-3 max-w-[390px] lg:w-[415px] mx-auto xl:px-4 pt-[112px] lg:pt-[151px] xl:pt-[151px]"
       >
         {#if isRegistering}
           <!-- Sign Up Form -->
@@ -492,8 +531,8 @@
                   <div 
                     role="button"
                     tabindex="0"
-                    on:click={handleSignIn}
-                    on:keydown={(e) => e.key === "Enter" && handleSignIn()}
+                    on:click={handleGoogleSignIn}
+                    on:keydown={(e) => e.key === "Enter" && handleGoogleSignIn()}
                     class="grow shrink basis-0 px-4 py-2 rounded-[10px] border border-light-border dark:border-dark-border flex-col justify-center items-center gap-2.5 inline-flex overflow-hidden transition-colors bg-light-bg-primary dark:bg-dark-bg-primary {isGoogleLoading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}"
                   >
                     <div
@@ -745,8 +784,8 @@
                   <div 
                     role="button"
                     tabindex="0"
-                    on:click={handleSignIn}
-                    on:keydown={(e) => e.key === "Enter" && handleSignIn()}
+                    on:click={handleGoogleSignIn}
+                    on:keydown={(e) => e.key === "Enter" && handleGoogleSignIn()}
                     class="grow shrink basis-0 px-4 py-2 rounded-[10px] border border-light-border dark:border-dark-border flex-col justify-center items-center gap-2.5 inline-flex overflow-hidden transition-colors bg-light-bg-primary dark:bg-dark-bg-primary {isGoogleLoading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}"
                   >
                     <div

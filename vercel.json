@@ -1,5 +1,10 @@
 {
   "rewrites": [
     { "source": "/(.*)", "destination": "/api/index" }
-  ]
+  ],
+  "buildCommand": "npm run build",
+  "outputDirectory": "build",
+  "framework": "sveltekit",
+  "installCommand": "npm install",
+  "devCommand": "npm run dev"
 } 

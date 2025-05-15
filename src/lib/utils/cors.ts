@@ -1,6 +1,6 @@
 /**
  * Utility function to add CORS headers to a Response
- * This is particularly important for applications that need to 
+ * This is particularly important for Capacitor apps that load from localhost but need to 
  * make cross-origin requests to the deployed API
  */
 import type { RequestEvent } from '@sveltejs/kit';

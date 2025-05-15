@@ -1,3 +1,4 @@
+
 // API Configuration for the application
 
 /**
@@ -28,3 +29,4 @@ export function getFetchOptions(options: RequestInit = {}): RequestInit {
     ...options
   };
 } 
+

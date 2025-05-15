@@ -1,6 +1,6 @@
 <script lang="ts">
   import { page } from "$app/stores";
-  import { user, isAuthenticated } from "$lib/stores/auth";
+  import { user, isAuthenticated, isAuthLoading } from "$lib/stores/auth";
   import { signOutUser } from "$lib/services/auth";
   import { theme } from "$lib/stores/theme";
   import "../app.css";
@@ -27,6 +27,8 @@
   import { DeploymentAnnouncements } from "$lib/services/deploymentAnnouncements";
   import { afterNavigate } from '$app/navigation';
   import { isCreateCoursePage, clearCreateCourseState } from '$lib/utils/navigation';
+  import { Capacitor } from '@capacitor/core';
+  import { App } from '@capacitor/app';
 
   // Import the components directly by their paths
   // @ts-ignore - Svelte component imports
@@ -489,6 +491,59 @@
       
       // Update last path
       lastPath = toPath;
+    }
+  });
+
+  // List of public routes
+  const webPublicRoutes = ['/', '/login', '/about', '/contact'];
+  const mobilePublicRoutes = ['/login'];
+
+  function getPlatform() {
+    if (typeof Capacitor !== 'undefined' && Capacitor.getPlatform) {
+      return Capacitor.getPlatform();
+    }
+    return 'web';
+  }
+
+  // SPA client-side auth guard
+  $: if (
+    isMounted &&
+    browser &&
+    !$isAuthLoading &&
+    $page
+  ) {
+    const platform = getPlatform();
+    const pathname = $page.url.pathname;
+    const isMobile = platform === 'android' || platform === 'ios';
+
+    if (isMobile) {
+      if (!$isAuthenticated && pathname !== '/login') {
+        // Always redirect unauthenticated users to /login
+        goto(`/login?redirectTo=${encodeURIComponent(pathname)}`);
+      } else if ($isAuthenticated && (pathname === '/' || pathname === '/login')) {
+        // Always redirect authenticated users to /dashboard if on / or /login
+        goto('/dashboard');
+      }
+    } else {
+      // Web: allow public routes, otherwise redirect to login if not authenticated
+      const allowedRoutes = webPublicRoutes;
+      if (!$isAuthenticated && !allowedRoutes.includes(pathname)) {
+        goto(`/login?redirectTo=${encodeURIComponent(pathname)}`);
+      }
+    }
+  }
+
+  onMount(() => {
+    if (browser && (getPlatform() === 'android' || getPlatform() === 'ios')) {
+      App.addListener('appStateChange', ({ isActive }) => {
+        if (
+          isActive &&
+          $isAuthenticated &&
+          ($page.url.pathname === '/login' || $page.url.pathname === '/')
+        ) {
+          goto('/dashboard');
+        }
+      });
     }
   });
 </script>
