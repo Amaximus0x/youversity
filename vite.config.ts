@@ -12,7 +12,10 @@ export default defineConfig({
     rollupOptions: {
       input: {
         'service-worker': 'static/service-worker.js'
-      }
+      },
+      external: [
+        '@capacitor/core'  // Externalize Capacitor to avoid build errors
+      ]
     }
   }
 });
