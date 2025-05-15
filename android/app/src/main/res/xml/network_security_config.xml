@@ -4,6 +4,7 @@
     <domain-config cleartextTrafficPermitted="true">
         <domain includeSubdomains="true">youversity.io</domain>
         <domain includeSubdomains="true">www.youversity.io</domain>
+        <domain includeSubdomains="true">youversity.vercel.app</domain>
         <domain includeSubdomains="true">localhost</domain>
     </domain-config>
     <!-- Trust user installed certificates for debug builds -->
