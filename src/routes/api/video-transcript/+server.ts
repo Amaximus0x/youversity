@@ -1,14 +1,15 @@
 import { error, json } from "@sveltejs/kit";
 import axios from "axios";
+import { ProxyAgent } from "undici";
 import { addCorsHeaders, handleCorsOptions } from '$lib/utils/cors';
+
+const proxyUrl =
+  "http://kQdcMjN5Ls6E1DK3:gurktsM4S7wdOnUF@geo.iproyal.com:12321";
 
 // Add OPTIONS handler for CORS preflight requests
 export const OPTIONS = async ({ request }) => {
   return handleCorsOptions(request);
 };
-
-const proxyUrl =
-  "http://kQdcMjN5Ls6E1DK3:gurktsM4S7wdOnUF@geo.iproyal.com:12321";
 
 async function fetchTranscriptFromYoutube(videoId: string) {
   console.log("=== Starting transcript fetch ===");

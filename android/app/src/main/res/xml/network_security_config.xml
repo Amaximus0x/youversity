@@ -1,8 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
 <network-security-config>
-    <domain-config cleartextTrafficPermitted="false">
+    <!-- Allow cleartext traffic for API server -->
+    <domain-config cleartextTrafficPermitted="true">
         <domain includeSubdomains="true">youversity.io</domain>
         <domain includeSubdomains="true">www.youversity.io</domain>
         <domain includeSubdomains="true">youversity.vercel.app</domain>
+        <domain includeSubdomains="true">localhost</domain>
     </domain-config>
+    <!-- Trust user installed certificates for debug builds -->
+    <debug-overrides>
+        <trust-anchors>
+            <certificates src="user" />
+            <certificates src="system" />
+        </trust-anchors>
+    </debug-overrides>
+    <!-- Base config -->
+    <base-config cleartextTrafficPermitted="false">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
 </network-security-config> 
