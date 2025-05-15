@@ -78,7 +78,7 @@ export const handle: Handle = async ({ event, resolve }) => {
     if (isProtectedApiEndpoint(event.url.pathname) && 
         !isPublicApiEndpoint(event.url.pathname) && 
         !event.locals.user) {
-      return createErrorResponse(401, 'Authentication required to access this resource');
+      return createErrorResponse(401, 'Authentication required to access this resource', event);
     }
   } catch (error) {
     console.error(`Auth error in hooks for ${event.url.pathname}:`, error);
@@ -86,13 +86,13 @@ export const handle: Handle = async ({ event, resolve }) => {
     
     // If this is a protected route and auth failed, return 401
     if (isProtectedApiEndpoint(event.url.pathname) && !isPublicApiEndpoint(event.url.pathname)) {
-      return createErrorResponse(401, 'Authentication failed');
+      return createErrorResponse(401, 'Authentication failed', event);
     }
   }
 
   // Handle CORS preflight requests
   if (event.request.method === 'OPTIONS') {
-    return createCorsResponse(null);
+    return createCorsResponse(null, {}, event);
   }
 
   // Add CORS headers to all responses
@@ -156,7 +156,7 @@ function isPublicApiEndpoint(pathname: string): boolean {
 }
 
 // Create a standardized error response with CORS headers
-function createErrorResponse(status: number, message: string): Response {
+function createErrorResponse(status: number, message: string, event?: any): Response {
   return createCorsResponse(JSON.stringify({ 
     error: status === 401 ? 'Unauthorized' : 'Error', 
     message 
@@ -165,20 +165,49 @@ function createErrorResponse(status: number, message: string): Response {
     headers: {
       'Content-Type': 'application/json'
     }
-  });
+  }, event);
 }
 
 // Create a response with CORS headers
-function createCorsResponse(body: any, options: ResponseInit = {}): Response {
+function createCorsResponse(body: any, options: ResponseInit = {}, event?: any): Response {
+  // Get the origin from the request headers if event is provided
+  const origin = event?.request?.headers?.get('origin') || null;
+  
+  // Log CORS debugging info
+  if (event) {
+    console.log('-------- CORS Response Creation --------');
+    console.log('Request URL:', event.url.toString());
+    console.log('Request method:', event.request.method);
+    console.log('Origin header:', origin);
+    console.log('User-Agent:', event.request.headers.get('user-agent'));
+    console.log('Request has credentials:', !!event.request.headers.get('cookie'));
+    console.log('----------------------------------------');
+  }
+  
+  // Create headers object
+  const corsHeaders = new Headers(options.headers || {});
+  
+  // Set CORS headers
+  corsHeaders.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH, HEAD');
+  
+  // When credentials are included, we cannot use wildcard '*' for origin
+  if (origin) {
+    corsHeaders.set('Access-Control-Allow-Origin', origin);
+    corsHeaders.set('Access-Control-Allow-Credentials', 'true');
+    console.log(`Setting Access-Control-Allow-Origin to specific origin: ${origin}`);
+  } else {
+    // Only use wildcard when origin is not specified and credentials aren't needed
+    corsHeaders.set('Access-Control-Allow-Origin', '*');
+    console.log('Setting Access-Control-Allow-Origin to wildcard *');
+  }
+  
+  corsHeaders.set('Access-Control-Allow-Headers', 
+    'Content-Type, Authorization, X-Firebase-Token, X-Server-Auth-UID, X-Dev-Test-UID, X-Simulated-Origin, X-Requested-With, Accept, Origin');
+  corsHeaders.set('Access-Control-Max-Age', '3600');
+  
   return new Response(body, {
     ...options,
-    headers: {
-      ...options.headers,
-      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Firebase-Token, X-Server-Auth-UID, X-Dev-Test-UID',
-      'Access-Control-Allow-Credentials': 'true'
-    }
+    headers: corsHeaders
   });
 }
 
@@ -187,9 +216,20 @@ function addCorsHeaders(response: Response, event: any): Response {
   const origin = event.request.headers.get('origin') || '*';
   const newHeaders = new Headers(response.headers);
   
+  // Debug logging
+  console.log('-------- Adding CORS Headers to Response --------');
+  console.log('Request URL:', event.url.toString());
+  console.log('Request method:', event.request.method);
+  console.log('Origin header:', origin);
+  console.log('Response status:', response.status);
+  console.log('---------------------------------------------');
+  
   newHeaders.set('Access-Control-Allow-Origin', origin);
-  newHeaders.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Firebase-Token, X-Server-Auth-UID, X-Dev-Test-UID');
+  newHeaders.set('Access-Control-Allow-Headers', 
+    'Content-Type, Authorization, X-Firebase-Token, X-Server-Auth-UID, X-Dev-Test-UID, X-Simulated-Origin, X-Requested-With, Accept, Origin');
+  newHeaders.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH, HEAD');
   newHeaders.set('Access-Control-Allow-Credentials', 'true');
+  newHeaders.set('Access-Control-Max-Age', '3600');
   
   return new Response(response.body, {
     status: response.status,

@@ -3,6 +3,8 @@
  * This is particularly important for applications that need to 
  * make cross-origin requests to the deployed API
  */
+import type { RequestEvent } from '@sveltejs/kit';
+
 export function addCorsHeaders(response: Response, request: Request): Response {
   const origin = request.headers.get('origin');
   
@@ -32,24 +34,31 @@ export function addCorsHeaders(response: Response, request: Request): Response {
  * Returns a 204 No Content response with CORS headers
  */
 export function handleCorsOptions(request: Request): Response {
-  const origin = request.headers.get('origin');
-  const headers = new Headers();
-  
-  // For native apps or requests without origin, we need to allow '*'
-  if (origin) {
-    headers.set('Access-Control-Allow-Origin', origin);
-    headers.set('Access-Control-Allow-Credentials', 'true');
-  } else {
-    headers.set('Access-Control-Allow-Origin', '*');
-  }
-  
-  headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, HEAD');
-  headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Firebase-Token, X-Server-Auth-UID, X-Requested-With, Accept');
-  headers.set('Access-Control-Max-Age', '86400'); // 24 hours
-  headers.set('Cache-Control', 'no-cache, no-store, must-revalidate');
-  
+  // Create headers for OPTIONS response
+  const headers = new Headers({
+    'Access-Control-Allow-Origin': request.headers.get('origin') || '*',
+    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Firebase-Token, X-Server-Auth-UID',
+    'Access-Control-Allow-Credentials': 'true',
+    'Access-Control-Max-Age': '3600', // Cache preflight for 1 hour
+  });
+
   return new Response(null, {
     status: 204,
-    headers
+    headers,
   });
+}
+
+// Log and handle CORS request details (debugging helper)
+export function logCorsRequest(event: RequestEvent) {
+  console.log('-------- CORS Request Details --------');
+  console.log('Request URL:', event.url.toString());
+  console.log('Request method:', event.request.method);
+  console.log('Origin header:', event.request.headers.get('origin'));
+  console.log('User-Agent:', event.request.headers.get('user-agent'));
+  console.log('Credentials mode:', event.request.credentials);
+  console.log('Access-Control-Request-Method:', event.request.headers.get('access-control-request-method'));
+  console.log('Access-Control-Request-Headers:', event.request.headers.get('access-control-request-headers'));
+  console.log('X-Forwarded-For:', event.request.headers.get('x-forwarded-for'));
+  console.log('--------------------------------------');
 } 
