@@ -6,26 +6,24 @@
   let result = '';
   let loading = false;
   let error: string | null = null;
-  let platform = 'web';
-  let isNative = false;
-
+  let platform = 'server';
+  
   async function testCors() {
     loading = true;
     error = null;
     result = '';
 
     try {
-      // Test relative URL which will go to same origin on web, and to API_CONFIG.baseURL on mobile
+      // Test relative URL
       const relativeResponse = await fetch('/api/test-cors', getFetchOptions());
       const relativeData = await relativeResponse.json();
       
-      // Test absolute URL which should always go to the specified domain
+      // Test absolute URL 
       const absoluteResponse = await fetch(`${API_CONFIG.baseURL}/api/test-cors`, getFetchOptions());
       const absoluteData = await absoluteResponse.json();
       
       result = `
-        Platform: ${platform}
-        Is Native: ${isNative}
+        Platform: web (Replit)
         API Base URL: ${API_CONFIG.baseURL}
         
         Relative URL Test:
@@ -44,12 +42,15 @@
 
   onMount(() => {
     // Auto-run test on page load
-    testCors();
+    if (browser) {
+      platform = 'web';
+      testCors();
+    }
   });
 </script>
 
 <div class="container mx-auto p-4">
-  <h1 class="text-2xl font-bold mb-4">CORS Test Page</h1>
+  <h1 class="text-2xl font-bold mb-4">CORS Test Page (Replit Version)</h1>
   
   <div class="mb-4">
     <button 
