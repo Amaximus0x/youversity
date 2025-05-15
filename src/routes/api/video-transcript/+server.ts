@@ -2,6 +2,7 @@ import { error } from "@sveltejs/kit";
 import axios from "axios";
 import { ProxyAgent } from "undici";
 import { addCorsHeaders, handleCorsOptions } from '$lib/utils/cors';
+import { Dispatcher } from "undici";
 
 const proxyUrl =
   "http://kQdcMjN5Ls6E1DK3:gurktsM4S7wdOnUF@geo.iproyal.com:12321";
@@ -12,12 +13,19 @@ export const OPTIONS = async ({ request }) => {
   return handleCorsOptions(request);
 };
 
-async function fetchTranscriptFromYoutube(videoId: string) {
+async function fetchTranscriptFromYoutube(videoId: string): Promise<string> {
   console.log("=== Starting transcript fetch ===");
   console.log(`Video ID: ${videoId}`);
 
   try {
-    const response = await fetch(`https://www.youtube.com/watch?v=${videoId}`, {
+    // Step 1: Fetch the YouTube page with proxy
+    console.log("Fetching YouTube page with proxy...");
+    
+    // Setup fetch options with proxy agent properly typed
+    const fetchOptions: {
+      headers: Record<string, string>;
+      dispatcher: Dispatcher;
+    } = {
       headers: {
         "User-Agent":
           "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
@@ -29,7 +37,9 @@ async function fetchTranscriptFromYoutube(videoId: string) {
         Referer: "https://www.youtube.com/",
       },
       dispatcher: proxyAgent,
-    });
+    };
+
+    const response = await fetch(`https://www.youtube.com/watch?v=${videoId}`, fetchOptions);
 
     if (!response.ok) {
       throw new Error("Invalid response from YouTube");
@@ -98,9 +108,9 @@ async function fetchTranscriptFromYoutube(videoId: string) {
       throw new Error("No English captions found");
     }
 
-    const transcriptResponse = await axios.get(captionTrack.baseUrl, {
-      timeout: 10000,
-      maxRedirects: 5,
+    // Step 2: Fetch the transcript XML with proxy
+    console.log("Fetching transcript XML with proxy...");
+    const transcriptResponse = await fetch(captionTrack.baseUrl, {
       headers: {
         Accept: "*/*",
         "Accept-Language": "en-US,en;q=0.9",
@@ -110,17 +120,21 @@ async function fetchTranscriptFromYoutube(videoId: string) {
         "User-Agent":
           "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
       },
-      proxy: false,
-    });
+      dispatcher: proxyAgent, // Use the same proxy agent
+    } as { headers: Record<string, string>; dispatcher: Dispatcher });
 
-    return transcriptResponse.data;
+    if (!transcriptResponse.ok) {
+      throw new Error(`Failed to fetch transcript XML: ${transcriptResponse.status}`);
+    }
+
+    return await transcriptResponse.text();
   } catch (error) {
     console.error("Error fetching transcript:", error);
     throw error;
   }
 }
 
-async function parseTranscriptXml(transcriptXml: string): string {
+async function parseTranscriptXml(transcriptXml: string): Promise<string> {
   console.log("=== Starting transcript parsing ===");
   console.log("Raw transcript length:", transcriptXml.length);
 
@@ -184,7 +198,7 @@ export async function GET({ url, request }) {
       },
     });
     return addCorsHeaders(successResponse, request);
-  } catch (err) {
+  } catch (err: any) {
     console.error("Error in transcript endpoint:", err);
     const errorResponse = new Response(
       JSON.stringify({
