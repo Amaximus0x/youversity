@@ -14,6 +14,7 @@ export default {
     extend: {
       screens: {
         'sm': '430px',
+        'video-3col': '1162px',
         // '2xl': '1440px',
       },
 
