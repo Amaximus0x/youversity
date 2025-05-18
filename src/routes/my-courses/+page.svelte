@@ -309,14 +309,73 @@
 
 <div class="min-h-screen">
   <!-- Header Section -->
-  <div class="mb-8">
-    <h1 class="text-h2-mobile lg:text-h2 text-light-text-primary dark:text-dark-text-primary mb-4">
-      My Courses
-    </h1>
-    <p class="text-light-text-tertiary dark:text-dark-text-tertiary text-semi-body lg:text-body">
+  <div class="mb-8 flex justify-between items-end">
+    <div>
+      <h1 class="text-h2-mobile lg:text-h2 text-light-text-primary dark:text-dark-text-primary mb-4">
+        My Courses
+      </h1>
+      <p class="text-light-text-tertiary dark:text-dark-text-tertiary text-semi-body lg:text-body">
+        Access all your enrolled and created courses. Stay on top of your learning, monitor your progress, and keep everything organized in one place!
+      </p>
+    </div>
 
-      Access all your enrolled and created courses. Stay on top of your learning, monitor your progress, and keep everything organized in one place!
-    </p>
+    <!-- Sort and Create Course Section - Desktop -->
+    <div class="hidden lg:flex items-center gap-4">
+      <!-- Sort Dropdown -->
+      <div class="sort-dropdown relative">
+        <button 
+          class="h-[42px] px-4 py-2 bg-black/5 dark:bg-white/10 rounded-lg justify-start items-center gap-[17px] inline-flex"
+          on:click|stopPropagation={() => showSortDropdown = !showSortDropdown}
+        >
+          <div class="text-light-text-secondary dark:text-dark-text-secondary text-nowrap">Sort by</div>
+          <div data-svg-wrapper class="relative">
+            <svg class="text-light-text-primary dark:text-dark-text-primary" width="16" height="27" viewBox="0 0 16 27" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 10.5C12 10.5 9.05403 6.50001 7.99997 6.5C6.9459 6.49999 4 10.5 4 10.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M12 16.5C12 16.5 9.05403 20.5 7.99997 20.5C6.9459 20.5 4 16.5 4 16.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+        </button>
+
+        {#if showSortDropdown}
+          <div class="absolute right-0 mt-2 w-48 bg-light-bg-secondary dark:bg-dark-bg-secondary rounded-lg shadow-lg border border-light-border dark:border-dark-border z-50">
+            <button
+              class="w-full px-4 py-2 text-left text-light-text-primary dark:text-dark-text-primary hover:bg-light-bg-secondary dark:hover:bg-dark-bg-secondary transition-colors flex items-center justify-between {sortOption === 'newest' ? 'bg-black/5 dark:bg-white/10' : ''}"
+              on:click={() => handleSortSelect('newest')}
+            >
+              <span>Newest</span>
+              {#if sortOption === 'newest'}
+                <svg class="w-4 h-4 text-Green dark:text-TransparentGreen2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+              {/if}
+            </button>
+            <button
+              class="w-full px-4 py-2 text-left text-light-text-primary dark:text-dark-text-primary hover:bg-light-bg-secondary dark:hover:bg-dark-bg-secondary transition-colors flex items-center justify-between {sortOption === 'oldest' ? 'bg-black/5 dark:bg-white/10' : ''}"
+              on:click={() => handleSortSelect('oldest')}
+            >
+              <span>Oldest</span>
+              {#if sortOption === 'oldest'}
+                <svg class="w-4 h-4 text-Green dark:text-TransparentGreen2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+              {/if}
+            </button>
+          </div>
+        {/if}
+      </div>
+      
+      <!-- Create Course Button -->
+      <button 
+        class="flex items-center gap-2 px-4 py-2 bg-brand-red text-white rounded-lg hover:bg-ButtonHover transition-colors"
+        on:click={handleCreateCourse}
+      >
+        <span class="text-body text-nowrap">Create Course</span>
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M8 1V15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M1 8H15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+    </div>
   </div>
 
   <!-- Tabs and Sort Section -->
@@ -389,62 +448,6 @@
             {/if}
           </button>
         </div>
-
-        <!-- Sort and Create Course Section - Desktop -->
-        <div class="hidden lg:flex items-center gap-4 absolute right-0 top-[-8px]   h-full ">
-          <!-- Sort Dropdown -->
-          <div class="sort-dropdown relative">
-            <button 
-              class="h-[42px] px-4 py-2 bg-black/5 dark:bg-white/10 rounded-lg justify-start items-center gap-[17px] inline-flex"
-              on:click|stopPropagation={() => showSortDropdown = !showSortDropdown}
-            >
-              <div class="text-light-text-secondary dark:text-dark-text-secondary">Sort by</div>
-              <div data-svg-wrapper class="relative">
-                <svg class="text-light-text-primary dark:text-dark-text-primary" width="16" height="27" viewBox="0 0 16 27" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M12 10.5C12 10.5 9.05403 6.50001 7.99997 6.5C6.9459 6.49999 4 10.5 4 10.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                  <path d="M12 16.5C12 16.5 9.05403 20.5 7.99997 20.5C6.9459 20.5 4 16.5 4 16.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-              </div>
-            </button>
-
-            {#if showSortDropdown}
-              <div class="absolute right-0 mt-2 w-48 bg-light-bg-secondary dark:bg-dark-bg-secondary rounded-lg shadow-lg border border-light-border dark:border-dark-border z-50">
-                <button
-                  class="w-full px-4 py-2 text-left text-light-text-primary dark:text-dark-text-primary hover:bg-light-bg-secondary dark:hover:bg-dark-bg-secondary transition-colors flex items-center justify-between {sortOption === 'newest' ? 'bg-black/5 dark:bg-white/10' : ''}"
-                  on:click={() => handleSortSelect('newest')}
-                >
-                  <span>Newest</span>
-                  {#if sortOption === 'newest'}
-                    <svg class="w-4 h-4 text-Green dark:text-TransparentGreen2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                    </svg>
-                  {/if}
-                </button>
-                <button
-                  class="w-full px-4 py-2 text-left text-light-text-primary dark:text-dark-text-primary hover:bg-light-bg-secondary dark:hover:bg-dark-bg-secondary transition-colors flex items-center justify-between {sortOption === 'oldest' ? 'bg-black/5 dark:bg-white/10' : ''}"
-                  on:click={() => handleSortSelect('oldest')}
-                >
-                  <span>Oldest</span>
-                  {#if sortOption === 'oldest'}
-                    <svg class="w-4 h-4 text-Green dark:text-TransparentGreen2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                    </svg>
-                  {/if}
-                </button>
-              </div>
-            {/if}
-          </div>
-          
-          <!-- Create Course Button -->
-          <button 
-            class="flex items-center gap-2 px-2 pl-4 py-2 bg-brand-red text-white rounded-lg hover:bg-ButtonHover transition-colors"
-            on:click={handleCreateCourse}
-          >
-            <span class="text-body">Create Course</span>
-            <img src="/icons/plus-sign.svg" alt="Create" class="w-6 h-6" />
-          </button>
-        </div>
-
       </div>
     </div>
 
@@ -495,10 +498,14 @@
 
       <!-- Create Course Button -->
       <button 
-        class="flex items-center px-2 py-2 bg-brand-red text-white rounded-lg hover:bg-ButtonHover transition-colors"
+        class="flex items-center gap-2 px-4 py-2 bg-brand-red text-white rounded-lg hover:bg-ButtonHover transition-colors"
         on:click={handleCreateCourse}
       >
-        <img src="/icons/plus-sign.svg" alt="Create" class="w-6 h-6" />
+        <span class="text-body text-nowrap">Create Course</span>
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M8 1V15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M1 8H15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
       </button>
     </div>
   </div>
