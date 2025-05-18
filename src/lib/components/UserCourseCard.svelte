@@ -13,13 +13,16 @@
         isCompleted?: boolean;
     };
     export let onShare: (courseId: string) => void;
+    export let isBookmarked: boolean = false;
+    export let onRemoveBookmark: ((courseId: string) => void) | undefined = undefined;
     
     // Add debug logging
     $: console.log('UserCourseCard received course:', {
         courseId: course.id,
         courseTitle: course.Final_Course_Title,
         isCompleted: course.isCompleted,
-        progress: course.progress
+        progress: course.progress,
+        isBookmarked
     });
 
     async function handleNavigateToCourse(courseId: string) {
@@ -144,16 +147,21 @@
         />
         <div class="absolute inset-0 bg-black/30" />
 
-        <!-- Share Button -->
-        <button
-            class="absolute top-4 right-4 p-2 bg-black/30 rounded-full justify-start items-center gap-2.5 hover:bg-black/10 z-10"
-            on:click|stopPropagation={(e) => {
-                e.preventDefault();
-                onShare(course.id);
-            }}
-        >
-            <img src="/icons/share-icon.svg" alt="Share" class="w-6 h-6" />
-        </button>
+        <!-- Action Buttons -->
+        <div class="absolute top-4 right-4 flex gap-2 z-10">
+            
+
+            <!-- Share Button -->
+            <button
+                class="p-2 bg-black/30 rounded-full justify-start items-center gap-2.5 hover:bg-black/10"
+                on:click|stopPropagation={(e) => {
+                    e.preventDefault();
+                    onShare(course.id);
+                }}
+            >
+                <img src="/icons/share-icon.svg" alt="Share" class="w-6 h-6" />
+            </button>
+        </div>
     </div>
 
     <!-- Content Section -->
@@ -276,4 +284,22 @@
             >
         </button>
     </div>
+    
+    <!-- Remove Bookmark Button - only show for bookmarked courses -->
+    {#if isBookmarked && onRemoveBookmark}
+        <div class="w-full px-4 py-2.5">
+            <button 
+                class="w-full p-2 border border-Grey rounded-lg justify-center items-center gap-2 transition-colors duration-200 hover:bg-light-bg-secondary dark:hover:bg-dark-bg-secondary"
+                on:click|stopPropagation={(e) => {
+                    e.preventDefault();
+                    onRemoveBookmark(course.id);
+                }}
+            >
+                <div class="flex items-center justify-center gap-4">
+                    <span class="text-[#FF0000] text-semi-body">Remove Bookmark</span>
+                    <img src="/icons/delete.svg" alt="Remove" class="w-6 h-6" />
+                </div>
+            </button>
+        </div>
+    {/if}
 </div>

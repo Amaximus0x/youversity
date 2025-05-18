@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { user } from '$lib/stores/auth';
-  import { getUserCourses, getEnrollmentProgress } from '$lib/firebase';
+  import { getUserCourses, getEnrollmentProgress, getBookmarkedCourses, toggleBookmark } from '$lib/firebase';
   import ShareModal from '$lib/components/ShareModal.svelte';
   import type { FinalCourseStructure } from '$lib/types/course';
   import UserCourseCard from '$lib/components/UserCourseCard.svelte';
@@ -19,15 +19,21 @@
     progress?: number;
     createdAt?: FirestoreTimestamp | Date | null;
     isCompleted?: boolean;
+    bookmarkedAt?: Date;
+    isCreated?: boolean;
+    isEnrolled?: boolean;
+    isAssigned?: boolean;
+    isBookmarked?: boolean;
   };
 
   let allCourses: CourseWithProgress[] = [];
   let enrolledCourses: CourseWithProgress[] = [];
   let createdCourses: CourseWithProgress[] = [];
-  let completedCourses: CourseWithProgress[] = [];
+  let assignedCourses: CourseWithProgress[] = [];
+  let bookmarkedCourses: CourseWithProgress[] = [];
   let loading = true;
   let error: string | null = null;
-  let activeTab: 'all' | 'enrolled' | 'created' | 'completed' = 'all';
+  let activeTab: 'all' | 'enrolled' | 'created' | 'assigned' | 'bookmarked' = 'all';
   let sortBy = '';
   let showShareModal = false;
   let selectedCourseId = '';
@@ -50,7 +56,8 @@
       allCourses = [];
       enrolledCourses = [];
       createdCourses = [];
-      completedCourses = [];
+      assignedCourses = [];
+      bookmarkedCourses = [];
       if (!initialLoad) {
         // Only redirect if this isn't the initial page load
         goto('/login');
@@ -120,21 +127,31 @@
       // Get created courses
       createdCourses = coursesWithProgress.filter(
         course => course.isCreator || course.createdBy === userData.uid
-      );
+      ).map(course => ({ ...course, isCreated: true }));
       console.log('Created courses:', createdCourses);
       
-      // Get enrolled courses that are not created by the user
+      // Get enrolled courses
       enrolledCourses = coursesWithProgress.filter(
-        // course => course.isEnrolled && !(course.isCreator || course.createdBy === userData.uid)
         course => course.isEnrolled
-      );
+      ).map(course => ({ ...course, isEnrolled: true }));
       console.log('Enrolled courses:', enrolledCourses);
       
-      // Get completed courses
-      completedCourses = coursesWithProgress.filter(course => course.isCompleted);
-      console.log('Completed courses:', completedCourses);
+      // Get assigned courses - this is placeholder logic, replace with actual logic
+      assignedCourses = coursesWithProgress.filter(
+        course => course.isAssigned || false
+      ).map(course => ({ ...course, isAssigned: true }));
+      console.log('Assigned courses:', assignedCourses);
       
-      // All courses should show both created and enrolled courses without duplicates
+      // Load bookmarked courses
+      try {
+        const bookmarked = await getBookmarkedCourses(userData.uid);
+        bookmarkedCourses = bookmarked.map(course => ({ ...course, isBookmarked: true }));
+        console.log('Bookmarked courses:', bookmarkedCourses);
+      } catch (error) {
+        console.error('Error loading bookmarked courses:', error);
+      }
+      
+      // All courses should show all course types without duplicates
       // Use a Map to deduplicate by course ID
       const uniqueCourses = new Map();
       
@@ -143,9 +160,39 @@
         uniqueCourses.set(course.id, course);
       });
       
-      // Add enrolled courses that aren't already in the map
+      // Add enrolled courses
       enrolledCourses.forEach(course => {
-        if (!uniqueCourses.has(course.id)) {
+        if (uniqueCourses.has(course.id)) {
+          // If course already exists, update it to indicate it's also enrolled
+          const existingCourse = uniqueCourses.get(course.id);
+          uniqueCourses.set(course.id, { ...existingCourse, isEnrolled: true });
+        } else {
+          uniqueCourses.set(course.id, course);
+        }
+      });
+
+      // Add assigned courses
+      assignedCourses.forEach(course => {
+        if (uniqueCourses.has(course.id)) {
+          // If course already exists, update it to indicate it's also assigned
+          const existingCourse = uniqueCourses.get(course.id);
+          uniqueCourses.set(course.id, { ...existingCourse, isAssigned: true });
+        } else {
+          uniqueCourses.set(course.id, course);
+        }
+      });
+
+      // Add bookmarked courses
+      bookmarkedCourses.forEach(course => {
+        if (uniqueCourses.has(course.id)) {
+          // If course already exists, update it to indicate it's also bookmarked
+          const existingCourse = uniqueCourses.get(course.id);
+          uniqueCourses.set(course.id, { 
+            ...existingCourse, 
+            isBookmarked: true, 
+            bookmarkedAt: course.bookmarkedAt 
+          });
+        } else {
           uniqueCourses.set(course.id, course);
         }
       });
@@ -159,6 +206,28 @@
       error = error instanceof Error ? error.message : 'Failed to load courses';
     } finally {
       loading = false;
+    }
+  }
+
+  async function handleRemoveBookmark(courseId: string) {
+    try {
+      const userData = get(user);
+      if (!userData) return;
+      
+      // Update local state immediately
+      bookmarkedCourses = bookmarkedCourses.filter(course => course.id !== courseId);
+      
+      // If we're on the bookmarked tab, update displayed courses
+      if (activeTab === 'bookmarked') {
+        displayedCourses = [...bookmarkedCourses];
+      }
+      
+      // Update backend
+      await toggleBookmark(userData.uid, courseId);
+    } catch (error) {
+      console.error('Error removing bookmark:', error);
+      // Reload courses if there was an error
+      await loadCourses();
     }
   }
 
@@ -193,18 +262,28 @@
       ? [...allCourses] 
       : activeTab === 'enrolled' 
         ? [...enrolledCourses] 
-        : activeTab === 'completed'
-          ? [...completedCourses]
-          : [...createdCourses];
+        : activeTab === 'created'
+          ? [...createdCourses]
+          : activeTab === 'assigned'
+            ? [...assignedCourses]
+            : [...bookmarkedCourses];
 
     console.log('Courses before sorting:', courses.map(c => ({ 
       title: c.Final_Course_Title, 
-      createdAt: c.createdAt 
+      createdAt: c.createdAt,
+      bookmarkedAt: c.bookmarkedAt
     })));
 
     if (sortOption === 'newest') {
       courses.sort((a, b) => {
-        // Handle different timestamp types
+        // For bookmarked courses, use bookmarkedAt
+        if (activeTab === 'bookmarked') {
+          const dateA = a.bookmarkedAt instanceof Date ? a.bookmarkedAt.getTime() : new Date(a.bookmarkedAt as any).getTime();
+          const dateB = b.bookmarkedAt instanceof Date ? b.bookmarkedAt.getTime() : new Date(b.bookmarkedAt as any).getTime();
+          return dateB - dateA;
+        }
+        
+        // Handle different timestamp types for other tabs
         let dateA = 0;
         let dateB = 0;
         
@@ -235,7 +314,14 @@
       });
     } else if (sortOption === 'oldest') {
       courses.sort((a, b) => {
-        // Handle different timestamp types
+        // For bookmarked courses, use bookmarkedAt
+        if (activeTab === 'bookmarked') {
+          const dateA = a.bookmarkedAt instanceof Date ? a.bookmarkedAt.getTime() : new Date(a.bookmarkedAt as any).getTime();
+          const dateB = b.bookmarkedAt instanceof Date ? b.bookmarkedAt.getTime() : new Date(b.bookmarkedAt as any).getTime();
+          return dateA - dateB;
+        }
+        
+        // Handle different timestamp types for other tabs
         let dateA = 0;
         let dateB = 0;
         
@@ -261,7 +347,8 @@
 
     console.log('Courses after sorting:', courses.map(c => ({ 
       title: c.Final_Course_Title, 
-      createdAt: c.createdAt 
+      createdAt: c.createdAt,
+      bookmarkedAt: c.bookmarkedAt
     })));
     
     displayedCourses = courses;
@@ -287,7 +374,8 @@
     all: allCourses.length,
     enrolled: enrolledCourses.length,
     created: createdCourses.length,
-    completed: completedCourses.length
+    assigned: assignedCourses.length,
+    bookmarked: bookmarkedCourses.length
   };
 
   // Add this function to handle create course navigation
@@ -433,17 +521,32 @@
             {/if}
           </button>
           <button 
-            class="pb-4 relative whitespace-nowrap {activeTab === 'completed' 
+            class="pb-4 relative whitespace-nowrap {activeTab === 'assigned' 
               ? 'text-Green dark:text-TransparentGreen2 text-body-semibold' 
               : 'text-light-text-tertiary dark:text-dark-text-tertiary text-body'}"
-            on:click={() => activeTab = 'completed'}
+            on:click={() => activeTab = 'assigned'}
           >
-            <span class="hidden lg:inline">Completed Courses</span>
-            <span class="lg:hidden">Completed</span>
+            <span class="hidden lg:inline">Assigned Courses</span>
+            <span class="lg:hidden">Assigned</span>
             <span class="ml-2 px-2 py-0.5 bg-Black/5 dark:bg-dark-bg-secondary rounded-full text-semibody-medium">
-              {courseCount.completed}
+              {courseCount.assigned}
             </span>
-            {#if activeTab === 'completed'}
+            {#if activeTab === 'assigned'}
+              <div class="absolute bottom-0 left-0 right-0 h-0.5 bg-Green dark:bg-TransparentGreen2"></div>
+            {/if}
+          </button>
+          <button 
+            class="pb-4 relative whitespace-nowrap {activeTab === 'bookmarked' 
+              ? 'text-Green dark:text-TransparentGreen2 text-body-semibold' 
+              : 'text-light-text-tertiary dark:text-dark-text-tertiary text-body'}"
+            on:click={() => activeTab = 'bookmarked'}
+          >
+            <span class="hidden lg:inline">Bookmarked Courses</span>
+            <span class="lg:hidden">Bookmarked</span>
+            <span class="ml-2 px-2 py-0.5 bg-Black/5 dark:bg-dark-bg-secondary rounded-full text-semibody-medium">
+              {courseCount.bookmarked}
+            </span>
+            {#if activeTab === 'bookmarked'}
               <div class="absolute bottom-0 left-0 right-0 h-0.5 bg-Green dark:bg-TransparentGreen2"></div>
             {/if}
           </button>
@@ -564,8 +667,8 @@
     {:else if displayedCourses.length === 0}
       <div class="col-span-full text-center py-12">
         <p class="text-light-text-secondary dark:text-dark-text-secondary text-lg">
-          {#if activeTab === 'completed'}
-            You haven't completed any courses yet. Keep learning!
+          {#if activeTab === 'bookmarked'}
+            You haven't bookmarked any courses yet.
           {:else}
             No courses found in this category.
           {/if}
@@ -574,7 +677,12 @@
     {:else}
       {#each displayedCourses as course (course.id)}
         <div class="w-full">
-          <UserCourseCard {course} onShare={(id) => handleShare(id, course.Final_Course_Title)} />
+          <UserCourseCard 
+            {course} 
+            onShare={(id) => handleShare(id, course.Final_Course_Title)} 
+            isBookmarked={activeTab === 'bookmarked' || (course.isBookmarked ?? false)}
+            onRemoveBookmark={activeTab === 'bookmarked' ? handleRemoveBookmark : undefined}
+          />
         </div>
       {/each}
     {/if}
