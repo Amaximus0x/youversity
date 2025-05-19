@@ -70,11 +70,21 @@
     let sortOption: "newest" | "oldest" = "newest";
     let displayedVideos = savedVideos;
 
+    // Selection related state
+    let showOptionsMenu = false;
+    let optionsMenuPosition = { x: 0, y: 0 };
+    let selectMode = false;
+    let selectedVideos = new Set<string>();
+    let hasSelectionOccurred = false; // Track if any selection has occurred during this session
+
     // Function to handle click outside of dropdown
     function handleClickOutside(event: MouseEvent) {
         const target = event.target as HTMLElement;
         if (!target.closest(".sort-dropdown")) {
             showSortDropdown = false;
+        }
+        if (showOptionsMenu && !target.closest(".options-menu")) {
+            showOptionsMenu = false;
         }
     }
 
@@ -92,8 +102,95 @@
 
     // Function to handle video card click
     function handleVideoClick(id: string) {
-        // Implement video click functionality
-        console.log(`Video ${id} clicked`);
+        // When in select mode, clicking the card should select/deselect it
+        if (selectMode) {
+            toggleVideoSelection(id);
+        } else {
+            // Normal click behavior (e.g., play video)
+            console.log(`Video ${id} clicked`);
+        }
+    }
+
+    // Function to handle options menu click
+    function handleOptionsClick(event: MouseEvent) {
+        event.stopPropagation();
+        const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
+        optionsMenuPosition = {
+            x: rect.left,
+            y: rect.bottom + window.scrollY
+        };
+        showOptionsMenu = true;
+    }
+
+    // Function to enter select mode
+    function enterSelectMode() {
+        selectMode = true;
+        hasSelectionOccurred = false; // Reset selection tracking when entering select mode
+        showOptionsMenu = false;
+    }
+
+    // Function to select all videos
+    function selectAllVideos() {
+        displayedVideos.forEach(video => {
+            selectedVideos.add(video.id);
+        });
+        selectedVideos = selectedVideos; // Trigger reactivity
+        hasSelectionOccurred = true; // Mark that selection has occurred
+        showOptionsMenu = false;
+        selectMode = true;
+    }
+
+    // Function to show insights
+    function showInsights() {
+        alert("Insights feature to be implemented");
+        showOptionsMenu = false;
+    }
+
+    // Function to toggle selection of a video
+    function toggleVideoSelection(id: string) {
+        if (selectedVideos.has(id)) {
+            selectedVideos.delete(id);
+        } else {
+            selectedVideos.add(id);
+            hasSelectionOccurred = true; // Mark that selection has occurred
+        }
+        selectedVideos = new Set(selectedVideos); // Trigger reactivity
+    }
+
+    // Function to cancel selection mode
+    function cancelSelection() {
+        selectMode = false;
+        hasSelectionOccurred = false; // Reset selection tracking
+        selectedVideos.clear();
+        selectedVideos = new Set(selectedVideos); // Trigger reactivity
+    }
+
+    // When all videos are deselected, exit selection mode only if selection has occurred previously
+    $: if (selectMode && selectedCount === 0 && hasSelectionOccurred) {
+        // This timeout prevents flickering during the selection/deselection process
+        setTimeout(() => {
+            if (selectedCount === 0) {
+                selectMode = false;
+                hasSelectionOccurred = false; // Reset selection tracking
+            }
+        }, 100);
+    }
+
+    // Functions for selected videos actions
+    function createNewCourse() {
+        alert(`Create new course with ${selectedVideos.size} videos`);
+    }
+
+    function addToExistingCourse() {
+        alert(`Add ${selectedVideos.size} videos to existing course`);
+    }
+
+    function assignVideos() {
+        alert(`Assign ${selectedVideos.size} videos`);
+    }
+
+    function deleteVideos() {
+        alert(`Delete ${selectedVideos.size} videos`);
     }
 
     onMount(() => {
@@ -128,6 +225,9 @@
         uploaded: uploadedVideos.length,
         assigned: assignedVideos.length,
     };
+
+    // Selected videos count
+    $: selectedCount = selectedVideos.size;
 </script>
 
 <div class="min-h-screen">
@@ -136,14 +236,12 @@
         <h1
             class="text-h2-mobile lg:text-h2 text-light-text-primary dark:text-dark-text-primary mb-4"
         >
-            My Courses
+            Video Library
         </h1>
         <p
             class="text-light-text-tertiary dark:text-dark-text-tertiary text-semi-body lg:text-body"
         >
-            Access all your enrolled and created courses. Stay on top of your
-            learning, monitor your progress, and keep everything organized in
-            one place!
+            Access all your saved and uploaded videos. Organize, preview, and turn them into learning content with ease.
         </p>
     </div>
 
@@ -263,7 +361,7 @@
               {/if}
             </div>
             
-            <!-- Create Course Button -->
+            <!-- Upload Video Button -->
             <button 
               class="flex items-center gap-2 px-2 pl-4 py-2 bg-Green text-white rounded-lg hover:bg-GreenHover transition-colors"
               on:click={handleUploadVideo}
@@ -374,7 +472,7 @@
 
             <!-- Upload Video Button -->
             <button
-                class="flex items-center gap-2 px-4 py-2 bg-Green  text-white rounded-lg hover:bg-GreenHover transition-colors"
+                class="flex items-center gap-2 px-4 py-2 bg-Green text-white rounded-lg hover:bg-GreenHover transition-colors"
                 on:click={handleUploadVideo}
             >
                 <span class="text-body text-nowrap">Upload video</span>
@@ -382,6 +480,59 @@
             </button>
         </div>
     </div>
+
+    <!-- Selection Toolbar - Only shown when videos are selected -->
+    {#if selectMode && selectedCount > 0}
+    <div class="w-full py-4  mb-6">
+        <div class="container mx-auto flex flex-wrap gap-4 items-center justify-between">
+            <div class="flex flex-wrap gap-4">
+                <button 
+                    class="px-4 py-2 bg-brand-red text-white rounded-lg hover:bg-ButtonHover transition-colors flex items-center gap-2"
+                    on:click={createNewCourse}
+                >
+                    <span>Create New Course</span>
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M8 1V15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M1 8H15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </button>
+                
+                <button
+                    class="px-4 py-2 bg-Green text-white rounded-lg hover:bg-GreenHover transition-colors flex items-center gap-2"
+                    on:click={addToExistingCourse}
+                >
+                    <span>Add to Existing Course</span>
+                    <img src="/icons/FolderPlus.svg" alt="Add to Existing Course" class="w-6 h-6" />
+                </button>
+                
+                <button
+                    class="px-4 py-2 bg-black/5 dark:bg-white/10 text-light-text-primary dark:text-dark-text-primary rounded-lg hover:bg-black/5 dark:hover:bg-white/20 transition-colors flex items-center gap-2"
+                    on:click={assignVideos}
+                >
+                    <span>Assign</span>
+                    <img src="/icons/UserPlus.svg" alt="Assign" class="w-6 h-6" />
+                </button>
+                
+                <button
+                    class="p-2 text-light-text-primary dark:text-dark-text-primary rounded-full bg-black/5 dark:bg-white/20 transition-colors"
+                    on:click={deleteVideos}
+                >
+                    <img src="/icons/Trash.svg" alt="Delete" class="w-6 h-6" />
+                </button>
+            </div>
+            
+            <div class="flex items-center gap-2 bg-brand-red/5 rounded-full pl-4 px-2 py-2">
+                <span class="text-brand-red text-body">{selectedCount} video{selectedCount !== 1 ? 's' : ''} selected</span>
+                <button
+                    class=" text-light-text-primary dark:text-dark-text-primary hover:bg-black/10 dark:hover:bg-white/20 rounded-full transition-colors"
+                    on:click={cancelSelection}
+                >
+                    <img src="/icons/X.svg" alt="Cancel" class="w-6 h-6" />
+                </button>
+            </div>
+        </div>
+    </div>
+    {/if}
 
     <!-- Video Grid -->
     <div class="grid grid-cols-1 md:grid-cols-2 video-3col:grid-cols-3 gap-6">
@@ -462,8 +613,58 @@
                     date={video.date}
                     duration={video.duration}
                     onClick={() => handleVideoClick(video.id)}
+                    onOptionsClick={handleOptionsClick}
+                    selectable={selectMode}
+                    selected={selectedVideos.has(video.id)}
+                    onSelect={(selected) => {
+                        if (selected) {
+                            selectedVideos.add(video.id);
+                            hasSelectionOccurred = true; // Mark that selection has occurred
+                        } else {
+                            selectedVideos.delete(video.id);
+                        }
+                        selectedVideos = new Set(selectedVideos); // Trigger reactivity
+                    }}
                 />
             {/each}
         {/if}
     </div>
 </div>
+
+<!-- Options Menu -->
+{#if showOptionsMenu}
+<div 
+    class="options-menu fixed z-50 bg-light-bg-primary dark:bg-dark-bg-primary shadow-lg rounded-md border border-light-border dark:border-dark-border"
+    style="left: {optionsMenuPosition.x}px; top: {optionsMenuPosition.y}px;"
+>
+    <ul class="w-48 py-2">
+        <li>
+            <button 
+                class="w-full px-4 py-2 text-left text-light-text-primary dark:text-dark-text-primary hover:bg-light-bg-secondary dark:hover:bg-dark-bg-secondary"
+                on:click={enterSelectMode}
+            >
+                Select
+            </button>
+        </li>
+        <li>
+            <button 
+                class="w-full px-4 py-2 text-left text-light-text-primary dark:text-dark-text-primary hover:bg-light-bg-secondary dark:hover:bg-dark-bg-secondary"
+                on:click={selectAllVideos}
+            >
+                Select All
+            </button>
+        </li>
+        <li>
+            <button 
+                class="w-full px-4 py-2 text-left text-light-text-primary dark:text-dark-text-primary hover:bg-light-bg-secondary dark:hover:bg-dark-bg-secondary flex items-center justify-between"
+                on:click={showInsights}
+            >
+                <span>Insight</span>
+                <svg class="w-5 h-5" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M2 2L6 6M18 18L14 14M14 6L18 2M2 18L6 14M10 1V4M1 10H4M16 10H19M10 16V19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </button>
+        </li>
+    </ul>
+</div>
+{/if}
