@@ -109,7 +109,12 @@
       label: "My Courses",
       href: "/my-courses",
     },
-    { icon: "/icons/bookmark-03.svg", label: "Bookmarks", href: "/bookmarks" },
+    {
+      icon: "/icons/bookmark-03.svg",
+      label: "Video library",
+      href: "/video-library",
+    },
+    /* { icon: "/icons/bookmark-03.svg", label: "Bookmarks", href: "/bookmarks" }, */
     { icon: "/icons/settings-02.svg", label: "Settings", href: "/settings?tab=profile" },
   ];
 

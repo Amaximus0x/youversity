@@ -20,10 +20,16 @@
         },
         {
             icon: "/icons/bookmark-03.svg",
+            label: "Video library",
+            href: "/video-library",
+            isActive: false,
+        },
+        /* {
+            icon: "/icons/bookmark-03.svg",
             label: "Bookmarks",
             href: "/bookmarks",
             isActive: false,
-        },
+        }, */
         {
             icon: "/icons/settings-02.svg",
             label: "Settings",
