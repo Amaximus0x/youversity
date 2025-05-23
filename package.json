@@ -41,10 +41,10 @@
   },
   "type": "module",
   "dependencies": {
+    "@capacitor-community/http": "^1.4.1",
     "@capacitor-firebase/authentication": "^7.2.0",
     "@capacitor/android": "^7.2.0",
     "@capacitor/app": "^7.0.1",
-    "@capacitor/http": "^0.0.2",
     "@capacitor/ios": "^7.2.0",
     "axios": "^1.7.7",
     "date-fns": "^4.1.0",
@@ -55,7 +55,7 @@
     "nodemailer": "^6.10.0",
     "shepherd.js": "^11.2.0",
     "svelte-motion": "^0.12.2",
-    "undici": "^7.9.0",
+    "undici": "^6.21.3",
     "youversity": "file:"
   },
   "engines": {

@@ -28,7 +28,9 @@
   import type { TourStep } from "$lib/stores/tourStore";
   import CustomTourGuide from "$lib/components/CustomTourGuide.svelte";
   import { get } from 'svelte/store';
-  import { API_CONFIG } from "$lib/config/api";
+  import { API_CONFIG, getFetchOptions } from "$lib/config/api";
+  // Import Capacitor's Http package for mobile
+  import { Http } from '@capacitor-community/http';
 
   // Define interface that describes the server data
   interface ServerAuthData {
@@ -543,32 +545,52 @@ Click 'Create Complete Course' below to publish it and start learning.</div>
         usedVideoIds: Array.from(globalUsedVideoIds).join(',') 
       });
       
+      // Get server auth UID
+      const serverAuthuid = data?.serverAuth?.user?.uid as string | undefined;
+      
       // Prepare headers with multiple sources of auth
-      const headers: Record<string, string> = {
-        Accept: "application/json",
-        "Cross-Origin-Opener-Policy": "same-origin",
-        "Authorization": `Bearer ${token}`
+      const headers = {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+        "Authorization": `Bearer ${token}`,
+        ...(serverAuthuid ? { "X-Server-Auth-UID": serverAuthuid } : {})
       };
       
-      // Add server auth as backup
-      const serverAuthuid = data?.serverAuth?.user?.uid as string | undefined;
-      if (serverAuthuid) {
-        headers["X-Server-Auth-UID"] = serverAuthuid;
-      }
+      let responseData;
+      const url = `${API_CONFIG.baseURL}/api/search-videos?${queryParams.toString()}`;
       
-      const response = await fetch(
-        `${API_CONFIG.baseURL}/api/search-videos?${queryParams.toString()}`,
-        {
-          headers,
-          credentials: 'include'
-        },
-      );
+      if (API_CONFIG.isNative) {
+        // Use native HTTP implementation on mobile
+        const httpResult = await Http.request({
+          method: 'GET',
+          url: url,
+          headers: headers,
+          params: {} // Add empty params object to prevent null pointer exception
+        });
+        
+        if (httpResult.status < 200 || httpResult.status >= 300) {
+          throw new Error(`API request failed with status ${httpResult.status}: ${httpResult.data?.error || 'Unknown error'}`);
+        }
+        
+        // Parse response data
+        responseData = typeof httpResult.data === 'string' 
+          ? JSON.parse(httpResult.data) 
+          : httpResult.data;
+      } else {
+        // Use regular fetch for web
+        const response = await fetch(url, {
+          ...getFetchOptions({
+            headers: headers
+          })
+        });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to fetch videos");
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || "Failed to fetch videos");
+        }
+        
+        responseData = await response.json();
       }
-      const responseData = await response.json();
 
       // Update the videos for this module
       moduleVideos[moduleIndex] = responseData.videos;
@@ -673,38 +695,66 @@ Click 'Create Complete Course' below to publish it and start learning.</div>
       const token = await ensureFreshToken();
       if (!token) return;
 
+      // Get server auth UID
+      const serverAuthuid = data?.serverAuth?.user?.uid as string | undefined;
+      
       // Prepare headers with multiple sources of auth
-      const headers: Record<string, string> = {
+      const headers = {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}`
+        "Accept": "application/json",
+        "Authorization": `Bearer ${token}`,
+        ...(serverAuthuid ? { "X-Server-Auth-UID": serverAuthuid } : {})
       };
       
-      // Add server auth as backup
-      const serverAuthuid = data?.serverAuth?.user?.uid as string | undefined;
-      if (serverAuthuid) {
-        headers["X-Server-Auth-UID"] = serverAuthuid;
+      // Prepare request data
+      const requestData = {
+        courseStructure,
+        selectedVideos: selectedVideosList,
+        moduleTranscripts,
+        // Include server auth info
+        serverAuthInfo: data?.serverAuth ? {
+          uid: data.serverAuth.user?.uid as string | undefined,
+          isAuthenticated: data.serverAuth.isAuthenticated as boolean
+        } : null
+      };
+      
+      let responseData;
+      const url = `${API_CONFIG.baseURL}/api/create-final-course`;
+      
+      if (API_CONFIG.isNative) {
+        // Use Capacitor HTTP for mobile
+        const httpResult = await Http.request({
+          method: 'POST',
+          url: url,
+          headers: headers,
+          data: requestData,
+          params: {} // Add empty params object to prevent null pointer exception
+        });
+        
+        if (httpResult.status < 200 || httpResult.status >= 300) {
+          throw new Error(`API request failed with status ${httpResult.status}: ${httpResult.data?.error || 'Unknown error'}`);
+        }
+        
+        // Parse response data
+        responseData = typeof httpResult.data === 'string' 
+          ? JSON.parse(httpResult.data) 
+          : httpResult.data;
+      } else {
+        // Use regular fetch for web
+        const response = await fetch(url, {
+          method: "POST",
+          ...getFetchOptions({
+            headers: headers,
+            body: JSON.stringify(requestData)
+          })
+        });
+      
+        responseData = await response.json();
       }
-
-      const response = await fetch(`${API_CONFIG.baseURL}/api/create-final-course`, {
-        method: "POST",
-        headers,
-        body: JSON.stringify({
-          courseStructure,
-          selectedVideos: selectedVideosList,
-          moduleTranscripts,
-          // Include server auth info
-          serverAuthInfo: data?.serverAuth ? {
-            uid: data.serverAuth.user?.uid as string | undefined,
-            isAuthenticated: data.serverAuth.isAuthenticated as boolean
-          } : null
-        }),
-        credentials: 'include' // Include cookies with the request
-      });
 
       finalLoadingState.setProgress(80);
       finalLoadingState.setStep("Processing course content...");
 
-      const responseData = await response.json();
       if (!responseData.success)
         throw new Error(responseData.error || "Failed to create final course");
 
@@ -755,13 +805,6 @@ Click 'Create Complete Course' below to publish it and start learning.</div>
       console.log("Making API request with token length:", token.length);
       console.log("First 20 chars of token:", token.substring(0, 20));
       
-      // Make sure the token is properly formatted
-      if (!token.includes('.')) {
-        console.error("Invalid token format - not a JWT");
-        error = "Authentication error: Invalid token format";
-        return;
-      }
-      
       // Check auth state directly
       console.log("Current auth user:", auth.currentUser ? `UID: ${auth.currentUser.uid}` : "Not signed in");
       
@@ -777,62 +820,95 @@ Click 'Create Complete Course' below to publish it and start learning.</div>
       // Re-set the cookie right before the fetch to ensure it's fresh
       document.cookie = `firebase-token=${token}; path=/; max-age=3600; SameSite=Lax`;
       
-      // Prepare headers with multiple sources of auth
-      const headers: Record<string, string> = {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}`,
-        "X-Firebase-Token": token
-      };
-      
-      // Try adding server auth as a backup
-      if (serverAuthuid) {
-        headers["X-Server-Auth-UID"] = serverAuthuid;
+      // Skip the HEAD check on mobile - it often triggers CORS preflight issues
+      if (!API_CONFIG.isNative) {
+        console.log("Checking API endpoint connection (web only)...");
+        try {
+          const headersCheckResponse = await fetch(`${API_CONFIG.baseURL}/api/generate-course`, { 
+            method: "HEAD",
+            credentials: 'include',
+            headers: {
+              "Authorization": token ? `Bearer ${token}` : "",
+              "X-Firebase-Token": token || "",
+              ...(serverAuthuid ? { "X-Server-Auth-UID": serverAuthuid } : {})
+            }
+          });
+          console.log("API connection check:", headersCheckResponse.status, headersCheckResponse.statusText);
+          console.log("API headers:", Object.fromEntries([...headersCheckResponse.headers.entries()]));
+        } catch (headersError) {
+          console.log("API connection check failed (this is usually fine):", 
+            headersError instanceof Error ? headersError.message : "Unknown error");
+        }
+      } else {
+        console.log("Skipping API connection check on mobile platform");
       }
-      
-      // Debug check to verify server connection and CORS setup
-      console.log("Checking API endpoint connection...");
-      try {
-        const headersCheckResponse = await fetch(`${API_CONFIG.baseURL}/api/generate-course`, { 
-          method: "HEAD",
-          credentials: 'include',
-          headers: {
-            "Authorization": token ? `Bearer ${token}` : "",
-            "X-Firebase-Token": token || "",
-            ...headers
-          }
-        });
-        console.log("API connection check:", headersCheckResponse.status, headersCheckResponse.statusText);
-        console.log("API headers:", Object.fromEntries([...headersCheckResponse.headers.entries()]));
-        // The 405 error is expected if we haven't implemented HEAD yet, so we catch and handle it
-      } catch (headersError) {
-        console.log("API connection check failed (this is usually fine):", 
-          headersError instanceof Error ? headersError.message : "Unknown error");
-      }
-      
+        
       // Make the actual API request
       console.log("Making actual API request...");
-      const response = await fetch(`${API_CONFIG.baseURL}/api/generate-course`, {
-        method: "POST",
-        headers,
-        body: JSON.stringify({ 
-          courseInput: courseObjective,
-          // Include auth info in the request body as well
-          serverAuthInfo: data?.serverAuth ? {
-            uid: data.serverAuth.user?.uid as string | undefined,
-            isAuthenticated: data.serverAuth.isAuthenticated as boolean
-          } : null,
-          // Include the token and user ID directly in the request body
-          token: token,
-          userId: auth.currentUser?.uid
-        }),
-        credentials: 'include', // Important: include cookies with the request
-        mode: 'same-origin', // Ensure the request goes to same origin
-      });
       
-      console.log("API response status:", response.status);
-      console.log("API response headers:", Object.fromEntries([...response.headers.entries()]));
+      // Prepare the body data
+      const requestData = { 
+        courseInput: courseObjective,
+        // Include auth info in the request body as well
+        serverAuthInfo: data?.serverAuth ? {
+          uid: data.serverAuth.user?.uid as string | undefined,
+          isAuthenticated: data.serverAuth.isAuthenticated as boolean
+        } : null,
+        // Include the token and user ID directly in the request body
+        token: token,
+        userId: auth.currentUser?.uid
+      };
       
-      const responseData = await response.json();
+      // Prepare headers for the request
+      const headers = {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+        "Authorization": `Bearer ${token}`,
+        "X-Firebase-Token": token,
+        ...(serverAuthuid ? { "X-Server-Auth-UID": serverAuthuid } : {})
+      };
+      
+      let responseData;
+      
+      // Use different HTTP implementations for web vs. mobile
+      if (API_CONFIG.isNative) {
+        // Use native HTTP implementation on mobile to bypass CORS
+        console.log("Using Capacitor HTTP plugin for mobile request");
+        const httpResult = await Http.request({
+          method: 'POST',
+          url: `${API_CONFIG.baseURL}/api/generate-course`,
+          headers: headers,
+          data: requestData,
+          params: {} // Add empty params object to prevent null pointer exception
+        });
+        
+        console.log("Capacitor HTTP response status:", httpResult.status);
+        
+        if (httpResult.status < 200 || httpResult.status >= 300) {
+          throw new Error(`API request failed with status ${httpResult.status}: ${httpResult.data?.error || 'Unknown error'}`);
+        }
+        
+        // Parse response data
+        responseData = typeof httpResult.data === 'string' 
+          ? JSON.parse(httpResult.data) 
+          : httpResult.data;
+      } else {
+        // Use regular fetch for web requests
+        console.log("Using browser fetch for web request");
+        const response = await fetch(`${API_CONFIG.baseURL}/api/generate-course`, {
+          method: "POST",
+          ...getFetchOptions({
+            headers: headers,
+            body: JSON.stringify(requestData)
+          })
+        });
+        
+        console.log("API response status:", response.status);
+        console.log("API response headers:", Object.fromEntries([...response.headers.entries()]));
+        
+        responseData = await response.json();
+      }
+      
       console.log("Course structure:", responseData);
 
       if (!responseData.success) {
@@ -1427,7 +1503,7 @@ Click 'Create Complete Course' below to publish it and start learning.</div>
                       stroke-linecap="round"
                       stroke-linejoin="round"
                       d="M15.1667 1L15.7646 2.11777C16.1689 2.87346 16.371 3.25131 16.2374 3.41313C16.1037 3.57495 15.6635 3.44426 14.7831 3.18288C13.9029 2.92155 12.9684 2.78095 12 2.78095C6.75329 2.78095 2.5 6.90846 2.5 12C2.5 13.6791 2.96262 15.2535 3.77093 16.6095M8.83333 23L8.23536 21.8822C7.83108 21.1265 7.62894 20.7486 7.7626 20.5868C7.89627 20.425 8.33649 20.5557 9.21689 20.8171C10.0971 21.0784 11.0316 21.219 12 21.219C17.2467 21.219 21.5 17.0915 21.5 12C21.5 10.3208 21.0374 8.74647 20.2291 7.39047"
-                    />
+                      />
                   </svg>
                 {/if}
               </button>

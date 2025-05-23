@@ -5,11 +5,13 @@ const config: CapacitorConfig = {
   appName: 'YouVersity',
   webDir: 'build',
   server: {
-    // Don't specify allowNavigation for mobile apps that need to work with the API
-    // This allows the app to connect to any domain via fetch/XHR
+    // For Android, we need to use a valid URL structure
     androidScheme: 'https',
-    // Clear hostname to allow fetch requests to any domain
-    hostname: ''
+    // Use 'localhost' for local web content instead of empty string
+    hostname: 'localhost',
+    // Set this to true to load from the built web directory
+    iosScheme: 'ionic',
+    cleartext: true
   },
   plugins: {
     SplashScreen: {

@@ -21,7 +21,7 @@ export function addCorsHeaders(response: Response, request: Request): Response {
   }
   
   corsResponse.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, HEAD');
-  corsResponse.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Firebase-Token, X-Server-Auth-UID, X-Requested-With, Accept');
+  corsResponse.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Firebase-Token, X-Server-Auth-UID, X-Requested-With, Accept, Cache-Control, Pragma');
   
   // Add cache control headers to avoid preflight caching issues
   corsResponse.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate');
@@ -38,7 +38,7 @@ export function handleCorsOptions(request: Request): Response {
   const headers = new Headers({
     'Access-Control-Allow-Origin': request.headers.get('origin') || '*',
     'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Firebase-Token, X-Server-Auth-UID',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Firebase-Token, X-Server-Auth-UID, X-Requested-With, Accept, Cache-Control, Pragma',
     'Access-Control-Allow-Credentials': 'true',
     'Access-Control-Max-Age': '3600', // Cache preflight for 1 hour
   });

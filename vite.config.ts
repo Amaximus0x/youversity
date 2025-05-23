@@ -14,7 +14,9 @@ export default defineConfig({
         'service-worker': 'static/service-worker.js'
       },
       external: [
-        '@capacitor/core'  // Externalize Capacitor to avoid build errors
+        '@capacitor/core',  // Exclude Capacitor from the build
+        'undici'            // Externalize undici to prevent build errors
+
       ]
     }
   }

@@ -1,0 +1,7 @@
+version: "2"
+authtoken: # You can add your authtoken here if you have one
+tunnels:
+  web:
+    proto: http
+    addr: 3000
+    inspect: false 
