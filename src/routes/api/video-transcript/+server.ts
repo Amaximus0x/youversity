@@ -1,10 +1,11 @@
 import { error, json } from "@sveltejs/kit";
 import axios from "axios";
-import { ProxyAgent } from "undici";
+import { ProxyAgent, fetch as proxyFetch } from "undici";
 import { addCorsHeaders, handleCorsOptions } from '$lib/utils/cors';
 
 const proxyUrl =
   "http://kQdcMjN5Ls6E1DK3:gurktsM4S7wdOnUF@geo.iproyal.com:12321";
+const proxyAgent = new ProxyAgent(proxyUrl);
 
 // Add OPTIONS handler for CORS preflight requests
 export const OPTIONS = async ({ request }) => {
@@ -16,7 +17,8 @@ async function fetchTranscriptFromYoutube(videoId: string) {
   console.log(`Video ID: ${videoId}`);
 
   try {
-    const response = await fetch(`https://www.youtube.com/watch?v=${videoId}`, {
+    const response = await proxyFetch(`https://www.youtube.com/watch?v=${videoId}`, {
+      dispatcher: proxyAgent,
       headers: {
         "User-Agent":
           "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
@@ -178,12 +180,13 @@ export async function GET({ url, request }) {
     });
     
     return addCorsHeaders(response, request);
-  } catch (err) {
+  } catch (err: unknown) {
     console.error("Error in transcript endpoint:", err);
+    const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
     const response = new Response(
       JSON.stringify({
         transcript: "No transcript available for this video",
-        error: err.message,
+        error: errorMessage,
       }),
       {
         status: 200,
@@ -207,17 +210,28 @@ export async function POST({ request }) {
       return addCorsHeaders(errorResponse, request);
     }
     
-    const response = await fetch(`https://www.youtube.com/watch?v=${videoId}`);
+    const response = await proxyFetch(`https://www.youtube.com/watch?v=${videoId}`, {
+      dispatcher: proxyAgent,
+      headers: {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Accept-Language": "en-US,en;q=0.9",
+        Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Cache-Control": "no-cache",
+        Pragma: "no-cache",
+        Referer: "https://www.youtube.com/",
+      },
+    });
     const html = await response.text();
     
     // Extract and process transcript...
     
     const successResponse = json({ success: true, transcript: "Successfully processed" });
     return addCorsHeaders(successResponse, request);
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Error in POST transcript endpoint:", error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
     const errorResponse = json({ 
-      error: error.message || "Failed to process transcript",
+      error: errorMessage || "Failed to process transcript",
       transcript: "No transcript available for this video" 
     });
     return addCorsHeaders(errorResponse, request);
