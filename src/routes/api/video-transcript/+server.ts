@@ -1,7 +1,8 @@
-import { error, json } from "@sveltejs/kit";
+import { error } from "@sveltejs/kit";
 import axios from "axios";
 import { ProxyAgent, fetch as proxyFetch } from "undici";
 import { addCorsHeaders, handleCorsOptions } from '$lib/utils/cors';
+import { Dispatcher } from "undici";
 
 const proxyUrl =
   "http://kQdcMjN5Ls6E1DK3:gurktsM4S7wdOnUF@geo.iproyal.com:12321";
@@ -12,13 +13,14 @@ export const OPTIONS = async ({ request }) => {
   return handleCorsOptions(request);
 };
 
-async function fetchTranscriptFromYoutube(videoId: string) {
+async function fetchTranscriptFromYoutube(videoId: string): Promise<string> {
   console.log("=== Starting transcript fetch ===");
   console.log(`Video ID: ${videoId}`);
 
   try {
     const response = await proxyFetch(`https://www.youtube.com/watch?v=${videoId}`, {
       dispatcher: proxyAgent,
+
       headers: {
         "User-Agent":
           "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
@@ -29,7 +31,10 @@ async function fetchTranscriptFromYoutube(videoId: string) {
         Pragma: "no-cache",
         Referer: "https://www.youtube.com/",
       },
-    });
+      dispatcher: proxyAgent,
+    };
+
+    const response = await fetch(`https://www.youtube.com/watch?v=${videoId}`, fetchOptions);
 
     if (!response.ok) {
       throw new Error("Invalid response from YouTube");
@@ -98,9 +103,9 @@ async function fetchTranscriptFromYoutube(videoId: string) {
       throw new Error("No English captions found");
     }
 
-    const transcriptResponse = await axios.get(captionTrack.baseUrl, {
-      timeout: 10000,
-      maxRedirects: 5,
+    // Step 2: Fetch the transcript XML with proxy
+    console.log("Fetching transcript XML with proxy...");
+    const transcriptResponse = await fetch(captionTrack.baseUrl, {
       headers: {
         Accept: "*/*",
         "Accept-Language": "en-US,en;q=0.9",
@@ -110,10 +115,14 @@ async function fetchTranscriptFromYoutube(videoId: string) {
         "User-Agent":
           "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
       },
-      proxy: false,
-    });
+      dispatcher: proxyAgent, // Use the same proxy agent
+    } as { headers: Record<string, string>; dispatcher: Dispatcher });
 
-    return transcriptResponse.data;
+    if (!transcriptResponse.ok) {
+      throw new Error(`Failed to fetch transcript XML: ${transcriptResponse.status}`);
+    }
+
+    return await transcriptResponse.text();
   } catch (error) {
     console.error("Error fetching transcript:", error);
     throw error;
@@ -165,7 +174,12 @@ export async function GET({ url, request }) {
     const videoId = url.searchParams.get("videoId");
 
     if (!videoId) {
-      const errorResponse = json({ error: "Video ID is required" }, { status: 400 });
+      const errorResponse = new Response(JSON.stringify({ error: "Video ID is required" }), {
+        status: 400,
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
       return addCorsHeaders(errorResponse, request);
     }
 
@@ -173,17 +187,19 @@ export async function GET({ url, request }) {
     const transcriptResponse = await fetchTranscriptFromYoutube(videoId);
     const cleanTranscript = await parseTranscriptXml(transcriptResponse);
 
-    const response = new Response(JSON.stringify({ transcript: cleanTranscript }), {
+    const successResponse = new Response(JSON.stringify({ transcript: cleanTranscript }), {
       headers: {
         "Content-Type": "application/json",
       },
     });
+
     
     return addCorsHeaders(response, request);
   } catch (err: unknown) {
     console.error("Error in transcript endpoint:", err);
     const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
     const response = new Response(
+
       JSON.stringify({
         transcript: "No transcript available for this video",
         error: errorMessage,
@@ -195,6 +211,7 @@ export async function GET({ url, request }) {
         },
       },
     );
+
     
     return addCorsHeaders(response, request);
   }
@@ -234,6 +251,7 @@ export async function POST({ request }) {
       error: errorMessage || "Failed to process transcript",
       transcript: "No transcript available for this video" 
     });
+
     return addCorsHeaders(errorResponse, request);
   }
 }

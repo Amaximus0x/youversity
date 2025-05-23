@@ -1,0 +1,3 @@
+@echo off
+echo Running Replit build process...
+node build-replit.js 

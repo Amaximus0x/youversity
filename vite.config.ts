@@ -16,6 +16,7 @@ export default defineConfig({
       external: [
         '@capacitor/core',  // Exclude Capacitor from the build
         'undici'            // Externalize undici to prevent build errors
+
       ]
     }
   }
