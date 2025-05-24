@@ -286,11 +286,6 @@ function createFinalLoadingStore() {
       courseId,
       isLoading: true // Keep loading true so modal stays open
     })),
-    stopLoading: (courseId?: string) => update(state => ({
-      ...state,
-      courseId: courseId || null,
-      isLoading: false
-    })),
   };
 }
 

@@ -18,9 +18,8 @@ async function fetchTranscriptFromYoutube(videoId: string): Promise<string> {
   console.log(`Video ID: ${videoId}`);
 
   try {
-    const response = await proxyFetch(`https://www.youtube.com/watch?v=${videoId}`, {
-      dispatcher: proxyAgent,
-
+    // Define fetchOptions correctly
+    const fetchOptions = {
       headers: {
         "User-Agent":
           "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
@@ -194,7 +193,7 @@ export async function GET({ url, request }) {
     });
 
     
-    return addCorsHeaders(response, request);
+    return addCorsHeaders(successResponse, request);
   } catch (err: unknown) {
     console.error("Error in transcript endpoint:", err);
     const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
