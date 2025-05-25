@@ -4,10 +4,10 @@
   "private": true,
   "scripts": {
     "dev": "vite dev",
-    "build": "cross-env ADAPTER_TARGET=vercel vite build",
-    "build:vercel": "cross-env ADAPTER_TARGET=vercel vite build",
+    "build": "cross-env ADAPTER_TARGET=replit vite build",
     "build:replit": "cross-env ADAPTER_TARGET=replit vite build",
     "build:capacitor": "cross-env ADAPTER_TARGET=capacitor vite build",
+    "build:vercel": "cross-env ADAPTER_TARGET=vercel vite build",
     "preview": "vite preview",
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
     "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",

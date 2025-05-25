@@ -21,6 +21,13 @@ export const HEAD: RequestHandler = async ({ request, locals }) => {
 };
 
 export const POST: RequestHandler = async ({ request, locals }) => {
+  // CAPACITOR DEBUG: Very early log
+  console.log("CAPACITOR DEBUG: /api/generate-course POST handler invoked. Origin:", request.headers.get('origin'));
+  console.log("CAPACITOR DEBUG: Initial locals.user:", JSON.stringify(locals.user));
+  console.log("CAPACITOR DEBUG: Request Method:", request.method);
+  console.log("CAPACITOR DEBUG: Request URL:", request.url);
+  // END CAPACITOR DEBUG
+
   console.log("API: /api/generate-course endpoint called");
   console.log("API: Request method:", request.method);
   console.log("API: Request headers:", Object.fromEntries([...request.headers.entries()]));
