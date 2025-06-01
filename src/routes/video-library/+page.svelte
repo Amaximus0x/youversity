@@ -112,7 +112,7 @@
     // Function to handle video upload
     function handleUploadVideo() {
         // Implement video upload functionality
-        alert("Upload video functionality to be implemented");
+        alert("Add video functionality to be implemented");
     }
 
     // Function to handle video card click
@@ -122,7 +122,7 @@
             toggleVideoSelection(id);
         } else {
             // Normal click behavior (e.g., play video)
-            console.log(`Video ${id} clicked`);
+            goto(`/video-library/${id}`);
         }
     }
 
@@ -466,12 +466,12 @@
                         {/if}
                     </div>
 
-                    <!-- Upload Video Button -->
+                    <!-- Add Video Button -->
                     <button
                         class="flex items-center gap-2 px-2 pl-4 py-2 bg-Green text-white rounded-lg hover:bg-GreenHover transition-colors"
                         on:click={handleUploadVideo}
                     >
-                        <span class="text-body">Upload video</span>
+                        <span class="text-body">Add video</span>
                         <img
                             src="/icons/BoxArrowUp.svg"
                             alt="Create"
@@ -579,12 +579,12 @@
                 {/if}
             </div>
 
-            <!-- Upload Video Button -->
+            <!-- Add Video Button -->
             <button
                 class="flex items-center gap-2 px-4 py-2 bg-Green text-white rounded-lg hover:bg-GreenHover transition-colors"
                 on:click={handleUploadVideo}
             >
-                <span class="text-body text-nowrap">Upload video</span>
+                <span class="text-body text-nowrap">Add video</span>
                 <img src="/icons/BoxArrowUp.svg" alt="Create" class="w-6 h-6" />
             </button>
         </div>

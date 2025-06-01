@@ -54,7 +54,7 @@
     
     <!-- Options Button or Selection Checkbox -->
     <div 
-      class="p-2 bg-black/60 backdrop-blur-[2px] rounded-md flex justify-center items-center z-10" 
+      class="p-2 bg-black/60 backdrop-blur-[2px] rounded-full flex justify-center items-center z-10" 
       on:click={selectable ? handleSelectClick : handleOptionsClick}
       on:keydown={selectable ? handleSelectKeyDown : handleOptionsKeyDown}
       role={selectable ? "checkbox" : "button"}
