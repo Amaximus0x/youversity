@@ -72,7 +72,10 @@
   );
 
   // Placeholder functions for action buttons under video
-  function showInsights() { alert("Show insights for " + videoDetails.title); }
+  function showInsights() { 
+    // alert("Show insights for " + videoDetails.title);
+    goto(`/video-library/video-insight/${currentVideoId}`);
+  }
   function shareVideo() { alert("Share " + videoDetails.title); }
   function createNewCourseWithVideo() { alert("Create new course with " + videoDetails.title); }
   function addToExistingCourseWithVideo() { alert("Add " + videoDetails.title + " to existing course"); }
@@ -82,7 +85,7 @@
 </script>
 
 <!-- Overall page structure, p-6 for padding as seen in screenshots -->
-<div class="min-h-screen text-light-text-primary dark:text-dark-text-primary p-6 -mr-7">
+<div class="min-h-screen text-light-text-primary dark:text-dark-text-primary">
   <div class="container mx-auto"> <!-- Container for max-width and centering -->
 
     <!-- Header Section (mimicking video-library/+page.svelte) -->
