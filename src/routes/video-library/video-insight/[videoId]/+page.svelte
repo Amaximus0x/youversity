@@ -171,10 +171,7 @@
                         class="flex gap-4 sm:gap-6 lg:gap-8 overflow-x-auto pb-1"
                     >
                         <button
-                            class="pb-4 relative whitespace-nowrap {activeTabForDisplay ===
-                            'saved'
-                                ? 'text-brand-red dark:text-brand-red text-body-semibold'
-                                : 'text-light-text-tertiary dark:text-dark-text-tertiary text-body'}"
+                            class="pb-4 relative whitespace-nowrap {activeTabForDisplay === 'saved' ? 'text-Green dark:text-TransparentGreen2 text-body-semibold' : 'text-light-text-tertiary dark:text-dark-text-tertiary text-body'}"
                             on:click={() => (activeTabForDisplay = "saved")}
                         >
                             <span class="hidden lg:inline">Saved videos</span>
@@ -186,14 +183,13 @@
                             </span>
                             {#if activeTabForDisplay === "saved"}
                                 <div
-                                    class="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-red dark:bg-brand-red"
+                                    class="absolute bottom-0 left-0 right-0 h-0.5 bg-Green dark:bg-TransparentGreen2"
                                 ></div>
                             {/if}
                         </button>
                         <button
-                            class="pb-4 relative whitespace-nowrap {activeTabForDisplay ===
-                            'assigned'
-                                ? 'text-brand-red dark:text-brand-red text-body-semibold'
+                            class="pb-4 relative whitespace-nowrap {activeTabForDisplay === 'assigned'
+                                ? 'text-Green dark:text-TransparentGreen2 text-body-semibold'
                                 : 'text-light-text-tertiary dark:text-dark-text-tertiary text-body'}"
                             on:click={() => (activeTabForDisplay = "assigned")}
                         >
@@ -207,7 +203,7 @@
                             </span>
                             {#if activeTabForDisplay === "assigned"}
                                 <div
-                                    class="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-red dark:bg-brand-red"
+                                    class="absolute bottom-0 left-0 right-0 h-0.5 bg-Green dark:bg-TransparentGreen2"
                                 ></div>
                             {/if}
                         </button>
@@ -217,7 +213,7 @@
                         class="hidden lg:flex items-center gap-4 absolute right-0 top-[-8px] h-full"
                     >
                         <button
-                            class="flex items-center gap-2 px-2 pl-4 py-2 bg-brand-turquoise text-white rounded-lg hover:bg-brand-turquoise/90 transition-colors"
+                            class="flex items-center gap-2 px-2 pl-4 py-2 bg-Green text-white rounded-lg hover:bg-GreenHover transition-colors"
                             on:click={handleUploadVideo}
                         >
                             <span class="text-body">Upload video</span>
@@ -233,7 +229,7 @@
             <!-- Upload Video Button - Mobile -->
             <div class="flex lg:hidden items-center justify-end gap-4 mt-4">
                 <button
-                    class="flex items-center gap-2 px-4 py-2 bg-brand-turquoise text-white rounded-lg hover:bg-brand-turquoise/90 transition-colors"
+                    class="flex items-center gap-2 px-4 py-2 bg-Green text-white rounded-lg hover:bg-GreenHover transition-colors"
                     on:click={handleUploadVideo}
                 >
                     <span class="text-body text-nowrap">Upload video</span>
@@ -403,7 +399,7 @@
                         <img
                             src={videoDetails.thumb}
                             alt="Video thumbnail"
-                            class="w-[70px] h-[40px] lg:w-[105px] lg:h-[60px] rounded-md object-cover"
+                            class="w-[70px] h-[40px] lg:w-[93px] lg:h-[48px] rounded-md object-cover"
                         />
                         <h2
                             class="w-[438px] text-semibody-medium lg:text-body-semibold text-light-text-primary dark:text-dark-text-primary "

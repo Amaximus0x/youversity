@@ -2,6 +2,7 @@
   import { page } from '$app/stores';
   import { onMount } from 'svelte';
   import { goto } from '$app/navigation'; // For navigation, e.g. upload button
+  import AssignVideoModal from '$lib/components/AssignVideoModal.svelte'; // Import the modal
 
   // Mock data for the specific video being viewed
   const videoDetails = {
@@ -31,6 +32,7 @@
   let currentVideoId: string | null = null;
   let expandedTagId: string | null = 'ai'; // Default 'AI' tag to be expanded
   let tagSearchQuery = "";
+  let showAssignModal = false; // State for controlling modal visibility
 
   // For visual consistency with the main library page's tabs
   let activeTabForDisplay: 'saved' | 'uploaded' | 'assigned' = 'saved';
@@ -79,7 +81,10 @@
   function shareVideo() { alert("Share " + videoDetails.title); }
   function createNewCourseWithVideo() { alert("Create new course with " + videoDetails.title); }
   function addToExistingCourseWithVideo() { alert("Add " + videoDetails.title + " to existing course"); }
-  function assignVideo() { alert("Assign " + videoDetails.title); }
+  function assignVideo() { 
+    // alert("Assign " + videoDetails.title);
+    showAssignModal = true; // Open the modal
+  }
   function deleteVideo() { alert("Delete " + videoDetails.title); }
 
 </script>
@@ -318,3 +323,5 @@
 
   </div>
 </div> 
+
+<AssignVideoModal bind:showModal={showAssignModal} on:close={() => showAssignModal = false} /> 
