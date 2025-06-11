@@ -29,7 +29,7 @@ export default {
       colors: {
         // Brand colors
         'brand': {
-          'red': '#EE434A',
+          'red': '#EB434A',
           'turquoise': '#42C1C8',
           'navy': '#2A4D61',
           'darkBlue': '#1E3443'

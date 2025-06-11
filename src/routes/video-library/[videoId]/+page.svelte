@@ -3,6 +3,7 @@
   import { onMount } from 'svelte';
   import { goto } from '$app/navigation'; // For navigation, e.g. upload button
   import AssignVideoModal from '$lib/components/AssignVideoModal.svelte'; // Import the modal
+  import CreateCourseModal from '$lib/components/modals/CreateCourseModal.svelte';
 
   // Mock data for the specific video being viewed
   const videoDetails = {
@@ -33,6 +34,7 @@
   let expandedTagId: string | null = 'ai'; // Default 'AI' tag to be expanded
   let tagSearchQuery = "";
   let showAssignModal = false; // State for controlling modal visibility
+  let showCreateCourseModal = false;
 
   // For visual consistency with the main library page's tabs
   let activeTabForDisplay: 'saved' | 'uploaded' | 'assigned' = 'saved';
@@ -79,7 +81,9 @@
     goto(`/video-library/video-insight/${currentVideoId}`);
   }
   function shareVideo() { alert("Share " + videoDetails.title); }
-  function createNewCourseWithVideo() { alert("Create new course with " + videoDetails.title); }
+  function createNewCourseWithVideo() { 
+    showCreateCourseModal = true;
+  }
   function addToExistingCourseWithVideo() { alert("Add " + videoDetails.title + " to existing course"); }
   function assignVideo() { 
     // alert("Assign " + videoDetails.title);
@@ -325,3 +329,4 @@
 </div> 
 
 <AssignVideoModal bind:showModal={showAssignModal} on:close={() => showAssignModal = false} /> 
+<CreateCourseModal bind:showModal={showCreateCourseModal} video={videoDetails} on:close={() => showCreateCourseModal = false} /> 
