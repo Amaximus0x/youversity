@@ -4,6 +4,7 @@
   import { goto } from '$app/navigation'; // For navigation, e.g. upload button
   import AssignVideoModal from '$lib/components/AssignVideoModal.svelte'; // Import the modal
   import CreateCourseModal from '$lib/components/modals/CreateCourseModal.svelte';
+  import AddToExistingCourseModal from '$lib/components/modals/AddToExistingCourseModal.svelte';
 
   // Mock data for the specific video being viewed
   const videoDetails = {
@@ -35,6 +36,7 @@
   let tagSearchQuery = "";
   let showAssignModal = false; // State for controlling modal visibility
   let showCreateCourseModal = false;
+  let showAddToExistingCourseModal = false;
 
   // For visual consistency with the main library page's tabs
   let activeTabForDisplay: 'saved' | 'uploaded' | 'assigned' = 'saved';
@@ -84,7 +86,9 @@
   function createNewCourseWithVideo() { 
     showCreateCourseModal = true;
   }
-  function addToExistingCourseWithVideo() { alert("Add " + videoDetails.title + " to existing course"); }
+  function addToExistingCourseWithVideo() {
+    showAddToExistingCourseModal = true;
+  }
   function assignVideo() { 
     // alert("Assign " + videoDetails.title);
     showAssignModal = true; // Open the modal
@@ -330,3 +334,4 @@
 
 <AssignVideoModal bind:showModal={showAssignModal} on:close={() => showAssignModal = false} /> 
 <CreateCourseModal bind:showModal={showCreateCourseModal} video={videoDetails} on:close={() => showCreateCourseModal = false} /> 
+<AddToExistingCourseModal bind:showModal={showAddToExistingCourseModal} on:close={() => showAddToExistingCourseModal = false} /> 
