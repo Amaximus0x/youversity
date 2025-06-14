@@ -2,95 +2,155 @@
     import { onMount } from "svelte";
     import { user } from "$lib/stores/auth";
     import VideoLibraryCard from "$lib/components/VideoLibraryCard.svelte";
+    import TagsSidebar from "$lib/components/TagsSidebar.svelte";
     import { goto } from "$app/navigation";
     import { get } from "svelte/store";
+    import { collection, getDocs, query, where } from 'firebase/firestore';
+    import { db } from '$lib/firebase';
 
-    // Mock data for videos - would be replaced with actual data fetching
-    const savedVideos = [
-        {
-            id: "1",
-            title: "Coding for Everyone: The Foundations of Web Development",
-            description:
-                "Start your programming journey by learning HTML, CSS, and JavaScript to build functional and interactive websites.",
-            date: "10th May 2025",
-            duration: "25 min",
-        },
-        {
-            id: "2",
-            title: "Coding for Everyone: The Foundations of Web Development",
-            description:
-                "Start your programming journey by learning HTML, CSS, and JavaScript to build functional and interactive websites.",
-            date: "10th May 2025",
-            duration: "25 min",
-        },
-        {
-            id: "3",
-            title: "Coding for Everyone: The Foundations of Web Development",
-            description:
-                "Start your programming journey by learning HTML, CSS, and JavaScript to build functional and interactive websites.",
-            date: "10th May 2025",
-            duration: "25 min",
-        },
-    ];
-
-    const uploadedVideos = [
-        {
-            id: "4",
-            title: "Coding for Everyone: The Foundations of Web Development",
-            description:
-                "Start your programming journey by learning HTML, CSS, and JavaScript to build functional and interactive websites.",
-            date: "10th May 2025",
-            duration: "25 min",
-        },
-        {
-            id: "5",
-            title: "Coding for Everyone: The Foundations of Web Development",
-            description:
-                "Start your programming journey by learning HTML, CSS, and JavaScript to build functional and interactive websites.",
-            date: "10th May 2025",
-            duration: "25 min",
-        },
-    ];
-
-    const assignedVideos = [
-        {
-            id: "6",
-            title: "Coding for Everyone: The Foundations of Web Development",
-            description:
-                "Start your programming journey by learning HTML, CSS, and JavaScript to build functional and interactive websites.",
-            date: "10th May 2025",
-            duration: "25 min",
-        },
-    ];
-
-    // Mock data for tags
-    const availableTags = [
-        { id: "ai", name: "AI", count: 6 },
-        { id: "design", name: "Design", count: 0 },
-        { id: "finance", name: "Finance", count: 0 },
-        { id: "health", name: "Health", count: 0 },
-        { id: "crypto", name: "Crypto", count: 0 },
-    ];
-
-    let loading = false;
+    // State for videos and tags
+    let allVideos: any[] = [];
+    let displayedVideos: any[] = [];
+    let availableTags: { id: string; name: string; count: number }[] = [];
+    let tagVideos: { [key: string]: any[] } = {};
+    let loading = true;
     let error: string | null = null;
     let activeTab: "saved" | "uploaded" | "assigned" = "saved";
     let showSortDropdown = false;
     let sortOption: "newest" | "oldest" = "newest";
-    let displayedVideos = savedVideos;
-
-    // Tag-related state
-    let tagSearchQuery = "";
-    let selectedTags = new Set<string>();
-    let filteredTags = availableTags;
-    let expandedTagId: string | null = null;
 
     // Selection related state
     let showOptionsMenu = false;
     let optionsMenuPosition = { x: 0, y: 0 };
     let selectMode = false;
-    let selectedVideos = new Set<string>();
-    let hasSelectionOccurred = false; // Track if any selection has occurred during this session
+    let selectedVideos: Set<string> = new Set();
+    let hasSelectionOccurred = false;
+
+    // Video counts for tabs
+    let videoCount = {
+        saved: 0,
+        uploaded: 0,
+        assigned: 0
+    };
+
+    // Function to fetch videos from Firestore
+    async function fetchVideos() {
+        try {
+            loading = true;
+            error = null;
+
+            const currentUser = get(user);
+            if (!currentUser) {
+                error = 'Please sign in to view videos';
+                return;
+            }
+
+            // Query to fetch only current user's videos
+            const videosRef = collection(db, 'videos');
+            const userVideosQuery = query(videosRef, where('userId', '==', currentUser.uid));
+            const querySnapshot = await getDocs(userVideosQuery);
+            
+            allVideos = querySnapshot.docs.map(doc => ({
+                videoId: doc.id,
+                ...doc.data()
+            }));
+
+            // Update video counts - all videos are now user's videos
+            videoCount = {
+                saved: allVideos.length, // All fetched videos are user's videos
+                uploaded: allVideos.length, // Same as saved since we only fetch user's videos
+                assigned: 0 // This will be implemented when assignment feature is added
+            };
+
+            // Extract unique tags and their counts
+            const tagCounts = new Map<string, number>();
+            const tagVideoMap: { [key: string]: any[] } = {};
+            
+            allVideos.forEach(video => {
+                if (video.tag) {
+                    tagCounts.set(video.tag, (tagCounts.get(video.tag) || 0) + 1);
+                    if (!tagVideoMap[video.tag]) {
+                        tagVideoMap[video.tag] = [];
+                    }
+                    tagVideoMap[video.tag].push(video);
+                }
+            });
+
+            // Convert tag counts to array format
+            availableTags = Array.from(tagCounts.entries()).map(([id, count]) => ({
+                id,
+                name: id.charAt(0).toUpperCase() + id.slice(1),
+                count
+            }));
+
+            // Sort tags by count (most frequent first)
+            availableTags.sort((a, b) => b.count - a.count);
+            
+            // Store tag videos mapping
+            tagVideos = tagVideoMap;
+            
+            // Set initial displayed videos
+            updateDisplayedVideos();
+            
+        } catch (err) {
+            console.error('Error fetching videos:', err);
+            error = err instanceof Error ? err.message : 'Failed to load videos';
+        } finally {
+            loading = false;
+        }
+    }
+
+    // Function to update displayed videos based on sort option
+    function updateDisplayedVideos() {
+        let filtered = [...allVideos];
+        
+        // Sort videos
+        filtered.sort((a, b) => {
+            const dateA = new Date(a.publishedAt).getTime();
+            const dateB = new Date(b.publishedAt).getTime();
+            return sortOption === 'newest' ? dateB - dateA : dateA - dateB;
+        });
+
+        displayedVideos = filtered;
+    }
+
+    // Function to handle video click
+    function handleVideoClick(id: string) {
+        if (selectMode) {
+            toggleVideoSelection(id);
+        } else {
+            goto(`/video-library/${id}`);
+        }
+    }
+
+    // Function to handle options menu click
+    function handleOptionsClick(event: MouseEvent) {
+        event.stopPropagation();
+        const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
+        optionsMenuPosition = {
+            x: rect.left,
+            y: rect.bottom + window.scrollY,
+        };
+        showOptionsMenu = true;
+    }
+
+    // Function to toggle video selection
+    function toggleVideoSelection(id: string) {
+        if (selectedVideos.has(id)) {
+            selectedVideos.delete(id);
+        } else {
+            selectedVideos.add(id);
+            hasSelectionOccurred = true;
+        }
+        selectedVideos = new Set(selectedVideos);
+    }
+
+    // Function to handle sort option selection
+    function handleSortSelect(option: "newest" | "oldest") {
+        sortOption = option;
+        showSortDropdown = false;
+        updateDisplayedVideos();
+    }
 
     // Function to handle click outside of dropdown
     function handleClickOutside(event: MouseEvent) {
@@ -103,178 +163,83 @@
         }
     }
 
-    // Function to handle sort option selection
-    function handleSortSelect(option: "newest" | "oldest") {
-        sortOption = option;
-        showSortDropdown = false;
-    }
-
     // Function to handle video upload
     function handleUploadVideo() {
-        // Implement video upload functionality
-        alert("Add video functionality to be implemented");
-    }
-
-    // Function to handle video card click
-    function handleVideoClick(id: string) {
-        // When in select mode, clicking the card should select/deselect it
-        if (selectMode) {
-            toggleVideoSelection(id);
-        } else {
-            // Normal click behavior (e.g., play video)
-            goto(`/video-library/${id}`);
-        }
-    }
-
-    // Function to handle options menu click
-    function handleOptionsClick(event: MouseEvent) {
-        event.stopPropagation();
-        const rect = (
-            event.currentTarget as HTMLElement
-        ).getBoundingClientRect();
-        optionsMenuPosition = {
-            x: rect.left,
-            y: rect.bottom + window.scrollY,
-        };
-        showOptionsMenu = true;
+        // TODO: Implement video upload functionality
+        alert("Video upload functionality coming soon!");
     }
 
     // Function to enter select mode
     function enterSelectMode() {
         selectMode = true;
-        hasSelectionOccurred = false; // Reset selection tracking when entering select mode
+        hasSelectionOccurred = false;
         showOptionsMenu = false;
     }
 
     // Function to select all videos
     function selectAllVideos() {
         displayedVideos.forEach((video) => {
-            selectedVideos.add(video.id);
+            selectedVideos.add(video.videoId);
         });
-        selectedVideos = selectedVideos; // Trigger reactivity
-        hasSelectionOccurred = true; // Mark that selection has occurred
+        selectedVideos = new Set(selectedVideos);
+        hasSelectionOccurred = true;
         showOptionsMenu = false;
         selectMode = true;
     }
 
     // Function to show insights
     function showInsights() {
-        alert("Insights feature to be implemented");
+        alert("Insights feature coming soon!");
         showOptionsMenu = false;
     }
 
-    // Function to toggle selection of a video
-    function toggleVideoSelection(id: string) {
-        if (selectedVideos.has(id)) {
-            selectedVideos.delete(id);
-        } else {
-            selectedVideos.add(id);
-            hasSelectionOccurred = true; // Mark that selection has occurred
-        }
-        selectedVideos = new Set(selectedVideos); // Trigger reactivity
-    }
-
-    // Function to cancel selection mode
+    // Function to cancel selection
     function cancelSelection() {
         selectMode = false;
-        hasSelectionOccurred = false; // Reset selection tracking
+        hasSelectionOccurred = false;
         selectedVideos.clear();
-        selectedVideos = new Set(selectedVideos); // Trigger reactivity
+        selectedVideos = new Set(selectedVideos);
     }
-
-    // Function to toggle tag expansion
-    function toggleTagExpansion(tagId: string) {
-        if (expandedTagId === tagId) {
-            expandedTagId = null; // Collapse if already expanded
-        } else {
-            expandedTagId = tagId; // Expand new tag
-        }
-    }
-
-    // Placeholder for deleting a tag
-    function handleDeleteTag(tagId: string) {
-        alert(`Delete tag ${tagId} - functionality to be implemented.`);
-        // Optionally, remove the tag from availableTags and collapse
-        if (expandedTagId === tagId) {
-            expandedTagId = null;
-        }
-        // Re-filter tags if it was removed from availableTags
-        // availableTags = availableTags.filter(t => t.id !== tagId);
-        // filteredTags = availableTags.filter(tag => tag.name.toLowerCase().includes(tagSearchQuery.toLowerCase()));
-    }
-
-    // Mock sub-items for the AI tag based on the screenshot
-    const aiSubItems = [
-        { id: 'vidSub1', title: 'Coding for Everyone...', thumb: '/images/videoCardThumb.png' },
-        { id: 'vidSub2', title: 'Understanding AI...', thumb: '/images/videoCardThumb.png' },
-        { id: 'vidSub3', title: 'Web3 and AI focu...', thumb: '/images/videoCardThumb.png' }
-    ];
-
-    // When all videos are deselected, exit selection mode only if selection has occurred previously
-    $: if (selectMode && selectedCount === 0 && hasSelectionOccurred) {
-        // This timeout prevents flickering during the selection/deselection process
-        setTimeout(() => {
-            if (selectedCount === 0) {
-                selectMode = false;
-                hasSelectionOccurred = false; // Reset selection tracking
-            }
-        }, 100);
-    }
-
-    // Filter tags based on search query
-    $: filteredTags = availableTags.filter((tag) =>
-        tag.name.toLowerCase().includes(tagSearchQuery.toLowerCase()),
-    );
 
     // Functions for selected videos actions
     function createNewCourse() {
-        alert(`Create new course with ${selectedVideos.size} videos`);
+        alert(`Create new course with ${selectedVideos.size} videos - Coming soon!`);
     }
 
     function addToExistingCourse() {
-        alert(`Add ${selectedVideos.size} videos to existing course`);
+        alert(`Add ${selectedVideos.size} videos to existing course - Coming soon!`);
     }
 
     function assignVideos() {
-        alert(`Assign ${selectedVideos.size} videos`);
+        alert(`Assign ${selectedVideos.size} videos - Coming soon!`);
     }
 
     function deleteVideos() {
-        alert(`Delete ${selectedVideos.size} videos`);
+        alert(`Delete ${selectedVideos.size} videos - Coming soon!`);
+    }
+
+    // Update displayed videos when sort option changes
+    $: if (sortOption) {
+        updateDisplayedVideos();
+    }
+
+    function handleVideoSelect(videoId: string, selected: boolean) {
+        if (selected) {
+            selectedVideos.add(videoId);
+            hasSelectionOccurred = true;
+        } else {
+            selectedVideos.delete(videoId);
+        }
+        selectedVideos = new Set(selectedVideos);
     }
 
     onMount(() => {
-        // Add click outside listener
+        fetchVideos();
         document.addEventListener("click", handleClickOutside);
         return () => {
             document.removeEventListener("click", handleClickOutside);
         };
     });
-
-    // Reactive statement to determine which videos to display based on active tab
-    $: {
-        if (activeTab === "saved") {
-            displayedVideos = [...savedVideos];
-        } else if (activeTab === "uploaded") {
-            displayedVideos = [...uploadedVideos];
-        } else {
-            displayedVideos = [...assignedVideos];
-        }
-
-        // Apply sorting if needed
-        if (sortOption === "newest") {
-            // Implement sorting logic here
-        } else if (sortOption === "oldest") {
-            // Implement sorting logic here
-        }
-    }
-
-    // Video counts for tabs
-    $: videoCount = {
-        saved: savedVideos.length,
-        uploaded: uploadedVideos.length,
-        assigned: assignedVideos.length,
-    };
 
     // Selected videos count
     $: selectedCount = selectedVideos.size;
@@ -693,202 +658,45 @@
     <!-- Main Content Area with Sidebar and Video Grid -->
     <div class="flex gap-6">
         <!-- Left Sidebar - Tags Section (Desktop only) -->
-        <div class="hidden lg:block w-[172px] flex-shrink-0">
-            <!-- Tags Search Bar -->
-            <div class="relative mb-2">
-                <input
-                    type="text"
-                    placeholder="Tags"
-                    bind:value={tagSearchQuery}
-                    class="w-full h-[29px] pl-2 pr-8 bg-light-bg-primary dark:bg-dark-bg-primary border border-light-border dark:border-dark-border rounded-lg text-semi-body text-light-text-primary dark:text-dark-text-primary placeholder:text-light-text-tertiary dark:placeholder:text-dark-text-tertiary focus:outline-none focus:border-brand-red transition-colors"
-                />
-                <div class="absolute right-3 top-1/2 -translate-y-1/2">
-                    <svg
-                        width="16"
-                        height="16"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        xmlns="http://www.w3.org/2000/svg"
-                        class="text-light-text-tertiary dark:text-dark-text-tertiary"
-                    >
-                        <path
-                            d="M17.5 17.5L22 22"
-                            stroke="currentColor"
-                            stroke-width="1.5"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                        />
-                        <path
-                            d="M20 11C20 6.02944 15.9706 2 11 2C6.02944 2 2 6.02944 2 11C2 15.9706 6.02944 20 11 20C15.9706 20 20 15.9706 20 11Z"
-                            stroke="currentColor"
-                            stroke-width="1.5"
-                            stroke-linejoin="round"
-                        />
-                    </svg>
-                </div>
-            </div>
-
-            <!-- Tags List -->
-            <div class="space-y-1">
-                {#each filteredTags as tag (tag.id)}
-                    <div class="space-y-1">
-                        <button
-                            class="w-full h-[29px] flex items-center justify-between px-2 py-1 rounded-lg transition-colors {expandedTagId === tag.id ? 'bg-black/5 dark:bg-white/10' : 'hover:bg-black/5 dark:hover:bg-white/10'}"
-                            on:click={() => toggleTagExpansion(tag.id)}
-                        >
-                            <div class="flex items-center gap-2">
-                                <img 
-                                    src="/icons/CaretRight.svg" 
-                                    alt="Dropdown" 
-                                    class="w-4 h-4 text-light-text-tertiary dark:text-dark-text-tertiary transition-transform {expandedTagId === tag.id ? '' : 'rotate-[-90deg]'}" 
-                                />
-                                <span class="text-semi-body-medium text-light-text-tertiary dark:text-dark-text-tertiary">
-                                    {tag.name}
-                                </span>
-                            </div>
-
-                            {#if expandedTagId === tag.id}
-                                <button
-                                    class="p-0.5 hover:bg-light-bg-primary dark:hover:bg-dark-bg-primary rounded transition-colors"
-                                    on:click|stopPropagation={() => handleDeleteTag(tag.id)}
-                                    aria-label="Delete tag"
-                                >
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 20 21" fill="none" class="text-light-text-tertiary dark:text-dark-text-tertiary">
-                                        <path d="M16.875 4.25H13.75V3.625C13.75 3.12772 13.5525 2.65081 13.2008 2.29917C12.8492 1.94754 12.3723 1.75 11.875 1.75H8.125C7.62772 1.75 7.15081 1.94754 6.79917 2.29917C6.44754 2.65081 6.25 3.12772 6.25 3.625V4.25H3.125C2.95924 4.25 2.80027 4.31585 2.68306 4.43306C2.56585 4.55027 2.5 4.70924 2.5 4.875C2.5 5.04076 2.56585 5.19973 2.68306 5.31694C2.80027 5.43415 2.95924 5.5 3.125 5.5H3.75V16.75C3.75 17.0815 3.8817 17.3995 4.11612 17.6339C4.35054 17.8683 4.66848 18 5 18H15C15.3315 18 15.6495 17.8683 15.8839 17.6339C16.1183 17.3995 16.25 17.0815 16.25 16.75V5.5H16.875C17.0408 5.5 17.1997 5.43415 17.3169 5.31694C17.4342 5.19973 17.5 5.04076 17.5 4.875C17.5 4.70924 17.4342 4.55027 17.3169 4.43306C17.1997 4.31585 17.0408 4.25 16.875 4.25ZM8.75 13.625C8.75 13.7908 8.68415 13.9497 8.56694 14.0669C8.44973 14.1842 8.29076 14.25 8.125 14.25C7.95924 14.25 7.80027 14.1842 7.68306 14.0669C7.56585 13.9497 7.5 13.7908 7.5 13.625V8.625C7.5 8.45924 7.56585 8.30027 7.68306 8.18306C7.80027 8.06585 7.95924 8 8.125 8C8.29076 8 8.44973 8.06585 8.56694 8.18306C8.68415 8.30027 8.75 8.45924 8.75 8.625V13.625ZM12.5 13.625C12.5 13.7908 12.4342 13.9497 12.3169 14.0669C12.1997 14.1842 12.0408 14.25 11.875 14.25C11.7092 14.25 11.5503 14.1842 11.4331 14.0669C11.3158 13.9497 11.25 13.7908 11.25 13.625V8.625C11.25 8.45924 11.3158 8.30027 11.4331 8.18306C11.5503 8.06585 11.7092 8 11.875 8C12.0408 8 12.1997 8.06585 12.3169 8.18306C12.4342 8.30027 12.5 8.45924 12.5 8.625V13.625ZM12.5 4.25H7.5V3.625C7.5 3.45924 7.56585 3.30027 7.68306 3.18306C7.80027 3.06585 7.95924 3 8.125 3H11.875C12.0408 3 12.1997 3.06585 12.3169 3.18306C12.4342 3.30027 12.5 3.45924 12.5 3.625V4.25Z" fill="currentColor"/>
-                                    </svg>
-                                </button>
-                            {/if}
-                        </button>
-
-                        {#if expandedTagId === tag.id}
-                            <div class="ml-2 pl-2 space-y-1 py-1 border-l border-light-border dark:border-dark-border">
-                                {#if tag.id === 'ai'}
-                                    {#each aiSubItems as subItem (subItem.id)}
-                                        <button class="w-full flex items-center gap-1.5 p-1 rounded-md hover:bg-black/5 dark:hover:bg-white/10 text-left">
-                                            <img 
-                                                src={subItem.thumb} 
-                                                alt="Video thumbnail" 
-                                                class="w-[23px] h-[15px] rounded object-cover flex-shrink-0" 
-                                            />
-                                            <span class="text-xs text-light-text-secondary dark:text-dark-text-secondary font-medium truncate">
-                                                {subItem.title}
-                                            </span>
-                                        </button>
-                                    {/each}
-                                {:else}
-                                    <div class="px-1 py-2">
-                                        <span class="text-xs text-light-text-tertiary dark:text-dark-text-tertiary">
-                                            No videos for this tag yet.
-                                        </span>
-                                    </div>
-                                {/if}
-                            </div>
-                        {/if}
-                    </div>
-                {/each}
-            </div>
+        <div class="hidden lg:block">
+            <TagsSidebar 
+                {availableTags}
+                {tagVideos}
+            />
         </div>
 
         <!-- Video Grid -->
-        <div class="flex-1 min-w-0">
-            <div
-                class="grid grid-cols-1 md:grid-cols-2 video-3col:grid-cols-3 gap-6"
-            >
-                <!-- Skeleton Loading -->
-                {#if loading}
-                    {#each Array(6) as _}
-                        <div
-                            class="w-full h-[390px] bg-light-bg-primary dark:bg-dark-bg-primary rounded-[14px] border border-light-border dark:border-dark-border overflow-hidden"
-                        >
-                            <!-- Thumbnail Skeleton -->
-                            <div
-                                class="relative w-full h-[148px] bg-light-bg-secondary dark:bg-dark-bg-secondary animate-pulse"
-                            >
-                                <!-- Play Button Skeleton -->
-                                <div
-                                    class="absolute top-4 right-4 w-10 h-10 rounded-full bg-black/20 animate-pulse"
-                                />
-                            </div>
-
-                            <!-- Content Section -->
-                            <div class="p-4 flex flex-col gap-4">
-                                <!-- Title Skeleton -->
-                                <div
-                                    class="h-6 bg-light-bg-secondary dark:bg-dark-bg-secondary rounded-lg w-3/4 animate-pulse"
-                                />
-
-                                <div class="flex flex-col gap-2">
-                                    <!-- Description Skeleton -->
-                                    <div
-                                        class="h-4 bg-light-bg-secondary dark:bg-dark-bg-secondary rounded w-full animate-pulse"
-                                    />
-                                    <div
-                                        class="h-4 bg-light-bg-secondary dark:bg-dark-bg-secondary rounded w-3/4 animate-pulse"
-                                    />
-
-                                    <!-- Date & Duration Skeleton -->
-                                    <div
-                                        class="flex items-center justify-between mt-2"
-                                    >
-                                        <div class="flex items-center gap-2">
-                                            <div
-                                                class="w-4 h-4 rounded bg-light-bg-secondary dark:bg-dark-bg-secondary animate-pulse"
-                                            />
-                                            <div
-                                                class="h-4 bg-light-bg-secondary dark:bg-dark-bg-secondary rounded w-16 animate-pulse"
-                                            />
-                                        </div>
-                                        <div class="flex items-center gap-2">
-                                            <div
-                                                class="h-4 bg-light-bg-secondary dark:bg-dark-bg-secondary rounded w-24 animate-pulse"
-                                            />
-                                            <div
-                                                class="w-4 h-4 rounded bg-light-bg-secondary dark:bg-dark-bg-secondary animate-pulse"
-                                            />
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    {/each}
-                {:else if displayedVideos.length === 0}
-                    <div class="col-span-full text-center py-12">
-                        <p
-                            class="text-light-text-secondary dark:text-dark-text-secondary text-lg"
-                        >
-                            {#if activeTab === "saved"}
-                                You haven't saved any videos yet.
-                            {:else if activeTab === "uploaded"}
-                                You haven't uploaded any videos yet.
-                            {:else}
-                                No assigned videos found.
-                            {/if}
-                        </p>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {#if loading}
+                {#each Array(6) as _}
+                    <div class="animate-pulse">
+                        <div class="w-full h-[390px] bg-light-bg-secondary dark:bg-dark-bg-secondary rounded-[14px]"></div>
                     </div>
-                {:else}
-                    {#each displayedVideos as video (video.id)}
-                        <VideoLibraryCard
-                            title={video.title}
-                            description={video.description}
-                            date={video.date}
-                            duration={video.duration}
-                            onClick={() => handleVideoClick(video.id)}
-                            onOptionsClick={handleOptionsClick}
-                            selectable={selectMode}
-                            selected={selectedVideos.has(video.id)}
-                            onSelect={(selected) => {
-                                if (selected) {
-                                    selectedVideos.add(video.id);
-                                    hasSelectionOccurred = true; // Mark that selection has occurred
-                                } else {
-                                    selectedVideos.delete(video.id);
-                                }
-                                selectedVideos = new Set(selectedVideos); // Trigger reactivity
-                            }}
-                        />
-                    {/each}
-                {/if}
-            </div>
+                {/each}
+            {:else if error}
+                <div class="col-span-full text-center py-8">
+                    <p class="text-light-text-secondary dark:text-dark-text-secondary">Error loading videos. Please try again.</p>
+                </div>
+            {:else if displayedVideos.length === 0}
+                <div class="col-span-full text-center py-8">
+                    <p class="text-light-text-secondary dark:text-dark-text-secondary text-body">No videos found matching your filters.</p>
+                </div>
+            {:else}
+                {#each displayedVideos as video}
+                    <VideoLibraryCard
+                        title={video.title}
+                        description={video.summary}
+                        date={new Date(video.publishedAt).toLocaleDateString()}
+                        duration="25 min"
+                        thumbnailUrl={video.thumbnailUrl}
+                        selectable={selectMode}
+                        selected={selectedVideos.has(video.videoId)}
+                        onClick={() => handleVideoClick(video.videoId)}
+                        onOptionsClick={(e) => handleOptionsClick(e)}
+                        onSelect={(selected) => handleVideoSelect(video.videoId, selected)}
+                    />
+                {/each}
+            {/if}
         </div>
     </div>
 </div>
