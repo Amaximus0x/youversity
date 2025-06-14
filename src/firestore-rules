@@ -154,8 +154,8 @@ service cloud.firestore {
       allow list: if request.auth != null;
     }
 
-    // Videos collection
-    match /videos/{videoId} {
+    // Saved Videos collection (renamed from videos)
+    match /savedVideos/{videoId} {
       // Allow reading for authenticated users
       allow read: if isAuthenticated();
       

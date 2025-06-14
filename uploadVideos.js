@@ -24,13 +24,13 @@ async function uploadVideos() {
   for (const video of videos) {
     try {
       // Use videoId as document ID
-      await db.collection('videos').doc(video.videoId).set(video);
+      await db.collection('savedVideos').doc(video.videoId).set(video);
       console.log(`Uploaded video: ${video.title} (${video.videoId})`);
     } catch (error) {
       console.error(`Failed to upload video ${video.videoId}:`, error);
     }
   }
-  console.log('All videos uploaded.');
+  console.log('All videos uploaded to savedVideos collection.');
   process.exit(0);
 }
 

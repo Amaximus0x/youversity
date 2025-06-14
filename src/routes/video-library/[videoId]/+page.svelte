@@ -27,10 +27,9 @@
   let showAddToExistingCourseModal = false;
 
   // For visual consistency with the main library page's tabs
-  let activeTabForDisplay: 'saved' | 'uploaded' | 'assigned' = 'saved';
+  let activeTabForDisplay: 'saved' | 'assigned' = 'saved';
   let videoCountForDisplay = {
     saved: 0,
-    uploaded: 0,
     assigned: 0,
   };
 
@@ -53,7 +52,7 @@
   // Function to fetch video details
   async function fetchVideoDetails(videoId: string) {
     try {
-      const videoDoc = await getDoc(doc(db, 'videos', videoId));
+      const videoDoc = await getDoc(doc(db, 'savedVideos', videoId));
       
       if (!videoDoc.exists()) {
         error = 'Video not found';
@@ -75,7 +74,7 @@
       // Determine the tab based on current user and video ownership
       const currentUser = get(user);
       if (currentUser && videoData.userId === currentUser.uid) {
-        activeTabForDisplay = 'uploaded';
+        activeTabForDisplay = 'saved';
       } else {
         activeTabForDisplay = 'saved';
       }
@@ -95,7 +94,7 @@
       }
 
       // Query to fetch only current user's videos for sidebar
-      const videosRef = collection(db, 'videos');
+      const videosRef = collection(db, 'savedVideos');
       const userVideosQuery = query(videosRef, where('userId', '==', currentUser.uid));
       const querySnapshot = await getDocs(userVideosQuery);
       
@@ -107,7 +106,6 @@
       // Update video counts - all videos are now user's videos
       videoCountForDisplay = {
         saved: allVideos.length, // All fetched videos are user's videos
-        uploaded: allVideos.length, // Same as saved since we only fetch user's videos
         assigned: 0 // This will be implemented when assignment feature is added
       };
 
@@ -253,19 +251,6 @@
               {/if}
             </button>
             <button
-              class="pb-4 relative whitespace-nowrap {activeTabForDisplay === 'uploaded' ? 'text-Green dark:text-TransparentGreen2 text-body-semibold' : 'text-light-text-tertiary dark:text-dark-text-tertiary text-body'}"
-              on:click={() => activeTabForDisplay = 'uploaded'}
-            >
-              <span class="hidden lg:inline">Uploaded videos</span>
-              <span class="lg:hidden">Uploaded</span>
-              <span class="ml-2 px-2 py-0.5 bg-Black/5 dark:bg-dark-bg-secondary rounded-full text-semibody-medium">
-                {videoCountForDisplay.uploaded}
-              </span>
-              {#if activeTabForDisplay === 'uploaded'}
-                <div class="absolute bottom-0 left-0 right-0 h-0.5 bg-Green dark:bg-TransparentGreen2"></div>
-              {/if}
-            </button>
-            <button
               class="pb-4 relative whitespace-nowrap {activeTabForDisplay === 'assigned' ? 'text-Green dark:text-TransparentGreen2 text-body-semibold' : 'text-light-text-tertiary dark:text-dark-text-tertiary text-body'}"
               on:click={() => activeTabForDisplay = 'assigned'}
             >
@@ -310,7 +295,6 @@
         <TagsSidebar 
           {availableTags}
           {tagVideos}
-          selectedTags={new Set()}
           currentVideoId={videoDetails?.id}
         />
       </div>

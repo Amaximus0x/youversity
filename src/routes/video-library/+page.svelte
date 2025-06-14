@@ -15,7 +15,7 @@
     let tagVideos: { [key: string]: any[] } = {};
     let loading = true;
     let error: string | null = null;
-    let activeTab: "saved" | "uploaded" | "assigned" = "saved";
+    let activeTab: "saved" | "assigned" = "saved";
     let showSortDropdown = false;
     let sortOption: "newest" | "oldest" = "newest";
 
@@ -29,7 +29,6 @@
     // Video counts for tabs
     let videoCount = {
         saved: 0,
-        uploaded: 0,
         assigned: 0
     };
 
@@ -46,7 +45,7 @@
             }
 
             // Query to fetch only current user's videos
-            const videosRef = collection(db, 'videos');
+            const videosRef = collection(db, 'savedVideos');
             const userVideosQuery = query(videosRef, where('userId', '==', currentUser.uid));
             const querySnapshot = await getDocs(userVideosQuery);
             
@@ -58,7 +57,6 @@
             // Update video counts - all videos are now user's videos
             videoCount = {
                 saved: allVideos.length, // All fetched videos are user's videos
-                uploaded: allVideos.length, // Same as saved since we only fetch user's videos
                 assigned: 0 // This will be implemented when assignment feature is added
             };
 
@@ -285,26 +283,6 @@
                             {videoCount.saved}
                         </span>
                         {#if activeTab === "saved"}
-                            <div
-                                class="absolute bottom-0 left-0 right-0 h-0.5 bg-Green dark:bg-TransparentGreen2"
-                            ></div>
-                        {/if}
-                    </button>
-                    <button
-                        class="pb-4 relative whitespace-nowrap {activeTab ===
-                        'uploaded'
-                            ? 'text-Green dark:text-TransparentGreen2 text-body-semibold'
-                            : 'text-light-text-tertiary dark:text-dark-text-tertiary text-body'}"
-                        on:click={() => (activeTab = "uploaded")}
-                    >
-                        <span class="hidden lg:inline">Uploaded videos</span>
-                        <span class="lg:hidden">Uploaded</span>
-                        <span
-                            class="ml-2 px-2 py-0.5 bg-Black/5 dark:bg-dark-bg-secondary rounded-full text-semibody-medium"
-                        >
-                            {videoCount.uploaded}
-                        </span>
-                        {#if activeTab === "uploaded"}
                             <div
                                 class="absolute bottom-0 left-0 right-0 h-0.5 bg-Green dark:bg-TransparentGreen2"
                             ></div>
@@ -730,22 +708,9 @@
                     on:click={showInsights}
                 >
                     <span>Insight</span>
-                    <svg
-                        class="w-5 h-5"
-                        width="20"
-                        height="20"
-                        viewBox="0 0 20 20"
-                        fill="none"
-                        xmlns="http://www.w3.org/2000/svg"
-                    >
-                        <path
-                            d="M2 2L6 6M18 18L14 14M14 6L18 2M2 18L6 14M10 1V4M1 10H4M16 10H19M10 16V19"
-                            stroke="currentColor"
-                            stroke-width="2"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                        />
-                    </svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
+                        <path d="M21.75 19.5C21.75 19.6989 21.671 19.8897 21.5303 20.0303C21.3897 20.171 21.1989 20.25 21 20.25H3C2.80109 20.25 2.61032 20.171 2.46967 20.0303C2.32902 19.8897 2.25 19.6989 2.25 19.5V4.5C2.25 4.30109 2.32902 4.11032 2.46967 3.96967C2.61032 3.82902 2.80109 3.75 3 3.75C3.19891 3.75 3.38968 3.82902 3.53033 3.96967C3.67098 4.11032 3.75 4.30109 3.75 4.5V13.3472L8.50594 9.1875C8.63536 9.07421 8.79978 9.00885 8.97165 9.00236C9.14353 8.99587 9.31241 9.04866 9.45 9.15188L14.9634 13.2872L20.5059 8.4375C20.5786 8.36556 20.6652 8.30925 20.7605 8.27201C20.8557 8.23478 20.9575 8.21741 21.0597 8.22097C21.1619 8.22454 21.2623 8.24896 21.3547 8.29275C21.4471 8.33653 21.5296 8.39875 21.5971 8.47558C21.6645 8.5524 21.7156 8.64222 21.7471 8.7395C21.7786 8.83678 21.7899 8.93948 21.7802 9.04128C21.7706 9.14307 21.7402 9.24182 21.691 9.33146C21.6418 9.42109 21.5748 9.49972 21.4941 9.5625L15.4941 14.8125C15.3646 14.9258 15.2002 14.9912 15.0283 14.9976C14.8565 15.0041 14.6876 14.9513 14.55 14.8481L9.03656 10.7147L3.75 15.3403V18.75H21C21.1989 18.75 21.3897 18.829 21.5303 18.9697C21.671 19.1103 21.75 19.3011 21.75 19.5Z" fill="#2A4D61"/>
+                      </svg>
                 </button>
             </li>
         </ul>
