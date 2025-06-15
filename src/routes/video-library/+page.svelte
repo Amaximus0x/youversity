@@ -640,6 +640,7 @@
             <TagsSidebar 
                 {availableTags}
                 {tagVideos}
+                onTagDeleted={fetchVideos}
             />
         </div>
 

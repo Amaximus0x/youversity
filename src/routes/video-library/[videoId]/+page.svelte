@@ -296,6 +296,13 @@
           {availableTags}
           {tagVideos}
           currentVideoId={videoDetails?.id}
+          onTagDeleted={async () => {
+            await fetchAllVideos();
+            // If current video was deleted, redirect to main library
+            if (videoDetails && !allVideos.some(v => v.videoId === videoDetails.id)) {
+              goto('/video-library');
+            }
+          }}
         />
       </div>
 

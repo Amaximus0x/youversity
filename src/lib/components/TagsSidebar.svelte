@@ -1,15 +1,21 @@
 <!-- src/lib/components/TagsSidebar.svelte -->
 <script lang="ts">
   import { goto } from '$app/navigation';
+  import { collection, doc, deleteDoc, getDocs, query, where } from 'firebase/firestore';
+  import { db } from '$lib/firebase';
+  import { user } from '$lib/stores/auth';
+  import { get } from 'svelte/store';
   
   // Props
   export let availableTags: { id: string; name: string; count: number }[] = [];
   export let tagVideos: { [key: string]: any[] } = {};
   export let currentVideoId: string | null = null; // To highlight current video
+  export let onTagDeleted: (() => void) | null = null; // Callback to refresh data
   
   // Internal state
   let tagSearchQuery = "";
   let expandedTagId: string | null = null;
+  let deletingTag: string | null = null; // Track which tag is being deleted
   
   // Filter tags based on search query
   $: filteredTags = availableTags.filter((tag) =>
@@ -29,11 +35,63 @@
     goto(`/video-library/${videoId}`);
   }
   
-  function handleDeleteTag(tagId: string) {
-    // TODO: Implement actual tag deletion
-    alert(`Delete tag ${tagId} - functionality to be implemented.`);
-    if (expandedTagId === tagId) {
-      expandedTagId = null;
+  async function handleDeleteTag(tagId: string) {
+    const currentUser = get(user);
+    if (!currentUser) {
+      alert('Please sign in to delete videos.');
+      return;
+    }
+
+    const tagName = availableTags.find(tag => tag.id === tagId)?.name || tagId;
+    const videoCount = tagVideos[tagId]?.length || 0;
+    
+    // Confirmation dialog
+    const confirmMessage = `Are you sure you want to delete all ${videoCount} video${videoCount !== 1 ? 's' : ''} in the "${tagName}" tag? This action cannot be undone.`;
+    if (!confirm(confirmMessage)) {
+      return;
+    }
+
+    try {
+      deletingTag = tagId;
+      
+      // Get all videos for this tag that belong to the current user
+      const videosToDelete = tagVideos[tagId] || [];
+      const userVideos = videosToDelete.filter(video => video.userId === currentUser.uid);
+      
+      if (userVideos.length === 0) {
+        alert('No videos found to delete or you do not have permission to delete these videos.');
+        return;
+      }
+
+      // Delete each video document
+      const deletePromises = userVideos.map(video => 
+        deleteDoc(doc(db, 'savedVideos', video.videoId))
+      );
+
+      await Promise.all(deletePromises);
+
+      // If we were viewing a video from this tag, redirect to main library
+      if (currentVideoId && userVideos.some(video => video.videoId === currentVideoId)) {
+        goto('/video-library');
+      }
+
+      // Collapse the expanded tag
+      if (expandedTagId === tagId) {
+        expandedTagId = null;
+      }
+
+      // Call the refresh callback to update the parent component
+      if (onTagDeleted) {
+        onTagDeleted();
+      }
+
+      alert(`Successfully deleted ${userVideos.length} video${userVideos.length !== 1 ? 's' : ''} from the "${tagName}" tag.`);
+      
+    } catch (error) {
+      console.error('Error deleting videos:', error);
+      alert('Failed to delete videos. Please try again.');
+    } finally {
+      deletingTag = null;
     }
   }
   
@@ -95,6 +153,7 @@
         <button
           class="w-full h-[29px] flex items-center justify-between px-2 py-1 rounded-lg transition-colors {expandedTagId === tag.id ? 'bg-black/5 dark:bg-white/10' : 'hover:bg-black/5 dark:hover:bg-white/10'}"
           on:click={() => handleTagClick(tag.id)}
+          disabled={deletingTag === tag.id}
         >
           <div class="flex items-center gap-2">
             <img 
@@ -112,12 +171,21 @@
               <button
                 class="p-1 hover:bg-black/5 dark:hover:bg-white/10 rounded-full transition-colors group"
                 on:click|stopPropagation={() => handleDeleteTag(tag.id)}
+                disabled={deletingTag === tag.id}
+                title="Delete all videos in this tag"
               >
-                <img 
-                  src="/icons/Trash.svg" 
-                  alt="Delete tag" 
-                  class="w-4 h-4 text-light-text-tertiary dark:text-dark-text-tertiary group-hover:text-brand-red transition-colors" 
-                />
+                {#if deletingTag === tag.id}
+                  <svg class="animate-spin h-4 w-4 text-light-text-tertiary dark:text-dark-text-tertiary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                {:else}
+                  <img 
+                    src="/icons/Trash.svg" 
+                    alt="Delete tag" 
+                    class="w-4 h-4 text-light-text-tertiary dark:text-dark-text-tertiary group-hover:text-brand-red transition-colors" 
+                  />
+                {/if}
               </button>
             {:else}
               <span class="text-xs px-2 py-0.5 bg-black/5 dark:bg-white/10 rounded-full">
@@ -134,6 +202,7 @@
                 <button 
                   class="w-full flex items-center gap-1.5 p-1 rounded-md hover:bg-black/5 dark:hover:bg-white/10 text-left {video.videoId === currentVideoId ? 'bg-brand-red/10' : ''}"
                   on:click={() => handleVideoClick(video.videoId)}
+                  disabled={deletingTag === tag.id}
                 >
                   <img 
                     src={video.thumbnailUrl || '/images/videoCardThumb.png'} 
