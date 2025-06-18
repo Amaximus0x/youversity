@@ -14,13 +14,23 @@
 		selectedCourseId = null;
 		selectedCourse = null;
 		selectedModule = null;
+		// Reset search and sort state
+		searchQuery = '';
+		sortBy = 'newest';
+		showSearchInput = false;
 		dispatch('close');
 	}
 
 	// State for courses data
 	let courses: any[] = [];
+	let filteredCourses: any[] = [];
 	let loading = false;
 	let error: string | null = null;
+	
+	// Search and sort state
+	let searchQuery = '';
+	let sortBy: 'newest' | 'oldest' | 'title' | 'duration' = 'newest';
+	let showSearchInput = false;
 
 	// Function to format duration from course data
 	function formatDuration(course: any): string {
@@ -40,6 +50,80 @@
 	function getCourseThumbnail(course: any): string {
 		return course.Final_Course_Thumbnail || '/images/videoCardThumb.png';
 	}
+
+	// Function to filter and sort courses
+	function filterAndSortCourses() {
+		let result = [...courses];
+		
+		// Apply search filter
+		if (searchQuery.trim()) {
+			const query = searchQuery.toLowerCase().trim();
+			result = result.filter(course => 
+				course.title.toLowerCase().includes(query) ||
+				course.description.toLowerCase().includes(query)
+			);
+		}
+		
+		// Apply sorting
+		result.sort((a, b) => {
+			switch (sortBy) {
+				case 'newest':
+					return new Date(b.originalData.createdAt).getTime() - new Date(a.originalData.createdAt).getTime();
+				case 'oldest':
+					return new Date(a.originalData.createdAt).getTime() - new Date(b.originalData.createdAt).getTime();
+				case 'title':
+					return a.title.localeCompare(b.title);
+				case 'duration':
+					// Extract numeric value from duration string for sorting
+					const getDurationMinutes = (duration: string) => {
+						const match = duration.match(/(\d+)hr|(\d+)min/g);
+						if (!match) return 0;
+						let totalMinutes = 0;
+						match.forEach(part => {
+							if (part.includes('hr')) {
+								totalMinutes += parseInt(part) * 60;
+							} else if (part.includes('min')) {
+								totalMinutes += parseInt(part);
+							}
+						});
+						return totalMinutes;
+					};
+					return getDurationMinutes(b.duration) - getDurationMinutes(a.duration);
+				default:
+					return 0;
+			}
+		});
+		
+		filteredCourses = result;
+	}
+
+	// Function to toggle sort order
+	function toggleSort() {
+		const sortOptions: typeof sortBy[] = ['newest', 'oldest', 'title', 'duration'];
+		const currentIndex = sortOptions.indexOf(sortBy);
+		sortBy = sortOptions[(currentIndex + 1) % sortOptions.length];
+		filterAndSortCourses();
+	}
+
+	// Function to toggle search input
+	function toggleSearch() {
+		showSearchInput = !showSearchInput;
+		if (!showSearchInput) {
+			searchQuery = '';
+			filterAndSortCourses();
+		}
+	}
+
+	// Reactive sort label
+	$: sortLabel = (() => {
+		switch (sortBy) {
+			case 'newest': return 'Newest';
+			case 'oldest': return 'Oldest';
+			case 'title': return 'Title';
+			case 'duration': return 'Duration';
+			default: return 'Sort';
+		}
+	})();
 
 	// Function to load user's courses
 	async function loadUserCourses() {
@@ -73,6 +157,9 @@
 			}));
 			
 			console.log('Transformed courses:', courses);
+			
+			// Initialize filtered courses
+			filterAndSortCourses();
 		} catch (err) {
 			console.error('Error loading user courses:', err);
 			error = 'Failed to load courses';
@@ -105,6 +192,11 @@
 			loadUserCourses();
 		}
 	});
+
+	// Reactive statements for search and sort
+	$: if (searchQuery !== undefined && courses.length > 0) {
+		filterAndSortCourses();
+	}
 
 	// Mock data for modules
 	const modules = [
@@ -220,15 +312,21 @@
 					<div class="self-stretch inline-flex justify-between items-center">
 						<div class="text-light-text-tertiary dark:text-dark-text-tertiary text-semibody-medium">
 							Please select course
+							{#if searchQuery.trim() || sortBy !== 'newest'}
+								<span class="ml-2 text-light-text-tertiary dark:text-dark-text-tertiary text-mini-body">
+									({filteredCourses.length} of {courses.length})
+								</span>
+							{/if}
 						</div>
 						<div class="flex justify-start items-center gap-2">
 							<button
-								class="pl-3 pr-2 py-1 bg-brand-red/5 rounded-full flex justify-start items-center gap-2"
+								on:click={toggleSort}
+								class="pl-3 pr-2 py-1 bg-brand-red/5 rounded-full flex justify-start items-center gap-2 hover:bg-brand-red/10 transition-colors"
 							>
 								<div
 									class="text-light-text-secondary dark:text-dark-text-secondary text-sm-button"
 								>
-									Sort
+									{sortLabel}
 								</div>
 								<div class="w-6 h-6 relative overflow-hidden text-light-text-secondary">
 									<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
@@ -236,7 +334,10 @@
 									</svg>
 								</div>
 							</button>
-							<button class="p-1 bg-brand-red/5 rounded-full flex justify-start items-center gap-2">
+							<button 
+								on:click={toggleSearch}
+								class="p-1 bg-brand-red/5 rounded-full flex justify-start items-center gap-2 hover:bg-brand-red/10 transition-colors {showSearchInput ? 'bg-brand-red/10' : ''}"
+							>
 								<div class="w-6 h-6 relative overflow-hidden text-light-text-secondary dark:text-dark-text-secondary">
 									<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
 										<path d="M17.5 17.5L22 22" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
@@ -246,6 +347,38 @@
 							</button>
 						</div>
 					</div>
+					
+					<!-- Search Input -->
+					{#if showSearchInput}
+						<div class="mb-4">
+							<div class="relative">
+								<input
+									type="text"
+									bind:value={searchQuery}
+									placeholder="Search courses..."
+									class="w-full px-4 py-2 pr-10 bg-white dark:bg-dark-bg-secondary border border-light-border dark:border-dark-border rounded-lg text-light-text-primary dark:text-dark-text-primary placeholder-light-text-tertiary dark:placeholder-dark-text-tertiary focus:outline-none focus:ring-2 focus:ring-brand-red/20 focus:border-brand-red text-semibody-medium"
+								/>
+								<div class="absolute right-3 top-1/2 transform -translate-y-1/2">
+									{#if searchQuery.trim()}
+										<button
+											on:click={() => searchQuery = ''}
+											class="text-light-text-tertiary dark:text-dark-text-tertiary hover:text-brand-red transition-colors"
+										>
+											<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none">
+												<path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+											</svg>
+										</button>
+									{:else}
+										<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" class="text-light-text-tertiary dark:text-dark-text-tertiary">
+											<path d="M17.5 17.5L22 22" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+											<path d="M20 11C20 6.02944 15.9706 2 11 2C6.02944 2 2 6.02944 2 11C2 15.9706 6.02944 20 11 20C15.9706 20 20 15.9706 20 11Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+										</svg>
+									{/if}
+								</div>
+							</div>
+						</div>
+					{/if}
+					
 					<div class="self-stretch flex-1 overflow-y-auto pr-2 custom-scrollbar">
 						<div class="inline-flex flex-col justify-start items-start gap-2 w-full">
 							{#if loading}
@@ -268,8 +401,8 @@
 										</button>
 									</div>
 								</div>
-							{:else if courses.length === 0}
-								<!-- Empty state -->
+							{:else if filteredCourses.length === 0 && courses.length === 0}
+								<!-- Empty state - no courses at all -->
 								<div class="w-full flex items-center justify-center py-8">
 									<div class="text-center">
 										<p class="text-light-text-secondary dark:text-dark-text-secondary text-semibody-medium mb-2">
@@ -280,9 +413,21 @@
 										</p>
 									</div>
 								</div>
+							{:else if filteredCourses.length === 0 && courses.length > 0}
+								<!-- Empty state - no search results -->
+								<div class="w-full flex items-center justify-center py-8">
+									<div class="text-center">
+										<p class="text-light-text-secondary dark:text-dark-text-secondary text-semibody-medium mb-2">
+											No courses match your search
+										</p>
+										<p class="text-light-text-tertiary dark:text-dark-text-tertiary text-mini-body">
+											Try adjusting your search terms
+										</p>
+									</div>
+								</div>
 							{:else}
 								<!-- Courses list -->
-								{#each courses as course (course.id)}
+								{#each filteredCourses as course (course.id)}
 									<button
 										on:click={() => selectCourse(course)}
 										class="self-stretch h-20 p-2 rounded-2xl border {selectedCourseId === course.id
