@@ -14,6 +14,8 @@
 		selectedCourseId = null;
 		selectedCourse = null;
 		selectedModule = null;
+		modules = []; // Reset modules
+		moduleVideos = []; // Reset module videos
 		// Reset search and sort state
 		searchQuery = '';
 		sortBy = 'newest';
@@ -182,6 +184,8 @@
 			selectedCourseId = null;
 			selectedCourse = null;
 			selectedModule = null;
+			modules = []; // Reset modules when modal is closed
+			moduleVideos = []; // Reset module videos when modal is closed
 		}
 	}
 
@@ -198,24 +202,75 @@
 		filterAndSortCourses();
 	}
 
-	// Mock data for modules
-	const modules = [
-		{ id: 1, name: 'Module 1', title: 'Understanding AI and science development', videoCount: 7, image: '/images/videoCardThumb.png' },
-		{ id: 2, name: 'Module 2', title: 'Understanding AI and science development', videoCount: 10, image: '/images/videoCardThumb.png' },
-		{ id: 3, name: 'Module 3', title: 'Understanding AI and science development', videoCount: 4, image: '/images/videoCardThumb.png' },
-		{ id: 4, name: 'Module 4', title: 'Understanding AI and science development', videoCount: 5, image: '/images/videoCardThumb.png' },
-		{ id: 5, name: 'Module 5', title: 'Understanding AI and science development', videoCount: 10, image: '/images/videoCardThumb.png' },
-		{ id: 6, name: 'Module 6', title: 'Understanding AI and science development', videoCount: 10, image: '/images/videoCardThumb.png' }
-	];
+	// State for modules data
+	let modules: any[] = [];
+	
+	// Function to generate modules from selected course data
+	function generateModulesFromCourse(course: any) {
+		if (!course?.originalData) return [];
+		
+		const courseData = course.originalData;
+		const moduleTitles = courseData.Final_Module_Title || [];
+		const moduleObjectives = courseData.Final_Module_Objective || [];
+		const moduleThumbnails = courseData.Final_Module_Thumbnails || [];
+		
+		return moduleTitles.map((title: string, index: number) => ({
+			id: index,
+			name: `Module ${index + 1}`,
+			title: title || `Module ${index + 1}`,
+			objective: moduleObjectives[index] || '',
+			videoCount: 1, // Each module typically has 1 main video
+			image: moduleThumbnails[index] || '/images/videoCardThumb.png',
+			moduleIndex: index
+		}));
+	}
 
-	// Mock data for videos in modules
-	const moduleVideos = [
-		{ id: 1, title: 'Developing compelling characters and settings', duration: '45 min', image: '/images/videoCardThumb.png' },
-		{ id: 2, title: 'Plot structure and narrative arcs', duration: '45 min', image: '/images/videoCardThumb.png' },
-		{ id: 3, title: 'Writing styles and voice', duration: '45 min', image: '/images/videoCardThumb.png' },
-		{ id: 4, title: 'Drawing fundamentals for digital artists', duration: '45 min', image: '/images/videoCardThumb.png' },
-		{ id: 5, title: 'Writing styles and voice', duration: '45 min', image: '/images/videoCardThumb.png' }
-	];
+	// State for module videos
+	let moduleVideos: any[] = [];
+	
+	// Function to generate videos from selected module and course data
+	function generateVideosFromModule(module: any, course: any) {
+		if (!module || !course?.originalData) return [];
+		
+		const courseData = course.originalData;
+		const moduleIndex = module.moduleIndex;
+		
+		// Get module-specific data
+		const moduleTitle = courseData.Final_Module_Title?.[moduleIndex] || `Module ${moduleIndex + 1}`;
+		const moduleVideoUrl = courseData.Final_Module_YouTube_Video_URL?.[moduleIndex];
+		const moduleVideoThumbnail = courseData.Final_Module_Thumbnails?.[moduleIndex] || '/images/videoCardThumb.png';
+		const moduleVideoDuration = courseData.Final_Module_Video_Duration?.[moduleIndex];
+		
+		// Format duration
+		const formatVideoDuration = (durationInMinutes: number) => {
+			if (!durationInMinutes) return 'Duration not available';
+			const minutes = Math.round(durationInMinutes);
+			if (minutes >= 60) {
+				const hours = Math.floor(minutes / 60);
+				const remainingMinutes = minutes % 60;
+				return remainingMinutes > 0 ? `${hours}hr ${remainingMinutes}min` : `${hours}hr`;
+			}
+			return `${minutes}min`;
+		};
+		
+		// Create video object for the main module video
+		const videos: any[] = [];
+		if (moduleVideoUrl) {
+			videos.push({
+				id: `module_${moduleIndex}_main`,
+				title: moduleTitle,
+				duration: formatVideoDuration(moduleVideoDuration),
+				image: moduleVideoThumbnail,
+				videoUrl: moduleVideoUrl,
+				isMainVideo: true
+			});
+		}
+		
+		// Note: In a typical course structure, each module has one main video
+		// If there are additional videos per module in the future, they can be added here
+		
+		return videos;
+	}
 
 	let selectedCourseId: string | null = null;
 	let selectedCourse: any = null;
@@ -225,6 +280,9 @@
 	function selectCourse(course: any) {
 		selectedCourseId = course.id;
 		selectedCourse = course;
+		// Generate modules from the selected course
+		modules = generateModulesFromCourse(course);
+		console.log('Generated modules for course:', course.title, modules);
 		currentView = 'moduleSelection';
 	}
 
@@ -232,10 +290,12 @@
 		if (currentView === 'videoList') {
 			currentView = 'moduleSelection';
 			selectedModule = null;
+			moduleVideos = []; // Reset module videos when going back to module selection
 		} else if (currentView === 'moduleSelection') {
 			currentView = 'courseList';
 			selectedCourseId = null;
 			selectedCourse = null;
+			modules = []; // Reset modules when going back to course list
 		}
 	}
 
@@ -247,6 +307,9 @@
 
 	function selectModule(module: any) {
 		selectedModule = module;
+		// Generate videos from the selected module
+		moduleVideos = generateVideosFromModule(module, selectedCourse);
+		console.log('Generated videos for module:', module.name, moduleVideos);
 		currentView = 'videoList';
 	}
 
@@ -520,38 +583,52 @@
 								Pick a module to add the video
 							</div>
 							<div class="flex-1 overflow-y-auto custom-scrollbar pr-2 min-h-0" style="max-height: 300px;">
-								<div class="grid grid-cols-2 gap-2 pb-2">
-									{#each modules as module (module.id)}
-										<button
-											on:click={() => selectModule(module)}
-											class="h-32 p-1 bg-black/5 dark:bg-white/10 rounded-lg flex flex-col gap-1.5 transition-colors hover:bg-light-border/30 dark:hover:bg-dark-border/30"
-										>
-											<div class="flex-1 relative rounded overflow-hidden">
-												<img
-													src={module.image}
-													alt={module.title}
-													class="w-full h-full object-cover"
-												/>
-												<div class="px-2 py-0.5 absolute top-1 left-1 bg-black/50 rounded-full backdrop-blur-sm">
-													<div class="text-white text-[10px] font-medium leading-none">
-														{module.name}
+								{#if modules.length === 0}
+									<!-- Empty state for no modules -->
+									<div class="w-full flex items-center justify-center py-8">
+										<div class="text-center">
+											<p class="text-light-text-secondary dark:text-dark-text-secondary text-semibody-medium mb-2">
+												No modules found
+											</p>
+											<p class="text-light-text-tertiary dark:text-dark-text-tertiary text-mini-body">
+												This course doesn't have any modules yet
+											</p>
+										</div>
+									</div>
+								{:else}
+									<div class="grid grid-cols-2 gap-2 pb-2">
+										{#each modules as module (module.id)}
+											<button
+												on:click={() => selectModule(module)}
+												class="h-32 p-1 bg-black/5 dark:bg-white/10 rounded-lg flex flex-col gap-1.5 transition-colors hover:bg-light-border/30 dark:hover:bg-dark-border/30"
+											>
+												<div class="flex-1 relative rounded overflow-hidden">
+													<img
+														src={module.image}
+														alt={module.title}
+														class="w-full h-full object-cover"
+													/>
+													<div class="px-2 py-0.5 absolute top-1 left-1 bg-black/50 rounded-full backdrop-blur-sm">
+														<div class="text-white text-[10px] font-medium leading-none">
+															{module.name}
+														</div>
+													</div>
+													<div class="px-1 absolute bottom-1 right-1 bg-black/20 rounded-3xl backdrop-blur-sm flex items-center gap-1">
+														<div class="text-white text-[10px] font-medium leading-none">
+															{module.videoCount}
+														</div>
+														<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none">
+															<path d="M13 2.5H3C2.60218 2.5 2.22064 2.65804 1.93934 2.93934C1.65804 3.22064 1.5 3.60218 1.5 4V11C1.5 11.3978 1.65804 11.7794 1.93934 12.0607C2.22064 12.342 2.60218 12.5 3 12.5H13C13.3978 12.5 13.7794 12.342 14.0607 12.0607C14.342 11.7794 14.5 11.3978 14.5 11V4C14.5 3.60218 14.342 3.22064 14.0607 2.93934C13.7794 2.65804 13.3978 2.5 13 2.5ZM13.5 11C13.5 11.1326 13.4473 11.2598 13.3536 11.3536C13.2598 11.4473 13.1326 11.5 13 11.5H3C2.86739 11.5 2.74021 11.4473 2.64645 11.3536C2.55268 11.2598 2.5 11.1326 2.5 11V4C2.5 3.86739 2.55268 3.74021 2.64645 3.64645C2.74021 3.55268 2.86739 3.5 3 3.5H13C13.1326 3.5 13.2598 3.55268 13.3536 3.64645C13.4473 3.74021 13.5 3.86739 13.5 4V11ZM10.5 14C10.5 14.1326 10.4473 14.2598 10.3536 14.3536C10.2598 14.4473 10.1326 14.5 10 14.5H6C5.86739 14.5 5.74021 14.4473 5.64645 14.3536C5.55268 14.2598 5.5 14.1326 5.5 14C5.5 13.8674 5.55268 13.7402 5.64645 13.6464C5.74021 13.5527 5.86739 13.5 6 13.5H10C10.1326 13.5 10.2598 13.5527 10.3536 13.6464C10.4473 13.7402 10.5 13.8674 10.5 14ZM10.2775 7.08375L7.2775 5.08375C7.20218 5.0335 7.11463 5.00464 7.0242 5.00026C6.93376 4.99588 6.84383 5.01614 6.76401 5.05887C6.68418 5.10161 6.61746 5.16521 6.57097 5.24291C6.52447 5.3206 6.49994 5.40946 6.5 5.5V9.5C6.49994 9.59054 6.52447 9.6794 6.57097 9.75709C6.61746 9.83478 6.68418 9.89839 6.76401 9.94113C6.84383 9.98386 6.93376 10.0041 7.0242 9.99974C7.11463 9.99536 7.20218 9.9665 7.2775 9.91625L10.2775 7.91625C10.3461 7.87061 10.4023 7.80873 10.4412 7.73611C10.4801 7.66349 10.5005 7.58238 10.5005 7.5C10.5005 7.41762 10.4801 7.33651 10.4412 7.26389C10.4023 7.19127 10.3461 7.12939 10.2775 7.08375ZM7.5 8.56563V6.4375L9.09875 7.5L7.5 8.56563Z" fill="white"/>
+														  </svg>
 													</div>
 												</div>
-												<div class="px-1 absolute bottom-1 right-1 bg-black/20 rounded-3xl backdrop-blur-sm flex items-center gap-1">
-													<div class="text-white text-[10px] font-medium leading-none">
-														{module.videoCount}
-													</div>
-													<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none">
-														<path d="M13 2.5H3C2.60218 2.5 2.22064 2.65804 1.93934 2.93934C1.65804 3.22064 1.5 3.60218 1.5 4V11C1.5 11.3978 1.65804 11.7794 1.93934 12.0607C2.22064 12.342 2.60218 12.5 3 12.5H13C13.3978 12.5 13.7794 12.342 14.0607 12.0607C14.342 11.7794 14.5 11.3978 14.5 11V4C14.5 3.60218 14.342 3.22064 14.0607 2.93934C13.7794 2.65804 13.3978 2.5 13 2.5ZM13.5 11C13.5 11.1326 13.4473 11.2598 13.3536 11.3536C13.2598 11.4473 13.1326 11.5 13 11.5H3C2.86739 11.5 2.74021 11.4473 2.64645 11.3536C2.55268 11.2598 2.5 11.1326 2.5 11V4C2.5 3.86739 2.55268 3.74021 2.64645 3.64645C2.74021 3.55268 2.86739 3.5 3 3.5H13C13.1326 3.5 13.2598 3.55268 13.3536 3.64645C13.4473 3.74021 13.5 3.86739 13.5 4V11ZM10.5 14C10.5 14.1326 10.4473 14.2598 10.3536 14.3536C10.2598 14.4473 10.1326 14.5 10 14.5H6C5.86739 14.5 5.74021 14.4473 5.64645 14.3536C5.55268 14.2598 5.5 14.1326 5.5 14C5.5 13.8674 5.55268 13.7402 5.64645 13.6464C5.74021 13.5527 5.86739 13.5 6 13.5H10C10.1326 13.5 10.2598 13.5527 10.3536 13.6464C10.4473 13.7402 10.5 13.8674 10.5 14ZM10.2775 7.08375L7.2775 5.08375C7.20218 5.0335 7.11463 5.00464 7.0242 5.00026C6.93376 4.99588 6.84383 5.01614 6.76401 5.05887C6.68418 5.10161 6.61746 5.16521 6.57097 5.24291C6.52447 5.3206 6.49994 5.40946 6.5 5.5V9.5C6.49994 9.59054 6.52447 9.6794 6.57097 9.75709C6.61746 9.83478 6.68418 9.89839 6.76401 9.94113C6.84383 9.98386 6.93376 10.0041 7.0242 9.99974C7.11463 9.99536 7.20218 9.9665 7.2775 9.91625L10.2775 7.91625C10.3461 7.87061 10.4023 7.80873 10.4412 7.73611C10.4801 7.66349 10.5005 7.58238 10.5005 7.5C10.5005 7.41762 10.4801 7.33651 10.4412 7.26389C10.4023 7.19127 10.3461 7.12939 10.2775 7.08375ZM7.5 8.56563V6.4375L9.09875 7.5L7.5 8.56563Z" fill="white"/>
-													  </svg>
+												<div class="text-light-text-secondary dark:text-dark-text-secondary text-[10px] font-medium leading-none text-left">
+													{module.title}
 												</div>
-											</div>
-											<div class="text-light-text-secondary dark:text-dark-text-secondary text-[10px] font-medium leading-none text-left">
-												{module.title}
-											</div>
-										</button>
-									{/each}
-								</div>
+											</button>
+										{/each}
+									</div>
+								{/if}
 							</div>
 						</div>
 					</div>
@@ -583,46 +660,60 @@
 							</div>
 						</div>
 						<div class="flex-1 overflow-y-auto custom-scrollbar pr-2 min-h-0">
-							<div class="flex flex-col gap-2">
-								{#each moduleVideos as video (video.id)}
-									<div class="flex items-start gap-2 p-2 border border-light-border dark:border-dark-border rounded-2xl">
-								
-											<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none" class="mt-[4px] flex-shrink-0">
-												<path d="M9.75 8C9.75 8.34612 9.64736 8.68446 9.45507 8.97225C9.26278 9.26004 8.98947 9.48434 8.6697 9.61679C8.34993 9.74924 7.99806 9.7839 7.65859 9.71638C7.31913 9.64885 7.00731 9.48218 6.76256 9.23744C6.51782 8.9927 6.35115 8.68088 6.28363 8.34141C6.2161 8.00194 6.25076 7.65008 6.38321 7.33031C6.51566 7.01054 6.73997 6.73722 7.02775 6.54493C7.31554 6.35264 7.65388 6.25 8 6.25C8.46413 6.25 8.90925 6.43438 9.23744 6.76256C9.56563 7.09075 9.75 7.53587 9.75 8ZM8 4.75C8.34612 4.75 8.68446 4.64737 8.97225 4.45507C9.26003 4.26278 9.48434 3.98947 9.61679 3.6697C9.74924 3.34993 9.7839 2.99806 9.71638 2.65859C9.64885 2.31913 9.48218 2.00731 9.23744 1.76256C8.9927 1.51782 8.68088 1.35115 8.34141 1.28363C8.00194 1.2161 7.65008 1.25076 7.3303 1.38321C7.01053 1.51566 6.73722 1.73997 6.54493 2.02775C6.35264 2.31554 6.25 2.65388 6.25 3C6.25 3.46413 6.43438 3.90925 6.76256 4.23744C7.09075 4.56563 7.53587 4.75 8 4.75ZM8 11.25C7.65388 11.25 7.31554 11.3526 7.02775 11.5449C6.73997 11.7372 6.51566 12.0105 6.38321 12.3303C6.25076 12.6501 6.2161 13.0019 6.28363 13.3414C6.35115 13.6809 6.51782 13.9927 6.76256 14.2374C7.00731 14.4822 7.31913 14.6489 7.65859 14.7164C7.99806 14.7839 8.34993 14.7492 8.6697 14.6168C8.98947 14.4843 9.26278 14.26 9.45507 13.9723C9.64736 13.6845 9.75 13.3461 9.75 13C9.75 12.5359 9.56563 12.0908 9.23744 11.7626C8.90925 11.4344 8.46413 11.25 8 11.25Z" fill="#2A4D61"/>
-											  </svg>
-											  
-										
-										<div class="flex-1 flex flex-col gap-1">
-											<div class="text-light-text-primary dark:text-dark-text-primary text-semibody-medium">
-												{video.title}
-											</div>
-											<div class="text-light-text-tertiary dark:text-dark-text-tertiary text-mini-body">
-												{video.duration}
-											</div>
-										</div>
-										<div class="w-20 h-14 relative rounded-lg overflow-hidden flex-shrink-0">
-											<img
-												src={video.image}
-												alt={video.title}
-												class="w-full h-full object-cover"
-											/>
-											<div class="absolute inset-0 flex items-center justify-center bg-black/20">
-												<svg
-													class="w-4 h-4 text-white"
-													viewBox="0 0 24 24"
-													fill="none"
-													xmlns="http://www.w3.org/2000/svg"
-												>
-													<path
-														d="M16.542 11.232C17.167 11.603 17.167 12.507 16.542 12.878L10.39 16.57C9.765 16.94 9 16.488 9 15.738V8.372C9 7.622 9.765 7.17 10.39 7.54L16.542 11.232Z"
-														fill="currentColor"
-													/>
-												</svg>
-											</div>
-										</div>
+							{#if moduleVideos.length === 0}
+								<!-- Empty state for no videos in module -->
+								<div class="w-full flex items-center justify-center py-8">
+									<div class="text-center">
+										<p class="text-light-text-secondary dark:text-dark-text-secondary text-semibody-medium mb-2">
+											No videos found
+										</p>
+										<p class="text-light-text-tertiary dark:text-dark-text-tertiary text-mini-body">
+											This module doesn't have any videos yet
+										</p>
 									</div>
-								{/each}
-							</div>
+								</div>
+							{:else}
+								<div class="flex flex-col gap-2">
+									{#each moduleVideos as video (video.id)}
+										<div class="flex items-start gap-2 p-2 border border-light-border dark:border-dark-border rounded-2xl">
+									
+												<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none" class="mt-[4px] flex-shrink-0">
+													<path d="M9.75 8C9.75 8.34612 9.64736 8.68446 9.45507 8.97225C9.26278 9.26004 8.98947 9.48434 8.6697 9.61679C8.34993 9.74924 7.99806 9.7839 7.65859 9.71638C7.31913 9.64885 7.00731 9.48218 6.76256 9.23744C6.51782 8.9927 6.35115 8.68088 6.28363 8.34141C6.2161 8.00194 6.25076 7.65008 6.38321 7.33031C6.51566 7.01054 6.73997 6.73722 7.02775 6.54493C7.31554 6.35264 7.65388 6.25 8 6.25C8.46413 6.25 8.90925 6.43438 9.23744 6.76256C9.56563 7.09075 9.75 7.53587 9.75 8ZM8 4.75C8.34612 4.75 8.68446 4.64737 8.97225 4.45507C9.26003 4.26278 9.48434 3.98947 9.61679 3.6697C9.74924 3.34993 9.7839 2.99806 9.71638 2.65859C9.64885 2.31913 9.48218 2.00731 9.23744 1.76256C8.9927 1.51782 8.68088 1.35115 8.34141 1.28363C8.00194 1.2161 7.65008 1.25076 7.3303 1.38321C7.01053 1.51566 6.73722 1.73997 6.54493 2.02775C6.35264 2.31554 6.25 2.65388 6.25 3C6.25 3.46413 6.43438 3.90925 6.76256 4.23744C7.09075 4.56563 7.53587 4.75 8 4.75ZM8 11.25C7.65388 11.25 7.31554 11.3526 7.02775 11.5449C6.73997 11.7372 6.51566 12.0105 6.38321 12.3303C6.25076 12.6501 6.2161 13.0019 6.28363 13.3414C6.35115 13.6809 6.51782 13.9927 6.76256 14.2374C7.00731 14.4822 7.31913 14.6489 7.65859 14.7164C7.99806 14.7839 8.34993 14.7492 8.6697 14.6168C8.98947 14.4843 9.26278 14.26 9.45507 13.9723C9.64736 13.6845 9.75 13.3461 9.75 13C9.75 12.5359 9.56563 12.0908 9.23744 11.7626C8.90925 11.4344 8.46413 11.25 8 11.25Z" fill="#2A4D61"/>
+												  </svg>
+												  
+											
+											<div class="flex-1 flex flex-col gap-1">
+												<div class="text-light-text-primary dark:text-dark-text-primary text-semibody-medium">
+													{video.title}
+												</div>
+												<div class="text-light-text-tertiary dark:text-dark-text-tertiary text-mini-body">
+													{video.duration}
+												</div>
+											</div>
+											<div class="w-20 h-14 relative rounded-lg overflow-hidden flex-shrink-0">
+												<img
+													src={video.image}
+													alt={video.title}
+													class="w-full h-full object-cover"
+												/>
+												<div class="absolute inset-0 flex items-center justify-center bg-black/20">
+													<svg
+														class="w-4 h-4 text-white"
+														viewBox="0 0 24 24"
+														fill="none"
+														xmlns="http://www.w3.org/2000/svg"
+													>
+														<path
+															d="M16.542 11.232C17.167 11.603 17.167 12.507 16.542 12.878L10.39 16.57C9.765 16.94 9 16.488 9 15.738V8.372C9 7.622 9.765 7.17 10.39 7.54L16.542 11.232Z"
+															fill="currentColor"
+														/>
+													</svg>
+												</div>
+											</div>
+										</div>
+									{/each}
+								</div>
+							{/if}
 						</div>
 					</div>
 					<!-- <div class="w-3 h-full bg-light-border/20 dark:bg-dark-border/20 rounded-full overflow-hidden relative">
