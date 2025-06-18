@@ -1,51 +1,110 @@
 <script lang="ts">
-	import { createEventDispatcher } from 'svelte';
+	import { createEventDispatcher, onMount } from 'svelte';
+	import { user } from '$lib/stores/auth';
+	import { getUserCourses } from '$lib/firebase';
+	import { get } from 'svelte/store';
+	
 	export let showModal: boolean;
 
 	const dispatch = createEventDispatcher();
 
 	function closeModal() {
+		// Reset modal state
+		currentView = 'courseList';
+		selectedCourseId = null;
+		selectedCourse = null;
+		selectedModule = null;
 		dispatch('close');
 	}
 
-	// Mock data for courses
-	const courses = [
-		{ 
-			id: 1, 
-			title: 'Principles of user experience and user interface design', 
-			duration: '2hrs', 
-			image: '/images/videoCardThumb.png',
-			description: 'This introductory course explores how Artificial Intelligence (AI) is transforming the landscape of modern software development. You\'ll gain a foundational understanding of AI concepts, tools, and their integration into real-world development workflows.'
-		},
-		{ 
-			id: 2, 
-			title: 'Music theory essentials for producers', 
-			duration: '4hrs', 
-			image: '/images/videoCardThumb.png',
-			description: 'Learn the fundamentals of music theory specifically tailored for music producers and electronic music creators.'
-		},
-		{ 
-			id: 3, 
-			title: 'Basics of Unity or Unreal Engine', 
-			duration: '1hr', 
-			image: '/images/videoCardThumb.png',
-			description: 'Get started with game development using Unity or Unreal Engine with this comprehensive beginner course.'
-		},
-		{ 
-			id: 4, 
-			title: 'Plot structure and narrative arcs', 
-			duration: '1hr 45 min', 
-			image: '/images/videoCardThumb.png',
-			description: 'Master the art of storytelling by understanding plot structures and how to create compelling narrative arcs.'
-		},
-		{ 
-			id: 5, 
-			title: 'Advanced cooking techniques', 
-			duration: '3hr 30 min', 
-			image: '/images/videoCardThumb.png',
-			description: 'Elevate your culinary skills with advanced cooking techniques used by professional chefs.'
+	// State for courses data
+	let courses: any[] = [];
+	let loading = false;
+	let error: string | null = null;
+
+	// Function to format duration from course data
+	function formatDuration(course: any): string {
+		if (course.Final_Course_Duration) {
+			const minutes = Math.round(course.Final_Course_Duration);
+			if (minutes >= 60) {
+				const hours = Math.floor(minutes / 60);
+				const remainingMinutes = minutes % 60;
+				return remainingMinutes > 0 ? `${hours}hr ${remainingMinutes}min` : `${hours}hr`;
+			}
+			return `${minutes}min`;
 		}
-	];
+		return 'Duration not available';
+	}
+
+	// Function to get course thumbnail
+	function getCourseThumbnail(course: any): string {
+		return course.Final_Course_Thumbnail || '/images/videoCardThumb.png';
+	}
+
+	// Function to load user's courses
+	async function loadUserCourses() {
+		try {
+			console.log('Loading user courses...');
+			loading = true;
+			error = null;
+			
+			const currentUser = $user;
+			console.log('Current user:', currentUser);
+			
+			if (!currentUser) {
+				error = 'Please sign in to view your courses';
+				loading = false;
+				return;
+			}
+
+			console.log('Fetching courses for user:', currentUser.uid);
+			const userCourses = await getUserCourses(currentUser.uid);
+			console.log('Fetched courses:', userCourses);
+			
+			// Transform courses to match the expected format
+			courses = userCourses.map(course => ({
+				id: course.id,
+				title: course.Final_Course_Title || 'Untitled Course',
+				duration: formatDuration(course),
+				image: getCourseThumbnail(course),
+				description: course.Final_Course_Objective || course.Final_Course_Introduction || 'No description available',
+				// Keep original course data for later use
+				originalData: course
+			}));
+			
+			console.log('Transformed courses:', courses);
+		} catch (err) {
+			console.error('Error loading user courses:', err);
+			error = 'Failed to load courses';
+		} finally {
+			loading = false;
+		}
+	}
+
+	// Load courses when modal is shown and user is available
+	$: if (showModal && $user && courses.length === 0 && !loading && !error) {
+		console.log('Modal opened with user, loading courses...');
+		loadUserCourses();
+	}
+	
+	// Reset loading state when modal is closed
+	$: if (!showModal) {
+		// Reset states when modal is closed
+		if (currentView !== 'courseList') {
+			currentView = 'courseList';
+			selectedCourseId = null;
+			selectedCourse = null;
+			selectedModule = null;
+		}
+	}
+
+	// Also try to load on mount if modal is already open
+	onMount(() => {
+		if (showModal && $user && courses.length === 0 && !loading && !error) {
+			console.log('Component mounted with modal open, loading courses...');
+			loadUserCourses();
+		}
+	});
 
 	// Mock data for modules
 	const modules = [
@@ -66,7 +125,7 @@
 		{ id: 5, title: 'Writing styles and voice', duration: '45 min', image: '/images/videoCardThumb.png' }
 	];
 
-	let selectedCourseId: number | null = null;
+	let selectedCourseId: string | null = null;
 	let selectedCourse: any = null;
 	let selectedModule: any = null;
 	let currentView: 'courseList' | 'moduleSelection' | 'videoList' = 'courseList';
@@ -189,51 +248,86 @@
 					</div>
 					<div class="self-stretch flex-1 overflow-y-auto pr-2 custom-scrollbar">
 						<div class="inline-flex flex-col justify-start items-start gap-2 w-full">
-							{#each courses as course (course.id)}
-								<button
-									on:click={() => selectCourse(course)}
-									class="self-stretch h-20 p-2 rounded-2xl border {selectedCourseId === course.id
-										? 'border-brand-red'
-										: 'border-light-border dark:border-dark-border'} inline-flex justify-start items-center gap-4 transition-colors w-full"
-								>
-									<div class="flex-1 self-stretch flex flex-col justify-center items-start">
-										<div
-											class="self-stretch justify-start text-light-text-primary dark:text-dark-text-primary text-semibody-medium text-left"
+							{#if loading}
+								<!-- Loading state -->
+								<div class="w-full flex items-center justify-center py-8">
+									<div class="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-red"></div>
+								</div>
+							{:else if error}
+								<!-- Error state -->
+								<div class="w-full flex items-center justify-center py-8">
+									<div class="text-center">
+										<p class="text-light-text-secondary dark:text-dark-text-secondary text-semibody-medium mb-2">
+											{error}
+										</p>
+										<button
+											on:click={loadUserCourses}
+											class="px-4 py-2 bg-brand-red text-white rounded-lg hover:bg-ButtonHover transition-colors text-semibody-medium"
 										>
-											{course.title}
-										</div>
-										<div class="self-stretch inline-flex justify-start items-center">
+											Try Again
+										</button>
+									</div>
+								</div>
+							{:else if courses.length === 0}
+								<!-- Empty state -->
+								<div class="w-full flex items-center justify-center py-8">
+									<div class="text-center">
+										<p class="text-light-text-secondary dark:text-dark-text-secondary text-semibody-medium mb-2">
+											No courses found
+										</p>
+										<p class="text-light-text-tertiary dark:text-dark-text-tertiary text-mini-body">
+											Create your first course to get started
+										</p>
+									</div>
+								</div>
+							{:else}
+								<!-- Courses list -->
+								{#each courses as course (course.id)}
+									<button
+										on:click={() => selectCourse(course)}
+										class="self-stretch h-20 p-2 rounded-2xl border {selectedCourseId === course.id
+											? 'border-brand-red'
+											: 'border-light-border dark:border-dark-border'} inline-flex justify-start items-center gap-4 transition-colors w-full"
+									>
+										<div class="flex-1 self-stretch flex flex-col justify-center items-start">
 											<div
-												class="text-light-text-tertiary dark:text-dark-text-tertiary text-mini-body leading-tight"
+												class="self-stretch justify-start text-light-text-primary dark:text-dark-text-primary text-semibody-medium text-left"
 											>
-												{course.duration}
+												{course.title}
+											</div>
+											<div class="self-stretch inline-flex justify-start items-center">
+												<div
+													class="text-light-text-tertiary dark:text-dark-text-tertiary text-mini-body leading-tight"
+												>
+													{course.duration}
+												</div>
 											</div>
 										</div>
-									</div>
-									<div class="w-24 h-full relative rounded-lg overflow-hidden flex-shrink-0">
-										<img
-											src={course.image}
-											alt={course.title}
-											class="w-full h-full object-cover"
-										/>
-										<div
-											class="absolute inset-0 flex items-center justify-center bg-black/20"
-										>
-											<svg
-												class="w-6 h-6 text-white"
-												viewBox="0 0 24 24"
-												fill="none"
-												xmlns="http://www.w3.org/2000/svg"
+										<div class="w-24 h-full relative rounded-lg overflow-hidden flex-shrink-0">
+											<img
+												src={course.image}
+												alt={course.title}
+												class="w-full h-full object-cover"
+											/>
+											<div
+												class="absolute inset-0 flex items-center justify-center bg-black/20"
 											>
-												<path
-													d="M16.542 11.232C17.167 11.603 17.167 12.507 16.542 12.878L10.39 16.57C9.765 16.94 9 16.488 9 15.738V8.372C9 7.622 9.765 7.17 10.39 7.54L16.542 11.232Z"
-													fill="currentColor"
-												/>
-											</svg>
+												<svg
+													class="w-6 h-6 text-white"
+													viewBox="0 0 24 24"
+													fill="none"
+													xmlns="http://www.w3.org/2000/svg"
+												>
+													<path
+														d="M16.542 11.232C17.167 11.603 17.167 12.507 16.542 12.878L10.39 16.57C9.765 16.94 9 16.488 9 15.738V8.372C9 7.622 9.765 7.17 10.39 7.54L16.542 11.232Z"
+														fill="currentColor"
+													/>
+												</svg>
+											</div>
 										</div>
-									</div>
-								</button>
-							{/each}
+									</button>
+								{/each}
+							{/if}
 						</div>
 					</div>
 				</div>
@@ -322,7 +416,7 @@
 				</div>
 			{:else if currentView === 'videoList'}
 				<div class="self-stretch flex-1 flex gap-3 overflow-hidden">
-					<div class="flex-1 flex flex-col gap-4 overflow-hidden min-h-0">
+					<div class="flex-1 flex flex-col gap-4 overflow-hidden min-h-0 p-2 border border-light-border dark:border-dark-border rounded-2xl">
 						<div class="flex flex-col gap-4 flex-shrink-0">
 							<div class="flex items-center justify-between">
 								<div class="text-light-text-tertiary dark:text-dark-text-tertiary text-semibody-medium">
@@ -344,13 +438,14 @@
 							</div>
 						</div>
 						<div class="flex-1 overflow-y-auto custom-scrollbar pr-2 min-h-0">
-							<div class="flex flex-col gap-4">
+							<div class="flex flex-col gap-2">
 								{#each moduleVideos as video (video.id)}
-									<div class="flex items-center gap-4 p-2">
-										
-											<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none">
+									<div class="flex items-start gap-2 p-2 border border-light-border dark:border-dark-border rounded-2xl">
+								
+											<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none" class="mt-[4px] flex-shrink-0">
 												<path d="M9.75 8C9.75 8.34612 9.64736 8.68446 9.45507 8.97225C9.26278 9.26004 8.98947 9.48434 8.6697 9.61679C8.34993 9.74924 7.99806 9.7839 7.65859 9.71638C7.31913 9.64885 7.00731 9.48218 6.76256 9.23744C6.51782 8.9927 6.35115 8.68088 6.28363 8.34141C6.2161 8.00194 6.25076 7.65008 6.38321 7.33031C6.51566 7.01054 6.73997 6.73722 7.02775 6.54493C7.31554 6.35264 7.65388 6.25 8 6.25C8.46413 6.25 8.90925 6.43438 9.23744 6.76256C9.56563 7.09075 9.75 7.53587 9.75 8ZM8 4.75C8.34612 4.75 8.68446 4.64737 8.97225 4.45507C9.26003 4.26278 9.48434 3.98947 9.61679 3.6697C9.74924 3.34993 9.7839 2.99806 9.71638 2.65859C9.64885 2.31913 9.48218 2.00731 9.23744 1.76256C8.9927 1.51782 8.68088 1.35115 8.34141 1.28363C8.00194 1.2161 7.65008 1.25076 7.3303 1.38321C7.01053 1.51566 6.73722 1.73997 6.54493 2.02775C6.35264 2.31554 6.25 2.65388 6.25 3C6.25 3.46413 6.43438 3.90925 6.76256 4.23744C7.09075 4.56563 7.53587 4.75 8 4.75ZM8 11.25C7.65388 11.25 7.31554 11.3526 7.02775 11.5449C6.73997 11.7372 6.51566 12.0105 6.38321 12.3303C6.25076 12.6501 6.2161 13.0019 6.28363 13.3414C6.35115 13.6809 6.51782 13.9927 6.76256 14.2374C7.00731 14.4822 7.31913 14.6489 7.65859 14.7164C7.99806 14.7839 8.34993 14.7492 8.6697 14.6168C8.98947 14.4843 9.26278 14.26 9.45507 13.9723C9.64736 13.6845 9.75 13.3461 9.75 13C9.75 12.5359 9.56563 12.0908 9.23744 11.7626C8.90925 11.4344 8.46413 11.25 8 11.25Z" fill="#2A4D61"/>
 											  </svg>
+											  
 										
 										<div class="flex-1 flex flex-col gap-1">
 											<div class="text-light-text-primary dark:text-dark-text-primary text-semibody-medium">
@@ -385,9 +480,9 @@
 							</div>
 						</div>
 					</div>
-					<div class="w-3 h-full bg-light-border/20 dark:bg-dark-border/20 rounded-full overflow-hidden relative">
+					<!-- <div class="w-3 h-full bg-light-border/20 dark:bg-dark-border/20 rounded-full overflow-hidden relative">
 						<div class="w-3 h-16 bg-brand-red rounded-full absolute top-1"></div>
-					</div>
+					</div> -->
 				</div>
 			{/if}
 		</div>
