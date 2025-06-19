@@ -381,6 +381,12 @@
 			return;
 		}
 
+		// Check if this video already exists as a module in the course
+		if (isVideoAlreadyInCourse(video, selectedCourse)) {
+			error = 'This video is already added to this course as a module';
+			return;
+		}
+
 		try {
 			addingVideo = true;
 			error = null;
@@ -412,11 +418,16 @@
 
 			console.log('Successfully added video as new module at index:', newModuleIndex);
 			
-			// Show success message and close modal
+			// Show success message and refresh the module list
 			successMessage = 'Video successfully added as a new module!';
+			
+			// Refresh the course data to get updated information
+			await refreshSelectedCourseData();
+			
+			// Clear success message after 3 seconds
 			setTimeout(() => {
-				closeModal();
-			}, 2000);
+				successMessage = null;
+			}, 3000);
 		} catch (err) {
 			console.error('Error adding video as new module:', err);
 			error = err instanceof Error ? err.message : 'Failed to add video as new module';
@@ -436,6 +447,12 @@
 	async function addVideoToModuleHandler() {
 		if (!video || !selectedModule || !selectedCourse || !$user) {
 			console.error('Missing required data for adding video to module');
+			return;
+		}
+
+		// Check if this video already exists in the selected module
+		if (isVideoAlreadyInModule(video, selectedModule, selectedCourse)) {
+			error = 'This video is already added to this module';
 			return;
 		}
 
@@ -497,6 +514,67 @@
 	// Function to close dropdown when clicking outside
 	function closeDropdown() {
 		openDropdownId = null;
+	}
+
+	// Helper function to check if video already exists in the course as a module
+	function isVideoAlreadyInCourse(videoToCheck: any, course: any): boolean {
+		if (!course?.originalData) return false;
+		
+		const courseData = course.originalData;
+		const moduleVideoUrls = courseData.Final_Module_YouTube_Video_URL || [];
+		
+		// Extract video ID from the video to check
+		const videoIdToCheck = extractVideoIdFromUrl(videoToCheck.videoUrl);
+		if (!videoIdToCheck) return false;
+		
+		// Check if any module has this video as main video
+		return moduleVideoUrls.some((url: string) => {
+			if (!url) return false;
+			const moduleVideoId = extractVideoIdFromUrl(url);
+			return moduleVideoId === videoIdToCheck;
+		});
+	}
+
+	// Helper function to check if video already exists in a specific module
+	function isVideoAlreadyInModule(videoToCheck: any, module: any, course: any): boolean {
+		if (!course?.originalData || !module) return false;
+		
+		const courseData = course.originalData;
+		const moduleIndex = module.moduleIndex;
+		
+		// Extract video ID from the video to check
+		const videoIdToCheck = extractVideoIdFromUrl(videoToCheck.videoUrl);
+		if (!videoIdToCheck) return false;
+		
+		// Check main module video
+		const mainVideoUrl = courseData.Final_Module_YouTube_Video_URL?.[moduleIndex];
+		if (mainVideoUrl) {
+			const mainVideoId = extractVideoIdFromUrl(mainVideoUrl);
+			if (mainVideoId === videoIdToCheck) return true;
+		}
+		
+		// Check additional videos in the module
+		const additionalVideos = courseData.Module_Additional_Videos?.[moduleIndex] || [];
+		return additionalVideos.some((video: any) => {
+			const additionalVideoId = extractVideoIdFromUrl(video.videoUrl);
+			return additionalVideoId === videoIdToCheck;
+		});
+	}
+
+	// Helper function to extract video ID from various YouTube URL formats
+	function extractVideoIdFromUrl(url: string): string | null {
+		if (!url) return null;
+		
+		// Handle embed URLs
+		if (url.includes('/embed/')) {
+			const match = url.match(/\/embed\/([^?&]+)/);
+			return match ? match[1] : null;
+		}
+		
+		// Handle regular YouTube URLs
+		const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i;
+		const match = url.match(regex);
+		return match ? match[1] : null;
 	}
 
 	// Function to delete a video from module
