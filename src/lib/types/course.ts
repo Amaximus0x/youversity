@@ -52,6 +52,7 @@ export interface FinalCourseStructure {
   Final_Module_Video_Duration: number[];
   Final_Module_Thumbnails: string[];
   Final_Course_Duration: number;
+  Module_Additional_Videos?: Record<number, any[]>;
   creatorUsername?: string;
   creatorDisplayName?: string;
   isCreator?: boolean;

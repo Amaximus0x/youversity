@@ -352,6 +352,7 @@ export async function getUserCourse(userId: string, courseId: string) {
       Final_Module_Video_Duration: courseData.Final_Module_Video_Duration || [],
       Final_Module_Thumbnails: courseData.Final_Module_Thumbnails || [],
       Final_Course_Duration: courseData.Final_Course_Duration || 0,
+      Module_Additional_Videos: courseData.Module_Additional_Videos || {},
       isCreator,
       isEnrolled,
       enrollmentData: enrollmentDoc.exists() ? enrollmentDoc.data() : null
@@ -1372,5 +1373,272 @@ export async function getPublicCoursesByCreator(creatorId: string) {
   } catch (error) {
     console.error('Error fetching creator courses:', error);
     throw new Error('Failed to fetch creator courses');
+  }
+}
+
+// Function to add a video to an existing module in a course
+export async function addVideoToModule(
+  userId: string,
+  courseId: string,
+  moduleIndex: number,
+  videoData: {
+    title: string;
+    videoUrl: string;
+    thumbnailUrl?: string;
+    duration?: number;
+    description?: string;
+  }
+) {
+  try {
+    console.log('Adding video to module:', { userId, courseId, moduleIndex, videoData });
+    
+    // Get the course document
+    const courseRef = doc(db, 'courses', courseId);
+    const courseDoc = await getDoc(courseRef);
+    
+    if (!courseDoc.exists()) {
+      throw new Error('Course not found');
+    }
+
+    const courseData = courseDoc.data();
+    
+    // Check if user is the creator of the course
+    if (courseData.createdBy !== userId) {
+      throw new Error('Unauthorized: Only the course creator can add videos to modules');
+    }
+
+    // Extract YouTube video ID from URL to create proper YouTube URL
+    const extractYouTubeVideoId = (url: string): string | null => {
+      const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i;
+      const match = url.match(regex);
+      return match ? match[1] : null;
+    };
+
+    const videoId = extractYouTubeVideoId(videoData.videoUrl);
+    const youtubeUrl = videoId ? `https://www.youtube.com/watch?v=${videoId}` : videoData.videoUrl;
+
+    // Get or initialize additional videos structure for modules
+    const additionalVideos = courseData.Module_Additional_Videos || {};
+    
+    // Initialize the module's additional videos array if it doesn't exist
+    if (!additionalVideos[moduleIndex]) {
+      additionalVideos[moduleIndex] = [];
+    }
+
+    // Create the video object to add
+    const newVideo = {
+      title: videoData.title,
+      videoUrl: youtubeUrl,
+      thumbnailUrl: videoData.thumbnailUrl || '',
+      duration: videoData.duration || 0,
+      description: videoData.description || '',
+      addedAt: new Date().toISOString(),
+      videoId: videoId || ''
+    };
+
+    // Add the new video to the module's additional videos
+    additionalVideos[moduleIndex].push(newVideo);
+
+    // Calculate new total duration including additional videos
+    let additionalDuration = 0;
+    Object.values(additionalVideos).forEach((moduleVideos: any) => {
+      if (Array.isArray(moduleVideos)) {
+        additionalDuration += moduleVideos.reduce((sum: number, video: any) => sum + (video.duration || 0), 0);
+      }
+    });
+
+    // Get current main module durations
+    const mainModuleDurations = courseData.Final_Module_Video_Duration || [];
+    const mainDuration = mainModuleDurations.reduce((sum: number, duration: number) => sum + (duration || 0), 0);
+    
+    const totalDuration = mainDuration + additionalDuration;
+
+    // Update the course document
+    const updateData = {
+      Module_Additional_Videos: additionalVideos,
+      Final_Course_Duration: totalDuration,
+      updatedAt: serverTimestamp()
+    };
+
+    await updateDoc(courseRef, updateData);
+    
+    console.log('Successfully added video to module');
+    return true;
+  } catch (error) {
+    console.error('Error adding video to module:', error);
+    throw error;
+  }
+}
+
+// Function to add a video as a new module to a course
+export async function addVideoAsNewModule(
+  userId: string,
+  courseId: string,
+  videoData: {
+    title: string;
+    videoUrl: string;
+    thumbnailUrl?: string;
+    duration?: number;
+    description?: string;
+  }
+) {
+  try {
+    console.log('Adding video as new module:', { userId, courseId, videoData });
+    
+    // Get the course document
+    const courseRef = doc(db, 'courses', courseId);
+    const courseDoc = await getDoc(courseRef);
+    
+    if (!courseDoc.exists()) {
+      throw new Error('Course not found');
+    }
+
+    const courseData = courseDoc.data();
+    
+    // Check if user is the creator of the course
+    if (courseData.createdBy !== userId) {
+      throw new Error('Unauthorized: Only the course creator can add modules to courses');
+    }
+
+    // Extract YouTube video ID from URL to create proper YouTube URL
+    const extractYouTubeVideoId = (url: string): string | null => {
+      const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i;
+      const match = url.match(regex);
+      return match ? match[1] : null;
+    };
+
+    const videoId = extractYouTubeVideoId(videoData.videoUrl);
+    const youtubeUrl = videoId ? `https://www.youtube.com/watch?v=${videoId}` : videoData.videoUrl;
+
+    // Get current module data arrays
+    const moduleTitles = courseData.Final_Module_Title || [];
+    const moduleObjectives = courseData.Final_Module_Objective || [];
+    const moduleSummaries = courseData.Final_Module_Summary || [];
+    const moduleUrls = courseData.Final_Module_YouTube_Video_URL || [];
+    const moduleThumbnails = courseData.Final_Module_Thumbnails || [];
+    const moduleDurations = courseData.Final_Module_Video_Duration || [];
+    const moduleQuizzes = courseData.Final_Module_Quiz || [];
+
+    // Add new module data
+    const newModuleIndex = moduleTitles.length;
+    moduleTitles.push(videoData.title);
+    moduleObjectives.push(videoData.description || `Learn about ${videoData.title}`);
+    moduleSummaries.push(videoData.description || `This module covers ${videoData.title}`);
+    moduleUrls.push(youtubeUrl);
+    moduleThumbnails.push(videoData.thumbnailUrl || '');
+    moduleDurations.push(videoData.duration || 0);
+    
+    // Create a basic quiz for the new module
+    const basicQuiz = {
+      quiz: [
+        {
+          question: `What is the main topic covered in this module about ${videoData.title}?`,
+          options: [
+            videoData.title,
+            "Something else",
+            "Not covered",
+            "Unknown topic"
+          ],
+          correct_answer: videoData.title
+        }
+      ]
+    };
+    moduleQuizzes.push(basicQuiz);
+
+    // Calculate new total duration
+    const totalDuration = moduleDurations.reduce((sum, duration) => sum + (duration || 0), 0);
+
+    // Update the course document
+    const updateData = {
+      Final_Module_Title: moduleTitles,
+      Final_Module_Objective: moduleObjectives,
+      Final_Module_Summary: moduleSummaries,
+      Final_Module_YouTube_Video_URL: moduleUrls,
+      Final_Module_Thumbnails: moduleThumbnails,
+      Final_Module_Video_Duration: moduleDurations,
+      Final_Module_Quiz: moduleQuizzes,
+      Final_Course_Duration: totalDuration,
+      updatedAt: serverTimestamp()
+    };
+
+    await updateDoc(courseRef, updateData);
+    
+    console.log('Successfully added video as new module');
+    return newModuleIndex;
+  } catch (error) {
+    console.error('Error adding video as new module:', error);
+    throw error;
+  }
+}
+
+// Function to remove a video from a module's additional videos
+export async function removeVideoFromModule(
+  userId: string,
+  courseId: string,
+  moduleIndex: number,
+  videoIndex: number
+) {
+  try {
+    console.log('Removing video from module:', { userId, courseId, moduleIndex, videoIndex });
+    
+    // Get the course document
+    const courseRef = doc(db, 'courses', courseId);
+    const courseDoc = await getDoc(courseRef);
+    
+    if (!courseDoc.exists()) {
+      throw new Error('Course not found');
+    }
+
+    const courseData = courseDoc.data();
+    
+    // Check if user is the creator of the course
+    if (courseData.createdBy !== userId) {
+      throw new Error('Unauthorized: Only the course creator can remove videos from modules');
+    }
+
+    // Get the additional videos structure
+    const additionalVideos = courseData.Module_Additional_Videos || {};
+    
+    // Check if the module has additional videos
+    if (!additionalVideos[moduleIndex] || !Array.isArray(additionalVideos[moduleIndex])) {
+      throw new Error('No additional videos found for this module');
+    }
+
+    // Check if the video index is valid
+    if (videoIndex >= additionalVideos[moduleIndex].length || videoIndex < 0) {
+      throw new Error('Invalid video index');
+    }
+
+    // Remove the video from the array
+    additionalVideos[moduleIndex].splice(videoIndex, 1);
+
+    // Calculate new total duration excluding the removed video
+    let additionalDuration = 0;
+    Object.values(additionalVideos).forEach((moduleVideos: any) => {
+      if (Array.isArray(moduleVideos)) {
+        additionalDuration += moduleVideos.reduce((sum: number, video: any) => sum + (video.duration || 0), 0);
+      }
+    });
+
+    // Get current main module durations
+    const mainModuleDurations = courseData.Final_Module_Video_Duration || [];
+    const mainDuration = mainModuleDurations.reduce((sum: number, duration: number) => sum + (duration || 0), 0);
+    
+    const totalDuration = mainDuration + additionalDuration;
+
+    // Update the course document
+    const updateData = {
+      Module_Additional_Videos: additionalVideos,
+      Final_Course_Duration: totalDuration,
+      updatedAt: serverTimestamp()
+    };
+
+    await updateDoc(courseRef, updateData);
+    
+    console.log('Successfully removed video from module');
+    return true;
+  } catch (error) {
+    console.error('Error removing video from module:', error);
+    throw error;
   }
 }

@@ -1,10 +1,11 @@
 <script lang="ts">
 	import { createEventDispatcher, onMount } from 'svelte';
 	import { user } from '$lib/stores/auth';
-	import { getUserCourses } from '$lib/firebase';
+	import { getUserCourses, addVideoToModule, addVideoAsNewModule } from '$lib/firebase';
 	import { get } from 'svelte/store';
 	
 	export let showModal: boolean;
+	export let video: any = null; // Video data to be added to course
 
 	const dispatch = createEventDispatcher();
 
@@ -20,6 +21,12 @@
 		searchQuery = '';
 		sortBy = 'newest';
 		showSearchInput = false;
+		// Reset messages
+		error = null;
+		successMessage = null;
+		// Reset dropdown state
+		openDropdownId = null;
+		deletingVideoId = null;
 		dispatch('close');
 	}
 
@@ -28,6 +35,8 @@
 	let filteredCourses: any[] = [];
 	let loading = false;
 	let error: string | null = null;
+	let addingVideo = false; // Loading state for adding video operations
+	let successMessage: string | null = null; // Success message state
 	
 	// Search and sort state
 	let searchQuery = '';
@@ -189,6 +198,47 @@
 		}
 	}
 
+	// Function to refresh the selected course data after adding videos
+	async function refreshSelectedCourseData() {
+		if (!selectedCourse || !$user) return;
+		
+		try {
+			// Add a small delay to ensure Firebase write has completed
+			await new Promise(resolve => setTimeout(resolve, 500));
+			
+			// Get the updated course data from Firebase
+			const { getUserCourse } = await import('$lib/firebase');
+			const updatedCourseData = await getUserCourse($user.uid, selectedCourse.id);
+			
+			// Update the selected course with new data
+			selectedCourse = {
+				...selectedCourse,
+				originalData: updatedCourseData
+			};
+			
+			// Also update the course in the courses array
+			const courseIndex = courses.findIndex(c => c.id === selectedCourse.id);
+			if (courseIndex !== -1) {
+				courses[courseIndex] = {
+					...courses[courseIndex],
+					originalData: updatedCourseData
+				};
+			}
+			
+			// Regenerate modules with updated video counts
+			modules = generateModulesFromCourse(selectedCourse);
+			
+			// If we're viewing a specific module, regenerate its video list
+			if (selectedModule) {
+				moduleVideos = generateVideosFromModule(selectedModule, selectedCourse);
+			}
+			
+			console.log('Successfully refreshed course data');
+		} catch (err) {
+			console.error('Error refreshing course data:', err);
+		}
+	}
+
 	// Also try to load on mount if modal is already open
 	onMount(() => {
 		if (showModal && $user && courses.length === 0 && !loading && !error) {
@@ -213,16 +263,24 @@
 		const moduleTitles = courseData.Final_Module_Title || [];
 		const moduleObjectives = courseData.Final_Module_Objective || [];
 		const moduleThumbnails = courseData.Final_Module_Thumbnails || [];
+		const additionalVideos = courseData.Module_Additional_Videos || {};
 		
-		return moduleTitles.map((title: string, index: number) => ({
-			id: index,
-			name: `Module ${index + 1}`,
-			title: title || `Module ${index + 1}`,
-			objective: moduleObjectives[index] || '',
-			videoCount: 1, // Each module typically has 1 main video
-			image: moduleThumbnails[index] || '/images/videoCardThumb.png',
-			moduleIndex: index
-		}));
+		return moduleTitles.map((title: string, index: number) => {
+			// Count main video + additional videos
+			const mainVideoCount = courseData.Final_Module_YouTube_Video_URL?.[index] ? 1 : 0;
+			const additionalVideoCount = additionalVideos[index]?.length || 0;
+			const totalVideoCount = mainVideoCount + additionalVideoCount;
+			
+			return {
+				id: index,
+				name: `Module ${index + 1}`,
+				title: title || `Module ${index + 1}`,
+				objective: moduleObjectives[index] || '',
+				videoCount: totalVideoCount,
+				image: moduleThumbnails[index] || '/images/videoCardThumb.png',
+				moduleIndex: index
+			};
+		});
 	}
 
 	// State for module videos
@@ -230,7 +288,9 @@
 	
 	// Function to generate videos from selected module and course data
 	function generateVideosFromModule(module: any, course: any) {
-		if (!module || !course?.originalData) return [];
+		if (!module || !course?.originalData) {
+			return [];
+		}
 		
 		const courseData = course.originalData;
 		const moduleIndex = module.moduleIndex;
@@ -266,8 +326,20 @@
 			});
 		}
 		
-		// Note: In a typical course structure, each module has one main video
-		// If there are additional videos per module in the future, they can be added here
+		// Add additional videos from the new structure
+		const additionalVideos = courseData.Module_Additional_Videos?.[moduleIndex] || [];
+		
+		additionalVideos.forEach((video: any, index: number) => {
+			videos.push({
+				id: `module_${moduleIndex}_additional_${index}`,
+				title: video.title,
+				duration: formatVideoDuration(video.duration),
+				image: video.thumbnailUrl || '/images/videoCardThumb.png',
+				videoUrl: video.videoUrl,
+				isMainVideo: false,
+				addedAt: video.addedAt
+			});
+		});
 		
 		return videos;
 	}
@@ -276,6 +348,10 @@
 	let selectedCourse: any = null;
 	let selectedModule: any = null;
 	let currentView: 'courseList' | 'moduleSelection' | 'videoList' = 'courseList';
+	
+	// State for video actions dropdown
+	let openDropdownId: string | null = null;
+	let deletingVideoId: string | null = null;
 
 	function selectCourse(course: any) {
 		selectedCourseId = course.id;
@@ -299,10 +375,54 @@
 		}
 	}
 
-	function addAsNewModule() {
-		// Handle adding video as new module
-		console.log('Adding video as new module to course:', selectedCourse);
-		closeModal();
+	async function addAsNewModule() {
+		if (!video || !selectedCourse || !$user) {
+			console.error('Missing required data for adding video as new module');
+			return;
+		}
+
+		try {
+			addingVideo = true;
+			error = null;
+
+			// Prepare video data for Firebase
+			const videoData = {
+				title: video.title,
+				videoUrl: video.videoUrl || '', // Use the original video URL, not the embed URL
+				thumbnailUrl: video.thumbnailUrl || '',
+				duration: 0, // We don't have duration info from saved videos
+				description: video.description || ''
+			};
+
+			// Extract original YouTube URL if it's an embed URL
+			if (videoData.videoUrl.includes('/embed/')) {
+				const videoId = videoData.videoUrl.split('/embed/')[1]?.split('?')[0];
+				if (videoId) {
+					videoData.videoUrl = `https://www.youtube.com/watch?v=${videoId}`;
+				}
+			}
+
+			console.log('Adding video as new module:', videoData);
+			
+			const newModuleIndex = await addVideoAsNewModule(
+				$user.uid,
+				selectedCourse.id,
+				videoData
+			);
+
+			console.log('Successfully added video as new module at index:', newModuleIndex);
+			
+			// Show success message and close modal
+			successMessage = 'Video successfully added as a new module!';
+			setTimeout(() => {
+				closeModal();
+			}, 2000);
+		} catch (err) {
+			console.error('Error adding video as new module:', err);
+			error = err instanceof Error ? err.message : 'Failed to add video as new module';
+		} finally {
+			addingVideo = false;
+		}
 	}
 
 	function selectModule(module: any) {
@@ -313,10 +433,123 @@
 		currentView = 'videoList';
 	}
 
-	function addVideoToModule() {
-		// Handle adding video to selected module
-		console.log('Adding video to module:', selectedModule, 'in course:', selectedCourse);
-		closeModal();
+	async function addVideoToModuleHandler() {
+		if (!video || !selectedModule || !selectedCourse || !$user) {
+			console.error('Missing required data for adding video to module');
+			return;
+		}
+
+		try {
+			addingVideo = true;
+			error = null;
+
+			// Prepare video data for Firebase
+			const videoData = {
+				title: video.title,
+				videoUrl: video.videoUrl || '', // Use the original video URL, not the embed URL
+				thumbnailUrl: video.thumbnailUrl || '',
+				duration: 0, // We don't have duration info from saved videos
+				description: video.description || ''
+			};
+
+			// Extract original YouTube URL if it's an embed URL
+			if (videoData.videoUrl.includes('/embed/')) {
+				const videoId = videoData.videoUrl.split('/embed/')[1]?.split('?')[0];
+				if (videoId) {
+					videoData.videoUrl = `https://www.youtube.com/watch?v=${videoId}`;
+				}
+			}
+
+			console.log('Adding video to module:', selectedModule.moduleIndex, 'in course:', selectedCourse.id);
+			
+			await addVideoToModule(
+				$user.uid,
+				selectedCourse.id,
+				selectedModule.moduleIndex,
+				videoData
+			);
+
+			console.log('Successfully added video to module');
+			
+			// Show success message and refresh the video list
+			successMessage = 'Video successfully added to the module!';
+			
+			// Refresh the course data to get updated information
+			await refreshSelectedCourseData();
+			
+			// Clear success message after 3 seconds
+			setTimeout(() => {
+				successMessage = null;
+			}, 3000);
+		} catch (err) {
+			console.error('Error adding video to module:', err);
+			error = err instanceof Error ? err.message : 'Failed to add video to module';
+		} finally {
+			addingVideo = false;
+		}
+	}
+
+	// Function to toggle dropdown for video actions
+	function toggleDropdown(videoId: string) {
+		openDropdownId = openDropdownId === videoId ? null : videoId;
+	}
+
+	// Function to close dropdown when clicking outside
+	function closeDropdown() {
+		openDropdownId = null;
+	}
+
+	// Function to delete a video from module
+	async function deleteVideoFromModule(video: any) {
+		if (!selectedModule || !selectedCourse || !$user) {
+			console.error('Missing required data for deleting video');
+			return;
+		}
+
+		// Don't allow deleting main videos
+		if (video.isMainVideo) {
+			error = 'Cannot delete the main module video';
+			return;
+		}
+
+		try {
+			deletingVideoId = video.id;
+			error = null;
+
+			// Extract the video index from the video ID (format: module_X_additional_Y)
+			const videoIdParts = video.id.split('_');
+			if (videoIdParts.length !== 4 || videoIdParts[2] !== 'additional') {
+				throw new Error('Invalid video ID format');
+			}
+			
+			const moduleIndex = parseInt(videoIdParts[1]);
+			const videoIndex = parseInt(videoIdParts[3]);
+
+			// Call Firebase function to remove the video
+			const { removeVideoFromModule } = await import('$lib/firebase');
+			await removeVideoFromModule($user.uid, selectedCourse.id, moduleIndex, videoIndex);
+
+			console.log('Successfully deleted video from module');
+			
+			// Show success message and refresh the video list
+			successMessage = 'Video successfully removed from the module!';
+			
+			// Refresh the course data to get updated information
+			await refreshSelectedCourseData();
+			
+			// Close dropdown
+			openDropdownId = null;
+			
+			// Clear success message after 3 seconds
+			setTimeout(() => {
+				successMessage = null;
+			}, 3000);
+		} catch (err) {
+			console.error('Error deleting video from module:', err);
+			error = err instanceof Error ? err.message : 'Failed to delete video from module';
+		} finally {
+			deletingVideoId = null;
+		}
 	}
 </script>
 
@@ -369,6 +602,27 @@
 					</svg>
 				</button>
 			</div>
+
+			<!-- Error Display -->
+			{#if error}
+				<div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3 mb-4">
+					<div class="text-red-800 dark:text-red-200 text-semibody-medium">
+						{error}
+					</div>
+				</div>
+			{/if}
+
+			<!-- Success Display -->
+			{#if successMessage}
+				<div class="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-3 mb-4">
+					<div class="text-green-800 dark:text-green-200 text-semibody-medium flex items-center gap-2">
+						<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" class="text-green-600 dark:text-green-400">
+							<path d="M20 6L9 17L4 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+						</svg>
+						{successMessage}
+					</div>
+				</div>
+			{/if}
 
 			{#if currentView === 'courseList'}
 				<div class="self-stretch flex-1 flex flex-col gap-4 overflow-hidden">
@@ -565,15 +819,20 @@
 									</div>
 									<button
 										on:click={addAsNewModule}
-										class="pl-4 pr-3 py-3 bg-brand-red/5 rounded-full flex items-center gap-2 self-center"
+										disabled={addingVideo}
+										class="pl-4 pr-3 py-3 bg-brand-red/5 rounded-full flex items-center gap-2 self-center {addingVideo ? 'opacity-50 cursor-not-allowed' : 'hover:bg-brand-red/10'} transition-colors"
 									>
 										<div class="text-light-text-primary dark:text-dark-text-primary text-mini-body font-medium">
-											Add video as new module
+											{addingVideo ? 'Adding...' : 'Add video as new module'}
 										</div>
-										<svg class="w-4 h-4 text-brand-red" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-											<path d="M8 1V15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-											<path d="M1 8H15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-										</svg>
+										{#if addingVideo}
+											<div class="w-4 h-4 border-2 border-brand-red border-t-transparent rounded-full animate-spin"></div>
+										{:else}
+											<svg class="w-4 h-4 text-brand-red" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+												<path d="M8 1V15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+												<path d="M1 8H15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+											</svg>
+										{/if}
 									</button>
 								</div>
 							</div>
@@ -632,9 +891,6 @@
 							</div>
 						</div>
 					</div>
-					<div class="w-3 h-full bg-light-border/20 dark:bg-dark-border/20 rounded-full overflow-hidden relative">
-						<div class="w-3 h-16 bg-brand-red rounded-full absolute top-1"></div>
-					</div>
 				</div>
 			{:else if currentView === 'videoList'}
 				<div class="self-stretch flex-1 flex gap-3 overflow-hidden">
@@ -645,21 +901,34 @@
 									{selectedModule.name}
 								</div>
 								<button
-									on:click={addVideoToModule}
-									class="pl-4 pr-3 py-3 bg-brand-red/5 rounded-full inline-flex justify-start items-center gap-2"
+									on:click={addVideoToModuleHandler}
+									disabled={addingVideo}
+									class="pl-4 pr-3 py-3 bg-brand-red/5 rounded-full inline-flex justify-start items-center gap-2 {addingVideo ? 'opacity-50 cursor-not-allowed' : 'hover:bg-brand-red/10'} transition-colors"
 								>
 									<div class="text-light-text-primary dark:text-dark-text-primary text-mini-body font-medium">
-										Add video to module
+										{addingVideo ? 'Adding...' : 'Add video to module'}
 									</div>
 									<div class="w-4 h-4 relative overflow-hidden">
-										<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none">
-											<path d="M14 8C14 8.13261 13.9473 8.25979 13.8536 8.35355C13.7598 8.44732 13.6326 8.5 13.5 8.5H8.5V13.5C8.5 13.6326 8.44732 13.7598 8.35355 13.8536C8.25979 13.9473 8.13261 14 8 14C7.86739 14 7.74021 13.9473 7.64645 13.8536C7.55268 13.7598 7.5 13.6326 7.5 13.5V8.5H2.5C2.36739 8.5 2.24021 8.44732 2.14645 8.35355C2.05268 8.25979 2 8.13261 2 8C2 7.86739 2.05268 7.74021 2.14645 7.64645C2.24021 7.55268 2.36739 7.5 2.5 7.5H7.5V2.5C7.5 2.36739 7.55268 2.24021 7.64645 2.14645C7.74021 2.05268 7.86739 2 8 2C8.13261 2 8.25979 2.05268 8.35355 2.14645C8.44732 2.24021 8.5 2.36739 8.5 2.5V7.5H13.5C13.6326 7.5 13.7598 7.55268 13.8536 7.64645C13.9473 7.74021 14 7.86739 14 8Z" fill="#EB434A"/>
-										  </svg>
+										{#if addingVideo}
+											<div class="w-4 h-4 border-2 border-brand-red border-t-transparent rounded-full animate-spin"></div>
+										{:else}
+											<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none">
+												<path d="M14 8C14 8.13261 13.9473 8.25979 13.8536 8.35355C13.7598 8.44732 13.6326 8.5 13.5 8.5H8.5V13.5C8.5 13.6326 8.44732 13.7598 8.35355 13.8536C8.25979 13.9473 8.13261 14 8 14C7.86739 14 7.74021 13.9473 7.64645 13.8536C7.55268 13.7598 7.5 13.6326 7.5 13.5V8.5H2.5C2.36739 8.5 2.24021 8.44732 2.14645 8.35355C2.05268 8.25979 2 8.13261 2 8C2 7.86739 2.05268 7.74021 2.14645 7.64645C2.24021 7.55268 2.36739 7.5 2.5 7.5H7.5V2.5C7.5 2.36739 7.55268 2.24021 7.64645 2.14645C7.74021 2.05268 7.86739 2 8 2C8.13261 2 8.25979 2.05268 8.35355 2.14645C8.44732 2.24021 8.5 2.36739 8.5 2.5V7.5H13.5C13.6326 7.5 13.7598 7.55268 13.8536 7.64645C13.9473 7.74021 14 7.86739 14 8Z" fill="#EB434A"/>
+											  </svg>
+										{/if}
 									</div>
 								</button>
 							</div>
 						</div>
-						<div class="flex-1 overflow-y-auto custom-scrollbar pr-2 min-h-0">
+						<div 
+							class="flex-1 overflow-y-auto custom-scrollbar pr-2 min-h-0"
+							on:click={(e) => {
+								// Close dropdown if clicking outside of dropdown area
+								if (openDropdownId && e.target && e.target instanceof Element && !e.target.closest('.dropdown-container')) {
+									closeDropdown();
+								}
+							}}
+						>
 							{#if moduleVideos.length === 0}
 								<!-- Empty state for no videos in module -->
 								<div class="w-full flex items-center justify-center py-8">
@@ -675,40 +944,125 @@
 							{:else}
 								<div class="flex flex-col gap-2">
 									{#each moduleVideos as video (video.id)}
-										<div class="flex items-start gap-2 p-2 border border-light-border dark:border-dark-border rounded-2xl">
-									
-												<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none" class="mt-[4px] flex-shrink-0">
-													<path d="M9.75 8C9.75 8.34612 9.64736 8.68446 9.45507 8.97225C9.26278 9.26004 8.98947 9.48434 8.6697 9.61679C8.34993 9.74924 7.99806 9.7839 7.65859 9.71638C7.31913 9.64885 7.00731 9.48218 6.76256 9.23744C6.51782 8.9927 6.35115 8.68088 6.28363 8.34141C6.2161 8.00194 6.25076 7.65008 6.38321 7.33031C6.51566 7.01054 6.73997 6.73722 7.02775 6.54493C7.31554 6.35264 7.65388 6.25 8 6.25C8.46413 6.25 8.90925 6.43438 9.23744 6.76256C9.56563 7.09075 9.75 7.53587 9.75 8ZM8 4.75C8.34612 4.75 8.68446 4.64737 8.97225 4.45507C9.26003 4.26278 9.48434 3.98947 9.61679 3.6697C9.74924 3.34993 9.7839 2.99806 9.71638 2.65859C9.64885 2.31913 9.48218 2.00731 9.23744 1.76256C8.9927 1.51782 8.68088 1.35115 8.34141 1.28363C8.00194 1.2161 7.65008 1.25076 7.3303 1.38321C7.01053 1.51566 6.73722 1.73997 6.54493 2.02775C6.35264 2.31554 6.25 2.65388 6.25 3C6.25 3.46413 6.43438 3.90925 6.76256 4.23744C7.09075 4.56563 7.53587 4.75 8 4.75ZM8 11.25C7.65388 11.25 7.31554 11.3526 7.02775 11.5449C6.73997 11.7372 6.51566 12.0105 6.38321 12.3303C6.25076 12.6501 6.2161 13.0019 6.28363 13.3414C6.35115 13.6809 6.51782 13.9927 6.76256 14.2374C7.00731 14.4822 7.31913 14.6489 7.65859 14.7164C7.99806 14.7839 8.34993 14.7492 8.6697 14.6168C8.98947 14.4843 9.26278 14.26 9.45507 13.9723C9.64736 13.6845 9.75 13.3461 9.75 13C9.75 12.5359 9.56563 12.0908 9.23744 11.7626C8.90925 11.4344 8.46413 11.25 8 11.25Z" fill="#2A4D61"/>
-												  </svg>
-												  
+										<div class="flex items-start gap-2 p-2 border border-light-border dark:border-dark-border rounded-2xl relative">
+											<!-- three dot button - only show when dropdown is closed -->
+											{#if openDropdownId !== video.id}
+												<div class="relative dropdown-container">
+													<button
+														on:click|stopPropagation={() => toggleDropdown(video.id)}
+														class="mt-[4px] flex-shrink-0 p-1 hover:bg-light-border/30 dark:hover:bg-dark-border/30 rounded transition-colors z-10 relative"
+														disabled={deletingVideoId === video.id}
+														type="button"
+													>
+														{#if deletingVideoId === video.id}
+															<div class="w-4 h-4 border-2 border-brand-red border-t-transparent rounded-full animate-spin"></div>
+														{:else}
+															<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none">
+																<path d="M9.75 8C9.75 8.34612 9.64736 8.68446 9.45507 8.97225C9.26278 9.26004 8.98947 9.48434 8.6697 9.61679C8.34993 9.74924 7.99806 9.7839 7.65859 9.71638C7.31913 9.64885 7.00731 9.48218 6.76256 9.23744C6.51782 8.9927 6.35115 8.68088 6.28363 8.34141C6.2161 8.00194 6.25076 7.65008 6.38321 7.33031C6.51566 7.01054 6.73997 6.73722 7.02775 6.54493C7.31554 6.35264 7.65388 6.25 8 6.25C8.46413 6.25 8.90925 6.43438 9.23744 6.76256C9.56563 7.09075 9.75 7.53587 9.75 8ZM8 4.75C8.34612 4.75 8.68446 4.64737 8.97225 4.45507C9.26003 4.26278 9.48434 3.98947 9.61679 3.6697C9.74924 3.34993 9.7839 2.99806 9.71638 2.65859C9.64885 2.31913 9.48218 2.00731 9.23744 1.76256C8.9927 1.51782 8.68088 1.35115 8.34141 1.28363C8.00194 1.2161 7.65008 1.25076 7.3303 1.38321C7.01053 1.51566 6.73722 1.73997 6.54493 2.02775C6.35264 2.31554 6.25 2.65388 6.25 3C6.25 3.46413 6.43438 3.90925 6.76256 4.23744C7.09075 4.56563 7.53587 4.75 8 4.75ZM8 11.25C7.65388 11.25 7.31554 11.3526 7.02775 11.5449C6.73997 11.7372 6.51566 12.0105 6.38321 12.3303C6.25076 12.6501 6.2161 13.0019 6.28363 13.3414C6.35115 13.6809 6.51782 13.9927 6.76256 14.2374C7.00731 14.4822 7.31913 14.6489 7.65859 14.7164C7.99806 14.7839 8.34993 14.7492 8.6697 14.6168C8.98947 14.4843 9.26278 14.26 9.45507 13.9723C9.64736 13.6845 9.75 13.3461 9.75 13C9.75 12.5359 9.56563 12.0908 9.23744 11.7626C8.90925 11.4344 8.46413 11.25 8 11.25Z" fill="#2A4D61"/>
+															</svg>
+														{/if}
+													</button>
+												</div>
+											{/if}
 											
 											<div class="flex-1 flex flex-col gap-1">
-												<div class="text-light-text-primary dark:text-dark-text-primary text-semibody-medium">
-													{video.title}
+												<div class="flex items-center gap-2">
+													<div class="text-light-text-primary dark:text-dark-text-primary text-semibody-medium">
+														{video.title}
+													</div>
+													<!-- {#if video.isMainVideo}
+														<span class="px-2 py-0.5 bg-brand-red/10 text-brand-red text-[10px] font-medium rounded-full">
+															Main
+														</span>
+													{:else}
+														<span class="px-2 py-0.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 text-[10px] font-medium rounded-full">
+															Added
+														</span>
+													{/if} -->
 												</div>
 												<div class="text-light-text-tertiary dark:text-dark-text-tertiary text-mini-body">
 													{video.duration}
 												</div>
 											</div>
-											<div class="w-20 h-14 relative rounded-lg overflow-hidden flex-shrink-0">
-												<img
-													src={video.image}
-													alt={video.title}
-													class="w-full h-full object-cover"
-												/>
-												<div class="absolute inset-0 flex items-center justify-center bg-black/20">
-													<svg
-														class="w-4 h-4 text-white"
-														viewBox="0 0 24 24"
-														fill="none"
-														xmlns="http://www.w3.org/2000/svg"
-													>
-														<path
-															d="M16.542 11.232C17.167 11.603 17.167 12.507 16.542 12.878L10.39 16.57C9.765 16.94 9 16.488 9 15.738V8.372C9 7.622 9.765 7.17 10.39 7.54L16.542 11.232Z"
-															fill="currentColor"
-														/>
-													</svg>
+											
+											<!-- Right side: Action buttons and thumbnail -->
+											<div class="flex items-center gap-2">
+												{#if openDropdownId === video.id}
+												<!-- Smaller thumbnail when buttons are shown -->
+												<div class="w-10 h-14 relative rounded-lg overflow-hidden flex-shrink-0">
+													<img
+														src={video.image}
+														alt={video.title}
+														class="w-full h-full object-cover"
+													/>
+													<div class="absolute inset-0 flex items-center justify-center bg-black/20">
+														<svg
+															class="w-3 h-3 text-white"
+															viewBox="0 0 24 24"
+															fill="none"
+															xmlns="http://www.w3.org/2000/svg"
+														>
+															<path
+																d="M16.542 11.232C17.167 11.603 17.167 12.507 16.542 12.878L10.39 16.57C9.765 16.94 9 16.488 9 15.738V8.372C9 7.622 9.765 7.17 10.39 7.54L16.542 11.232Z"
+																fill="currentColor"
+															/>
+														</svg>
+													</div>
 												</div>
+													<!-- Action buttons shown when dropdown is open -->
+													<div class="flex flex-col gap-1">
+														<button
+															on:click={() => {
+																// TODO: Implement edit functionality
+																closeDropdown();
+															}}
+															class="px-4 py-2 bg-Green dark:bg-Green2 text-white text-mini-body font-medium rounded-lg hover:bg-button-hover dark:hover:bg-button-hover-dark transition-colors min-w-[60px]"
+														>
+															EDIT
+														</button>
+														{#if !video.isMainVideo}
+															<button
+																on:click={() => deleteVideoFromModule(video)}
+																disabled={deletingVideoId === video.id}
+																class="px-4 py-2 bg-red-500 text-white text-mini-body font-medium rounded-lg hover:bg-red-600 transition-colors min-w-[60px] {deletingVideoId === video.id ? 'opacity-50 cursor-not-allowed' : ''}"
+															>
+																{#if deletingVideoId === video.id}
+																	<div class="w-3 h-3 border border-white border-t-transparent rounded-full animate-spin mx-auto"></div>
+																{:else}
+																	DELETE
+																{/if}
+															</button>
+														{:else}
+															<div class="px-4 py-2 bg-gray-400 text-white text-xs font-medium rounded cursor-not-allowed opacity-50 min-w-[60px] text-center">
+																DELETE
+															</div>
+														{/if}
+													</div>
+													
+													
+												{:else}
+													<!-- Full-size thumbnail when buttons are hidden -->
+													<div class="w-20 h-14 relative rounded-lg overflow-hidden flex-shrink-0">
+														<img
+															src={video.image}
+															alt={video.title}
+															class="w-full h-full object-cover"
+														/>
+														<div class="absolute inset-0 flex items-center justify-center bg-black/20">
+															<svg
+																class="w-4 h-4 text-white"
+																viewBox="0 0 24 24"
+																fill="none"
+																xmlns="http://www.w3.org/2000/svg"
+															>
+																<path
+																	d="M16.542 11.232C17.167 11.603 17.167 12.507 16.542 12.878L10.39 16.57C9.765 16.94 9 16.488 9 15.738V8.372C9 7.622 9.765 7.17 10.39 7.54L16.542 11.232Z"
+																	fill="currentColor"
+																/>
+															</svg>
+														</div>
+													</div>
+												{/if}
 											</div>
 										</div>
 									{/each}
