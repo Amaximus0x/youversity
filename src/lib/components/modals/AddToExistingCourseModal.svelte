@@ -210,6 +210,8 @@
 			const { getUserCourse } = await import('$lib/firebase');
 			const updatedCourseData = await getUserCourse($user.uid, selectedCourse.id);
 			
+			console.log('Updated course data from Firebase:', updatedCourseData);
+			
 			// Update the selected course with new data
 			selectedCourse = {
 				...selectedCourse,
@@ -227,10 +229,20 @@
 			
 			// Regenerate modules with updated video counts
 			modules = generateModulesFromCourse(selectedCourse);
+			console.log('Regenerated modules after refresh:', modules);
 			
 			// If we're viewing a specific module, regenerate its video list
 			if (selectedModule) {
+				console.log('Refreshing video list for selected module:', selectedModule);
+				
+				// Find the updated module data (in case module index changed)
+				const updatedModule = modules.find(m => m.moduleIndex === selectedModule.moduleIndex);
+				if (updatedModule) {
+					selectedModule = updatedModule;
+				}
+				
 				moduleVideos = generateVideosFromModule(selectedModule, selectedCourse);
+				console.log('Regenerated module videos after refresh:', moduleVideos);
 			}
 			
 			console.log('Successfully refreshed course data');
@@ -257,7 +269,10 @@
 	
 	// Function to generate modules from selected course data
 	function generateModulesFromCourse(course: any) {
-		if (!course?.originalData) return [];
+		if (!course?.originalData) {
+			console.log('generateModulesFromCourse: No course data available');
+			return [];
+		}
 		
 		const courseData = course.originalData;
 		const moduleTitles = courseData.Final_Module_Title || [];
@@ -265,11 +280,21 @@
 		const moduleThumbnails = courseData.Final_Module_Thumbnails || [];
 		const additionalVideos = courseData.Module_Additional_Videos || {};
 		
+		console.log('generateModulesFromCourse: Course data', {
+			titles: moduleTitles,
+			objectives: moduleObjectives,
+			thumbnails: moduleThumbnails,
+			additionalVideos: additionalVideos,
+			videoUrls: courseData.Final_Module_YouTube_Video_URL
+		});
+		
 		return moduleTitles.map((title: string, index: number) => {
 			// Count main video + additional videos
 			const mainVideoCount = courseData.Final_Module_YouTube_Video_URL?.[index] ? 1 : 0;
 			const additionalVideoCount = additionalVideos[index]?.length || 0;
 			const totalVideoCount = mainVideoCount + additionalVideoCount;
+			
+			console.log(`Module ${index + 1}: ${title}, Main videos: ${mainVideoCount}, Additional: ${additionalVideoCount}, Total: ${totalVideoCount}`);
 			
 			return {
 				id: index,
@@ -289,17 +314,32 @@
 	// Function to generate videos from selected module and course data
 	function generateVideosFromModule(module: any, course: any) {
 		if (!module || !course?.originalData) {
+			console.log('generateVideosFromModule: Missing module or course data', { module, course });
 			return [];
 		}
 		
 		const courseData = course.originalData;
 		const moduleIndex = module.moduleIndex;
 		
+		console.log('generateVideosFromModule: Processing module', moduleIndex, 'for course', courseData.Final_Course_Title);
+		console.log('Module titles:', courseData.Final_Module_Title);
+		console.log('Module video URLs:', courseData.Final_Module_YouTube_Video_URL);
+		console.log('Module thumbnails:', courseData.Final_Module_Thumbnails);
+		console.log('Module durations:', courseData.Final_Module_Video_Duration);
+		console.log('Additional videos:', courseData.Module_Additional_Videos);
+		
 		// Get module-specific data
 		const moduleTitle = courseData.Final_Module_Title?.[moduleIndex] || `Module ${moduleIndex + 1}`;
 		const moduleVideoUrl = courseData.Final_Module_YouTube_Video_URL?.[moduleIndex];
 		const moduleVideoThumbnail = courseData.Final_Module_Thumbnails?.[moduleIndex] || '/images/videoCardThumb.png';
 		const moduleVideoDuration = courseData.Final_Module_Video_Duration?.[moduleIndex];
+		
+		console.log('Module data for index', moduleIndex, ':', {
+			title: moduleTitle,
+			url: moduleVideoUrl,
+			thumbnail: moduleVideoThumbnail,
+			duration: moduleVideoDuration
+		});
 		
 		// Format duration
 		const formatVideoDuration = (durationInMinutes: number) => {
@@ -316,6 +356,7 @@
 		// Create video object for the main module video
 		const videos: any[] = [];
 		if (moduleVideoUrl) {
+			console.log('Adding main video for module', moduleIndex);
 			videos.push({
 				id: `module_${moduleIndex}_main`,
 				title: moduleTitle,
@@ -324,12 +365,16 @@
 				videoUrl: moduleVideoUrl,
 				isMainVideo: true
 			});
+		} else {
+			console.log('No main video URL found for module', moduleIndex);
 		}
 		
 		// Add additional videos from the new structure
 		const additionalVideos = courseData.Module_Additional_Videos?.[moduleIndex] || [];
+		console.log('Additional videos for module', moduleIndex, ':', additionalVideos);
 		
 		additionalVideos.forEach((video: any, index: number) => {
+			console.log('Adding additional video', index, 'for module', moduleIndex);
 			videos.push({
 				id: `module_${moduleIndex}_additional_${index}`,
 				title: video.title,
@@ -341,6 +386,7 @@
 			});
 		});
 		
+		console.log('Final videos array for module', moduleIndex, ':', videos);
 		return videos;
 	}
 
@@ -381,6 +427,22 @@
 			return;
 		}
 
+		// Prevent multiple rapid clicks
+		if (addingVideo) {
+			console.log('Already adding video, ignoring duplicate request');
+			return;
+		}
+
+		console.log('Full video object received:', video);
+		console.log('Video properties:', {
+			title: video.title,
+			videoUrl: video.videoUrl,
+			originalVideoUrl: video.originalVideoUrl,
+			thumbnailUrl: video.thumbnailUrl,
+			description: video.description,
+			id: video.id
+		});
+
 		// Check if this video already exists as a module in the course
 		if (isVideoAlreadyInCourse(video, selectedCourse)) {
 			error = 'This video is already added to this course as a module';
@@ -390,25 +452,53 @@
 		try {
 			addingVideo = true;
 			error = null;
+			successMessage = 'Processing video and generating enhanced content...';
+
+			// Use the original video URL if available, otherwise try to convert embed URL
+			let videoUrl = video.originalVideoUrl || video.videoUrl || '';
+			
+			console.log('Processing video URL:', {
+				originalVideoUrl: video.originalVideoUrl,
+				videoUrl: video.videoUrl,
+				finalUrl: videoUrl
+			});
+			
+			// If we only have an embed URL, convert it back to regular YouTube URL
+			if (!video.originalVideoUrl && videoUrl.includes('/embed/')) {
+				const videoId = videoUrl.split('/embed/')[1]?.split('?')[0];
+				if (videoId) {
+					videoUrl = `https://www.youtube.com/watch?v=${videoId}`;
+				}
+			}
+
+			// If we still don't have a valid URL, we need to stop
+			if (!videoUrl) {
+				error = 'This video does not have a valid YouTube URL and cannot be added to a course. Please ensure the video was properly saved with a YouTube URL.';
+				console.error('No valid video URL found:', video);
+				return;
+			}
+
+			// Validate that it's a YouTube URL
+			const youtubeRegex = /^https?:\/\/(www\.)?(youtube\.com\/(watch\?v=|embed\/)|youtu\.be\/)/;
+			if (!youtubeRegex.test(videoUrl)) {
+				error = 'Invalid YouTube URL format. Only YouTube videos can be added to courses.';
+				console.error('Invalid YouTube URL:', videoUrl);
+				return;
+			}
 
 			// Prepare video data for Firebase
 			const videoData = {
 				title: video.title,
-				videoUrl: video.videoUrl || '', // Use the original video URL, not the embed URL
+				videoUrl: videoUrl,
 				thumbnailUrl: video.thumbnailUrl || '',
-				duration: 0, // We don't have duration info from saved videos
+				duration: 0, // Will be enhanced with actual duration
 				description: video.description || ''
 			};
 
-			// Extract original YouTube URL if it's an embed URL
-			if (videoData.videoUrl.includes('/embed/')) {
-				const videoId = videoData.videoUrl.split('/embed/')[1]?.split('?')[0];
-				if (videoId) {
-					videoData.videoUrl = `https://www.youtube.com/watch?v=${videoId}`;
-				}
-			}
-
-			console.log('Adding video as new module:', videoData);
+			console.log('Adding enhanced video as new module:', videoData);
+			console.log('Selected course before adding:', selectedCourse);
+			
+			successMessage = 'Creating enhanced module with transcript, quiz, and summary...';
 			
 			const newModuleIndex = await addVideoAsNewModule(
 				$user.uid,
@@ -416,27 +506,36 @@
 				videoData
 			);
 
-			console.log('Successfully added video as new module at index:', newModuleIndex);
+			console.log('Successfully added enhanced video as new module at index:', newModuleIndex);
 			
 			// Show success message and refresh the module list
-			successMessage = 'Video successfully added as a new module!';
+			successMessage = 'Enhanced module successfully created with transcript, quiz, and summary!';
 			
 			// Refresh the course data to get updated information
+			console.log('Refreshing course data after adding new enhanced module...');
 			await refreshSelectedCourseData();
 			
-			// Clear success message after 3 seconds
+			// If we're currently viewing the module selection, we might want to highlight the new module
+			if (currentView === 'moduleSelection') {
+				console.log('Currently in module selection view, modules updated:', modules);
+			}
+			
+			// Clear success message after 5 seconds (longer for enhanced content)
 			setTimeout(() => {
 				successMessage = null;
-			}, 3000);
+			}, 5000);
 		} catch (err) {
-			console.error('Error adding video as new module:', err);
-			error = err instanceof Error ? err.message : 'Failed to add video as new module';
+			console.error('Error adding enhanced video as new module:', err);
+			error = err instanceof Error ? err.message : 'Failed to add enhanced video as new module';
 		} finally {
 			addingVideo = false;
 		}
 	}
 
 	function selectModule(module: any) {
+		console.log('Selecting module:', module);
+		console.log('Selected course data:', selectedCourse);
+		
 		selectedModule = module;
 		// Generate videos from the selected module
 		moduleVideos = generateVideosFromModule(module, selectedCourse);
@@ -450,6 +549,14 @@
 			return;
 		}
 
+		// Prevent multiple rapid clicks
+		if (addingVideo) {
+			console.log('Already adding video to module, ignoring duplicate request');
+			return;
+		}
+
+		console.log('Full video object for module addition:', video);
+
 		// Check if this video already exists in the selected module
 		if (isVideoAlreadyInModule(video, selectedModule, selectedCourse)) {
 			error = 'This video is already added to this module';
@@ -459,25 +566,46 @@
 		try {
 			addingVideo = true;
 			error = null;
+			successMessage = 'Processing video and generating enhanced content...';
+
+			// Use the original video URL if available, otherwise try to convert embed URL
+			let videoUrl = video.originalVideoUrl || video.videoUrl || '';
+			
+			// If we only have an embed URL, convert it back to regular YouTube URL
+			if (!video.originalVideoUrl && videoUrl.includes('/embed/')) {
+				const videoId = videoUrl.split('/embed/')[1]?.split('?')[0];
+				if (videoId) {
+					videoUrl = `https://www.youtube.com/watch?v=${videoId}`;
+				}
+			}
+
+			// If we still don't have a valid URL, we need to stop
+			if (!videoUrl) {
+				error = 'This video does not have a valid YouTube URL and cannot be added to a course. Please ensure the video was properly saved with a YouTube URL.';
+				console.error('No valid video URL found:', video);
+				return;
+			}
+
+			// Validate that it's a YouTube URL
+			const youtubeRegex = /^https?:\/\/(www\.)?(youtube\.com\/(watch\?v=|embed\/)|youtu\.be\/)/;
+			if (!youtubeRegex.test(videoUrl)) {
+				error = 'Invalid YouTube URL format. Only YouTube videos can be added to courses.';
+				console.error('Invalid YouTube URL:', videoUrl);
+				return;
+			}
 
 			// Prepare video data for Firebase
 			const videoData = {
 				title: video.title,
-				videoUrl: video.videoUrl || '', // Use the original video URL, not the embed URL
+				videoUrl: videoUrl,
 				thumbnailUrl: video.thumbnailUrl || '',
-				duration: 0, // We don't have duration info from saved videos
+				duration: 0, // Will be enhanced with actual duration
 				description: video.description || ''
 			};
 
-			// Extract original YouTube URL if it's an embed URL
-			if (videoData.videoUrl.includes('/embed/')) {
-				const videoId = videoData.videoUrl.split('/embed/')[1]?.split('?')[0];
-				if (videoId) {
-					videoData.videoUrl = `https://www.youtube.com/watch?v=${videoId}`;
-				}
-			}
-
-			console.log('Adding video to module:', selectedModule.moduleIndex, 'in course:', selectedCourse.id);
+			console.log('Adding enhanced video to module:', selectedModule.moduleIndex, 'in course:', selectedCourse.id);
+			
+			successMessage = 'Adding enhanced video with transcript, quiz, and summary...';
 			
 			await addVideoToModule(
 				$user.uid,
@@ -486,21 +614,21 @@
 				videoData
 			);
 
-			console.log('Successfully added video to module');
+			console.log('Successfully added enhanced video to module');
 			
 			// Show success message and refresh the video list
-			successMessage = 'Video successfully added to the module!';
+			successMessage = 'Enhanced video successfully added to the module with transcript, quiz, and summary!';
 			
 			// Refresh the course data to get updated information
 			await refreshSelectedCourseData();
 			
-			// Clear success message after 3 seconds
+			// Clear success message after 5 seconds (longer for enhanced content)
 			setTimeout(() => {
 				successMessage = null;
-			}, 3000);
+			}, 5000);
 		} catch (err) {
-			console.error('Error adding video to module:', err);
-			error = err instanceof Error ? err.message : 'Failed to add video to module';
+			console.error('Error adding enhanced video to module:', err);
+			error = err instanceof Error ? err.message : 'Failed to add enhanced video to module';
 		} finally {
 			addingVideo = false;
 		}
@@ -523,8 +651,9 @@
 		const courseData = course.originalData;
 		const moduleVideoUrls = courseData.Final_Module_YouTube_Video_URL || [];
 		
-		// Extract video ID from the video to check
-		const videoIdToCheck = extractVideoIdFromUrl(videoToCheck.videoUrl);
+		// Extract video ID from the video to check (use original URL if available)
+		const videoUrl = videoToCheck.originalVideoUrl || videoToCheck.videoUrl;
+		const videoIdToCheck = extractVideoIdFromUrl(videoUrl);
 		if (!videoIdToCheck) return false;
 		
 		// Check if any module has this video as main video
@@ -542,8 +671,9 @@
 		const courseData = course.originalData;
 		const moduleIndex = module.moduleIndex;
 		
-		// Extract video ID from the video to check
-		const videoIdToCheck = extractVideoIdFromUrl(videoToCheck.videoUrl);
+		// Extract video ID from the video to check (use original URL if available)
+		const videoUrl = videoToCheck.originalVideoUrl || videoToCheck.videoUrl;
+		const videoIdToCheck = extractVideoIdFromUrl(videoUrl);
 		if (!videoIdToCheck) return false;
 		
 		// Check main module video
@@ -879,6 +1009,14 @@
 								<div class="text-light-text-tertiary dark:text-dark-text-tertiary text-mini-body font-semibold">
 									Selected Course
 								</div>
+								<div class="px-3 py-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+									<div class="text-blue-800 dark:text-blue-200 text-[10px] font-medium mb-1">
+										✨ Enhanced Video Processing
+									</div>
+									<div class="text-blue-700 dark:text-blue-300 text-[10px] leading-tight">
+										Videos are automatically enhanced with transcript analysis, AI-generated summaries, learning objectives, and custom quizzes.
+									</div>
+								</div>
 								<div class="p-2 rounded-2xl border border-light-border dark:border-dark-border flex flex-col gap-4">
 									<div class="p-1 rounded-lg border border-brand-red flex gap-2">
 										<img
@@ -901,7 +1039,7 @@
 										class="pl-4 pr-3 py-3 bg-brand-red/5 rounded-full flex items-center gap-2 self-center {addingVideo ? 'opacity-50 cursor-not-allowed' : 'hover:bg-brand-red/10'} transition-colors"
 									>
 										<div class="text-light-text-primary dark:text-dark-text-primary text-mini-body font-medium">
-											{addingVideo ? 'Adding...' : 'Add video as new module'}
+											{addingVideo ? 'Creating enhanced module...' : 'Add as enhanced module'}
 										</div>
 										{#if addingVideo}
 											<div class="w-4 h-4 border-2 border-brand-red border-t-transparent rounded-full animate-spin"></div>
@@ -984,7 +1122,7 @@
 									class="pl-4 pr-3 py-3 bg-brand-red/5 rounded-full inline-flex justify-start items-center gap-2 {addingVideo ? 'opacity-50 cursor-not-allowed' : 'hover:bg-brand-red/10'} transition-colors"
 								>
 									<div class="text-light-text-primary dark:text-dark-text-primary text-mini-body font-medium">
-										{addingVideo ? 'Adding...' : 'Add video to module'}
+										{addingVideo ? 'Adding enhanced video...' : 'Add enhanced video to module'}
 									</div>
 									<div class="w-4 h-4 relative overflow-hidden">
 										{#if addingVideo}

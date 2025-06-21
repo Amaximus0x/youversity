@@ -1390,7 +1390,7 @@ export async function addVideoToModule(
   }
 ) {
   try {
-    console.log('Adding video to module:', { userId, courseId, moduleIndex, videoData });
+    console.log('Adding enhanced video to module:', { userId, courseId, moduleIndex, videoData });
     
     // Get the course document
     const courseRef = doc(db, 'courses', courseId);
@@ -1417,6 +1417,45 @@ export async function addVideoToModule(
     const videoId = extractYouTubeVideoId(videoData.videoUrl);
     const youtubeUrl = videoId ? `https://www.youtube.com/watch?v=${videoId}` : videoData.videoUrl;
 
+    // Enhance video data with transcript, quiz, and summary
+    let enhancedData: {
+      title?: string;
+      duration?: number;
+      objective?: string;
+      summary?: string;
+      quiz?: any;
+      hasTranscript?: boolean;
+      transcriptLength?: number;
+    } | null = null;
+    
+    try {
+      const baseUrl = typeof window !== 'undefined' 
+        ? window.location.origin 
+        : (process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : 'https://youversity.vercel.app');
+      
+      const enhanceResponse = await fetch(`${baseUrl}/api/enhance-video-module`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          videoUrl: youtubeUrl,
+          videoTitle: videoData.title,
+          videoDescription: videoData.description
+        }),
+      });
+
+      if (enhanceResponse.ok) {
+        const enhanceResult = await enhanceResponse.json();
+        if (enhanceResult.success) {
+          enhancedData = enhanceResult.data;
+          console.log('Successfully enhanced video data:', enhancedData);
+        }
+      }
+    } catch (error) {
+      console.warn('Failed to enhance video data, using basic data:', error);
+    }
+
     // Get or initialize additional videos structure for modules
     const additionalVideos = courseData.Module_Additional_Videos || {};
     
@@ -1425,15 +1464,21 @@ export async function addVideoToModule(
       additionalVideos[moduleIndex] = [];
     }
 
-    // Create the video object to add
+    // Create the enhanced video object to add
     const newVideo = {
-      title: videoData.title,
+      title: enhancedData?.title || videoData.title,
       videoUrl: youtubeUrl,
       thumbnailUrl: videoData.thumbnailUrl || '',
-      duration: videoData.duration || 0,
+      duration: enhancedData?.duration || videoData.duration || 0,
       description: videoData.description || '',
       addedAt: new Date().toISOString(),
-      videoId: videoId || ''
+      videoId: videoId || '',
+      // Enhanced fields
+      objective: enhancedData?.objective || `Learn about ${videoData.title}`,
+      summary: enhancedData?.summary || `This video covers ${videoData.title}`,
+      quiz: enhancedData?.quiz || null,
+      hasTranscript: enhancedData?.hasTranscript || false,
+      transcriptLength: enhancedData?.transcriptLength || 0
     };
 
     // Add the new video to the module's additional videos
@@ -1462,7 +1507,7 @@ export async function addVideoToModule(
 
     await updateDoc(courseRef, updateData);
     
-    console.log('Successfully added video to module');
+    console.log('Successfully added enhanced video to module');
     return true;
   } catch (error) {
     console.error('Error adding video to module:', error);
@@ -1483,7 +1528,7 @@ export async function addVideoAsNewModule(
   }
 ) {
   try {
-    console.log('Adding video as new module:', { userId, courseId, videoData });
+    console.log('Adding enhanced video as new module:', { userId, courseId, videoData });
     
     // Get the course document
     const courseRef = doc(db, 'courses', courseId);
@@ -1510,6 +1555,45 @@ export async function addVideoAsNewModule(
     const videoId = extractYouTubeVideoId(videoData.videoUrl);
     const youtubeUrl = videoId ? `https://www.youtube.com/watch?v=${videoId}` : videoData.videoUrl;
 
+    // Enhance video data with transcript, quiz, and summary
+    let enhancedData: {
+      title?: string;
+      duration?: number;
+      objective?: string;
+      summary?: string;
+      quiz?: any;
+      hasTranscript?: boolean;
+      transcriptLength?: number;
+    } | null = null;
+    
+    try {
+      const baseUrl = typeof window !== 'undefined' 
+        ? window.location.origin 
+        : (process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : 'https://youversity.vercel.app');
+      
+      const enhanceResponse = await fetch(`${baseUrl}/api/enhance-video-module`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          videoUrl: youtubeUrl,
+          videoTitle: videoData.title,
+          videoDescription: videoData.description
+        }),
+      });
+
+      if (enhanceResponse.ok) {
+        const enhanceResult = await enhanceResponse.json();
+        if (enhanceResult.success) {
+          enhancedData = enhanceResult.data;
+          console.log('Successfully enhanced video data for new module:', enhancedData);
+        }
+      }
+    } catch (error) {
+      console.warn('Failed to enhance video data for new module, using basic data:', error);
+    }
+
     // Get current module data arrays
     const moduleTitles = courseData.Final_Module_Title || [];
     const moduleObjectives = courseData.Final_Module_Objective || [];
@@ -1519,34 +1603,45 @@ export async function addVideoAsNewModule(
     const moduleDurations = courseData.Final_Module_Video_Duration || [];
     const moduleQuizzes = courseData.Final_Module_Quiz || [];
 
-    // Add new module data
+    // Add new enhanced module data
     const newModuleIndex = moduleTitles.length;
-    moduleTitles.push(videoData.title);
-    moduleObjectives.push(videoData.description || `Learn about ${videoData.title}`);
-    moduleSummaries.push(videoData.description || `This module covers ${videoData.title}`);
+    moduleTitles.push(enhancedData?.title || videoData.title);
+    moduleObjectives.push(enhancedData?.objective || videoData.description || `Learn about ${videoData.title}`);
+    moduleSummaries.push(enhancedData?.summary || videoData.description || `This module covers ${videoData.title}`);
     moduleUrls.push(youtubeUrl);
     moduleThumbnails.push(videoData.thumbnailUrl || '');
-    moduleDurations.push(videoData.duration || 0);
+    moduleDurations.push(enhancedData?.duration || videoData.duration || 0);
     
-    // Create a basic quiz for the new module
-    const basicQuiz = {
+    // Use enhanced quiz or create a basic quiz for the new module
+    const moduleQuiz = enhancedData?.quiz || {
+      title: `Quiz: ${videoData.title}`,
       quiz: [
         {
           question: `What is the main topic covered in this module about ${videoData.title}?`,
-          options: [
-            videoData.title,
-            "Something else",
-            "Not covered",
-            "Unknown topic"
-          ],
-          correct_answer: videoData.title
+          type: 'multiple-choice',
+          options: {
+            A: videoData.title.split(' ').slice(0, 3).join(' '),
+            B: "Something else",
+            C: "Not covered",
+            D: "Unknown topic"
+          },
+          answer: "A"
         }
       ]
     };
-    moduleQuizzes.push(basicQuiz);
+    moduleQuizzes.push(moduleQuiz);
 
-    // Calculate new total duration
-    const totalDuration = moduleDurations.reduce((sum, duration) => sum + (duration || 0), 0);
+    // Calculate new total duration including additional videos from other modules
+    const additionalVideos = courseData.Module_Additional_Videos || {};
+    let additionalDuration = 0;
+    Object.values(additionalVideos).forEach((moduleVideos: any) => {
+      if (Array.isArray(moduleVideos)) {
+        additionalDuration += moduleVideos.reduce((sum: number, video: any) => sum + (video.duration || 0), 0);
+      }
+    });
+
+    const mainDuration = moduleDurations.reduce((sum, duration) => sum + (duration || 0), 0);
+    const totalDuration = mainDuration + additionalDuration;
 
     // Update the course document
     const updateData = {
@@ -1563,7 +1658,7 @@ export async function addVideoAsNewModule(
 
     await updateDoc(courseRef, updateData);
     
-    console.log('Successfully added video as new module');
+    console.log('Successfully added enhanced video as new module');
     return newModuleIndex;
   } catch (error) {
     console.error('Error adding video as new module:', error);

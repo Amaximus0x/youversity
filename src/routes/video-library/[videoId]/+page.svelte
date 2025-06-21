@@ -60,16 +60,65 @@
       }
 
       const videoData = videoDoc.data();
+      console.log('Raw video data from Firebase:', videoData);
+      console.log('Video URL field:', videoData.videoUrl);
+      console.log('All fields:', Object.keys(videoData));
+      
+      // Try to find the video URL in various possible fields
+      const possibleUrlFields = ['videoUrl', 'url', 'link', 'youtubeUrl', 'youtube_url', 'video_url'];
+      let foundVideoUrl = '';
+      
+      for (const field of possibleUrlFields) {
+        if (videoData[field] && typeof videoData[field] === 'string') {
+          foundVideoUrl = videoData[field];
+          console.log(`Found video URL in field '${field}':`, foundVideoUrl);
+          break;
+        }
+      }
+      
+      // If no URL found, check if we can construct one from the video ID
+      if (!foundVideoUrl && videoDoc.id) {
+        // Check if the document ID looks like a YouTube video ID (11 characters, alphanumeric)
+        const youtubeIdRegex = /^[a-zA-Z0-9_-]{11}$/;
+        if (youtubeIdRegex.test(videoDoc.id)) {
+          foundVideoUrl = `https://www.youtube.com/watch?v=${videoDoc.id}`;
+          console.log('Constructed YouTube URL from document ID:', foundVideoUrl);
+        } else {
+          console.log('Document ID does not appear to be a valid YouTube video ID:', videoDoc.id);
+          console.log('This appears to be a non-YouTube video or test data');
+        }
+      }
+      
+      // Determine video type for user feedback
+      let videoType = 'unknown';
+      if (foundVideoUrl) {
+        if (foundVideoUrl.includes('youtube.com') || foundVideoUrl.includes('youtu.be')) {
+          videoType = 'youtube';
+        } else {
+          videoType = 'external';
+        }
+      } else if (videoData.transcriptText || videoData.summary) {
+        videoType = 'text-only'; // Has content but no video URL
+      } else {
+        videoType = 'invalid';
+      }
+      
       videoDetails = {
         id: videoDoc.id,
         title: videoData.title,
         description: videoData.summary || videoData.description || '',
-        videoUrl: videoData.videoUrl ? createEmbedUrl(videoData.videoUrl) : '',
+        videoUrl: foundVideoUrl ? createEmbedUrl(foundVideoUrl) : '', // For player display
+        originalVideoUrl: foundVideoUrl || '', // Store original URL for adding to courses
+        videoType: videoType, // Add video type for UI decisions
         tag: videoData.tag,
         userId: videoData.userId,
         publishedAt: videoData.publishedAt,
-        thumbnailUrl: videoData.thumbnailUrl
+        thumbnailUrl: videoData.thumbnailUrl,
+        transcriptText: videoData.transcriptText || '', // Include transcript if available
+        hasContent: !!(videoData.transcriptText || videoData.summary) // Flag for content availability
       };
+
+      console.log('Processed video details:', videoDetails);
 
       // Determine the tab based on current user and video ownership
       const currentUser = get(user);
@@ -343,9 +392,53 @@
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
             allowfullscreen
           ></iframe>
+            {:else if videoDetails.videoType === 'text-only' && videoDetails.transcriptText}
+              <!-- Show transcript text for text-only content -->
+              <div class="w-full h-full p-6 bg-gradient-to-br from-gray-900 to-gray-800 text-white overflow-y-auto">
+                <div class="mb-4 flex items-center gap-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-blue-400">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14,2 14,8 20,8"></polyline>
+                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                    <polyline points="10,9 9,9 8,9"></polyline>
+                  </svg>
+                  <span class="text-blue-400 font-medium">Text Content</span>
+                </div>
+                <div class="text-gray-200 leading-relaxed whitespace-pre-wrap">
+                  {videoDetails.transcriptText}
+                </div>
+              </div>
             {:else}
-              <div class="w-full h-full flex items-center justify-center">
-                <p class="text-white">Video not available</p>
+              <div class="w-full h-full flex items-center justify-center text-white">
+                <div class="text-center">
+                  {#if videoDetails.videoType === 'invalid'}
+                    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mx-auto mb-4 text-red-400">
+                      <circle cx="12" cy="12" r="10"></circle>
+                      <line x1="15" y1="9" x2="9" y2="15"></line>
+                      <line x1="9" y1="9" x2="15" y2="15"></line>
+                    </svg>
+                    <p class="text-lg font-medium text-red-400 mb-2">Invalid Video</p>
+                    <p class="text-gray-400 text-sm">This video doesn't have a valid URL or content</p>
+                  {:else if videoDetails.videoType === 'text-only'}
+                    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mx-auto mb-4 text-blue-400">
+                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                      <polyline points="14,2 14,8 20,8"></polyline>
+                      <line x1="16" y1="13" x2="8" y2="13"></line>
+                      <line x1="16" y1="17" x2="8" y2="17"></line>
+                    </svg>
+                    <p class="text-lg font-medium text-blue-400 mb-2">Text Content</p>
+                    <p class="text-gray-400 text-sm">This item contains text content but no video</p>
+                  {:else}
+                    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mx-auto mb-4 text-gray-400">
+                      <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                      <line x1="8" y1="21" x2="16" y2="21"></line>
+                      <line x1="12" y1="17" x2="12" y2="21"></line>
+                    </svg>
+                    <p class="text-lg font-medium text-gray-400 mb-2">Video not available</p>
+                    <p class="text-gray-500 text-sm">No video URL found for this content</p>
+                  {/if}
+                </div>
               </div>
             {/if}
         </div>
@@ -380,14 +473,47 @@
             <div class="flex flex-wrap items-center gap-x-6 gap-y-3"> 
                 <!-- Group 2: Course Actions -->
                 <div class="flex items-center gap-3">
-                    <button on:click={createNewCourseWithVideo} class="px-4 py-2 bg-brand-red text-white rounded-lg hover:bg-ButtonHover transition-colors flex items-center gap-2 text-semibody-medium">
-                        Create New Course
-                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8 1V15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M1 8H15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                    </button>
-                    <button on:click={addToExistingCourseWithVideo} class="px-4 py-2 bg-Green text-white rounded-lg hover:bg-GreenHover transition-colors flex items-center gap-2 text-semibody-medium">
-                        Add to Existing Course
-                        <img src="/icons/FolderPlus.svg" alt="Add to Existing Course" class="w-5 h-5" />
-                    </button>
+                    {#if videoDetails.originalVideoUrl}
+                        <button on:click={createNewCourseWithVideo} class="px-4 py-2 bg-brand-red text-white rounded-lg hover:bg-ButtonHover transition-colors flex items-center gap-2 text-semibody-medium">
+                            Create New Course
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8 1V15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M1 8H15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        </button>
+                        <button on:click={addToExistingCourseWithVideo} class="px-4 py-2 bg-Green text-white rounded-lg hover:bg-GreenHover transition-colors flex items-center gap-2 text-semibody-medium">
+                            Add to Existing Course
+                            <img src="/icons/FolderPlus.svg" alt="Add to Existing Course" class="w-5 h-5" />
+                        </button>
+                    {:else}
+                        <div class="relative group">
+                            <button disabled class="px-4 py-2 bg-gray-400 text-white rounded-lg cursor-not-allowed flex items-center gap-2 text-semibody-medium opacity-50">
+                                Create New Course
+                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8 1V15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M1 8H15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                            </button>
+                            <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-black text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
+                                {#if videoDetails.videoType === 'text-only'}
+                                    Text-only content cannot be added to courses
+                                {:else if videoDetails.videoType === 'invalid'}
+                                    Invalid video data - missing URL and content
+                                {:else}
+                                    This video doesn't have a valid YouTube URL
+                                {/if}
+                            </div>
+                        </div>
+                        <div class="relative group">
+                            <button disabled class="px-4 py-2 bg-gray-400 text-white rounded-lg cursor-not-allowed flex items-center gap-2 text-semibody-medium opacity-50">
+                                Add to Existing Course
+                                <img src="/icons/FolderPlus.svg" alt="Add to Existing Course" class="w-5 h-5" />
+                            </button>
+                            <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-black text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
+                                {#if videoDetails.videoType === 'text-only'}
+                                    Text-only content cannot be added to courses
+                                {:else if videoDetails.videoType === 'invalid'}
+                                    Invalid video data - missing URL and content
+                                {:else}
+                                    This video doesn't have a valid YouTube URL
+                                {/if}
+                            </div>
+                        </div>
+                    {/if}
                 </div>
 
                 <!-- Group 3: Assign & Delete -->
@@ -402,6 +528,35 @@
                 </div>
             </div>
         </div>
+        
+        <!-- Video Type Information -->
+        {#if videoDetails.videoType !== 'youtube'}
+            <div class="mb-6 p-4 rounded-lg {videoDetails.videoType === 'text-only' ? 'bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800' : 'bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800'}">
+                <div class="flex items-start gap-3">
+                    {#if videoDetails.videoType === 'text-only'}
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <path d="M12 16v-4"></path>
+                            <path d="M12 8h.01"></path>
+                        </svg>
+                        <div>
+                            <h4 class="text-blue-800 dark:text-blue-200 font-medium text-semibody-medium mb-1">Text Content</h4>
+                            <p class="text-blue-700 dark:text-blue-300 text-semi-body">This item contains text content but no video. Text-only content cannot be added to video courses, but you can view the content above.</p>
+                        </div>
+                    {:else}
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-yellow-600 dark:text-yellow-400 mt-0.5 flex-shrink-0">
+                            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                            <line x1="12" y1="9" x2="12" y2="13"></line>
+                            <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                        </svg>
+                        <div>
+                            <h4 class="text-yellow-800 dark:text-yellow-200 font-medium text-semibody-medium mb-1">Invalid Video Data</h4>
+                            <p class="text-yellow-700 dark:text-yellow-300 text-semi-body">This video entry doesn't have a valid YouTube URL. Only YouTube videos can be added to courses. You may need to update this video with a proper YouTube URL.</p>
+                        </div>
+                    {/if}
+                </div>
+            </div>
+        {/if}
         
         <!-- Video Description -->
         <div class="text-body text-light-text-secondary dark:text-dark-text-secondary leading-relaxed prose dark:prose-invert max-w-none">
