@@ -96,16 +96,21 @@
   }
   
   // Auto-expand tag if current video belongs to it
-  $: if (currentVideoId && availableTags.length > 0 && !expandedTagId) {
+  $: if (currentVideoId && availableTags.length > 0) {
     // Find which tag contains the current video
+    let foundTagId = null;
     for (const tag of availableTags) {
       if (tagVideos[tag.id]?.some(video => video.videoId === currentVideoId)) {
-        expandedTagId = tag.id;
+        foundTagId = tag.id;
         break;
       }
     }
-    // If no tag found, expand first tag with videos
-    if (!expandedTagId && availableTags.length > 0) {
+    
+    // If we found a tag containing the current video, expand it
+    if (foundTagId) {
+      expandedTagId = foundTagId;
+    } else if (!expandedTagId && availableTags.length > 0) {
+      // If no tag found and nothing is expanded, expand first tag with videos
       expandedTagId = availableTags[0].id;
     }
   }

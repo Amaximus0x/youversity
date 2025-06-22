@@ -52,14 +52,38 @@
   // Function to fetch video details
   async function fetchVideoDetails(videoId: string) {
     try {
+      // First try to get by document ID (for backward compatibility)
       const videoDoc = await getDoc(doc(db, 'savedVideos', videoId));
       
-      if (!videoDoc.exists()) {
+      if (videoDoc.exists()) {
+        const videoData = videoDoc.data();
+        processVideoData(videoDoc.id, videoData);
+        return;
+      }
+
+      // If not found by document ID, query by videoId field
+      const videosRef = collection(db, 'savedVideos');
+      const videoQuery = query(videosRef, where('videoId', '==', videoId));
+      const querySnapshot = await getDocs(videoQuery);
+      
+      if (querySnapshot.empty) {
         error = 'Video not found';
         return;
       }
 
-      const videoData = videoDoc.data();
+      // Get the first matching document
+      const foundDoc = querySnapshot.docs[0];
+      const videoData = foundDoc.data();
+      processVideoData(foundDoc.id, videoData);
+
+    } catch (err) {
+      console.error('Error fetching video details:', err);
+      error = err instanceof Error ? err.message : 'Failed to load video';
+    }
+  }
+
+  // Separate function to process video data
+  function processVideoData(docId: string, videoData: any) {
       console.log('Raw video data from Firebase:', videoData);
       console.log('Video URL field:', videoData.videoUrl);
       console.log('All fields:', Object.keys(videoData));
@@ -104,7 +128,7 @@
       }
       
       videoDetails = {
-        id: videoDoc.id,
+        id: docId,
         title: videoData.title,
         description: videoData.summary || videoData.description || '',
         videoUrl: foundVideoUrl ? createEmbedUrl(foundVideoUrl) : '', // For player display
@@ -127,11 +151,6 @@
       } else {
         activeTabForDisplay = 'saved';
       }
-
-    } catch (err) {
-      console.error('Error fetching video details:', err);
-      error = err instanceof Error ? err.message : 'Failed to load video';
-    }
   }
 
   // Function to fetch all videos for tags sidebar
@@ -344,11 +363,11 @@
         <TagsSidebar 
           {availableTags}
           {tagVideos}
-          currentVideoId={videoDetails?.id}
+          currentVideoId={currentVideoId}
           onTagDeleted={async () => {
             await fetchAllVideos();
             // If current video was deleted, redirect to main library
-            if (videoDetails && !allVideos.some(v => v.videoId === videoDetails.id)) {
+            if (videoDetails && !allVideos.some(v => v.videoId === currentVideoId)) {
               goto('/video-library');
             }
           }}

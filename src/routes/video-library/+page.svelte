@@ -52,8 +52,8 @@
             const querySnapshot = await getDocs(userVideosQuery);
             
             allVideos = querySnapshot.docs.map(doc => ({
-                videoId: doc.id,
-                ...doc.data()
+                documentId: doc.id,  // Firestore document ID
+                ...doc.data()  // This includes the videoId field (YouTube ID)
             }));
 
             // Update video counts - all videos are now user's videos
