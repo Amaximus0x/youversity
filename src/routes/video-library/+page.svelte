@@ -3,6 +3,7 @@
     import { user } from "$lib/stores/auth";
     import VideoLibraryCard from "$lib/components/VideoLibraryCard.svelte";
     import TagsSidebar from "$lib/components/TagsSidebar.svelte";
+    import AddVideoModal from "$lib/components/AddVideoModal.svelte";
     import { goto } from "$app/navigation";
     import { get } from "svelte/store";
     import { collection, getDocs, query, where } from 'firebase/firestore';
@@ -25,6 +26,7 @@
     let selectMode = false;
     let selectedVideos: Set<string> = new Set();
     let hasSelectionOccurred = false;
+    let showAddVideoModal = false;
 
     // Video counts for tabs
     let videoCount = {
@@ -163,8 +165,12 @@
 
     // Function to handle video upload
     function handleUploadVideo() {
-        // TODO: Implement video upload functionality
-        alert("Video upload functionality coming soon!");
+        showAddVideoModal = true;
+    }
+
+    // Function to handle video added
+    function handleVideoAdded() {
+        fetchVideos(); // Refresh the video list
     }
 
     // Function to enter select mode
@@ -716,4 +722,12 @@
             </li>
         </ul>
     </div>
+{/if}
+
+<!-- Add Video Modal -->
+{#if showAddVideoModal}
+    <AddVideoModal
+        onClose={() => (showAddVideoModal = false)}
+        onVideoAdded={handleVideoAdded}
+    />
 {/if}
