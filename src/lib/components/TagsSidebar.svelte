@@ -161,7 +161,7 @@
               alt="Dropdown" 
               class="w-4 h-4 text-light-text-tertiary dark:text-dark-text-tertiary transition-transform {expandedTagId === tag.id ? '' : 'rotate-[-90deg]'}" 
             />
-            <span class="text-semi-body-medium">
+            <span class="text-semi-body-medium text-light-text-primary dark:text-dark-text-primary">
               {tag.name}
             </span>
           </div>
@@ -188,7 +188,7 @@
                 {/if}
               </button>
             {:else}
-              <span class="text-xs px-2 py-0.5 bg-black/5 dark:bg-white/10 rounded-full">
+              <span class="text-xs px-2 py-0.5 bg-black/5 dark:bg-white/10 rounded-full text-light-text-secondary dark:text-dark-text-secondary">
                 {tag.count}
               </span>
             {/if}
