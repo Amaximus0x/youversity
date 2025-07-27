@@ -1009,14 +1009,14 @@
 								<div class="text-light-text-tertiary dark:text-dark-text-tertiary text-mini-body font-semibold">
 									Selected Course
 								</div>
-								<div class="px-3 py-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+								<!-- <div class="px-3 py-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
 									<div class="text-blue-800 dark:text-blue-200 text-[10px] font-medium mb-1">
 										✨ Enhanced Video Processing
 									</div>
 									<div class="text-blue-700 dark:text-blue-300 text-[10px] leading-tight">
 										Videos are automatically enhanced with transcript analysis, AI-generated summaries, learning objectives, and custom quizzes.
 									</div>
-								</div>
+								</div> -->
 								<div class="p-2 rounded-2xl border border-light-border dark:border-dark-border flex flex-col gap-4">
 									<div class="p-1 rounded-lg border border-brand-red flex gap-2">
 										<img
@@ -1039,7 +1039,7 @@
 										class="pl-4 pr-3 py-3 bg-brand-red/5 rounded-full flex items-center gap-2 self-center {addingVideo ? 'opacity-50 cursor-not-allowed' : 'hover:bg-brand-red/10'} transition-colors"
 									>
 										<div class="text-light-text-primary dark:text-dark-text-primary text-mini-body font-medium">
-											{addingVideo ? 'Creating enhanced module...' : 'Add as enhanced module'}
+											{addingVideo ? 'Creating new module...' : 'Add video as new module'}
 										</div>
 										{#if addingVideo}
 											<div class="w-4 h-4 border-2 border-brand-red border-t-transparent rounded-full animate-spin"></div>
@@ -1122,7 +1122,7 @@
 									class="pl-4 pr-3 py-3 bg-brand-red/5 rounded-full inline-flex justify-start items-center gap-2 {addingVideo ? 'opacity-50 cursor-not-allowed' : 'hover:bg-brand-red/10'} transition-colors"
 								>
 									<div class="text-light-text-primary dark:text-dark-text-primary text-mini-body font-medium">
-										{addingVideo ? 'Adding enhanced video...' : 'Add enhanced video to module'}
+										{addingVideo ? 'Adding video...' : 'Add video to module'}
 									</div>
 									<div class="w-4 h-4 relative overflow-hidden">
 										{#if addingVideo}

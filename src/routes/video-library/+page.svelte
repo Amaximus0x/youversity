@@ -5,6 +5,7 @@
     import TagsSidebar from "$lib/components/TagsSidebar.svelte";
     import AddVideoModal from "$lib/components/AddVideoModal.svelte";
     import CreateCourseModal from "$lib/components/modals/CreateCourseModal.svelte";
+    import TagSidebarMobile from "$lib/components/TagSidebarMobile.svelte";
     import { goto } from "$app/navigation";
     import { get } from "svelte/store";
     import { collection, getDocs, query, where } from 'firebase/firestore';
@@ -28,6 +29,7 @@
     let selectedVideos: Set<string> = new Set();
     let hasSelectionOccurred = false;
     let showAddVideoModal = false;
+    let showTagsSidebarMobile = false;
     let showCreateCourseModal = false;
     let createCourseVideos: any[] = [];
 
@@ -164,6 +166,11 @@
         if (showOptionsMenu && !target.closest(".options-menu")) {
             showOptionsMenu = false;
         }
+    }
+
+    // Function to handle open tags sidebar
+    function handleOpenTagsSidebar() {
+        showTagsSidebarMobile = true;
     }
 
     // Function to handle video upload
@@ -446,111 +453,121 @@
             </div>
         </div>
 
-        <!-- Sort and Upload Button - Mobile -->
-        <div class="flex lg:hidden items-center justify-end gap-4 mt-4">
-            <!-- Sort Dropdown -->
-            <div class="sort-dropdown relative">
-                <button
-                    class="h-[42px] px-4 py-2 bg-black/5 dark:bg-white/10 rounded-lg justify-start items-center gap-[17px] inline-flex"
-                    on:click|stopPropagation={() =>
-                        (showSortDropdown = !showSortDropdown)}
-                >
-                    <div
-                        class="text-light-text-secondary dark:text-dark-text-secondary"
-                    >
-                        Sort by
-                    </div>
-                    <div data-svg-wrapper class="relative">
-                        <svg
-                            class="text-black dark:text-white"
-                            width="16"
-                            height="27"
-                            viewBox="0 0 16 27"
-                            fill="none"
-                            xmlns="http://www.w3.org/2000/svg"
-                        >
-                            <path
-                                d="M12 10.5C12 10.5 9.05403 6.50001 7.99997 6.5C6.9459 6.49999 4 10.5 4 10.5"
-                                stroke="currentColor"
-                                stroke-width="1.5"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                            />
-                            <path
-                                d="M12 16.5C12 16.5 9.05403 20.5 7.99997 20.5C6.9459 20.5 4 16.5 4 16.5"
-                                stroke="currentColor"
-                                stroke-width="1.5"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                            />
-                        </svg>
-                    </div>
-                </button>
-
-                {#if showSortDropdown}
-                    <div
-                        class="absolute right-0 mt-2 w-48 bg-light-bg-secondary dark:bg-dark-bg-secondary rounded-lg shadow-lg border border-light-border dark:border-dark-border z-50"
-                    >
-                        <button
-                            class="w-full px-4 py-2 text-left text-light-text-primary dark:text-dark-text-primary hover:bg-light-bg-secondary dark:hover:bg-dark-bg-secondary transition-colors flex items-center justify-between {sortOption ===
-                            'newest'
-                                ? 'bg-black/5 dark:bg-white/10'
-                                : ''}"
-                            on:click={() => handleSortSelect("newest")}
-                        >
-                            <span>Newest</span>
-                            {#if sortOption === "newest"}
-                                <svg
-                                    class="w-4 h-4 text-Green dark:text-TransparentGreen2"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <path
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        stroke-width="2"
-                                        d="M5 13l4 4L19 7"
-                                    />
-                                </svg>
-                            {/if}
-                        </button>
-                        <button
-                            class="w-full px-4 py-2 text-left text-light-text-primary dark:text-dark-text-primary hover:bg-light-bg-secondary dark:hover:bg-dark-bg-secondary transition-colors flex items-center justify-between {sortOption ===
-                            'oldest'
-                                ? 'bg-black/5 dark:bg-white/10'
-                                : ''}"
-                            on:click={() => handleSortSelect("oldest")}
-                        >
-                            <span>Oldest</span>
-                            {#if sortOption === "oldest"}
-                                <svg
-                                    class="w-4 h-4 text-Green dark:text-TransparentGreen2"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <path
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        stroke-width="2"
-                                        d="M5 13l4 4L19 7"
-                                    />
-                                </svg>
-                            {/if}
-                        </button>
-                    </div>
-                {/if}
-            </div>
-
-            <!-- Add Video Button -->
+        <div class="flex items-center justify-between w-full mt-2 lg:hidden">
+            <!--Mobile Tag Sidebar Button -->
             <button
-                class="flex items-center gap-2 px-4 py-2 bg-Green text-white rounded-lg hover:bg-GreenHover transition-colors"
-                on:click={handleUploadVideo}
+                class="p-2 hover:bg-light-bg-secondary dark:hover:bg-dark-bg-secondary rounded-lg transition-colors"
+                on:click={handleOpenTagsSidebar}
             >
-                <span class="text-body text-nowrap">Add video</span>
-                <img src="/icons/BoxArrowUp.svg" alt="Create" class="w-6 h-6" />
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-[34px] h-[34px] text-black dark:text-white" viewBox="0 0 34 34" fill="none">
+                    <path d="M28.6875 5.3125H5.3125C4.74891 5.3125 4.20841 5.53638 3.8099 5.9349C3.41138 6.33341 3.1875 6.87391 3.1875 7.4375V26.5625C3.1875 27.1261 3.41138 27.6666 3.8099 28.0651C4.20841 28.4636 4.74891 28.6875 5.3125 28.6875H28.6875C29.2511 28.6875 29.7916 28.4636 30.1901 28.0651C30.5886 27.6666 30.8125 27.1261 30.8125 26.5625V7.4375C30.8125 6.87391 30.5886 6.33341 30.1901 5.9349C29.7916 5.53638 29.2511 5.3125 28.6875 5.3125ZM5.3125 20.1875H7.4375C7.71929 20.1875 7.98954 20.0756 8.1888 19.8763C8.38806 19.677 8.5 19.4068 8.5 19.125C8.5 18.8432 8.38806 18.573 8.1888 18.3737C7.98954 18.1744 7.71929 18.0625 7.4375 18.0625H5.3125V15.9375H7.4375C7.71929 15.9375 7.98954 15.8256 8.1888 15.6263C8.38806 15.427 8.5 15.1568 8.5 14.875C8.5 14.5932 8.38806 14.323 8.1888 14.1237C7.98954 13.9244 7.71929 13.8125 7.4375 13.8125H5.3125V11.6875H7.4375C7.71929 11.6875 7.98954 11.5756 8.1888 11.3763C8.38806 11.177 8.5 10.9068 8.5 10.625C8.5 10.3432 8.38806 10.073 8.1888 9.8737C7.98954 9.67444 7.71929 9.5625 7.4375 9.5625H5.3125V7.4375H10.625V26.5625H5.3125V20.1875ZM28.6875 26.5625H12.75V7.4375H28.6875V26.5625Z" fill="currentColor"/>
+                </svg>
             </button>
+            <!-- Sort and Upload Button - Mobile -->
+            <div class="flex items-center gap-4">
+                <!-- Sort Dropdown -->
+                <div class="sort-dropdown relative">
+                    <button
+                        class="w-auto h-auto px-2 py-1 bg-black/5 dark:bg-white/10 rounded-lg items-center gap-2 inline-flex"
+                        on:click|stopPropagation={() =>
+                            (showSortDropdown = !showSortDropdown)}
+                    >
+                        <div
+                            class="text-light-text-secondary dark:text-dark-text-secondary"
+                        >
+                            Sort by
+                        </div>
+                        <div data-svg-wrapper class="relative">
+                            <svg
+                                class="text-black dark:text-white"
+                                width="16"
+                                height="27"
+                                viewBox="0 0 16 27"
+                                fill="none"
+                                xmlns="http://www.w3.org/2000/svg"
+                            >
+                                <path
+                                    d="M12 10.5C12 10.5 9.05403 6.50001 7.99997 6.5C6.9459 6.49999 4 10.5 4 10.5"
+                                    stroke="currentColor"
+                                    stroke-width="1.5"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                />
+                                <path
+                                    d="M12 16.5C12 16.5 9.05403 20.5 7.99997 20.5C6.9459 20.5 4 16.5 4 16.5"
+                                    stroke="currentColor"
+                                    stroke-width="1.5"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                />
+                            </svg>
+                        </div>
+                    </button>
+    
+                    {#if showSortDropdown}
+                        <div
+                            class="absolute right-0 mt-2 w-48 bg-light-bg-secondary dark:bg-dark-bg-secondary rounded-lg shadow-lg border border-light-border dark:border-dark-border z-50"
+                        >
+                            <button
+                                class="w-full px-4 py-2 text-left text-light-text-primary dark:text-dark-text-primary hover:bg-light-bg-secondary dark:hover:bg-dark-bg-secondary transition-colors flex items-center justify-between {sortOption ===
+                                'newest'
+                                    ? 'bg-black/5 dark:bg-white/10'
+                                    : ''}"
+                                on:click={() => handleSortSelect("newest")}
+                            >
+                                <span>Newest</span>
+                                {#if sortOption === "newest"}
+                                    <svg
+                                        class="w-4 h-4 text-Green dark:text-TransparentGreen2"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                    >
+                                        <path
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                            stroke-width="2"
+                                            d="M5 13l4 4L19 7"
+                                        />
+                                    </svg>
+                                {/if}
+                            </button>
+                            <button
+                                class="w-full px-4 py-2 text-left text-light-text-primary dark:text-dark-text-primary hover:bg-light-bg-secondary dark:hover:bg-dark-bg-secondary transition-colors flex items-center justify-between {sortOption ===
+                                'oldest'
+                                    ? 'bg-black/5 dark:bg-white/10'
+                                    : ''}"
+                                on:click={() => handleSortSelect("oldest")}
+                            >
+                                <span>Oldest</span>
+                                {#if sortOption === "oldest"}
+                                    <svg
+                                        class="w-4 h-4 text-Green dark:text-TransparentGreen2"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                    >
+                                        <path
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                            stroke-width="2"
+                                            d="M5 13l4 4L19 7"
+                                        />
+                                    </svg>
+                                {/if}
+                            </button>
+                        </div>
+                    {/if}
+                </div>
+    
+                <!-- Add Video Button -->
+                <button
+                    class="flex items-center gap-2 p-1.5 bg-Green text-white rounded-lg hover:bg-GreenHover transition-colors"
+                    on:click={handleUploadVideo}
+                >
+                    <img src="/icons/BoxArrowUp.svg" alt="Create" class="w-6 h-6" />
+                </button>
+            </div>
         </div>
     </div>
 
@@ -766,3 +783,11 @@
         }}
     />
 {/if}
+
+<!-- Mobile Tag Sidebar -->
+<TagSidebarMobile
+    isOpen={showTagsSidebarMobile}
+    {availableTags}
+    {tagVideos}
+    on:close={() => (showTagsSidebarMobile = false)}
+/>

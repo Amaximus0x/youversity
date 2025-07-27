@@ -5,6 +5,7 @@
   import { db } from '$lib/firebase';
   import { user } from '$lib/stores/auth';
   import { get } from 'svelte/store';
+  import AlertModal from './modals/AlertModal.svelte';
   
   // Props
   export let availableTags: { id: string; name: string; count: number }[] = [];
@@ -16,6 +17,27 @@
   let tagSearchQuery = "";
   let expandedTagId: string | null = null;
   let deletingTag: string | null = null; // Track which tag is being deleted
+  
+  // Alert modal state
+  let alertModal = {
+    isOpen: false,
+    title: '',
+    message: '',
+    type: 'info' as 'info' | 'warning' | 'error' | 'success' | 'confirm',
+    confirmText: 'OK',
+    cancelText: 'Cancel',
+    showCancel: false,
+    onConfirm: () => {},
+    onCancel: () => {}
+  };
+  
+  function showAlert(options: Partial<typeof alertModal>) {
+    alertModal = {
+      ...alertModal,
+      ...options,
+      isOpen: true
+    };
+  }
   
   // Filter tags based on search query
   $: filteredTags = availableTags.filter((tag) =>
@@ -38,18 +60,35 @@
   async function handleDeleteTag(tagId: string) {
     const currentUser = get(user);
     if (!currentUser) {
-      alert('Please sign in to delete videos.');
+      showAlert({
+        title: 'Sign In Required',
+        message: 'Please sign in to delete videos.',
+        type: 'warning',
+        confirmText: 'OK',
+        showCancel: false
+      });
       return;
     }
 
     const tagName = availableTags.find(tag => tag.id === tagId)?.name || tagId;
     const videoCount = tagVideos[tagId]?.length || 0;
     
-    // Confirmation dialog
-    const confirmMessage = `Are you sure you want to delete all ${videoCount} video${videoCount !== 1 ? 's' : ''} in the "${tagName}" tag? This action cannot be undone.`;
-    if (!confirm(confirmMessage)) {
-      return;
-    }
+    // Show confirmation dialog
+    showAlert({
+      title: `Delete ${tagName} Video Tag`,
+      message: `Are you sure you want to delete all ${videoCount} video${videoCount !== 1 ? 's' : ''} in the "${tagName}" tag? This action cannot be undone.`,
+      type: 'confirm',
+      confirmText: 'Delete',
+      cancelText: 'Cancel',
+      showCancel: true,
+      onConfirm: () => performDeleteTag(tagId, tagName, videoCount),
+      onCancel: () => {}
+    });
+  }
+  
+  async function performDeleteTag(tagId: string, tagName: string, videoCount: number) {
+    const currentUser = get(user);
+    if (!currentUser) return;
 
     try {
       deletingTag = tagId;
@@ -59,7 +98,13 @@
       const userVideos = videosToDelete.filter(video => video.userId === currentUser.uid);
       
       if (userVideos.length === 0) {
-        alert('No videos found to delete or you do not have permission to delete these videos.');
+        showAlert({
+          title: 'No Videos Found',
+          message: 'No videos found to delete or you do not have permission to delete these videos.',
+          type: 'warning',
+          confirmText: 'OK',
+          showCancel: false
+        });
         return;
       }
 
@@ -85,11 +130,23 @@
         onTagDeleted();
       }
 
-      alert(`Successfully deleted ${userVideos.length} video${userVideos.length !== 1 ? 's' : ''} from the "${tagName}" tag.`);
+      showAlert({
+        title: 'Success',
+        message: `Successfully deleted ${userVideos.length} video${userVideos.length !== 1 ? 's' : ''} from the "${tagName}" tag.`,
+        type: 'success',
+        confirmText: 'OK',
+        showCancel: false
+      });
       
     } catch (error) {
       console.error('Error deleting videos:', error);
-      alert('Failed to delete videos. Please try again.');
+      showAlert({
+        title: 'Error',
+        message: 'Failed to delete videos. Please try again.',
+        type: 'error',
+        confirmText: 'OK',
+        showCancel: false
+      });
     } finally {
       deletingTag = null;
     }
@@ -231,4 +288,23 @@
       </div>
     {/each}
   </div>
-</div> 
+</div>
+
+<!-- Alert Modal -->
+<AlertModal
+  isOpen={alertModal.isOpen}
+  title={alertModal.title}
+  message={alertModal.message}
+  type={alertModal.type}
+  confirmText={alertModal.confirmText}
+  cancelText={alertModal.cancelText}
+  showCancel={alertModal.showCancel}
+  on:confirm={() => {
+    alertModal.isOpen = false;
+    alertModal.onConfirm();
+  }}
+  on:cancel={() => {
+    alertModal.isOpen = false;
+    alertModal.onCancel();
+  }}
+/> 
