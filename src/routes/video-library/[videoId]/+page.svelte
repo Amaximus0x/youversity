@@ -101,14 +101,14 @@
       }
       
       // If no URL found, check if we can construct one from the video ID
-      if (!foundVideoUrl && videoDoc.id) {
+      if (!foundVideoUrl && docId) {
         // Check if the document ID looks like a YouTube video ID (11 characters, alphanumeric)
         const youtubeIdRegex = /^[a-zA-Z0-9_-]{11}$/;
-        if (youtubeIdRegex.test(videoDoc.id)) {
-          foundVideoUrl = `https://www.youtube.com/watch?v=${videoDoc.id}`;
+        if (youtubeIdRegex.test(docId)) {
+          foundVideoUrl = `https://www.youtube.com/watch?v=${docId}`;
           console.log('Constructed YouTube URL from document ID:', foundVideoUrl);
         } else {
-          console.log('Document ID does not appear to be a valid YouTube video ID:', videoDoc.id);
+          console.log('Document ID does not appear to be a valid YouTube video ID:', docId);
           console.log('This appears to be a non-YouTube video or test data');
         }
       }
@@ -267,6 +267,7 @@
     }
   }
   function createNewCourseWithVideo() { 
+    if (!videoDetails) return;
     showCreateCourseModal = true;
   }
   function addToExistingCourseWithVideo() {
@@ -590,6 +591,6 @@
 
 {#if videoDetails}
 <AssignVideoModal bind:showModal={showAssignModal} on:close={() => showAssignModal = false} /> 
-<CreateCourseModal bind:showModal={showCreateCourseModal} video={videoDetails} on:close={() => showCreateCourseModal = false} /> 
+<CreateCourseModal bind:showModal={showCreateCourseModal} videos={[videoDetails]} on:close={() => showCreateCourseModal = false} on:courseCreated={() => {/* Course creation complete - CourseReadyModal will be shown */}} /> 
   <AddToExistingCourseModal bind:showModal={showAddToExistingCourseModal} video={videoDetails} on:close={() => showAddToExistingCourseModal = false} />
 {/if} 

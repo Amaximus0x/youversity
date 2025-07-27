@@ -7,7 +7,7 @@ import type { CourseStructure, FinalCourseStructure, VideoItem, Quiz, QuizQuesti
 import { getVideoTranscript } from '$lib/services/transcriptUtils';
 import pLimit from 'p-limit';
 import { OPENAI_CONFIG } from '$lib/config/openai';
-import { adminApp } from '$lib/server/firebase-admin'; 
+import { adminApp, adminDb } from '$lib/server/firebase-admin'; 
 import { v4 as uuidv4 } from 'uuid';
 import { addCorsHeaders, handleCorsOptions } from '$lib/utils/cors';
 
@@ -900,9 +900,34 @@ export const POST: RequestHandler = async ({ request, locals }) => {
         throw new Error('Invalid course generation result');
       }
 
+      // Add user information to the course
+      const courseWithUserInfo = {
+        ...finalCourse,
+        createdBy: authenticatedUser.uid,
+        creatorUsername: data.creatorUsername || 'User',
+        creatorDisplayName: data.creatorDisplayName || 'User',
+        isPublic: data.isPublic || false,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+
+      // Save the course to Firestore
+      if (!adminDb) {
+        throw new Error('Firestore not initialized');
+      }
+      const courseRef = await adminDb.collection('courses').add(courseWithUserInfo);
+      
+      console.log(`Course saved to Firestore with ID: ${courseRef.id}`);
+
+      // Return the course with the generated ID
+      const courseWithId = {
+        ...courseWithUserInfo,
+        id: courseRef.id
+      };
+
       const successResponse = json({
         success: true,
-        course: finalCourse
+        course: courseWithId
       });
       
       return addCorsHeaders(successResponse, request);

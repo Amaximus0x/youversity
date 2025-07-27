@@ -1,4 +1,5 @@
 import { initializeApp, getApps, cert } from 'firebase-admin/app';
+import { getFirestore } from 'firebase-admin/firestore';
 import { env } from '$env/dynamic/private';
 
 // Add detailed debug logging
@@ -116,9 +117,21 @@ try {
             throw new Error('Invalid token');
           }
         }
+      }),
+      // Add mock firestore for development
+      firestore: () => ({
+        collection: (name: string) => ({
+          add: async (data: any) => {
+            console.log('MOCK FIRESTORE: Adding document to collection:', name);
+            console.log('MOCK FIRESTORE: Document data:', data);
+            const mockId = 'mock-course-' + Date.now();
+            console.log('MOCK FIRESTORE: Generated mock ID:', mockId);
+            return { id: mockId };
+          }
+        })
       })
     };
-    console.log('Mock Firebase Admin initialized with auth support');
+    console.log('Mock Firebase Admin initialized with auth and firestore support');
   } else {
     throw error; // In production, we want to fail fast if Firebase Admin fails to initialize
   }
@@ -207,4 +220,7 @@ export async function tryVerifyToken(token: string) {
   }
 }
 
-export const adminApp = app; 
+export const adminApp = app;
+
+// Export Firestore instance
+export const adminDb = app ? (app.firestore ? app.firestore() : getFirestore(app)) : null; 

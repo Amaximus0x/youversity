@@ -85,7 +85,6 @@
 
   $: shouldShowModal =
     $finalLoadingState.isLoading ||
-    $finalLoadingState.courseId ||
     $modalState.isMinimized;
 
   $: isComplete = $finalLoadingState.progress === 100;

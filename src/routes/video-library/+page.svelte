@@ -4,6 +4,7 @@
     import VideoLibraryCard from "$lib/components/VideoLibraryCard.svelte";
     import TagsSidebar from "$lib/components/TagsSidebar.svelte";
     import AddVideoModal from "$lib/components/AddVideoModal.svelte";
+    import CreateCourseModal from "$lib/components/modals/CreateCourseModal.svelte";
     import { goto } from "$app/navigation";
     import { get } from "svelte/store";
     import { collection, getDocs, query, where } from 'firebase/firestore';
@@ -27,6 +28,8 @@
     let selectedVideos: Set<string> = new Set();
     let hasSelectionOccurred = false;
     let showAddVideoModal = false;
+    let showCreateCourseModal = false;
+    let createCourseVideos: any[] = [];
 
     // Video counts for tabs
     let videoCount = {
@@ -207,7 +210,19 @@
 
     // Functions for selected videos actions
     function createNewCourse() {
-        alert(`Create new course with ${selectedVideos.size} videos - Coming soon!`);
+        if (selectedVideos.size === 0) {
+            alert("Please select at least one video to create a course.");
+            return;
+        }
+        
+        // Get selected video data
+        const selectedVideoData = displayedVideos.filter(video => 
+            selectedVideos.has(video.videoId)
+        );
+        
+        // Show the create course modal with selected videos
+        showCreateCourseModal = true;
+        createCourseVideos = selectedVideoData;
     }
 
     function addToExistingCourse() {
@@ -729,5 +744,25 @@
     <AddVideoModal
         onClose={() => (showAddVideoModal = false)}
         onVideoAdded={handleVideoAdded}
+    />
+{/if}
+
+<!-- Create Course Modal -->
+{#if showCreateCourseModal}
+    <CreateCourseModal
+        bind:showModal={showCreateCourseModal}
+        videos={createCourseVideos}
+        on:close={() => {
+            showCreateCourseModal = false;
+            createCourseVideos = [];
+            // Clear selection after course creation
+            selectedVideos.clear();
+            selectedVideos = new Set(selectedVideos);
+            selectMode = false;
+            hasSelectionOccurred = false;
+        }}
+        on:courseCreated={() => {
+            // Course creation complete - CourseReadyModal will be shown
+        }}
     />
 {/if}
