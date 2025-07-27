@@ -271,9 +271,9 @@
     $: selectedCount = selectedVideos.size;
 </script>
 
-<div class="min-h-screen">
+<div class="min-h-screen flex flex-col">
     <!-- Header Section -->
-    <div class="mb-8">
+    <div class="mb-8 hidden lg:block">
         <h1
             class="text-h2-mobile lg:text-h2 text-light-text-primary dark:text-dark-text-primary mb-4"
         >
@@ -287,55 +287,47 @@
         </p>
     </div>
 
-    <!-- Tabs and Sort Section -->
-    <div class="mb-6">
+    <!-- Tabs and Sort Section - Fixed on mobile -->
+    <div class="lg:mb-6 sticky top-[64px] lg:top-0 mx-[-16px] lg:mx-0 bg-light-bg-secondary dark:bg-dark-bg-secondary z-30 lg:static lg:bg-transparent pt-6 lg:pt-0">
         <!-- Border container that spans full width -->
         <div
             class="relative border-b border-light-border dark:border-dark-border"
         >
-            <div class="container lg:pl-4 max-w-auto">
+            <div class="container lg:pl-4 max-w-auto px-4 lg:px-0">
                 <!-- Tabs -->
-                <div class="flex gap-4 sm:gap-6 lg:gap-8 overflow-x-auto pb-1">
+                <div class="flex justify-between lg:justify-start lg:gap-4">
                     <button
-                        class="pb-4 relative whitespace-nowrap {activeTab ===
+                        class="flex-1 p-4 gap-2 relative whitespace-nowrap {activeTab ===
                         'saved'
-                            ? 'text-Green dark:text-TransparentGreen2 text-body-semibold'
+                            ? 'text-Green dark:text-Green2 text-body-semibold border-b border-Green dark:border-Green2'
                             : 'text-light-text-tertiary dark:text-dark-text-tertiary text-body'}"
                         on:click={() => (activeTab = "saved")}
                     >
                         <span class="hidden lg:inline">Saved videos</span>
                         <span class="lg:hidden">Saved</span>
                         <span
-                            class="ml-2 px-2 py-0.5 bg-Black/5 dark:bg-dark-bg-secondary rounded-full text-semibody-medium"
+                        class="px-2 py-0.5 bg-Black/5 dark:bg-dark-bg-secondary rounded-[40px] text-semibody-medium"
                         >
                             {videoCount.saved}
                         </span>
-                        {#if activeTab === "saved"}
-                            <div
-                                class="absolute bottom-0 left-0 right-0 h-0.5 bg-Green dark:bg-TransparentGreen2"
-                            ></div>
-                        {/if}
+                        
                     </button>
 
                     <button
-                        class="pb-4 relative whitespace-nowrap {activeTab ===
+                        class="flex-1 p-4 gap-2 relative whitespace-nowrap {activeTab ===
                         'assigned'
-                            ? 'text-Green dark:text-TransparentGreen2 text-body-semibold'
+                            ? 'text-Green dark:text-Green2 text-body-semibold border-b border-Green dark:border-Green2'
                             : 'text-light-text-tertiary dark:text-dark-text-tertiary text-body'}"
                         on:click={() => (activeTab = "assigned")}
                     >
                         <span class="hidden lg:inline">Assigned videos</span>
                         <span class="lg:hidden">Assigned</span>
                         <span
-                            class="ml-2 px-2 py-0.5 bg-Black/5 dark:bg-dark-bg-secondary rounded-full text-semibody-medium"
+                            class="px-2 py-0.5 bg-Black/5 dark:bg-dark-bg-secondary rounded-[40px] text-semibody-medium"
                         >
                             {videoCount.assigned}
                         </span>
-                        {#if activeTab === "assigned"}
-                            <div
-                                class="absolute bottom-0 left-0 right-0 h-0.5 bg-Green dark:bg-TransparentGreen2"
-                            ></div>
-                        {/if}
+                       
                     </button>
                 </div>
                 <!-- Sort and Create Course Section - Desktop -->
@@ -453,7 +445,7 @@
             </div>
         </div>
 
-        <div class="flex items-center justify-between w-full mt-2 lg:hidden">
+        <div class="flex items-center justify-between w-full p-4 lg:hidden">
             <!--Mobile Tag Sidebar Button -->
             <button
                 class="p-2 hover:bg-light-bg-secondary dark:hover:bg-dark-bg-secondary rounded-lg transition-colors"
@@ -562,18 +554,22 @@
     
                 <!-- Add Video Button -->
                 <button
-                    class="flex items-center gap-2 p-1.5 bg-Green text-white rounded-lg hover:bg-GreenHover transition-colors"
+                    class="flex items-center gap-2 p-1.5 bg-Green dark:bg-Green2 text-white rounded-lg hover:bg-GreenHover transition-colors"
                     on:click={handleUploadVideo}
                 >
-                    <img src="/icons/BoxArrowUp.svg" alt="Create" class="w-6 h-6" />
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
+                        <path d="M20.9212 6.41438L19.4212 3.41438C19.3589 3.28977 19.2631 3.185 19.1445 3.11181C19.0259 3.03862 18.8893 2.9999 18.75 3H5.25C5.11067 2.9999 4.97406 3.03862 4.8555 3.11181C4.73693 3.185 4.6411 3.28977 4.57875 3.41438L3.07875 6.41438C3.02705 6.51871 3.00011 6.63356 3 6.75V19.5C3 19.8978 3.15804 20.2794 3.43934 20.5607C3.72064 20.842 4.10218 21 4.5 21H19.5C19.8978 21 20.2794 20.842 20.5607 20.5607C20.842 20.2794 21 19.8978 21 19.5V6.75C20.9999 6.63356 20.9729 6.51871 20.9212 6.41438ZM5.71312 4.5H18.2869L19.0369 6H4.96312L5.71312 4.5ZM19.5 19.5H4.5V7.5H19.5V19.5ZM15.5306 12.2194C15.6003 12.2891 15.6556 12.3718 15.6933 12.4628C15.731 12.5539 15.7504 12.6515 15.7504 12.75C15.7504 12.8485 15.731 12.9461 15.6933 13.0372C15.6556 13.1282 15.6003 13.2109 15.5306 13.2806C15.4609 13.3503 15.3782 13.4056 15.2872 13.4433C15.1961 13.481 15.0985 13.5004 15 13.5004C14.9015 13.5004 14.8039 13.481 14.7128 13.4433C14.6218 13.4056 14.5391 13.3503 14.4694 13.2806L12.75 11.5603V17.25C12.75 17.4489 12.671 17.6397 12.5303 17.7803C12.3897 17.921 12.1989 18 12 18C11.8011 18 11.6103 17.921 11.4697 17.7803C11.329 17.6397 11.25 17.4489 11.25 17.25V11.5603L9.53063 13.2806C9.46094 13.3503 9.37822 13.4056 9.28717 13.4433C9.19613 13.481 9.09855 13.5004 9 13.5004C8.90145 13.5004 8.80387 13.481 8.71283 13.4433C8.62178 13.4056 8.53906 13.3503 8.46937 13.2806C8.39969 13.2109 8.34442 13.1282 8.3067 13.0372C8.26899 12.9461 8.24958 12.8485 8.24958 12.75C8.24958 12.6515 8.26899 12.5539 8.3067 12.4628C8.34442 12.3718 8.39969 12.2891 8.46937 12.2194L11.4694 9.21937C11.539 9.14964 11.6217 9.09432 11.7128 9.05658C11.8038 9.01884 11.9014 8.99941 12 8.99941C12.0986 8.99941 12.1962 9.01884 12.2872 9.05658C12.3783 9.09432 12.461 9.14964 12.5306 9.21937L15.5306 12.2194Z" fill="white"/>
+                      </svg>
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- Selection Toolbar - Only shown when videos are selected -->
-    {#if selectMode && selectedCount > 0}
-        <div class="w-full py-4 mb-6">
+    <!-- Scrollable content area -->
+    <div class="flex-1 overflow-y-auto">
+        <!-- Selection Toolbar - Only shown when videos are selected -->
+        {#if selectMode && selectedCount > 0}
+            <div class="w-full py-4 mb-6">
             <div
                 class="container mx-auto flex flex-wrap gap-4 items-center justify-between"
             >
@@ -671,8 +667,8 @@
         </div>
     {/if}
 
-    <!-- Main Content Area with Sidebar and Video Grid -->
-    <div class="flex gap-6">
+        <!-- Main Content Area with Sidebar and Video Grid -->
+        <div class="flex gap-6 px-4 lg:px-0 pb-4">
         <!-- Left Sidebar - Tags Section (Desktop only) -->
         <div class="hidden lg:block">
             <TagsSidebar 
@@ -715,6 +711,7 @@
                 {/each}
             {/if}
         </div>
+    </div>
     </div>
 </div>
 
