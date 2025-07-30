@@ -43,7 +43,7 @@
 </script>
 
 <div 
-  class="w-full h-full backdrop-blur-sm rounded-[14px] border border-light-border dark:border-dark-border inline-flex flex-col justify-start items-start overflow-hidden transition-transform hover:scale-[1.02] hover:shadow-lg"
+  class="w-full h-full backdrop-blur-sm rounded-[14px] border border-light-border dark:border-dark-border inline-flex flex-col justify-start items-start overflow-hidden transition-transform hover:scale-[1.02] hover:shadow-lg cursor-pointer"
   on:click={onClick}
 >
   <div class="relative w-full px-4 pt-4 pb-[92px] inline-flex justify-end items-start gap-2.5 overflow-hidden" style="background-image: url('{thumbnailUrl || '/images/videoCardThumb.png'}'); background-size: cover; background-position: center;">

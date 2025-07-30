@@ -1,5 +1,4 @@
-import { FirebaseAuthentication } from '@capacitor-firebase/authentication';
-import { auth } from '$lib/firebase';
+import { firebaseInitialized } from '$lib/firebase';
 import { signInWithCredential, GoogleAuthProvider, OAuthCredential } from 'firebase/auth';
 import type { User } from 'firebase/auth';
 
@@ -8,6 +7,11 @@ import type { User } from 'firebase/auth';
  */
 export async function signInWithGoogle(): Promise<User | null> {
   try {
+    // Dynamic import to avoid errors when not on native platform
+    const { FirebaseAuthentication } = await import('@capacitor-firebase/authentication').catch(() => {
+      throw new Error('Native authentication not available on this platform');
+    });
+    
     // Sign in with Google on the native layer
     const result = await FirebaseAuthentication.signInWithGoogle();
     
@@ -20,6 +24,9 @@ export async function signInWithGoogle(): Promise<User | null> {
       result.credential?.idToken,
       result.credential?.accessToken
     );
+    
+    // Wait for Firebase to be initialized
+    const { auth } = await firebaseInitialized;
     
     // Sign in to Firebase with the Google credential
     const userCredential = await signInWithCredential(auth, credential);
@@ -35,7 +42,16 @@ export async function signInWithGoogle(): Promise<User | null> {
  */
 export async function signOut(): Promise<void> {
   try {
-    await FirebaseAuthentication.signOut();
+    // Try to import and use native sign out if available
+    try {
+      const { FirebaseAuthentication } = await import('@capacitor-firebase/authentication');
+      await FirebaseAuthentication.signOut();
+    } catch {
+      // Native auth not available, continue with web sign out
+    }
+    
+    // Wait for Firebase to be initialized
+    const { auth } = await firebaseInitialized;
     await auth.signOut();
   } catch (error) {
     console.error('Error signing out:', error);
@@ -47,5 +63,6 @@ export async function signOut(): Promise<void> {
  * Get the current authentication state
  */
 export async function getCurrentUser(): Promise<User | null> {
+  const { auth } = await firebaseInitialized;
   return auth.currentUser;
 } 

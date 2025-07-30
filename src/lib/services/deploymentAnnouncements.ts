@@ -1,4 +1,4 @@
-import { db } from '$lib/firebase';
+import { firebaseInitialized } from '$lib/firebase';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { NotificationService } from './notificationService';
 
@@ -16,6 +16,14 @@ export class DeploymentAnnouncements {
 
   static async checkAndSendDeploymentAnnouncements() {
     try {
+      // Wait for Firebase to be initialized
+      const { db } = await firebaseInitialized;
+      
+      if (!db) {
+        console.error('Firebase is not initialized');
+        return;
+      }
+
       // Get the last announced version
       const versionDoc = await getDoc(doc(db, this.COLLECTION, this.VERSION_DOC));
       const lastVersion = versionDoc.exists() ? (versionDoc.data() as DeploymentVersion).version : null;

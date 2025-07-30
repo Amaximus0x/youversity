@@ -41,6 +41,7 @@ let app: FirebaseApp;
 let auth: Auth;
 let db: Firestore;
 let storage: FirebaseStorage;
+let isInitialized = false;
 
 // Create a promise to track Firebase initialization
 export const firebaseInitialized = new Promise<{
@@ -58,6 +59,7 @@ export const firebaseInitialized = new Promise<{
 
       // Set persistence to local
       await setPersistence(auth, browserLocalPersistence);
+      isInitialized = true;
       console.log('Firebase initialized successfully');
       resolve({ app, auth, db, storage });
     } else {
@@ -74,8 +76,13 @@ export const firebaseInitialized = new Promise<{
   }
 });
 
-// Export initialized instances
+// Export initialized instances (for backward compatibility, but these might be undefined initially)
 export { app, auth, db, storage };
+
+// Helper function to get initialized Firebase services
+export async function getFirebaseServices() {
+  return firebaseInitialized;
+}
 
 // Function to refresh the auth token
 export async function refreshToken(): Promise<string | null> {
@@ -120,7 +127,8 @@ export async function setAuthTokenCookie(): Promise<void> {
 // Firebase utility functions
 export async function saveCourseToFirebase(userId: string, courseData: any) {
   try {
-    const publicCourseRef = doc(collection(db, 'courses'));
+    const { db: initializedDb } = await firebaseInitialized;
+    const publicCourseRef = doc(collection(initializedDb, 'courses'));
     const courseId = publicCourseRef.id;
 
     // Try to extract playlist ID from the first video URL
@@ -151,7 +159,7 @@ export async function saveCourseToFirebase(userId: string, courseData: any) {
     await setDoc(publicCourseRef, courseWithMetadata);
 
     // Save reference to user's courses collection
-    const userCourseRef = doc(db, `users/${userId}/courses/${courseId}`);
+    const userCourseRef = doc(initializedDb, `users/${userId}/courses/${courseId}`);
     await setDoc(userCourseRef, {
       courseRef: publicCourseRef,
       createdAt: serverTimestamp(),
@@ -186,9 +194,11 @@ async function enrichWithCreatorProfile(course: any) {
 
 export async function getUserCourses(userId: string) {
   try {
+    const { db: initializedDb } = await firebaseInitialized;
+    
     // Get courses created by user
     const createdCoursesQuery = query(
-      collection(db, 'courses'),
+      collection(initializedDb, 'courses'),
       where('createdBy', '==', userId)
     );
     const createdCoursesSnapshot = await getDocs(createdCoursesQuery);
@@ -204,7 +214,7 @@ export async function getUserCourses(userId: string) {
     );
 
     // Get enrolled courses from user's subcollection
-    const enrolledCoursesRef = collection(db, `users/${userId}/courses`);
+    const enrolledCoursesRef = collection(initializedDb, `users/${userId}/courses`);
     const enrolledCoursesSnapshot = await getDocs(enrolledCoursesRef);
     
     // Get full course data for enrolled courses

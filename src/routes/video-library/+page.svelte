@@ -9,7 +9,7 @@
     import { goto } from "$app/navigation";
     import { get } from "svelte/store";
     import { collection, getDocs, query, where } from 'firebase/firestore';
-    import { db } from '$lib/firebase';
+    import { firebaseInitialized } from '$lib/firebase';
 
     // State for videos and tags
     let allVideos: any[] = [];
@@ -51,8 +51,16 @@
                 return;
             }
 
+            // Wait for Firebase to be initialized
+            const { db: initializedDb } = await firebaseInitialized;
+            
+            if (!initializedDb) {
+                error = 'Firebase is not initialized';
+                return;
+            }
+
             // Query to fetch only current user's videos
-            const videosRef = collection(db, 'savedVideos');
+            const videosRef = collection(initializedDb, 'savedVideos');
             const userVideosQuery = query(videosRef, where('userId', '==', currentUser.uid));
             const querySnapshot = await getDocs(userVideosQuery);
             
@@ -293,7 +301,7 @@
         <div
             class="relative border-b border-light-border dark:border-dark-border"
         >
-            <div class="container lg:pl-4 max-w-auto px-4 lg:px-0">
+            <div class="container max-w-auto px-4 lg:px-0 lg:flex lg:justify-between">
                 <!-- Tabs -->
                 <div class="flex justify-between lg:justify-start lg:gap-4">
                     <button

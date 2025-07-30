@@ -485,8 +485,8 @@
   // Use afterNavigate to detect navigation changes
   afterNavigate(({ from, to }) => {
     if (browser) {
-      const fromPath = from?.url.pathname || lastPath;
-      const toPath = to?.url.pathname || window.location.pathname;
+      const fromPath = from?.url?.pathname || lastPath;
+      const toPath = to?.url?.pathname || window.location.pathname;
       
       // Check if we're navigating away from create-course
       if (isCreateCoursePage(fromPath) && !isCreateCoursePage(toPath)) {
